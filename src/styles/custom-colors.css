@@ -1,0 +1,94 @@
+/* Custom color overrides for APGM brand color #AD6269 */
+
+/* Override Bootstrap primary color */
+:root {
+  --bs-primary: #AD6269;
+  --bs-primary-rgb: 173, 98, 105;
+}
+
+/* Text color overrides */
+.text-primary {
+  color: #AD6269 !important;
+}
+
+.text-rose-600 {
+  color: #AD6269 !important;
+}
+
+/* Paragraph text should be black */
+p {
+  color: #000000 !important;
+}
+
+.text-secondary {
+  color: #000000 !important;
+}
+
+.text-muted {
+  color: #000000 !important;
+}
+
+/* Lead text should also be black */
+.lead {
+  color: #000000 !important;
+}
+
+/* Specific black text class */
+.text-black {
+  color: #000000 !important;
+}
+
+/* Button overrides */
+.btn-primary {
+  background-color: #AD6269 !important;
+  border-color: #AD6269 !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background-color: #9a5660 !important;
+  border-color: #9a5660 !important;
+}
+
+.btn-outline-primary {
+  color: #AD6269 !important;
+  border-color: #AD6269 !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+  background-color: #AD6269 !important;
+  border-color: #AD6269 !important;
+  color: white !important;
+}
+
+/* Border colors */
+.border-primary {
+  border-color: #AD6269 !important;
+}
+
+/* Background colors */
+.bg-primary {
+  background-color: #AD6269 !important;
+}
+
+/* Spinner colors */
+.spinner-border.text-primary {
+  color: #AD6269 !important;
+}
+
+/* Link colors */
+a.text-primary {
+  color: #AD6269 !important;
+}
+
+a.text-primary:hover {
+  color: #9a5660 !important;
+}
+
+/* SVG icon colors */
+svg.text-primary {
+  color: #AD6269 !important;
+}
