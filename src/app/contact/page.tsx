@@ -267,7 +267,7 @@ export default function ContactPage() {
                   </h6>
                   <p className="mb-0 small">
                     For post-treatment questions or concerns, call our 24/7 aftercare line at 
-                    <strong> (919) 441-0932</strong>. We're here to support your healing journey.
+                    <strong> (919) 441-0932</strong>. We&apos;re here to support your healing journey.
                   </p>
                 </div>
               </div>
@@ -307,7 +307,7 @@ export default function ContactPage() {
                     </h3>
                     <div id="faq2" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
                       <div className="accordion-body">
-                        Please let us know which service you're interested in, any specific concerns or questions, and your preferred appointment timeframe. Photos of your current brows are also helpful for consultations.
+                        Please let us know which service you&apos;re interested in, any specific concerns or questions, and your preferred appointment timeframe. Photos of your current brows are also helpful for consultations.
                       </div>
                     </div>
                   </div>
@@ -320,7 +320,7 @@ export default function ContactPage() {
                     </h3>
                     <div id="faq3" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
                       <div className="accordion-body">
-                        Yes! We offer virtual consultations via video call to discuss your goals, answer questions, and determine if you're a good candidate for permanent makeup services.
+                        Yes! We offer virtual consultations via video call to discuss your goals, answer questions, and determine if you&apos;re a good candidate for permanent makeup services.
                       </div>
                     </div>
                   </div>
@@ -328,7 +328,7 @@ export default function ContactPage() {
                   <div className="accordion-item border-0 shadow-sm">
                     <h3 className="accordion-header">
                       <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
-                        What's the best way to schedule an appointment?
+                        What&apos;s the best way to schedule an appointment?
                       </button>
                     </h3>
                     <div id="faq4" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">

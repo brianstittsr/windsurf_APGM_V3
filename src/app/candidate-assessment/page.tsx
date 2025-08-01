@@ -185,7 +185,7 @@ export default function CandidacyAssessment() {
         return (
           <div className="step">
             <h2 className="text-center mb-4 text-primary">Basic Information</h2>
-            <p className="text-center text-muted mb-4">Let's start with some basic information about your current situation.</p>
+            <p className="text-center text-muted mb-4">Let&apos;s start with some basic information about your current situation.</p>
             
             <div className="mb-4">
               <h5 className="mb-3">Please check any that apply to you:</h5>
@@ -275,7 +275,7 @@ export default function CandidacyAssessment() {
         return (
           <div className="step">
             <h2 className="text-center mb-4 text-primary">Medical History</h2>
-            <p className="text-center text-muted mb-4">These conditions may require doctor's clearance before treatment.</p>
+            <p className="text-center text-muted mb-4">These conditions may require doctor&apos;s clearance before treatment.</p>
             
             <div className="mb-4">
               <h5 className="mb-3">Please check any that apply to you:</h5>
@@ -302,7 +302,7 @@ export default function CandidacyAssessment() {
             </div>
 
             <div className="alert alert-warning">
-              <strong>Note:</strong> If any of the above apply to you, you will need to get doctor's clearance before your appointment.
+              <strong>Note:</strong> If any of the above apply to you, you will need to get doctor&apos;s clearance before your appointment.
             </div>
           </div>
         );
@@ -498,7 +498,7 @@ export default function CandidacyAssessment() {
               )}
               
               {results.type === 'caution' && (
-                <p>Once you have doctor's approval, we'd be happy to schedule your consultation!</p>
+                <p>Once you have doctor&apos;s approval, we&apos;d be happy to schedule your consultation!</p>
               )}
             </div>
 
@@ -558,7 +558,7 @@ export default function CandidacyAssessment() {
                 />
                 <h1 className="text-primary mb-3">Candidacy Assessment</h1>
                 <p className="text-muted">
-                  Let's determine if eyebrow enhancement services are right for you. This quick assessment will help us provide the best recommendations for your needs.
+                  Let&apos;s determine if eyebrow enhancement services are right for you. This quick assessment will help us provide the best recommendations for your needs.
                 </p>
               </div>
 

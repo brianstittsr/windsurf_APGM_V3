@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -104,7 +103,7 @@ export default function FinancingPage() {
               <h1 className="display-4 fw-bold text-dark mb-3">PAY YOUR WAY</h1>
               <p className="lead text-secondary mb-4">Payment options that make it easy.</p>
               <p className="text-muted">
-                Everyone should be able to get their dream brows. A Pretty Girl Matter offers several ways to pay so that payment doesn't get in the way!
+                Everyone should be able to get their dream brows. A Pretty Girl Matter offers several ways to pay so that payment doesn&apos;t get in the way!
               </p>
             </div>
           </div>
@@ -175,7 +174,7 @@ export default function FinancingPage() {
                     <h3 className="h4 fw-bold mb-0">Pay with Cherry</h3>
                   </div>
                   <p className="text-muted mb-3">
-                    Choose from a range of monthly payment plans, with qualifying 0% APR options. Applying is simple and does not impact your credit score. If you're approved for financing, you can use your funds immediately.
+                    Choose from a range of monthly payment plans, with qualifying 0% APR options. Applying is simple and does not impact your credit score. If you&apos;re approved for financing, you can use your funds immediately.
                   </p>
                   <a href="#" className="btn btn-danger rounded-pill px-4">USE CHERRY</a>
                 </div>
@@ -215,7 +214,7 @@ export default function FinancingPage() {
                     <h3 className="h4 fw-bold mb-0">Pay with PayPal Credit</h3>
                   </div>
                   <p className="text-muted">
-                    Shop with PayPal Credit's digital, reusable credit line to get No Interest if paid in full in 6 months on purchases of $99 or more. Select PayPal as method of payment when booking your appointment.
+                    Shop with PayPal Credit&apos;s digital, reusable credit line to get No Interest if paid in full in 6 months on purchases of $99 or more. Select PayPal as method of payment when booking your appointment.
                   </p>
                 </div>
               </div>
@@ -303,7 +302,7 @@ export default function FinancingPage() {
             <div className="col-lg-8 text-center">
               <h2 className="h3 fw-bold mb-4">How It Works</h2>
               <p className="text-muted lead">
-                Choose from a range of monthly payment plans, with qualifying 0% APR options. Applying is simple and does not impact your credit score. If you're approved for financing, you can use your funds immediately. Manage your payment options using Cherry's self-serve consumer portal.
+                Choose from a range of monthly payment plans, with qualifying 0% APR options. Applying is simple and does not impact your credit score. If you&apos;re approved for financing, you can use your funds immediately. Manage your payment options using Cherry&apos;s self-serve consumer portal.
               </p>
             </div>
           </div>
@@ -315,7 +314,7 @@ export default function FinancingPage() {
         <div className="container">
           <div className="text-center mb-5">
             <h2 className="h3 fw-bold mb-3">Testimonials</h2>
-            <p className="text-muted">Don't just take our word for it! Here's what other consumers have to say about Cherry…</p>
+            <p className="text-muted">Don&apos;t just take our word for it! Here&apos;s what other consumers have to say about Cherry…</p>
           </div>
           
           <div className="row g-4">
@@ -336,7 +335,7 @@ export default function FinancingPage() {
                       </div>
                       <h5 className="fw-bold mb-0">{testimonial.name}</h5>
                     </div>
-                    <p className="text-muted mb-0">"{testimonial.text}"</p>
+                    <p className="text-muted mb-0">&quot;{testimonial.text}&quot;</p>
                   </div>
                 </div>
               </div>

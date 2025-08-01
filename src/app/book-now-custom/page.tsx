@@ -2,6 +2,7 @@
 
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import Image from 'next/image';
 import { useState } from 'react';
 
 interface Service {
@@ -47,7 +48,7 @@ export default function BookNowCustom() {
       image: "/images/services/blade-shade.jpg"
     },
     {
-      name: "Ombre' Eyebrows",
+      name: "Ombre Eyebrows",
       price: "$620.00",
       description: "Ombré powder brows create a soft, airy look or a more intense, defined appearance based on your preferences. This technique uses shading to achieve a natural brow that enhances your facial features beautifully.",
       image: "/images/services/ombre-brows.jpg"
@@ -166,10 +167,12 @@ export default function BookNowCustom() {
               <div key={index} className="col-lg-4 col-md-6">
                 <div className="card h-100 shadow-sm border-0">
                   <div className="position-relative">
-                    <img 
+                    <Image 
                       src={service.image} 
                       className="card-img-top" 
                       alt={service.name}
+                      width={400}
+                      height={250}
                       style={{ height: '250px', objectFit: 'cover' }}
                       onError={(e) => {
                         e.currentTarget.src = 'https://via.placeholder.com/400x250/AD6269/FFFFFF?text=' + encodeURIComponent(service.name);
@@ -301,7 +304,7 @@ export default function BookNowCustom() {
   // Health Form Component
   const HealthFormComponent = () => {
     const [currentSignature, setCurrentSignature] = useState('');
-    const [employeeSignature, setEmployeeSignature] = useState('Victoria Martinez');
+    const employeeSignature = 'Victoria Martinez';
 
     return (
       <section className="py-5">
@@ -364,7 +367,7 @@ export default function BookNowCustom() {
 
                       <div className="row">
                         <div className="col-md-6 mb-3">
-                          <label className="form-label text-dark fw-semibold">Customer's Signature</label>
+                          <label className="form-label text-dark fw-semibold">Customer&apos;s Signature</label>
                           <input
                             type="text"
                             className="form-control"
@@ -375,7 +378,7 @@ export default function BookNowCustom() {
                           <small className="text-muted">I agree to use electronic records and signatures.</small>
                         </div>
                         <div className="col-md-6 mb-3">
-                          <label className="form-label text-dark fw-semibold">Employee's Signature</label>
+                          <label className="form-label text-dark fw-semibold">Employee&apos;s Signature</label>
                           <input
                             type="text"
                             className="form-control"

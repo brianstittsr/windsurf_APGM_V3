@@ -254,7 +254,7 @@ export default function CancellationPolicy() {
                       <h2 className="h4 fw-bold text-primary mb-3">10. Contact Us</h2>
                       <p className="text-black mb-3">
                         If you have questions about our cancellation policy or need to discuss a special situation, 
-                        please don't hesitate to contact us:
+                        please don&apos;t hesitate to contact us:
                       </p>
                       <div className="text-black">
                         <p className="mb-2"><strong>A Pretty Girl Matter, LLC</strong></p>
