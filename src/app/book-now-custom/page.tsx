@@ -1,433 +1,557 @@
 'use client';
 
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useState } from 'react';
-
-interface Service {
-  name: string;
-  price: string;
-  description: string;
-  image: string;
-}
-
-interface HealthFormData {
-  [key: string]: string;
-}
+import Header from '../../components/Header';
+import Footer from '../../components/Footer';
+import ClientProfileWizard, { ClientProfileData } from '../../components/ClientProfileWizard';
+import HealthFormWizard, { HealthFormData } from '../../components/HealthFormWizard';
+import CheckoutCart, { CheckoutData, ServiceItem } from '../../components/CheckoutCart';
+import DatabaseSetup from '../../components/DatabaseSetup';
+import { useServices, useAppointments, useHealthForm, useAvailability } from '@/hooks/useFirebase';
+import { Timestamp } from 'firebase/firestore';
+import { useSearchParams } from 'next/navigation';
 
 export default function BookNowCustom() {
-  const [currentStep, setCurrentStep] = useState<'services' | 'calendar' | 'health'>('services');
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
-  const [selectedDateTime, setSelectedDateTime] = useState<string>('');
+  const searchParams = useSearchParams();
+  const isSetupMode = searchParams.get('setup') === 'true';
+  
+  const [currentStep, setCurrentStep] = useState<'services' | 'calendar' | 'profile' | 'health' | 'checkout' | 'confirmation'>('services');
+  const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedTime, setSelectedTime] = useState<string>('');
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
+    const today = new Date();
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay()); // Start of current week (Sunday)
+    return weekStart;
+  });
+  
+  // Show database setup if setup parameter is present
+  if (isSetupMode) {
+    return (
+      <>
+        <Header />
+        <div className="container py-5">
+          <div className="row justify-content-center">
+            <div className="col-lg-8">
+              <h1 className="text-center mb-4">Database Setup</h1>
+              <DatabaseSetup />
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+  
+  // Firebase hooks
+  const { services, loading: servicesLoading, error: servicesError } = useServices();
+  const { createAppointment } = useAppointments();
+  const { submitHealthForm } = useHealthForm();
+  const { availability, bookTimeSlot } = useAvailability(selectedDate);
+  
+  const [clientProfile, setClientProfile] = useState<ClientProfileData>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    dateOfBirth: '',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    emergencyContactName: '',
+    emergencyContactPhone: '',
+    preferredContactMethod: '',
+    hearAboutUs: ''
+  });
+  
   const [healthFormData, setHealthFormData] = useState<HealthFormData>({});
+  const [clientSignature, setClientSignature] = useState<string>('');
+  
+  const [checkoutData, setCheckoutData] = useState<CheckoutData>({
+    selectedDate: '',
+    selectedTime: '',
+    paymentMethod: '',
+    specialRequests: '',
+    giftCard: '',
+    agreeToTerms: false,
+    agreeToPolicy: false
+  });
 
-  const services: Service[] = [
-    {
-      name: "Powder Eyebrows",
-      price: "$600.00",
-      description: "Powder brows offer a semi-permanent cosmetic tattoo solution that delivers soft, shaded, and natural-looking eyebrows, replicating the effect of makeup. This technique results in a smooth, gradient finish, enhancing the fullness and definition of your brows with a subtle ombré effect that transitions from lighter at the front to darker at the tail.",
-      image: "/images/services/powder-brows.jpg"
-    },
-    {
-      name: "Microbladed Eyebrows",
-      price: "$600.00",
-      description: "Microblading is a precise technique that creates fine, hair-like strokes to enhance the natural appearance of your eyebrows. This service is perfect for clients seeking a subtle and textured brow look that frames the face beautifully and reduces the need for daily makeup application.",
-      image: "/images/services/microblading.jpg"
-    },
-    {
-      name: "Bold Combo Eyebrows",
-      price: "$707.85",
-      description: "Experience the perfect blend of artistry with our Permanent Makeup - Eyebrow/Bold Combo, combining microbladed strokes for natural texture and shaded areas for enhanced definition. This technique delivers a striking and dramatic eyebrow look that lasts, allowing you to wake up with perfectly defined brows every day.",
-      image: "/images/services/bold-combo.jpg"
-    },
-    {
-      name: "Blade and Shade Eyebrows",
-      price: "$640.00",
-      description: "Experience the perfect blend of artistry with our Permanent Makeup - Eyebrows service, incorporating both microbladed strokes for added texture and a shaded body and tail for enhanced definition. This technique yields a soft, natural look that beautifully frames your face and simplifies your beauty routine.",
-      image: "/images/services/blade-shade.jpg"
-    },
-    {
-      name: "Ombre Eyebrows",
-      price: "$620.00",
-      description: "Ombré powder brows create a soft, airy look or a more intense, defined appearance based on your preferences. This technique uses shading to achieve a natural brow that enhances your facial features beautifully.",
-      image: "/images/services/ombre-brows.jpg"
-    },
-    {
-      name: "Combo Eyebrows",
-      price: "Starting at $640.00",
-      description: "Combo brows combine the precision of microbladed strokes with a shaded body and tail, creating a beautifully defined and textured look. This technique offers the benefits of both styles, providing fullness and depth to your eyebrows while maintaining a natural appearance.",
-      image: "/images/services/combo-brows.jpg"
-    },
-    {
-      name: "Eyebrow Colour Corrector",
-      price: "$395.00",
-      description: "This service specializes in neutralizing unwanted tones from old permanent eyebrow makeup, such as red, blue, or gray, restoring them to a soft, natural shade. Please note that this session focuses solely on correction and does not include reshaping or new brow designs, and may be necessary before pursuing a new brow style.",
-      image: "/images/services/color-corrector.jpg"
-    },
-    {
-      name: "Annual Touch-Up Combo Colorboost",
-      price: "$395.00",
-      description: "Refresh and revive your brows with a Combo Colorboost! This service is designed to enhance and maintain the color and shape of previously done microblading, ombré, or combo brows. Perfect for clients who are 6–8 months out from their initial brow service or last touch-up, it helps restore pigment, improve definition, and keep your brows looking fresh and polished.",
-      image: "/images/services/touch-up.jpg"
-    },
-    {
-      name: "Permanent Makeup - Lip Liner Designer",
-      price: "$120.00",
-      description: "Professional lip liner application for enhanced definition and shape.",
-      image: "/images/services/lip-liner.jpg"
-    },
-    {
-      name: "Permanent Makeup - Lip Liner Corrective",
-      price: "$45.00",
-      description: "Corrective lip liner service to fix and enhance existing work.",
-      image: "/images/services/lip-corrective.jpg"
-    },
-    {
-      name: "Tiny Tattoo",
-      price: "$100.00",
-      description: "Tiny Tattoo specializes in creating small, meaningful designs that capture personal significance through fine line artistry. With a size limit of up to 2 inches, clients can upload their exact design or inspiration images when booking to ensure a personalized experience.",
-      image: "/images/services/tiny-tattoo.jpg"
-    }
+  // Services are now loaded from Firebase via useServices hook
+
+  const timeSlots = [
+    "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
+    "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "2:00 PM", "2:30 PM",
+    "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM"
   ];
 
-  const healthQuestions = [
-    "Do you have any known allergic reactions or sensitivities to any topical or local anesthetics?",
-    "Do you have any allergies (i.e. Polysporin, Bacitracin, Neosporin, Latex, etc.)?",
-    "Are you allergic to lidocaine or any other numbing agents?",
-    "Are you currently pregnant or breast-feeding?",
-    "Do you bruise easily?",
-    "Do you have any heart conditions or high blood pressure?",
-    "Do you have or do you think it is possible that you have any blood borne communicable disease such as HIV or Hepatitis?",
-    "Do you have any serious medical conditions?",
-    "Does your skin swell easily?",
-    "Do you have diabetes, currently on any form of immunosuppressant therapy or any condition that may delay healing?",
-    "Do you have any known personal history or family history of Methemoglobinemia?",
-    "Have you ever had a Herpes Simplex Type I infection?",
-    "Do you use Retin A or Hydroxyl (Glycolic) Acid preparations?",
-    "Are you prone to Keloid scarring, hypertrophic scarring or any other form of excessive scarring condition?",
-    "Do you suffer from any form of Hyperpigmentary skin condition?",
-    "Do you have a bleeding disorder or take blood thinners?",
-    "Are you allergic to any sensitive metals?",
-    "Have you had any form of cosmetic or surgical procedures, Radiotherapy or Chemotherapy at any time within the last 6 months? (Botox, injections, laser therapies, facelifts, etc.)?"
-  ];
-
-  const handleServiceSelect = (service: Service) => {
+  const handleServiceSelect = (service: ServiceItem) => {
     setSelectedService(service);
     setCurrentStep('calendar');
   };
 
-  const handleDateTimeSelect = (dateTime: string) => {
-    setSelectedDateTime(dateTime);
-    setCurrentStep('health');
+  const handleDateTimeSelect = (date: string, time: string) => {
+    setSelectedDate(date);
+    setSelectedTime(time);
+    setCurrentStep('profile');
   };
 
-  const handleHealthFormChange = (questionIndex: number, value: string) => {
-    setHealthFormData(prev => ({
-      ...prev,
-      [questionIndex]: value
-    }));
-  };
-
-  const handleHealthFormSubmit = () => {
-    // Handle form submission
-    console.log('Booking completed:', {
-      service: selectedService,
-      dateTime: selectedDateTime,
-      healthForm: healthFormData
-    });
-    alert('Booking completed successfully!');
-  };
-
-  // Services Grid Component
-  const ServicesGrid = () => (
-    <>
-      {/* Hero Section */}
-      <section className="py-5 bg-light" style={{ backgroundColor: 'rgba(173, 98, 105, 0.3)' }}>
-        <div className="container">
-          <div className="row justify-content-center">
-            <div className="col-lg-8 text-center">
-              <h1 className="display-4 fw-bold text-dark mb-4">
-                Our <span className="text-primary">Services</span>
-              </h1>
-              <p className="fs-5 text-black mb-5">
-                Choose from our comprehensive range of permanent makeup services. 
-                Each service is performed with precision and artistry to enhance your natural beauty.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Services Cards Section */}
-      <section className="py-5">
-        <div className="container">
-          <div className="row g-4">
-            {services.map((service, index) => (
-              <div key={index} className="col-lg-4 col-md-6">
-                <div className="card h-100 shadow-sm border-0">
-                  <div className="position-relative">
-                    <Image 
-                      src={service.image} 
-                      className="card-img-top" 
-                      alt={service.name}
-                      width={400}
-                      height={250}
-                      style={{ height: '250px', objectFit: 'cover' }}
-                      onError={(e) => {
-                        e.currentTarget.src = 'https://via.placeholder.com/400x250/AD6269/FFFFFF?text=' + encodeURIComponent(service.name);
-                      }}
-                    />
-                    <div className="position-absolute top-0 end-0 m-3">
-                      <span className="badge bg-primary fs-6 px-3 py-2">
-                        {service.price}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="card-body d-flex flex-column">
-                    <h5 className="card-title fw-bold text-dark mb-3">{service.name}</h5>
-                    <p className="card-text text-black flex-grow-1 lh-base">
-                      {service.description}
-                    </p>
-                    <button 
-                      className="btn btn-primary mt-3 fw-semibold"
-                      onClick={() => handleServiceSelect(service)}
-                    >
-                      Book Now
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    </>
-  );
-
-  // Calendar Component
-  const CalendarComponent = () => {
-    const [selectedDate, setSelectedDate] = useState('');
-    const [selectedTime, setSelectedTime] = useState('');
-
-    const availableDates = [
-      '2025-08-05', '2025-08-06', '2025-08-07', '2025-08-08', '2025-08-09',
-      '2025-08-12', '2025-08-13', '2025-08-14', '2025-08-15', '2025-08-16'
-    ];
-
-    const availableTimes = [
-      '9:00 AM', '10:00 AM', '11:00 AM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM'
-    ];
-
-    const handleConfirmDateTime = () => {
-      if (selectedDate && selectedTime) {
-        handleDateTimeSelect(`${selectedDate} at ${selectedTime}`);
+  const handleBookingComplete = async () => {
+    if (!selectedService) return;
+    
+    try {
+      // Create appointment in Firebase
+      const appointmentData = {
+        clientId: 'temp-client-id', // In a real app, this would be the authenticated user's ID
+        serviceId: selectedService.id,
+        artistId: 'default-artist', // You might want to implement artist selection
+        scheduledDate: selectedDate,
+        scheduledTime: selectedTime,
+        status: 'pending' as const,
+        totalAmount: selectedService.price + (selectedService.price * 0.0775), // Including tax
+        depositAmount: Math.round(selectedService.price * 0.3), // 30% deposit
+        remainingAmount: selectedService.price - Math.round(selectedService.price * 0.3),
+        paymentStatus: 'pending' as const,
+        specialRequests: checkoutData.specialRequests,
+        giftCardCode: checkoutData.giftCard || undefined,
+        rescheduleCount: 0,
+        confirmationSent: false,
+        reminderSent: false
+      };
+      
+      const appointmentId = await createAppointment(appointmentData);
+      
+      // Submit health form
+      if (Object.keys(healthFormData).length > 0) {
+        // Convert HealthFormData to the expected format
+        const responses: { [key: string]: string } = {};
+        Object.entries(healthFormData).forEach(([key, value]) => {
+          responses[key] = String(value);
+        });
+        
+        await submitHealthForm({
+          clientId: 'temp-client-id',
+          appointmentId,
+          responses,
+          ipAddress: '',
+          isValid: true,
+          clearanceRequired: false
+        }, clientSignature);
       }
-    };
+      
+      // Book the time slot
+      await bookTimeSlot(selectedTime, appointmentId, 'default-artist');
+      
+      console.log('Booking completed successfully:', appointmentId);
+      setCurrentStep('confirmation');
+    } catch (error) {
+      console.error('Failed to complete booking:', error);
+      // You might want to show an error message to the user
+    }
+  };
+
+  // Calendar navigation functions
+  const goToPreviousWeek = () => {
+    const newWeekStart = new Date(currentWeekStart);
+    newWeekStart.setDate(newWeekStart.getDate() - 7);
+    setCurrentWeekStart(newWeekStart);
+  };
+
+  const goToNextWeek = () => {
+    const newWeekStart = new Date(currentWeekStart);
+    newWeekStart.setDate(newWeekStart.getDate() + 7);
+    setCurrentWeekStart(newWeekStart);
+  };
+
+  const renderProgressBar = () => {
+    const steps = ['services', 'calendar', 'profile', 'health', 'checkout'];
+    const currentIndex = steps.indexOf(currentStep);
+    const progress = ((currentIndex + 1) / steps.length) * 100;
 
     return (
-      <section className="py-5">
+      <div className="container-fluid bg-light py-3">
         <div className="container">
           <div className="row justify-content-center">
             <div className="col-lg-8">
-              <div className="card shadow border-0">
-                <div className="card-header bg-primary text-center">
-                  <h3 className="text-white mb-0">Schedule Your Appointment</h3>
-                </div>
-                <div className="card-body p-4">
-                  <div className="text-center mb-4">
-                    <h4 className="text-dark">{selectedService?.name}</h4>
-                    <p className="fs-5 fw-bold text-primary">{selectedService?.price}</p>
-                  </div>
-
-                  <div className="row">
-                    <div className="col-md-6 mb-4">
-                      <h5 className="text-dark mb-3">Select Date</h5>
-                      <div className="row g-2">
-                        {availableDates.map((date) => (
-                          <div key={date} className="col-6">
-                            <button
-                              className={`btn w-100 ${selectedDate === date ? 'btn-primary' : 'btn-outline-secondary'}`}
-                              onClick={() => setSelectedDate(date)}
-                            >
-                              {new Date(date).toLocaleDateString('en-US', { 
-                                month: 'short', 
-                                day: 'numeric' 
-                              })}
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="col-md-6 mb-4">
-                      <h5 className="text-dark mb-3">Select Time</h5>
-                      <div className="row g-2">
-                        {availableTimes.map((time) => (
-                          <div key={time} className="col-6">
-                            <button
-                              className={`btn w-100 ${selectedTime === time ? 'btn-primary' : 'btn-outline-secondary'}`}
-                              onClick={() => setSelectedTime(time)}
-                            >
-                              {time}
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="d-flex gap-3 justify-content-center">
-                    <button 
-                      className="btn btn-outline-secondary px-4"
-                      onClick={() => setCurrentStep('services')}
-                    >
-                      Back to Services
-                    </button>
-                    <button 
-                      className="btn btn-primary px-4 fw-semibold"
-                      onClick={handleConfirmDateTime}
-                      disabled={!selectedDate || !selectedTime}
-                    >
-                      Continue to Health Form
-                    </button>
-                  </div>
-                </div>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <small className="text-muted">Step {currentIndex + 1} of {steps.length}</small>
+                <small className="text-muted">{Math.round(progress)}% Complete</small>
+              </div>
+              <div className="progress" style={{ height: '8px' }}>
+                <div 
+                  className="progress-bar bg-primary" 
+                  role="progressbar" 
+                  style={{ width: `${progress}%` }}
+                ></div>
+              </div>
+              <div className="d-flex justify-content-between mt-2">
+                <small className={currentStep === 'services' ? 'text-primary fw-bold' : 'text-muted'}>Service</small>
+                <small className={currentStep === 'calendar' ? 'text-primary fw-bold' : 'text-muted'}>Date & Time</small>
+                <small className={currentStep === 'profile' ? 'text-primary fw-bold' : 'text-muted'}>Profile</small>
+                <small className={currentStep === 'health' ? 'text-primary fw-bold' : 'text-muted'}>Health Form</small>
+                <small className={currentStep === 'checkout' ? 'text-primary fw-bold' : 'text-muted'}>Checkout</small>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
     );
   };
 
-  // Health Form Component
-  const HealthFormComponent = () => {
-    const [currentSignature, setCurrentSignature] = useState('');
-    const employeeSignature = 'Victoria Martinez';
+  const renderCalendarSelection = () => {
+    const currentDate = new Date();
+    
+    // Generate week days based on the current week state
+    const weekDays = [];
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(currentWeekStart);
+      day.setDate(currentWeekStart.getDate() + i);
+      weekDays.push(day);
+    }
+
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
+    // Navigation functions
+    const goToPreviousWeek = () => {
+      const newWeekStart = new Date(currentWeekStart);
+      newWeekStart.setDate(currentWeekStart.getDate() - 7);
+      setCurrentWeekStart(newWeekStart);
+    };
+
+    const goToNextWeek = () => {
+      const newWeekStart = new Date(currentWeekStart);
+      newWeekStart.setDate(currentWeekStart.getDate() + 7);
+      setCurrentWeekStart(newWeekStart);
+    };
+
+    // Determine if we're showing current week or another week
+    const today = new Date();
+    const todayWeekStart = new Date(today);
+    todayWeekStart.setDate(today.getDate() - today.getDay());
+    const isCurrentWeek = currentWeekStart.getTime() === todayWeekStart.getTime();
+    
+    // Get the primary month for the week (month of the first day)
+    const weekMonth = monthNames[weekDays[0].getMonth()];
+    const weekYear = weekDays[0].getFullYear();
+    
+    // Check if week spans multiple months
+    const lastDayMonth = weekDays[6].getMonth();
+    const spansMonths = weekDays[0].getMonth() !== lastDayMonth;
 
     return (
-      <section className="py-5">
-        <div className="container">
-          <div className="row justify-content-center">
-            <div className="col-lg-10">
-              <div className="card shadow border-0">
-                <div className="card-header bg-primary text-center">
-                  <h3 className="text-white mb-0">CLIENT HEALTH FORM</h3>
+      <div className="container-fluid py-5">
+        <div className="row justify-content-center">
+          <div className="col-lg-8">
+            <div className="card shadow-lg border-0">
+              {/* Add Service Button */}
+              <div className="card-header bg-white border-0 pt-4 pb-2">
+                <div className="d-flex justify-content-start">
+                  <button className="btn btn-primary rounded-pill px-4 py-2">
+                    <i className="fas fa-plus me-2"></i>
+                    Add Service
+                  </button>
                 </div>
-                <div className="card-body p-4">
-                  <div className="text-center mb-4">
-                    <h4 className="text-dark">{selectedService?.name}</h4>
-                    <p className="text-black">Appointment: {selectedDateTime}</p>
+              </div>
+
+              <div className="card-body px-4 pb-4">
+                {/* Month and Week Header */}
+                <div className="text-center mb-4">
+                  <h2 className="h1 fw-bold text-dark mb-1">
+                    {weekMonth} {weekYear} <span className="text-muted fs-4">{isCurrentWeek ? 'This Week' : 'Week View'}</span>
+                  </h2>
+                  {spansMonths && (
+                    <small className="text-muted">
+                      {monthNames[weekDays[0].getMonth()]} {weekDays[0].getDate()} - {monthNames[lastDayMonth]} {weekDays[6].getDate()}
+                    </small>
+                  )}
+                </div>
+
+                {/* Calendar Week View */}
+                <div className="d-flex align-items-center justify-content-center mb-5">
+                  {/* Previous Week Arrow */}
+                  <button 
+                    className="btn btn-dark p-2 me-3"
+                    onClick={goToPreviousWeek}
+                    title="Previous Week"
+                    style={{ zIndex: 10, position: 'relative' }}
+                  >
+                    <i className="fas fa-angle-double-left fs-4"></i>
+                  </button>
+
+                  {/* Week Days */}
+                  <div className="d-flex gap-0">
+                    {weekDays.map((day, index) => {
+                      const isToday = day.toDateString() === currentDate.toDateString();
+                      const isSelected = index === 5; // Friday is selected in the image
+                      
+                      return (
+                        <div
+                          key={index}
+                          className={`text-center p-3 ${
+                            isSelected 
+                              ? 'bg-primary text-white' 
+                              : 'bg-light text-dark'
+                          } ${index === 0 ? 'rounded-start' : ''} ${
+                            index === 6 ? 'rounded-end' : ''
+                          }`}
+                          style={{ 
+                            minWidth: '100px',
+                            cursor: 'pointer',
+                            border: isSelected ? '2px solid #e11d48' : '1px solid #e9ecef'
+                          }}
+                        >
+                          <div className="fw-semibold small mb-1">
+                            {dayNames[index]}
+                          </div>
+                          <div className="h3 fw-bold mb-0">
+                            {day.getDate()}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
 
-                  <form>
-                    {healthQuestions.map((question, index) => (
-                      <div key={index} className="mb-4">
-                        <label className="form-label text-dark fw-semibold">
-                          {index + 1}. {question}
-                        </label>
-                        <div className="d-flex gap-4">
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name={`question-${index}`}
-                              id={`question-${index}-yes`}
-                              value="yes"
-                              onChange={(e) => handleHealthFormChange(index, e.target.value)}
-                            />
-                            <label className="form-check-label text-black" htmlFor={`question-${index}-yes`}>
-                              Yes
-                            </label>
-                          </div>
-                          <div className="form-check">
-                            <input
-                              className="form-check-input"
-                              type="radio"
-                              name={`question-${index}`}
-                              id={`question-${index}-no`}
-                              value="no"
-                              onChange={(e) => handleHealthFormChange(index, e.target.value)}
-                            />
-                            <label className="form-check-label text-black" htmlFor={`question-${index}-no`}>
-                              No
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-
-                    <div className="border-top pt-4 mt-5">
-                      <div className="mb-4">
-                        <p className="text-black small lh-base">
-                          The UNDERSIGNED acknowledges that A Pretty Girl Matter, LLC has explained the nature of procedure, including the risks and dangers inherent therein. I HEREBY CONSENT A Pretty Girl Matter, LLC to perform eyebrow microblading treatment and its procedures on me and in consideration of her doing so, I hereby release and forever discharge A Pretty Girl Matter, LLC from all demands, damages, actions or causes of action arising out of the performance of the said treatment procedures, which I, my heirs, executors, administrators or assign can, shall or may have. No refund on any treatment. I accept the above colour, design, and payment terms in this contract. I hereby consent to A Pretty Girl Matter, LLC to take photographs of the undersigned both before and after any procedures being undertaken by A Pretty Girl Matter, LLC at the request of the undersigned. It is further acknowledged that the undersigned authorizes A Pretty Girl Matter, LLC to use such photographs in compiling albums of its various clients for the purposes of showing potential clients the procedures completed.
-                        </p>
-                      </div>
-
-                      <div className="row">
-                        <div className="col-md-6 mb-3">
-                          <label className="form-label text-dark fw-semibold">Customer&apos;s Signature</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={currentSignature}
-                            onChange={(e) => setCurrentSignature(e.target.value)}
-                            placeholder="Type your full name"
-                          />
-                          <small className="text-muted">I agree to use electronic records and signatures.</small>
-                        </div>
-                        <div className="col-md-6 mb-3">
-                          <label className="form-label text-dark fw-semibold">Employee&apos;s Signature</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={employeeSignature}
-                            readOnly
-                          />
-                          <small className="text-muted">Date: {new Date().toLocaleDateString()} - {new Date().toLocaleTimeString()}</small>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="d-flex gap-3 justify-content-center mt-4">
-                      <button 
-                        type="button"
-                        className="btn btn-outline-secondary px-4"
-                        onClick={() => setCurrentStep('calendar')}
-                      >
-                        Back to Calendar
-                      </button>
-                      <button 
-                        type="button"
-                        className="btn btn-primary px-4 fw-semibold"
-                        onClick={handleHealthFormSubmit}
-                        disabled={!currentSignature || Object.keys(healthFormData).length < healthQuestions.length}
-                      >
-                        Complete Booking
-                      </button>
-                    </div>
-                  </form>
+                  {/* Next Week Arrow */}
+                  <button 
+                    className="btn btn-dark p-2 ms-3"
+                    onClick={goToNextWeek}
+                    title="Next Week"
+                    style={{ zIndex: 10, position: 'relative' }}
+                  >
+                    <i className="fas fa-angle-double-right fs-4"></i>
+                  </button>
                 </div>
+
+                {/* No Availability Message */}
+                <div className="text-center py-5">
+                  <div className="mb-4">
+                    <i className="fas fa-calendar-times text-muted" style={{ fontSize: '4rem' }}></i>
+                  </div>
+                  
+                  <h3 className="fw-bold text-dark mb-3">Sorry, they're booked</h3>
+                  
+                  <p className="text-muted mb-4">
+                    They don't have any appointments available, but call to<br />
+                    see if there are any last minute openings: <a href="tel:(919) 441-0932" className="text-primary text-decoration-none fw-semibold">(919) 441-0932</a>
+                  </p>
+
+                  <div className="mb-4">
+                    <span className="text-muted">or</span>
+                  </div>
+
+                  <div className="mb-4">
+                    <h4 className="fw-bold text-dark mb-2">Next available date:</h4>
+                    <h4 className="text-dark">Sun, Aug 3, 2025</h4>
+                  </div>
+
+                  <button 
+                    className="btn btn-primary btn-lg px-5 py-3 rounded-3"
+                    onClick={() => {
+                      // Set date to Aug 3, 2025 and continue
+                      setSelectedDate('2025-08-03');
+                      setSelectedTime('10:00 AM'); // Set a default time
+                      handleDateTimeSelect('2025-08-03', '10:00 AM');
+                    }}
+                  >
+                    Go to Sun, Aug 3, 2025
+                  </button>
+                </div>
+              </div>
+
+              <div className="card-footer bg-light d-flex justify-content-between py-3">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary px-4"
+                  onClick={() => setCurrentStep('services')}
+                >
+                  <i className="fas fa-arrow-left me-2"></i>
+                  Back to Services
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary px-4"
+                  onClick={() => handleDateTimeSelect(selectedDate, selectedTime)}
+                  disabled={!selectedDate || !selectedTime}
+                >
+                  Continue to Profile
+                  <i className="fas fa-arrow-right ms-2"></i>
+                </button>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
     );
   };
 
+  const renderServiceSelection = () => (
+    <div className="container-fluid py-5">
+      <div className="row justify-content-center">
+        <div className="col-lg-10">
+          <div className="text-center mb-5">
+            <h1 className="display-4 fw-bold text-primary mb-3">Choose Your Service</h1>
+            <p className="lead text-muted">Select the permanent makeup service you&apos;d like to book</p>
+          </div>
+          
+          {servicesLoading && (
+            <div className="text-center">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading services...</span>
+              </div>
+              <p className="mt-2 text-muted">Loading services...</p>
+            </div>
+          )}
+          
+          {servicesError && (
+            <div className="alert alert-danger">
+              <h4 className="alert-heading">Error Loading Services</h4>
+              <p>{servicesError}</p>
+            </div>
+          )}
+          
+          {!servicesLoading && !servicesError && (
+            <div className="row g-4">
+              {services.map((service) => (
+              <div key={service.id} className="col-lg-6">
+                <div className="card h-100 shadow-sm border-0 service-card">
+                  <div className="row g-0 h-100">
+                    <div className="col-md-5">
+                      <Image
+                        src={service.image}
+                        alt={service.name}
+                        width={300}
+                        height={250}
+                        className="img-fluid rounded-start h-100 object-cover"
+                      />
+                    </div>
+                    <div className="col-md-7">
+                      <div className="card-body d-flex flex-column h-100">
+                        <div>
+                          <h5 className="card-title text-primary fw-bold">{service.name}</h5>
+                          <div className="mb-2">
+                            <span className="badge bg-primary me-2">${service.price}</span>
+                            <span className="badge bg-secondary">{service.duration}</span>
+                          </div>
+                          <p className="card-text text-muted small">{service.description}</p>
+                        </div>
+                        <div className="mt-auto">
+                          <button
+                            className="btn btn-primary w-100"
+                            onClick={() => handleServiceSelect(service)}
+                          >
+                            Select This Service
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderConfirmation = () => (
+    <div className="container-fluid py-5">
+      <div className="row justify-content-center">
+        <div className="col-lg-8">
+          <div className="card shadow-lg border-0">
+            <div className="card-header bg-success text-white text-center py-4">
+              <i className="fas fa-check-circle fa-3x mb-3"></i>
+              <h2 className="h3 mb-0">Booking Confirmed!</h2>
+              <p className="mb-0 opacity-75">Your appointment has been successfully scheduled</p>
+            </div>
+            
+            <div className="card-body p-4 text-center">
+              <div className="alert alert-success">
+                <h5 className="fw-bold mb-3">Appointment Details</h5>
+                <p className="mb-2"><strong>Service:</strong> {selectedService?.name}</p>
+                <p className="mb-2"><strong>Date:</strong> {new Date(selectedDate).toLocaleDateString()}</p>
+                <p className="mb-2"><strong>Time:</strong> {selectedTime}</p>
+                <p className="mb-0"><strong>Client:</strong> {clientProfile.firstName} {clientProfile.lastName}</p>
+              </div>
+              
+              <p className="text-muted mb-4">
+                A confirmation email has been sent to {clientProfile.email}. 
+                Please arrive 15 minutes early for your appointment.
+              </p>
+              
+              <div className="d-flex gap-3 justify-content-center">
+                <button
+                  className="btn btn-primary px-4"
+                  onClick={() => window.location.href = '/'}
+                >
+                  Return to Home
+                </button>
+                <button
+                  className="btn btn-outline-primary px-4"
+                  onClick={() => window.location.href = '/contact'}
+                >
+                  Contact Us
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-vh-100 d-flex flex-column">
+    <>
       <Header />
       
-      <main className="flex-grow-1 pt-header">
-        {currentStep === 'services' && <ServicesGrid />}
-        {currentStep === 'calendar' && <CalendarComponent />}
-        {currentStep === 'health' && <HealthFormComponent />}
-      </main>
-
+      <div style={{ paddingTop: '140px' }}>
+        {currentStep !== 'confirmation' && renderProgressBar()}
+        
+        {currentStep === 'services' && renderServiceSelection()}
+        {currentStep === 'calendar' && renderCalendarSelection()}
+        {currentStep === 'profile' && (
+        <ClientProfileWizard
+          data={clientProfile}
+          onChange={setClientProfile}
+          onNext={() => setCurrentStep('health')}
+          onBack={() => setCurrentStep('calendar')}
+        />
+      )}
+      {currentStep === 'health' && (
+        <HealthFormWizard
+          data={healthFormData}
+          onChange={setHealthFormData}
+          onNext={() => setCurrentStep('checkout')}
+          onBack={() => setCurrentStep('profile')}
+          clientSignature={clientSignature}
+          onSignatureChange={setClientSignature}
+        />
+      )}
+      {currentStep === 'checkout' && selectedService && (
+        <CheckoutCart
+          service={selectedService}
+          appointmentDate={selectedDate}
+          appointmentTime={selectedTime}
+          clientName={`${clientProfile.firstName} ${clientProfile.lastName}`}
+          data={checkoutData}
+          onChange={setCheckoutData}
+          onNext={handleBookingComplete}
+          onBack={() => setCurrentStep('health')}
+        />
+      )}
+      {currentStep === 'confirmation' && renderConfirmation()}
+      </div>
+      
       <Footer />
-    </div>
+    </>
   );
 }

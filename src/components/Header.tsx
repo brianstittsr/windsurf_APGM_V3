@@ -98,10 +98,16 @@ export default function Header() {
             </a>
           </div>
 
-          {/* CTA Button */}
-          <div className="d-none d-lg-block">
+          {/* CTA Buttons */}
+          <div className="d-none d-lg-flex gap-2">
             <Link
-              href="/book-now"
+              href="/login"
+              className="btn btn-outline-primary rounded-pill px-4"
+            >
+              Login
+            </Link>
+            <Link
+              href="/book-now-custom"
               className="btn btn-primary rounded-pill px-4"
             >
               Book Now
@@ -120,7 +126,13 @@ export default function Header() {
               </div>
             )}
             <Link
-              href="/book-now"
+              href="/login"
+              className="btn btn-outline-primary rounded-pill px-4 w-100 mb-2"
+            >
+              Login
+            </Link>
+            <Link
+              href="/book-now-custom"
               className="btn btn-primary rounded-pill px-4 w-100"
             >
               Book Now

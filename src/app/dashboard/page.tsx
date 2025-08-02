@@ -1,0 +1,201 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Header from '../../components/Header';
+import Footer from '../../components/Footer';
+import { auth, isFirebaseConfigured } from '@/lib/firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { User } from 'firebase/auth';
+
+export default function Dashboard() {
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isFirebaseConfigured() || !auth) {
+      router.push('/login');
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+      } else {
+        router.push('/login');
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [router]);
+
+  const handleSignOut = async () => {
+    try {
+      if (auth) {
+        await signOut(auth);
+        router.push('/');
+      }
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <div className="container-fluid" style={{ paddingTop: '140px', minHeight: '100vh' }}>
+          <div className="row justify-content-center">
+            <div className="col-lg-8 text-center">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p className="mt-3 text-muted">Loading your dashboard...</p>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect to login
+  }
+
+  return (
+    <>
+      <Header />
+      <div className="container-fluid" style={{ paddingTop: '140px', minHeight: '100vh' }}>
+        <div className="row justify-content-center">
+          <div className="col-lg-10">
+            {/* Welcome Section */}
+            <div className="card border-0 shadow-sm mb-4">
+              <div className="card-body p-4">
+                <div className="row align-items-center">
+                  <div className="col-md-8">
+                    <h1 className="h3 text-primary fw-bold mb-2">
+                      Welcome back, {user.displayName || user.email}!
+                    </h1>
+                    <p className="text-muted mb-0">
+                      Manage your appointments and profile from your dashboard
+                    </p>
+                  </div>
+                  <div className="col-md-4 text-md-end">
+                    <button
+                      onClick={handleSignOut}
+                      className="btn btn-outline-secondary rounded-pill"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="row g-4 mb-4">
+              <div className="col-md-6 col-lg-3">
+                <div className="card border-0 shadow-sm h-100">
+                  <div className="card-body text-center p-4">
+                    <div className="mb-3">
+                      <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px' }}>
+                        <svg width="24" height="24" fill="currentColor" className="text-primary" viewBox="0 0 24 24">
+                          <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <h5 className="card-title">Book Appointment</h5>
+                    <p className="card-text text-muted small">Schedule your next permanent makeup session</p>
+                    <Link href="/book-now-custom" className="btn btn-primary rounded-pill">
+                      Book Now
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-6 col-lg-3">
+                <div className="card border-0 shadow-sm h-100">
+                  <div className="card-body text-center p-4">
+                    <div className="mb-3">
+                      <div className="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px' }}>
+                        <svg width="24" height="24" fill="currentColor" className="text-success" viewBox="0 0 24 24">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <h5 className="card-title">My Appointments</h5>
+                    <p className="card-text text-muted small">View and manage your upcoming appointments</p>
+                    <button className="btn btn-success rounded-pill" disabled>
+                      Coming Soon
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-6 col-lg-3">
+                <div className="card border-0 shadow-sm h-100">
+                  <div className="card-body text-center p-4">
+                    <div className="mb-3">
+                      <div className="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px' }}>
+                        <svg width="24" height="24" fill="currentColor" className="text-info" viewBox="0 0 24 24">
+                          <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.89 1 3 1.89 3 3V21C3 22.11 3.89 23 5 23H19C20.11 23 21 22.11 21 21V9M19 21H5V3H13V9H19Z"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <h5 className="card-title">Health Forms</h5>
+                    <p className="card-text text-muted small">Complete or update your health information</p>
+                    <button className="btn btn-info rounded-pill" disabled>
+                      Coming Soon
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-6 col-lg-3">
+                <div className="card border-0 shadow-sm h-100">
+                  <div className="card-body text-center p-4">
+                    <div className="mb-3">
+                      <div className="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px' }}>
+                        <svg width="24" height="24" fill="currentColor" className="text-warning" viewBox="0 0 24 24">
+                          <path d="M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm9 7h-6v13h-2v-6h-2v6H9V9H3V7h18v2z"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <h5 className="card-title">Profile</h5>
+                    <p className="card-text text-muted small">Update your personal information</p>
+                    <button className="btn btn-warning rounded-pill" disabled>
+                      Coming Soon
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="card border-0 shadow-sm">
+              <div className="card-header bg-white border-0 pb-0">
+                <h5 className="card-title text-primary fw-bold">Recent Activity</h5>
+              </div>
+              <div className="card-body">
+                <div className="text-center py-5">
+                  <div className="text-muted">
+                    <svg width="48" height="48" fill="currentColor" viewBox="0 0 24 24" className="mb-3">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    <h6>No recent activity</h6>
+                    <p className="small">Your appointment history and updates will appear here</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <Footer />
+    </>
+  );
+}

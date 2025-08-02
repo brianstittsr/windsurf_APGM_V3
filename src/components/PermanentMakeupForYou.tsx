@@ -55,7 +55,7 @@ export default function PermanentMakeupForYou() {
           {/* Right Side - Text Content */}
           <div className="col-lg-6">
             <p className="fs-5 text-secondary mb-3">
-              soft or natural to bold and defined
+              soft or natural to bold and defined...
             </p>
             <h2 className="display-4 fw-bold text-dark mb-4">
               THE CHOICE IS <span className="text-primary">YOURS</span>

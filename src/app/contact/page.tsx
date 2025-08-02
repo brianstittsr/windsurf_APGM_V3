@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import { useContactForm } from '@/hooks/useFirebase';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -12,8 +13,7 @@ export default function ContactPage() {
     service: '',
     message: ''
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState('');
+  const { submitContactForm, loading, error, success } = useContactForm();
 
   const services = [
     'Microblading Eyebrows',
@@ -32,11 +32,9 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     
-    // Simulate form submission
-    setTimeout(() => {
-      setSubmitMessage('Thank you for your message! We\'ll get back to you within 24 hours.');
+    try {
+      await submitContactForm(formData);
       setFormData({
         name: '',
         email: '',
@@ -44,15 +42,16 @@ export default function ContactPage() {
         service: '',
         message: ''
       });
-      setIsSubmitting(false);
-    }, 1000);
+    } catch (err) {
+      console.error('Failed to submit contact form:', err);
+    }
   };
 
   return (
     <>
       <Header />
       
-      <main>
+      <main style={{ paddingTop: '140px' }}>
         {/* Hero Section */}
         <section className="bg-primary text-white py-5">
           <div className="container">
@@ -95,9 +94,15 @@ export default function ContactPage() {
                   <div className="card-body p-4">
                     <h2 className="h3 fw-bold mb-4 text-primary">Send Us a Message</h2>
                     
-                    {submitMessage && (
+                    {success && (
                       <div className="alert alert-success" role="alert">
-                        {submitMessage}
+                        Thank you for your message! We'll get back to you within 24 hours.
+                      </div>
+                    )}
+                    
+                    {error && (
+                      <div className="alert alert-danger" role="alert">
+                        {error}
                       </div>
                     )}
                     
@@ -183,9 +188,9 @@ export default function ContactPage() {
                           <button
                             type="submit"
                             className="btn btn-primary btn-lg rounded-pill px-5"
-                            disabled={isSubmitting}
+                            disabled={loading}
                           >
-                            {isSubmitting ? (
+                            {loading ? (
                               <>
                                 <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                 Sending...

@@ -1,67 +1,21 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
 
 export default function Hero() {
-  const video1Ref = useRef<HTMLVideoElement>(null);
-  const video2Ref = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const video1 = video1Ref.current;
-    const video2 = video2Ref.current;
-
-    if (video1 && video2) {
-      // Ensure both videos start playing
-      const playVideos = async () => {
-        try {
-          await Promise.all([
-            video1.play(),
-            video2.play()
-          ]);
-        } catch (error) {
-          console.log('Video autoplay failed:', error);
-        }
-      };
-      
-      playVideos();
-    }
-  }, []);
   return (
     <section id="hero" className="pt-header min-vh-100 d-flex align-items-center position-relative overflow-hidden">
-      {/* Video Background 1 */}
-      <video 
-        ref={video1Ref}
-        className="position-absolute top-0 start-0 w-100 h-100 video-bg-1" 
+      {/* Optimized Image Background */}
+      <div 
+        className="position-absolute top-0 start-0 w-100 h-100" 
         style={{
-          objectFit: 'cover',
+          backgroundImage: 'url(/images/hero/hero-main.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
           zIndex: -2
         }}
-        autoPlay 
-        muted 
-        loop 
-        playsInline
-        preload="auto"
-      >
-        <source src="/images/hero/3181593-uhd_3840_2160_25fps.mp4" type="video/mp4" />
-      </video>
-      
-      {/* Video Background 2 */}
-      <video 
-        ref={video2Ref}
-        className="position-absolute top-0 start-0 w-100 h-100 video-bg-2" 
-        style={{
-          objectFit: 'cover',
-          zIndex: -2
-        }}
-        autoPlay 
-        muted 
-        loop 
-        playsInline
-        preload="auto"
-      >
-        <source src="/images/hero/3181513-uhd_3840_2160_25fps.mp4" type="video/mp4" />
-      </video>
+      ></div>
       
       {/* Dark overlay for text readability */}
       <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark" style={{opacity: 0.4, zIndex: -1}}></div>
@@ -84,7 +38,7 @@ export default function Hero() {
 
             <div className="d-flex justify-content-center fade-in-3">
               <Link
-                href="/book-now"
+                href="/book-now-custom"
                 className="btn btn-primary btn-lg rounded-pill px-4 text-decoration-none"
               >
                 Book Now
@@ -93,11 +47,24 @@ export default function Hero() {
           </div>
         </div>
         
-        {/* Online Consultation Button at bottom */}
-        <div className="position-absolute bottom-0 start-50 translate-middle-x mb-4">
+      </div>
+      
+      {/* Online Consultation Button with Black Ribbon - Anchored to Bottom Center */}
+      <div className="position-absolute bottom-0 start-0 w-100" style={{ zIndex: 1 }}>
+        <div 
+          className="d-flex justify-content-center align-items-center py-3"
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(5px)'
+          }}
+        >
           <Link
             href="/contact"
-            className="btn btn-outline-light btn-lg rounded-pill px-4 text-decoration-none fade-in-4"
+            className="btn btn-light btn-lg rounded-pill px-5 text-decoration-none shadow-sm"
+            style={{
+              fontWeight: '600',
+              letterSpacing: '0.5px'
+            }}
           >
             Online Consultation
           </Link>

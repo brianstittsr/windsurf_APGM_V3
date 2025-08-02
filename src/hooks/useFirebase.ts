@@ -1,0 +1,377 @@
+import { useState, useEffect } from 'react';
+import { 
+  ServiceService, 
+  AppointmentService, 
+  UserService, 
+  ContactFormService,
+  CandidateAssessmentService,
+  HealthFormService,
+  AvailabilityService
+} from '@/services/database';
+import { 
+  Service, 
+  Appointment, 
+  User, 
+  ContactForm, 
+  CandidateAssessment,
+  HealthForm,
+  DayAvailability 
+} from '@/types/database';
+import { isFirebaseConfigured } from '@/lib/firebase';
+
+// Hook for services
+export function useServices() {
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        setLoading(true);
+        
+        if (!isFirebaseConfigured()) {
+          // Return mock data when Firebase is not configured
+          setServices([
+            {
+              id: 'powder-brows',
+              name: 'Powder Eyebrows',
+              description: 'Powder brows offer a semi-permanent cosmetic tattoo solution that creates a soft, powdered makeup look.',
+              price: 600,
+              duration: '2-3 hours',
+              category: 'eyebrows',
+              isActive: true,
+              image: '/images/services/powder-brows.jpg',
+              requirements: ['Age 18+', 'No recent Botox'],
+              contraindications: ['Pregnancy', 'Blood thinners'],
+              createdAt: new Date() as any,
+              updatedAt: new Date() as any
+            },
+            {
+              id: 'microblading',
+              name: 'Microblading',
+              description: 'Hair-stroke technique that creates natural-looking eyebrows.',
+              price: 550,
+              duration: '2-3 hours',
+              category: 'eyebrows',
+              isActive: true,
+              image: '/images/services/microblading.jpg',
+              requirements: ['Age 18+', 'No recent Botox'],
+              contraindications: ['Pregnancy', 'Blood thinners'],
+              createdAt: new Date() as any,
+              updatedAt: new Date() as any
+            }
+          ]);
+          setError('Firebase not configured - showing demo data');
+          return;
+        }
+        
+        const servicesData = await ServiceService.getAllServices();
+        setServices(servicesData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch services');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
+
+  return { services, loading, error };
+}
+
+// Hook for appointments
+export function useAppointments(clientId?: string) {
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!clientId) return;
+
+    const fetchAppointments = async () => {
+      try {
+        setLoading(true);
+        const appointmentsData = await AppointmentService.getAppointmentsByClient(clientId);
+        setAppointments(appointmentsData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch appointments');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAppointments();
+  }, [clientId]);
+
+  const createAppointment = async (appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      const id = await AppointmentService.createAppointment(appointmentData);
+      return id;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create appointment');
+      throw err;
+    }
+  };
+
+  const updateAppointmentStatus = async (id: string, status: Appointment['status']) => {
+    try {
+      await AppointmentService.updateAppointmentStatus(id, status);
+      // Refresh appointments
+      if (clientId) {
+        const appointmentsData = await AppointmentService.getAppointmentsByClient(clientId);
+        setAppointments(appointmentsData);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update appointment');
+      throw err;
+    }
+  };
+
+  return { 
+    appointments, 
+    loading, 
+    error, 
+    createAppointment, 
+    updateAppointmentStatus 
+  };
+}
+
+// Hook for user management
+export function useUser(userId?: string) {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchUser = async () => {
+      try {
+        setLoading(true);
+        const userData = await UserService.getUserById(userId);
+        setUser(userData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch user');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [userId]);
+
+  const createUser = async (userData: Omit<User, 'id'>) => {
+    try {
+      const id = await UserService.createUser(userData);
+      return id;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create user');
+      throw err;
+    }
+  };
+
+  const updateUser = async (userData: Partial<User>) => {
+    if (!userId) throw new Error('No user ID provided');
+    
+    try {
+      await UserService.updateUser(userId, userData);
+      // Refresh user data
+      const updatedUser = await UserService.getUserById(userId);
+      setUser(updatedUser);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update user');
+      throw err;
+    }
+  };
+
+  return { user, loading, error, createUser, updateUser };
+}
+
+// Hook for contact forms
+export function useContactForm() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const submitContactForm = async (formData: {
+    name: string;
+    email: string;
+    phone: string;
+    service: string;
+    message: string;
+  }) => {
+    try {
+      setLoading(true);
+      setError(null);
+      setSuccess(false);
+
+      const contactFormData: Omit<ContactForm, 'id'> = {
+        ...formData,
+        submittedAt: new Date() as any, // Will be converted to Timestamp in service
+        status: 'new',
+        ipAddress: '', // You might want to get this from a service
+        source: 'contact_page'
+      };
+
+      await ContactFormService.createContactForm(contactFormData);
+      setSuccess(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit contact form');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { submitContactForm, loading, error, success };
+}
+
+// Hook for candidate assessment
+export function useCandidateAssessment() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<CandidateAssessment['result'] | null>(null);
+
+  const submitAssessment = async (
+    responses: CandidateAssessment['responses'], 
+    clientId?: string
+  ) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Import the calculation function
+      const { calculateAssessmentScore } = await import('@/scripts/initializeDatabase');
+      const assessmentResult = calculateAssessmentScore(responses);
+
+      const assessmentData: Omit<CandidateAssessment, 'id'> = {
+        clientId,
+        responses,
+        result: assessmentResult,
+        completedAt: new Date() as any, // Will be converted to Timestamp
+        ipAddress: '' // You might want to get this from a service
+      };
+
+      await CandidateAssessmentService.createAssessment(assessmentData);
+      setResult(assessmentResult);
+      
+      return assessmentResult;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit assessment');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { submitAssessment, loading, error, result };
+}
+
+// Hook for health forms
+export function useHealthForm(appointmentId?: string) {
+  const [healthForm, setHealthForm] = useState<HealthForm | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!appointmentId) return;
+
+    const fetchHealthForm = async () => {
+      try {
+        setLoading(true);
+        const form = await HealthFormService.getHealthFormByAppointment(appointmentId);
+        setHealthForm(form);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch health form');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHealthForm();
+  }, [appointmentId]);
+
+  const submitHealthForm = async (
+    formData: {
+      clientId: string;
+      appointmentId: string;
+      responses: { [key: string]: string };
+      ipAddress: string;
+      isValid: boolean;
+      clearanceRequired: boolean;
+    },
+    signature: string
+  ) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const healthFormData: Omit<HealthForm, 'id'> = {
+        ...formData,
+        signature,
+        signedAt: new Date() as any, // Will be converted to Timestamp
+      };
+
+      const id = await HealthFormService.createHealthForm(healthFormData);
+      
+      // Refresh health form data
+      const newForm = await HealthFormService.getHealthFormByAppointment(formData.appointmentId);
+      setHealthForm(newForm);
+      
+      return id;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit health form');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { healthForm, submitHealthForm, loading, error };
+}
+
+// Hook for availability
+export function useAvailability(date?: string) {
+  const [availability, setAvailability] = useState<DayAvailability | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!date) return;
+
+    const fetchAvailability = async () => {
+      try {
+        setLoading(true);
+        const availabilityData = await AvailabilityService.getAvailability(date);
+        setAvailability(availabilityData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch availability');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAvailability();
+  }, [date]);
+
+  const bookTimeSlot = async (time: string, appointmentId: string, artistId: string = 'default') => {
+    if (!date) throw new Error('No date provided');
+    
+    try {
+      await AvailabilityService.bookTimeSlot(date, time, appointmentId, artistId);
+      // Refresh availability
+      const availabilityData = await AvailabilityService.getAvailability(date);
+      setAvailability(availabilityData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to book time slot');
+      throw err;
+    }
+  };
+
+  return { availability, bookTimeSlot, loading, error };
+}
