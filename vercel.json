@@ -1,0 +1,18 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev",
+  "env": {
+    "NEXT_PUBLIC_BUSINESS_NAME": "A Pretty Girl Matter",
+    "NEXT_PUBLIC_BUSINESS_PHONE": "(919) 441-0932",
+    "NEXT_PUBLIC_BUSINESS_EMAIL": "info@aprettygirl.com"
+  },
+  "rewrites": [
+    {
+      "source": "/admin/:path*",
+      "destination": "/admin/:path*"
+    }
+  ]
+}
