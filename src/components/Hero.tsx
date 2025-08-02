@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export default function Hero() {
   return (
-    <section id="hero" className="pt-header min-vh-100 d-flex align-items-center position-relative overflow-hidden">
+    <section id="hero" className="min-vh-100 d-flex align-items-center position-relative overflow-hidden" style={{ paddingTop: '140px' }}>
       {/* Optimized Image Background */}
       <div 
         className="position-absolute top-0 start-0 w-100 h-100" 
