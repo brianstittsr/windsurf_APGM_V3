@@ -11,9 +11,33 @@ export default function Header() {
     setIsClient(true);
   }, []);
 
+  const handleAddressClick = () => {
+    const address = "4040 Barrett Drive Suite 3, Raleigh, NC 27609";
+    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+    window.open(googleMapsUrl, '_blank');
+  };
+
   return (
-    <header className="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
-      <div className="container">
+    <header className="bg-white shadow-sm fixed-top">
+      {/* Top bar with address */}
+      <div className="bg-light py-1 d-none d-lg-block">
+        <div className="container">
+          <div className="d-flex justify-content-end">
+            <button 
+              onClick={handleAddressClick}
+              className="btn btn-link text-decoration-none text-secondary p-0 fw-semibold"
+              style={{ fontSize: '0.9rem' }}
+              title="View on Google Maps"
+            >
+              📍 4040 Barrett Drive Suite 3, Raleigh, NC 27609
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Main navbar */}
+      <nav className="navbar navbar-expand-lg navbar-light">
+        <div className="container">
         {/* Logo */}
         <Link href="/" className="navbar-brand text-decoration-none">
           <img 
@@ -49,13 +73,6 @@ export default function Header() {
               CONTACT
             </Link>
           </nav>
-
-          {/* Address */}
-          <div className="d-none d-lg-block me-3">
-            <span className="text-secondary fw-semibold">
-              📍 4040 Barrett Drive Suite 3, Raleigh, NC
-            </span>
-          </div>
 
           {/* Phone Number */}
           <div className="d-none d-lg-block me-3">
@@ -114,8 +131,15 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Mobile Phone & CTA */}
+          {/* Mobile Address, Phone & CTA */}
           <div className="d-lg-none mt-3">
+            <button 
+              onClick={handleAddressClick}
+              className="btn btn-outline-info rounded-pill px-4 w-100 mb-2"
+              title="View on Google Maps"
+            >
+              📍 4040 Barrett Drive Suite 3, Raleigh, NC
+            </button>
             {isClient ? (
               <a href="tel:919-441-0932" className="btn btn-outline-secondary rounded-pill px-4 w-100 mb-2 text-decoration-none">
                 📞 919-441-0932
@@ -139,7 +163,8 @@ export default function Header() {
             </Link>
           </div>
         </div>
-      </div>
+        </div>
+      </nav>
     </header>
   );
 }
