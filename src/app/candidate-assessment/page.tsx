@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 
@@ -525,6 +526,14 @@ export default function CandidacyAssessment() {
               <p>Contact us to schedule your appointment:</p>
               <p><strong>Email:</strong> victoria@aprettygirlmatter.com</p>
               <p><strong>Phone:</strong> (919) 441-0932</p>
+              <div className="mt-3">
+                <Link 
+                  href="/book-now-custom" 
+                  className="btn btn-primary btn-lg rounded-pill px-5"
+                >
+                  Book Now
+                </Link>
+              </div>
             </div>
 
             <div className="mt-4 p-3 bg-light rounded">
