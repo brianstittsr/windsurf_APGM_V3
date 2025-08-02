@@ -20,7 +20,7 @@ export default function PermanentMakeupForYou() {
   }, [images.length]);
 
   return (
-    <section id="services" className="py-section bg-white">
+    <section id="services" className="py-section" style={{ backgroundColor: 'rgba(173, 98, 105, 0.3)' }}>
       <div className="container">
         {/* Header */}
         <div className="text-center mb-5">

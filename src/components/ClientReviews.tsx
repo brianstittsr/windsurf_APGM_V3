@@ -111,7 +111,8 @@ export default function ClientReviews() {
 
         </div>
 
-        {/* Main Review Carousel */}
+        {/* Main Review Carousel - HIDDEN */}
+        {/*
         <div className="position-relative rounded-3 p-4 p-md-5 mb-5" style={{ backgroundColor: 'rgba(173, 98, 105, 0.3)' }}>
           <div className="position-relative" style={{ minHeight: '20rem' }}>
             {reviews.map((review, index) => (
@@ -125,7 +126,6 @@ export default function ClientReviews() {
                 }}
               >
                 <div className="row g-4 align-items-center">
-                  {/* Review Content */}
                   <div className="col-lg-6">
                     <div className="d-flex align-items-center mb-3">
                       {renderStars(review.rating)}
@@ -149,7 +149,6 @@ export default function ClientReviews() {
                     </div>
                   </div>
 
-                  {/* Before/After Image */}
                   <div className="col-lg-6">
                     <div className="position-relative">
                       <img
@@ -168,7 +167,6 @@ export default function ClientReviews() {
             ))}
           </div>
 
-          {/* Navigation Arrows */}
           <button
             onClick={prevReview}
             className="position-absolute start-0 top-50 translate-middle-y ms-3 btn btn-light rounded-circle p-2 shadow"
@@ -187,7 +185,6 @@ export default function ClientReviews() {
             </svg>
           </button>
 
-          {/* Dots Indicator */}
           <div className="d-flex justify-content-center gap-2 mt-4">
             {reviews.map((_, index) => (
               <button
@@ -201,6 +198,7 @@ export default function ClientReviews() {
             ))}
           </div>
         </div>
+        */}
 
         {/* Review Grid */}
         <div className="row g-4">
