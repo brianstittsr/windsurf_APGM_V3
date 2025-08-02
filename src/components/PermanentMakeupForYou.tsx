@@ -20,7 +20,7 @@ export default function PermanentMakeupForYou() {
   }, [images.length]);
 
   return (
-    <section id="services" className="py-section" style={{ backgroundColor: 'rgba(173, 98, 105, 0.3)' }}>
+    <section id="services" className="py-section bg-white">
       <div className="container">
         {/* Header */}
         <div className="text-center mb-5">
@@ -68,7 +68,7 @@ export default function PermanentMakeupForYou() {
 
         {/* Bottom CTA */}
         <div className="text-center mt-5">
-          <div className="bg-gradient-rose rounded-custom-lg p-5">
+          <div className="rounded-custom-lg p-5" style={{ backgroundColor: 'rgba(173, 98, 105, 0.3)' }}>
             <h3 className="h3 fw-bold text-dark mb-4">
               Not sure which service is right for you?
             </h3>

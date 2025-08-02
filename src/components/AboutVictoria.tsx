@@ -49,19 +49,19 @@ export default function AboutVictoria() {
               </h3>
               <div className="text-black lh-base">
                 <p className="fs-4 mb-4">
-                  Hi, I&apos;m Victoria! With experience in permanent makeup artistry, 
-                  I&apos;ve dedicated my career to helping women feel confident and beautiful every single day.
+                  As a proud veteran and the founder of <strong>A Pretty Girl Matter</strong>, I discovered my passion for 
+                  permanent makeup through its incredible power to elevate natural beauty and boost confidence. 
+                  After serving in the military, I wanted to create something meaningful that combined my love for 
+                  artistry with my mission to empower others—and so my permanent makeup business was born.
                 </p>
                 <p className="fs-5 mb-4">
-                  My journey began with a Fine Arts degree, where I developed my eye for color, symmetry, 
-                  and facial aesthetics. This artistic foundation, combined with extensive training in 
-                  permanent makeup techniques, allows me to create results that are both beautiful and natural.
+                  I've had the privilege of training with some of the top PMU academies in the world—<strong>The 
+                  Collective, Beauty Slesh, Beauty Angels, and Plush Beauty Academy</strong>—where I mastered 
+                  advanced techniques in <strong>microblading, ombré brows, combo brows, lip blushing, permanent 
+                  eyeliner, and tiny tattoos</strong>. This exclusive education equips me to deliver precise, personalized 
+                  results and comprehensive care from consultation to aftercare.
                 </p>
-                <p className="fs-5 mb-4">
-                  I believe that permanent makeup should enhance your natural features, not mask them. 
-                  Every client receives a personalized approach based on their unique facial structure, 
-                  skin tone, and lifestyle needs.
-                </p>
+
               </div>
             </div>
 
@@ -84,11 +84,12 @@ export default function AboutVictoria() {
 
             {/* Philosophy */}
             <div className="card border-light rounded-3 p-4 shadow">
-              <h4 className="h5 fw-bold text-dark mb-3">My Philosophy</h4>
+              <h4 className="h5 fw-bold text-dark mb-3">My Mission</h4>
               <p className="text-black fst-italic mb-0 fs-5">
-                &quot;Beauty is not about perfection—it&apos;s about enhancing what makes you uniquely you. 
-                My goal is to create permanent makeup that looks so natural, people will think you 
-                just woke up that beautiful.&quot;
+                &quot;My mission is simple: to help you wake up looking and feeling your absolute best with 
+                effortless, natural-looking permanent makeup. Whether you're a busy professional, a mom, or 
+                someone who values confidence and convenience, I'm here to create a look that's uniquely 
+                yours.&quot;
               </p>
             </div>
           </div>
