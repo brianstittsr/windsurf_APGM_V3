@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Image from 'next/image';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -12,7 +12,7 @@ import { useServices, useAppointments, useHealthForm, useAvailability } from '@/
 import { Timestamp } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 
-export default function BookNowCustom() {
+function BookNowCustomContent() {
   const searchParams = useSearchParams();
   const isSetupMode = searchParams.get('setup') === 'true';
   
@@ -553,5 +553,19 @@ export default function BookNowCustom() {
       
       <Footer />
     </>
+  );
+}
+
+export default function BookNowCustom() {
+  return (
+    <Suspense fallback={
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    }>
+      <BookNowCustomContent />
+    </Suspense>
   );
 }
