@@ -3,13 +3,7 @@ import Link from 'next/link';
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
-  const services = [
-    "Microblading Eyebrows",
-    "Permanent Eyeliner",
-    "Lip Blushing",
-    "Color Correction",
-    "Touch-up Services"
-  ];
+  // Services section removed as requested
 
   const quickLinks = [
     { name: "Home", href: "#hero" },
@@ -66,20 +60,6 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Services */}
-          <div className="col-lg-3 col-md-6">
-            <h4 className="fw-semibold h5 mb-3">Our Services</h4>
-            <ul className="list-unstyled">
-              {services.map((service, index) => (
-                <li key={index} className="mb-2">
-                  <Link href="#services" className="text-light text-decoration-none">
-                    {service}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
           {/* Quick Links */}
           <div className="col-lg-3 col-md-6">
             <h4 className="fw-semibold h5 mb-3">Quick Links</h4>
@@ -126,9 +106,7 @@ export default function Footer() {
               <div>
                 <h5 className="fw-semibold mb-2">Business Hours</h5>
                 <div className="text-light small">
-                  <div className="mb-1">Monday - Friday: 9AM - 7PM</div>
-                  <div className="mb-1">Saturday: 9AM - 5PM</div>
-                  <div>Sunday: Closed</div>
+                  <div>By Appointment Only</div>
                 </div>
               </div>
             </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 export default function ClientReviews() {
   const [currentReview, setCurrentReview] = useState(0);
@@ -84,32 +85,17 @@ export default function ClientReviews() {
       <div className="container">
         {/* Header */}
         <div className="text-center mb-5">
-          <h2 className="display-2 fw-bold text-dark mb-4">
+          <h2 className="main-heading fw-bold text-dark mb-4">
             Client
             <span className="text-rose-600"> Reviews</span>
           </h2>
-          <p className="fs-5 text-secondary mx-auto" style={{maxWidth: '48rem'}}>
+          <p className="paragraph-text text-secondary mx-auto" style={{maxWidth: '48rem'}}>
             Don&apos;t just take our word for it. Here&apos;s what our amazing clients have to say about their 
             permanent makeup experience with Victoria.
           </p>
         </div>
 
-        {/* Stats */}
-        <div className="row g-4 mb-5">
-          <div className="col-6 col-md-3 text-center">
-            <div className="display-4 fw-bold text-primary mb-2">500+</div>
-            <div className="text-muted">Happy Clients</div>
-          </div>
-          <div className="col-6 col-md-3 text-center">
-            <div className="display-4 fw-bold text-primary mb-2">5.0</div>
-            <div className="text-muted">Average Rating</div>
-          </div>
-          <div className="col-6 col-md-3 text-center">
-            <div className="display-4 fw-bold text-primary mb-2">98%</div>
-            <div className="text-muted">Satisfaction Rate</div>
-          </div>
 
-        </div>
 
         {/* Main Review Carousel - HIDDEN */}
         {/*
@@ -232,17 +218,19 @@ export default function ClientReviews() {
 
         {/* CTA Section */}
         <div className="text-center mt-5">
-          <div className="bg-primary rounded-3 p-5 text-white">
-            <h3 className="h2 fw-bold mb-3">
-              Ready to Join Our Happy Clients?
+          <div className="bg-primary rounded-3 p-5 text-white mx-auto" style={{maxWidth: '64rem'}}>
+            <h3 className="main-heading fw-bold text-white mb-4">
+              Book Now
             </h3>
-            <p className="text-white-50 mb-4 mx-auto" style={{maxWidth: '32rem'}}>
+            <p className="paragraph-text text-white mb-4">
               Experience the confidence and convenience of permanent makeup. 
               Book your free consultation today and start your transformation journey.
             </p>
-            <button className="btn btn-light text-primary px-4 py-2 rounded-pill fw-semibold">
-              Book Your Consultation
-            </button>
+            <div className="d-flex justify-content-center">
+              <Link href="/book-now-custom" className="btn btn-light text-primary rounded-pill px-4 fw-semibold book-now-button">
+                Book Now
+              </Link>
+            </div>
           </div>
         </div>
       </div>

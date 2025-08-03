@@ -24,10 +24,10 @@ export default function Hero() {
         <div className="row justify-content-center">
           <div className="col-lg-8 text-center">
             <div className="mb-4">
-              <p className="fs-5 text-white lh-base mb-4 fade-in-1">
+              <p className="paragraph-text text-white lh-base mb-4 fade-in-1">
                 <span className="text-rose-600">SOFT NATURAL</span> PERMANENT MAKEUP
               </p>
-              <h1 className="display-1 fw-bold text-white lh-1">
+              <h1 className="main-heading fw-bold text-white lh-1">
                 <span className="animated-word word-fade-1">WAKE</span>
                 <span className="animated-word word-fade-2">UP</span>
                 <span className="animated-word word-fade-3">FLAWLESS</span>
@@ -39,7 +39,7 @@ export default function Hero() {
             <div className="d-flex justify-content-center fade-in-3">
               <Link
                 href="/book-now-custom"
-                className="btn btn-primary btn-lg rounded-pill px-4 text-decoration-none"
+                className="btn btn-primary btn-lg rounded-pill px-4 text-decoration-none book-now-text"
               >
                 Book Now
               </Link>

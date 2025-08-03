@@ -82,11 +82,11 @@ export default function Header() {
           {/* Phone Number */}
           <div className="d-none d-lg-block me-3">
             {isClient ? (
-              <a href="tel:919-441-0932" className="text-decoration-none text-secondary fw-semibold">
+              <a href="tel:919-441-0932" className="text-decoration-none text-secondary fw-bold" style={{fontFamily: 'Playfair Display, serif'}}>
                 📞 919-441-0932
               </a>
             ) : (
-              <span className="text-secondary fw-semibold">
+              <span className="text-secondary fw-bold" style={{fontFamily: 'Playfair Display, serif'}}>
                 📞 919-441-0932
               </span>
             )}
@@ -119,13 +119,13 @@ export default function Header() {
           <div className="d-none d-lg-flex gap-2">
             <Link
               href="/login"
-              className="btn btn-outline-primary rounded-pill px-4"
+              className="btn btn-outline-primary rounded-pill px-4 book-now-button"
             >
               Login
             </Link>
             <Link
               href="/book-now-custom"
-              className="btn btn-primary rounded-pill px-4"
+              className="btn btn-primary rounded-pill px-4 book-now-text"
             >
               Book Now
             </Link>
@@ -141,11 +141,11 @@ export default function Header() {
               📍 4040 Barrett Drive Suite 3, Raleigh, NC
             </button>
             {isClient ? (
-              <a href="tel:919-441-0932" className="btn btn-outline-secondary rounded-pill px-4 w-100 mb-2 text-decoration-none">
+              <a href="tel:919-441-0932" className="btn btn-outline-secondary rounded-pill px-4 w-100 mb-2 text-decoration-none fw-bold" style={{fontFamily: 'Playfair Display, serif'}}>
                 📞 919-441-0932
               </a>
             ) : (
-              <div className="btn btn-outline-secondary rounded-pill px-4 w-100 mb-2">
+              <div className="btn btn-outline-secondary rounded-pill px-4 w-100 mb-2 fw-bold" style={{fontFamily: 'Playfair Display, serif'}}>
                 📞 919-441-0932
               </div>
             )}
@@ -157,7 +157,7 @@ export default function Header() {
             </Link>
             <Link
               href="/book-now-custom"
-              className="btn btn-primary rounded-pill px-4 w-100"
+              className="btn btn-primary rounded-pill px-4 w-100 book-now-text"
             >
               Book Now
             </Link>

@@ -62,11 +62,11 @@ export default function AreYouAGoodCandidate() {
       <div className="container">
         {/* Header */}
         <div className="text-center mb-5">
-          <h2 className="display-2 fw-bold text-dark mb-4">
+          <h2 className="main-heading fw-bold text-dark mb-4">
             Are You A Good
             <span className="text-rose-600"> Candidate?</span>
           </h2>
-          <p className="fs-5 text-secondary mx-auto" style={{maxWidth: '48rem'}}>
+          <p className="paragraph-text text-secondary mx-auto" style={{maxWidth: '48rem'}}>
             Permanent makeup is perfect for many people, but it&apos;s important to understand 
             if you&apos;re a good candidate for the procedure.
           </p>
@@ -138,18 +138,18 @@ export default function AreYouAGoodCandidate() {
         {/* CTA Section */}
         <div className="mt-5 text-center">
           <div className="bg-white border border-primary border-opacity-25 rounded-custom-lg p-4 mx-auto" style={{maxWidth: '64rem'}}>
-            <h3 className="h3 fw-bold text-dark mb-3">
+            <h3 className="sub-heading fw-bold text-dark mb-3">
               Still Not Sure If You&apos;re A Good Candidate?
             </h3>
-            <p className="text-secondary mb-4">
+            <p className="paragraph-text text-secondary mb-4">
               Take our quick candidacy assessment to discover if microblading is right for you! 
               This simple evaluation will help determine your readiness based on your lifestyle, health, and beauty goals.
             </p>
             <div className="d-flex flex-column flex-sm-row gap-3 justify-content-center">
-              <Link href="/candidate-assessment" className="btn btn-primary rounded-pill px-4 fw-semibold">
+              <Link href="/candidate-assessment" className="btn btn-primary rounded-pill px-4 fw-semibold book-now-text">
                 Am I Good Candidate
               </Link>
-              <button className="btn btn-outline-primary rounded-pill px-4 fw-semibold">
+              <button className="btn btn-outline-primary rounded-pill px-4 fw-semibold book-now-text">
                 Book Now
               </button>
               <button className="btn btn-outline-secondary rounded-pill px-4 fw-semibold">

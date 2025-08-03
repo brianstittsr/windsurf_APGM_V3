@@ -39,11 +39,11 @@ export default function TheProcess() {
       <div className="container">
         {/* Header */}
         <div className="text-center mb-5">
-          <h2 className="display-2 fw-bold text-dark mb-4">
+          <h2 className="main-heading fw-bold text-dark mb-4">
             The
             <span className="text-rose-600"> Process</span>
           </h2>
-          <p className="fs-5 text-secondary mx-auto" style={{maxWidth: '48rem'}}>
+          <p className="paragraph-text text-secondary mx-auto" style={{maxWidth: '48rem'}}>
             Our proven 6-step process ensures you get the most natural, beautiful, and long-lasting results. 
             Every step is designed with your comfort and satisfaction in mind.
           </p>
@@ -152,20 +152,17 @@ export default function TheProcess() {
         {/* Bottom Section */}
         <div className="mt-5 text-center">
           <div className="card border-0 shadow-custom rounded-custom p-5 mx-auto" style={{maxWidth: '64rem'}}>
-            <h3 className="h3 fw-bold text-dark mb-4">
+            <h3 className="main-heading fw-bold text-dark mb-4">
               Ready to Start Your Transformation?
             </h3>
-            <p className="text-black mb-4">
+            <p className="paragraph-text text-black mb-4">
               The entire process typically takes 2-3 hours for the initial appointment, with a touch-up session 
-              scheduled 4-6 weeks later. Results last 1-3 years depending on the service.
+              scheduled 4-6 weeks later.
             </p>
-            <div className="d-flex flex-column flex-sm-row gap-3 justify-content-center">
-              <Link href="/candidate-assessment" className="btn btn-primary rounded-pill px-4 fw-semibold">
-                Are You A Good Candidate
+            <div className="d-flex justify-content-center">
+              <Link href="/book-now-custom" className="btn btn-primary rounded-pill px-4 fw-semibold book-now-button">
+                Book Now
               </Link>
-              <button className="btn btn-outline-primary rounded-pill px-4 fw-semibold">
-                Online Consultation
-              </button>
             </div>
           </div>
         </div>

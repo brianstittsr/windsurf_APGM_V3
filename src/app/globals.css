@@ -1,4 +1,5 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400&display=swap');
 
 html {
   scroll-behavior: smooth;
@@ -210,4 +211,70 @@ a, button, .btn {
 
 .rounded-pill-custom {
   border-radius: 50rem;
+}
+
+/* Custom Typography Sizes */
+.main-heading {
+  font-family: 'Playfair Display', serif !important;
+  font-weight: 700 !important;
+  font-size: 75px !important;
+  line-height: 1.2;
+}
+
+.sub-heading {
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 400 !important;
+  font-size: 46px !important;
+  line-height: 1.3;
+}
+
+.paragraph-text {
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 400 !important;
+  font-size: 28px !important;
+  line-height: 1.5;
+}
+
+.book-now-text {
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 400 !important;
+  font-size: 28px !important;
+  line-height: 1.4;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  .main-heading {
+    font-size: 48px !important;
+  }
+  
+  .sub-heading {
+    font-size: 32px !important;
+  }
+  
+  .paragraph-text {
+    font-size: 22px !important;
+  }
+  
+  .book-now-text {
+    font-size: 22px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-heading {
+    font-size: 36px !important;
+  }
+  
+  .sub-heading {
+    font-size: 24px !important;
+  }
+  
+  .paragraph-text {
+    font-size: 18px !important;
+  }
+  
+  .book-now-text {
+    font-size: 18px !important;
+  }
 }

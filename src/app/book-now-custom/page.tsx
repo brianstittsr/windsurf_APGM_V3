@@ -13,7 +13,7 @@ import { Timestamp } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 import { getServiceImagePath } from '@/utils/serviceImageUtils';
 import { calculateTotalWithStripeFees } from '@/lib/stripe-fees';
-import { ClientEmailService, LoginEmailData, HealthFormEmailData } from '@/services/clientEmailService';
+// Email services moved to API routes to avoid client-side imports
 
 function BookNowCustomContent() {
   const searchParams = useSearchParams();
@@ -104,8 +104,8 @@ function BookNowCustomContent() {
 
   const handleHealthFormSubmit = async () => {
     try {
-      // Send login information email
-      const loginEmailData: LoginEmailData = {
+      // Send login information email via API
+      const loginEmailData = {
         clientName: `${clientProfile.firstName} ${clientProfile.lastName}`,
         clientEmail: clientProfile.email,
         temporaryPassword: 'TempPass123!', // Generate a temporary password
@@ -115,11 +115,15 @@ function BookNowCustomContent() {
         businessEmail: 'victoria@aprettygirlmatter.com'
       };
       
-      const loginEmailSent = await ClientEmailService.sendLoginEmail(loginEmailData);
-      console.log('Login email sent:', loginEmailSent);
+      const loginResponse = await fetch('/api/send-login-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginEmailData)
+      });
+      console.log('Login email sent:', loginResponse.ok);
       
-      // Send health form confirmation email
-      const healthFormEmailData: HealthFormEmailData = {
+      // Send health form confirmation email via API
+      const healthFormEmailData = {
         clientName: `${clientProfile.firstName} ${clientProfile.lastName}`,
         clientEmail: clientProfile.email,
         healthFormData,
@@ -137,8 +141,12 @@ function BookNowCustomContent() {
         businessEmail: 'victoria@aprettygirlmatter.com'
       };
       
-      const healthFormEmailSent = await ClientEmailService.sendHealthFormEmail(healthFormEmailData);
-      console.log('Health form email sent:', healthFormEmailSent);
+      const healthFormResponse = await fetch('/api/send-health-form-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(healthFormEmailData)
+      });
+      console.log('Health form email sent:', healthFormResponse.ok);
       
       // Move to checkout step
       setCurrentStep('checkout');

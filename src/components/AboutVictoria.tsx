@@ -4,7 +4,9 @@ export default function AboutVictoria() {
     "Microblading Specialist Certification",
     "Advanced Color Theory Training",
     "Bloodborne Pathogen Certified",
-    "CPR & First Aid Certified"
+    "CPR & First Aid Certified",
+    "Lip Blushing",
+    "Eye Liner"
   ];
 
   const achievements: Array<{icon: string; title: string; description: string}> = [
@@ -16,13 +18,12 @@ export default function AboutVictoria() {
       <div className="container">
         {/* Header */}
         <div className="text-center mb-5">
-          <h2 className="display-2 fw-bold text-dark mb-4">
+          <h2 className="main-heading fw-bold text-dark mb-4">
             About
             <span className="text-primary"> Victoria</span>
           </h2>
-          <p className="fs-5 text-secondary mx-auto" style={{maxWidth: '48rem'}}>
-            Meet the artist behind the beauty. Victoria combines technical expertise with artistic vision 
-            to create stunning, natural-looking permanent makeup results.
+          <p className="paragraph-text text-secondary mx-auto text-wrap" style={{maxWidth: '64rem', wordWrap: 'break-word', overflowWrap: 'break-word'}}>
+            Meet the artist behind the beauty. Victoria combines technical expertise with artistic vision to create stunning, natural-looking permanent makeup results.
           </p>
         </div>
 
@@ -98,7 +99,7 @@ export default function AboutVictoria() {
         {/* Certifications Section */}
         <div className="mt-5">
           <div className="card border-light rounded-3 p-5 shadow">
-            <h3 className="h2 fw-bold text-dark mb-4 text-center">
+            <h3 className="h2 fw-bold text-dark mb-4 text-center" style={{fontFamily: 'Playfair Display, serif'}}>
               Certifications & Training
             </h3>
             
@@ -111,7 +112,7 @@ export default function AboutVictoria() {
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     </div>
-                    <span className="text-dark fw-medium">{cert}</span>
+                    <span className="text-dark fw-medium" style={{fontFamily: 'Poppins, sans-serif'}}>{cert}</span>
                   </div>
                 </div>
               ))}
