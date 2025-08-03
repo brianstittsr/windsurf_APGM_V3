@@ -32,9 +32,12 @@ export function getServiceImagePath(service: ServiceItem): string {
     return serviceImageMap[service.id];
   }
 
-  // Check by service name for "Combo Eyebrows" specifically
+  // Check by service name for specific services
   if (service.name === 'Combo Eyebrows') {
     return '/images/services/COMBO.png';
+  }
+  if (service.name === 'Bold Combo Eyebrows' || service.name === 'Bold Combo') {
+    return '/images/services/BOLD-COMBO.png';
   }
 
   // Check by service name patterns
