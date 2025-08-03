@@ -46,7 +46,7 @@ export default function CancellationPolicy() {
 
                     {/* Current Policy Text */}
                     <div className="mb-5">
-                      <h2 className="h4 fw-bold mb-4" style={{color: '#AD6269'}}>Cancellation Policy</h2>
+                      <h2 className="h4 fw-bold mb-4" style={{color: '#AD6269', fontFamily: 'Playfair Display, serif'}}>Cancellation Policy</h2>
                       <p className="paragraph-text text-black mb-4">
                         Cancellations made with at least 48 hours' notice are eligible for a one-time rescheduling with a $50 reschedule fee. Both the initial deposit and the reschedule fee will be applied toward the total cost of your service.
                       </p>
@@ -104,47 +104,9 @@ export default function CancellationPolicy() {
                       </div>
                     </div>
 
-                    <div className="mb-5">
-                      <h2 className="h4 fw-bold mb-3" style={{color: '#AD6269'}}>Emergency and Medical Exceptions</h2>
-                      <div className="card border-success">
-                        <div className="card-body">
-                          <h5 className="text-success mb-3">🏥 Medical Emergencies</h5>
-                          <p className="text-black mb-2">
-                            We understand that true emergencies happen. The following situations may qualify for 
-                            deposit refund consideration:
-                          </p>
-                          <ul className="text-black">
-                            <li>Hospitalization (documentation required)</li>
-                            <li>Death in immediate family</li>
-                            <li>Severe illness preventing travel</li>
-                            <li>Natural disasters or extreme weather</li>
-                          </ul>
-                          <p className="text-black">
-                            Health-related cancellations made for the safety of all clients will not incur penalties.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
 
-                    <div className="mb-5">
-                      <h2 className="h4 fw-bold mb-3" style={{color: '#AD6269'}}>Health-Related Cancellations</h2>
-                      <div className="mb-4">
-                        <h5 className="fw-semibold text-dark mb-2">Client Health Issues</h5>
-                        <p className="text-black mb-3">
-                          If you develop any of the following conditions before your appointment, please reschedule:
-                        </p>
-                        <ul className="text-black mb-3">
-                          <li>Cold, flu, or any illness</li>
-                          <li>Skin irritation or infection in the treatment area</li>
-                          <li>Recent Botox or facial treatments (within 2 weeks)</li>
-                          <li>Pregnancy (if discovered after booking)</li>
-                          <li>New medications that may affect healing</li>
-                        </ul>
-                        <p className="text-black">
-                          Health-related cancellations made for the safety of all clients will not incur penalties.
-                        </p>
-                      </div>
-                    </div>
+
+
 
                     <div className="mb-5">
                       <h2 className="h4 fw-bold mb-3" style={{color: '#AD6269'}}>How to Cancel or Reschedule</h2>
@@ -174,27 +136,9 @@ export default function CancellationPolicy() {
                       </div>
                     </div>
 
-                    <div className="mb-5">
-                      <h2 className="h4 fw-bold mb-3" style={{color: '#AD6269'}}>Refund Processing</h2>
-                      <ul className="text-black">
-                        <li>Refunds will be processed within 5-7 business days</li>
-                        <li>Refunds will be issued to the original payment method</li>
-                        <li>Cash payments will be refunded by check or cash</li>
-                        <li>Credit card refunds may take 1-2 billing cycles to appear</li>
-                      </ul>
-                    </div>
 
-                    <div className="mb-5">
-                      <h2 className="h4 fw-bold mb-3" style={{color: '#AD6269'}}>Repeat Offenders</h2>
-                      <p className="text-black">
-                        Clients with a pattern of late cancellations or no-shows may be required to:
-                      </p>
-                      <ul className="text-black">
-                        <li>Pay in full at the time of booking</li>
-                        <li>Provide a larger deposit</li>
-                        <li>Be placed on a restricted booking list</li>
-                      </ul>
-                    </div>
+
+
 
                     {/* Contact Section */}
                     <div className="mb-5">
