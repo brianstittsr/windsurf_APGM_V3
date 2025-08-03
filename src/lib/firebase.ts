@@ -5,10 +5,9 @@ import { getStorage, connectStorageEmulator } from 'firebase/storage';
 
 // Check if Firebase environment variables are configured
 const isFirebaseConfigured = () => {
-  return !!
-    process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
+  return !!(process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
     process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN &&
-    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
 };
 
 // Firebase configuration
