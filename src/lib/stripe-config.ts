@@ -27,6 +27,17 @@ export function getStripeMode(): StripeMode {
 }
 
 /**
+ * Check if we're in build time (no runtime environment)
+ */
+function isBuildTime(): boolean {
+  // During Next.js build, we want to avoid throwing errors
+  // Check for common build-time indicators
+  return process.env.NODE_ENV === undefined || 
+         process.env.NEXT_PHASE === 'phase-production-build' ||
+         process.env.VERCEL_ENV === undefined;
+}
+
+/**
  * Get Stripe configuration based on the current mode
  */
 export function getStripeConfig(): StripeConfig {
@@ -37,13 +48,24 @@ export function getStripeConfig(): StripeConfig {
   let secretKey: string;
   let webhookSecret: string;
   
+  // During build time, provide placeholder values to prevent errors
+  if (isBuildTime()) {
+    return {
+      publishableKey: isLive ? 'pk_live_placeholder' : 'pk_test_placeholder',
+      secretKey: isLive ? 'sk_live_placeholder' : 'sk_test_placeholder',
+      webhookSecret: 'whsec_placeholder',
+      mode,
+      isLive
+    };
+  }
+  
   if (isLive) {
     // Production/Live keys
     publishableKey = process.env.STRIPE_LIVE_PUBLISHABLE_KEY || '';
     secretKey = process.env.STRIPE_LIVE_SECRET_KEY || '';
     webhookSecret = process.env.STRIPE_LIVE_WEBHOOK_SECRET || '';
     
-    // Validate live keys
+    // Validate live keys (only at runtime)
     if (!publishableKey.startsWith('pk_live_')) {
       throw new Error('Invalid or missing Stripe live publishable key');
     }
@@ -56,7 +78,7 @@ export function getStripeConfig(): StripeConfig {
     secretKey = process.env.STRIPE_TEST_SECRET_KEY || '';
     webhookSecret = process.env.STRIPE_TEST_WEBHOOK_SECRET || '';
     
-    // Validate test keys
+    // Validate test keys (only at runtime)
     if (!publishableKey.startsWith('pk_test_')) {
       throw new Error('Invalid or missing Stripe test publishable key');
     }
@@ -65,7 +87,7 @@ export function getStripeConfig(): StripeConfig {
     }
   }
   
-  // Ensure all keys are present
+  // Ensure all keys are present (only at runtime)
   if (!publishableKey || !secretKey) {
     throw new Error(`Missing Stripe ${mode} keys in environment variables`);
   }
@@ -83,24 +105,50 @@ export function getStripeConfig(): StripeConfig {
  * Get the publishable key for client-side use
  */
 export function getStripePublishableKey(): string {
-  const config = getStripeConfig();
-  return config.publishableKey;
+  try {
+    const config = getStripeConfig();
+    return config.publishableKey;
+  } catch (error) {
+    // During build time, return a placeholder
+    if (isBuildTime()) {
+      const mode = getStripeMode();
+      return mode === 'live' ? 'pk_live_placeholder' : 'pk_test_placeholder';
+    }
+    throw error;
+  }
 }
 
 /**
  * Get the secret key for server-side use
  */
 export function getStripeSecretKey(): string {
-  const config = getStripeConfig();
-  return config.secretKey;
+  try {
+    const config = getStripeConfig();
+    return config.secretKey;
+  } catch (error) {
+    // During build time, return a placeholder
+    if (isBuildTime()) {
+      const mode = getStripeMode();
+      return mode === 'live' ? 'sk_live_placeholder' : 'sk_test_placeholder';
+    }
+    throw error;
+  }
 }
 
 /**
  * Get the webhook secret for webhook verification
  */
 export function getStripeWebhookSecret(): string {
-  const config = getStripeConfig();
-  return config.webhookSecret;
+  try {
+    const config = getStripeConfig();
+    return config.webhookSecret;
+  } catch (error) {
+    // During build time, return a placeholder
+    if (isBuildTime()) {
+      return 'whsec_placeholder';
+    }
+    throw error;
+  }
 }
 
 /**
