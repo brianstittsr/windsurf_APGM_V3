@@ -6,7 +6,6 @@ import stripePromise from '../lib/stripe';
 import StripePaymentForm from './StripePaymentForm';
 import StripeModeIndicator from './StripeModeIndicator';
 import { calculateTotalWithStripeFees, formatCurrency, getStripeFeeExplanation } from '../lib/stripe-fees';
-import { InvoiceEmailService, InvoiceData } from '../services/invoiceEmailService';
 
 interface ServiceItem {
   id: string;
@@ -72,8 +71,8 @@ export default function CheckoutCart({
     try {
       console.log('📧 Sending invoice email...');
       
-      const invoiceData: InvoiceData = {
-        invoiceNumber: InvoiceEmailService.generateInvoiceNumber(),
+      const invoiceData = {
+        invoiceNumber: `INV-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
         clientName: clientName,
         clientEmail: 'brianstittsr@gmail.com', // Using your email as requested
         serviceName: service.name,
@@ -97,9 +96,16 @@ export default function CheckoutCart({
         paymentIntentId: paymentIntent.id
       };
       
-      const emailSent = await InvoiceEmailService.sendInvoiceEmail(invoiceData);
+      // Send invoice via API
+      const invoiceResponse = await fetch('/api/send-invoice', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(invoiceData),
+      });
       
-      if (emailSent) {
+      if (invoiceResponse.ok) {
         console.log('✅ Invoice email sent successfully!');
       } else {
         console.log('⚠️ Invoice email failed to send, but payment was successful');

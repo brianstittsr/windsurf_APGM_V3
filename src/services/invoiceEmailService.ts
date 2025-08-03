@@ -4,30 +4,9 @@
  */
 
 import { SMTPEmailService, InvoiceEmailTemplate } from './gmailEmailService';
+import { InvoiceData } from '../types/invoice';
 import * as path from 'path';
 import * as fs from 'fs';
-
-export interface InvoiceData {
-  invoiceNumber: string;
-  clientName: string;
-  clientEmail: string;
-  serviceName: string;
-  servicePrice: number;
-  tax: number;
-  processingFee: number;
-  total: number;
-  depositPaid: number;
-  remainingBalance: number;
-  appointmentDate: string;
-  appointmentTime: string;
-  businessName: string;
-  businessPhone: string;
-  businessEmail: string;
-  businessAddress?: string;
-  paymentIntentId: string;
-}
-
-// Re-export the interface for external use
 export type { InvoiceEmailTemplate };
 
 export class InvoiceEmailService {

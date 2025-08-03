@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { headers } from 'next/headers';
 import { getStripeSecretKey, getStripeWebhookSecret, getStripeModeDescription } from '@/lib/stripe-config';
-import { InvoiceEmailService } from '@/services/invoiceEmailService';
 import { calculateStripeFee } from '@/lib/stripe-fees';
 
 const stripe = new Stripe(getStripeSecretKey(), {
@@ -63,7 +62,7 @@ export async function POST(request: NextRequest) {
           // Example of what the invoice data structure would look like:
           /*
           const invoiceData = {
-            invoiceNumber: InvoiceEmailService.generateInvoiceNumber(),
+            invoiceNumber: `INV-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
             clientName: 'Retrieved from database',
             clientEmail: 'Retrieved from database', 
             serviceName: 'Retrieved from database',
@@ -82,7 +81,7 @@ export async function POST(request: NextRequest) {
             paymentIntentId: paymentIntent.id
           };
           
-          await InvoiceEmailService.sendInvoiceEmail(invoiceData);
+          // Send via API: await fetch('/api/send-invoice', { method: 'POST', body: JSON.stringify(invoiceData) });
           */
         }
       } catch (error) {
