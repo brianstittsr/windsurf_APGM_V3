@@ -1,0 +1,137 @@
+/**
+ * Stripe Configuration Utility
+ * Handles switching between test/sandbox and live/production modes
+ */
+
+export type StripeMode = 'test' | 'live';
+
+export interface StripeConfig {
+  publishableKey: string;
+  secretKey: string;
+  webhookSecret: string;
+  mode: StripeMode;
+  isLive: boolean;
+}
+
+/**
+ * Get the current Stripe mode from environment variables
+ */
+export function getStripeMode(): StripeMode {
+  const mode = process.env.STRIPE_MODE?.toLowerCase();
+  
+  if (mode === 'live' || mode === 'production') {
+    return 'live';
+  }
+  
+  return 'test'; // Default to test mode for safety
+}
+
+/**
+ * Get Stripe configuration based on the current mode
+ */
+export function getStripeConfig(): StripeConfig {
+  const mode = getStripeMode();
+  const isLive = mode === 'live';
+  
+  let publishableKey: string;
+  let secretKey: string;
+  let webhookSecret: string;
+  
+  if (isLive) {
+    // Production/Live keys
+    publishableKey = process.env.STRIPE_LIVE_PUBLISHABLE_KEY || '';
+    secretKey = process.env.STRIPE_LIVE_SECRET_KEY || '';
+    webhookSecret = process.env.STRIPE_LIVE_WEBHOOK_SECRET || '';
+    
+    // Validate live keys
+    if (!publishableKey.startsWith('pk_live_')) {
+      throw new Error('Invalid or missing Stripe live publishable key');
+    }
+    if (!secretKey.startsWith('sk_live_')) {
+      throw new Error('Invalid or missing Stripe live secret key');
+    }
+  } else {
+    // Test/Sandbox keys
+    publishableKey = process.env.STRIPE_TEST_PUBLISHABLE_KEY || '';
+    secretKey = process.env.STRIPE_TEST_SECRET_KEY || '';
+    webhookSecret = process.env.STRIPE_TEST_WEBHOOK_SECRET || '';
+    
+    // Validate test keys
+    if (!publishableKey.startsWith('pk_test_')) {
+      throw new Error('Invalid or missing Stripe test publishable key');
+    }
+    if (!secretKey.startsWith('sk_test_')) {
+      throw new Error('Invalid or missing Stripe test secret key');
+    }
+  }
+  
+  // Ensure all keys are present
+  if (!publishableKey || !secretKey) {
+    throw new Error(`Missing Stripe ${mode} keys in environment variables`);
+  }
+  
+  return {
+    publishableKey,
+    secretKey,
+    webhookSecret,
+    mode,
+    isLive
+  };
+}
+
+/**
+ * Get the publishable key for client-side use
+ */
+export function getStripePublishableKey(): string {
+  const config = getStripeConfig();
+  return config.publishableKey;
+}
+
+/**
+ * Get the secret key for server-side use
+ */
+export function getStripeSecretKey(): string {
+  const config = getStripeConfig();
+  return config.secretKey;
+}
+
+/**
+ * Get the webhook secret for webhook verification
+ */
+export function getStripeWebhookSecret(): string {
+  const config = getStripeConfig();
+  return config.webhookSecret;
+}
+
+/**
+ * Check if Stripe is in live/production mode
+ */
+export function isStripeLiveMode(): boolean {
+  const config = getStripeConfig();
+  return config.isLive;
+}
+
+/**
+ * Get a human-readable mode description
+ */
+export function getStripeModeDescription(): string {
+  const config = getStripeConfig();
+  return config.isLive ? 'Production (Live)' : 'Test (Sandbox)';
+}
+
+/**
+ * Log current Stripe configuration (without exposing sensitive data)
+ */
+export function logStripeConfig(): void {
+  try {
+    const config = getStripeConfig();
+    console.log(`🔧 Stripe Configuration:`);
+    console.log(`   Mode: ${config.mode.toUpperCase()}`);
+    console.log(`   Environment: ${getStripeModeDescription()}`);
+    console.log(`   Publishable Key: ${config.publishableKey.substring(0, 12)}...`);
+    console.log(`   Secret Key: ${config.secretKey.substring(0, 12)}...`);
+    console.log(`   Webhook Secret: ${config.webhookSecret ? 'Configured' : 'Missing'}`);
+  } catch (error) {
+    console.error('❌ Stripe Configuration Error:', error);
+  }
+}

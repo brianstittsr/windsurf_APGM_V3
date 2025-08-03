@@ -340,6 +340,23 @@ export class ServiceService {
   static async createService(serviceData: Omit<Service, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     return DatabaseService.create<Service>(COLLECTIONS.SERVICES, serviceData);
   }
+
+  static async deleteAllServices(): Promise<void> {
+    const services = await DatabaseService.getAll<Service>(COLLECTIONS.SERVICES);
+    for (const service of services) {
+      await DatabaseService.delete(COLLECTIONS.SERVICES, service.id);
+    }
+  }
+
+  static async deleteServicesByName(name: string): Promise<void> {
+    const services = await DatabaseService.query<Service>(
+      COLLECTIONS.SERVICES,
+      [{ field: 'name', operator: '==', value: name }]
+    );
+    for (const service of services) {
+      await DatabaseService.delete(COLLECTIONS.SERVICES, service.id);
+    }
+  }
 }
 
 export class AppointmentService {
@@ -556,5 +573,16 @@ export class BusinessSettingsService {
 
   static async updateSettings(settings: Partial<BusinessSettings>): Promise<void> {
     return DatabaseService.update<BusinessSettings>(COLLECTIONS.BUSINESS_SETTINGS, 'main', settings);
+  }
+
+  static async createOrUpdateSettings(settings: BusinessSettings): Promise<void> {
+    const { db } = await import('@/lib/firebase');
+    const { doc, setDoc, serverTimestamp } = await import('firebase/firestore');
+    const docRef = doc(db, COLLECTIONS.BUSINESS_SETTINGS, 'main');
+    await setDoc(docRef, {
+      ...settings,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
   }
 }

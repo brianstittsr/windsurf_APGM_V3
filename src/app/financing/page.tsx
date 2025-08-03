@@ -94,7 +94,7 @@ export default function FinancingPage() {
   return (
     <>
       <Header />
-      <main className="min-vh-100">
+      <main className="min-vh-100" style={{ paddingTop: '140px' }}>
       {/* Header Section */}
       <section className="py-5 bg-light">
         <div className="container">

@@ -10,7 +10,7 @@ const defaultServices: Omit<Service, 'id' | 'createdAt' | 'updatedAt'>[] = [
     duration: "2-3 hours",
     description: "Powder brows offer a semi-permanent cosmetic tattoo solution that delivers soft, shaded, and natural-looking eyebrows, replicating the effect of makeup.",
     category: "eyebrows",
-    image: "/images/services/powder-brows.jpg",
+    image: "/images/services/POWDER.png",
     isActive: true,
     requirements: [
       "Must be 18 years or older",
@@ -24,12 +24,12 @@ const defaultServices: Omit<Service, 'id' | 'createdAt' | 'updatedAt'>[] = [
     ]
   },
   {
-    name: "Microbladed Eyebrows",
-    price: 600,
+    name: "Strokes Eyebrows",
+    price: 550,
     duration: "2-3 hours",
-    description: "Microblading is a precise technique that creates fine, hair-like strokes to enhance the natural appearance of your eyebrows.",
+    description: "Hair-stroke technique that creates natural-looking eyebrows with precise individual strokes.",
     category: "eyebrows",
-    image: "/images/services/microblading.jpg",
+    image: "/images/services/STROKES.png",
     isActive: true,
     requirements: [
       "Must be 18 years or older",
@@ -48,7 +48,7 @@ const defaultServices: Omit<Service, 'id' | 'createdAt' | 'updatedAt'>[] = [
     duration: "3-4 hours",
     description: "Experience the perfect blend of artistry combining microbladed strokes for natural texture and shaded areas for enhanced definition.",
     category: "eyebrows",
-    image: "/images/services/bold-combo.jpg",
+    image: "/images/services/BOLD-COMBO.png",
     isActive: true,
     requirements: [
       "Must be 18 years or older",
@@ -67,7 +67,7 @@ const defaultServices: Omit<Service, 'id' | 'createdAt' | 'updatedAt'>[] = [
     duration: "3-4 hours",
     description: "Incorporating both microbladed strokes for added texture and a shaded body and tail for enhanced definition.",
     category: "eyebrows",
-    image: "/images/services/blade-shade.jpg",
+    image: "/images/services/BLADE+SHADE.png",
     isActive: true,
     requirements: [
       "Must be 18 years or older",
@@ -86,7 +86,7 @@ const defaultServices: Omit<Service, 'id' | 'createdAt' | 'updatedAt'>[] = [
     duration: "2-3 hours",
     description: "Ombré powder brows create a soft, airy look or a more intense, defined appearance based on your preferences.",
     category: "eyebrows",
-    image: "/images/services/ombre-brows.jpg",
+    image: "/images/services/OMBRE.png",
     isActive: true,
     requirements: [
       "Must be 18 years or older",
@@ -105,7 +105,7 @@ const defaultServices: Omit<Service, 'id' | 'createdAt' | 'updatedAt'>[] = [
     duration: "3-4 hours",
     description: "Combo brows combine the precision of microbladed strokes with a shaded body and tail, creating a beautifully defined look.",
     category: "eyebrows",
-    image: "/images/services/combo-brows.jpg",
+    image: "/images/services/COMBO.png",
     isActive: true,
     requirements: [
       "Must be 18 years or older",
@@ -186,6 +186,15 @@ export async function initializeDatabase() {
   try {
     console.log('Initializing database...');
 
+    // Clean up existing services
+    console.log('Cleaning up existing services...');
+    await ServiceService.deleteAllServices();
+    
+    // Also specifically remove any "Microbladed Eyebrows" entries that might exist
+    console.log('Removing old "Microbladed Eyebrows" entries...');
+    await ServiceService.deleteServicesByName('Microbladed Eyebrows');
+    await ServiceService.deleteServicesByName('Microblading');
+
     // Initialize services
     console.log('Creating default services...');
     for (const service of defaultServices) {
@@ -194,7 +203,7 @@ export async function initializeDatabase() {
 
     // Initialize business settings
     console.log('Creating business settings...');
-    await BusinessSettingsService.updateSettings(defaultBusinessSettings);
+    await BusinessSettingsService.createOrUpdateSettings(defaultBusinessSettings);
 
     console.log('Database initialization completed successfully!');
   } catch (error) {

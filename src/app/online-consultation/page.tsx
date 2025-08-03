@@ -45,7 +45,8 @@ export default function OnlineConsultation() {
       <div className="container-fluid" style={{ 
         background: 'linear-gradient(135deg, #fff 0%, #f8f8f8 100%)', 
         minHeight: '100vh',
-        fontFamily: 'Montserrat, sans-serif'
+        fontFamily: 'Montserrat, sans-serif',
+        paddingTop: '140px'
       }}>
         <div className="container" style={{ maxWidth: '900px', padding: '20px' }}>
           {/* Header */}

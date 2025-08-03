@@ -11,6 +11,8 @@ import DatabaseSetup from '../../components/DatabaseSetup';
 import { useServices, useAppointments, useHealthForm, useAvailability } from '@/hooks/useFirebase';
 import { Timestamp } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
+import { getServiceImagePath } from '@/utils/serviceImageUtils';
+import { calculateTotalWithStripeFees } from '@/lib/stripe-fees';
 
 function BookNowCustomContent() {
   const searchParams = useSearchParams();
@@ -111,9 +113,15 @@ function BookNowCustomContent() {
         scheduledDate: selectedDate,
         scheduledTime: selectedTime,
         status: 'pending' as const,
-        totalAmount: selectedService.price + (selectedService.price * 0.0775), // Including tax
-        depositAmount: Math.round(selectedService.price * 0.3), // 30% deposit
-        remainingAmount: selectedService.price - Math.round(selectedService.price * 0.3),
+        // Calculate amounts with Stripe fees
+        ...(() => {
+          const feeCalculation = calculateTotalWithStripeFees(selectedService.price, 0.0775, 200);
+          return {
+            totalAmount: feeCalculation.total, // Including tax and Stripe fees
+            depositAmount: feeCalculation.deposit + feeCalculation.stripeFee, // Deposit + Stripe fee
+            remainingAmount: feeCalculation.remaining, // Service + tax - deposit (fee already paid)
+          };
+        })(),
         paymentStatus: 'pending' as const,
         specialRequests: checkoutData.specialRequests,
         giftCardCode: checkoutData.giftCard || undefined,
@@ -172,27 +180,27 @@ function BookNowCustomContent() {
     const progress = ((currentIndex + 1) / steps.length) * 100;
 
     return (
-      <div className="container-fluid bg-light py-3">
+      <div className="container-fluid py-3" style={{ backgroundColor: '#AD6269' }}>
         <div className="container">
           <div className="row justify-content-center">
             <div className="col-lg-8">
               <div className="d-flex justify-content-between align-items-center mb-2">
-                <small className="text-muted">Step {currentIndex + 1} of {steps.length}</small>
-                <small className="text-muted">{Math.round(progress)}% Complete</small>
+                <small className="text-white">Step {currentIndex + 1} of {steps.length}</small>
+                <small className="text-white">{Math.round(progress)}% Complete</small>
               </div>
-              <div className="progress" style={{ height: '8px' }}>
+              <div className="progress" style={{ height: '8px', backgroundColor: 'rgba(255,255,255,0.3)' }}>
                 <div 
-                  className="progress-bar bg-primary" 
+                  className="progress-bar" 
                   role="progressbar" 
-                  style={{ width: `${progress}%` }}
+                  style={{ width: `${progress}%`, backgroundColor: '#000000' }}
                 ></div>
               </div>
               <div className="d-flex justify-content-between mt-2">
-                <small className={currentStep === 'services' ? 'text-primary fw-bold' : 'text-muted'}>Service</small>
-                <small className={currentStep === 'calendar' ? 'text-primary fw-bold' : 'text-muted'}>Date & Time</small>
-                <small className={currentStep === 'profile' ? 'text-primary fw-bold' : 'text-muted'}>Profile</small>
-                <small className={currentStep === 'health' ? 'text-primary fw-bold' : 'text-muted'}>Health Form</small>
-                <small className={currentStep === 'checkout' ? 'text-primary fw-bold' : 'text-muted'}>Checkout</small>
+                <small className={currentStep === 'services' ? 'text-white fw-bold' : 'text-white opacity-75'}>Service</small>
+                <small className={currentStep === 'calendar' ? 'text-white fw-bold' : 'text-white opacity-75'}>Date & Time</small>
+                <small className={currentStep === 'profile' ? 'text-white fw-bold' : 'text-white opacity-75'}>Profile</small>
+                <small className={currentStep === 'health' ? 'text-white fw-bold' : 'text-white opacity-75'}>Health Form</small>
+                <small className={currentStep === 'checkout' ? 'text-white fw-bold' : 'text-white opacity-75'}>Checkout</small>
               </div>
             </div>
           </div>
@@ -260,6 +268,24 @@ function BookNowCustomContent() {
                   </button>
                 </div>
               </div>
+
+              {/* Selected Service Display */}
+              {selectedService && (
+                <div className="card-body border-bottom bg-light px-4 py-3">
+                  <div className="row align-items-center">
+                    <div className="col-md-8">
+                      <h5 className="mb-1 text-primary fw-bold">{selectedService.name}</h5>
+                      <p className="mb-0 text-muted small">{selectedService.description}</p>
+                    </div>
+                    <div className="col-md-4 text-md-end">
+                      <div className="d-flex flex-column align-items-md-end">
+                        <span className="badge bg-primary mb-1">${selectedService.price}</span>
+                        <span className="badge bg-secondary">{selectedService.duration}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="card-body px-4 pb-4">
                 {/* Month and Week Header */}
@@ -420,38 +446,54 @@ function BookNowCustomContent() {
           {!servicesLoading && !servicesError && (
             <div className="row g-4">
               {services.map((service) => (
-              <div key={service.id} className="col-lg-6">
-                <div className="card h-100 shadow-sm border-0 service-card">
-                  <div className="row g-0 h-100">
-                    <div className="col-md-5">
-                      <Image
-                        src={service.image}
-                        alt={service.name}
-                        width={300}
-                        height={250}
-                        className="img-fluid rounded-start h-100 object-cover"
-                      />
+              <div key={service.id} className="col-lg-4 col-md-6">
+                <div 
+                  className={`card h-100 shadow-sm service-card ${
+                    selectedService?.id === service.id ? 'border-primary border-2' : 'border-0'
+                  }`}
+                  style={{ 
+                    cursor: 'pointer', 
+                    transition: 'all 0.3s ease',
+                    backgroundColor: selectedService?.id === service.id 
+                      ? 'rgba(173, 98, 105, 0.15)' 
+                      : 'white'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-5px)';
+                    e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+                    e.currentTarget.style.backgroundColor = 'rgba(173, 98, 105, 0.25)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                    e.currentTarget.style.backgroundColor = selectedService?.id === service.id 
+                      ? 'rgba(173, 98, 105, 0.15)' 
+                      : 'white';
+                  }}
+                  onClick={() => handleServiceSelect(service)}
+                >
+                  <div className="position-relative" style={{ height: '250px', overflow: 'hidden' }}>
+                    <Image
+                      src={getServiceImagePath(service)}
+                      alt={service.name}
+                      fill
+                      className="card-img-top"
+                      style={{ objectFit: 'contain' }}
+                    />
+                  </div>
+                  <div className="card-body d-flex flex-column">
+                    <h5 className="card-title text-primary fw-bold mb-3">{service.name}</h5>
+                    <div className="mb-3">
+                      <span className="badge bg-primary me-2 fs-6">${service.price}</span>
+                      <span className="badge bg-secondary fs-6">{service.duration}</span>
                     </div>
-                    <div className="col-md-7">
-                      <div className="card-body d-flex flex-column h-100">
-                        <div>
-                          <h5 className="card-title text-primary fw-bold">{service.name}</h5>
-                          <div className="mb-2">
-                            <span className="badge bg-primary me-2">${service.price}</span>
-                            <span className="badge bg-secondary">{service.duration}</span>
-                          </div>
-                          <p className="card-text text-muted small">{service.description}</p>
-                        </div>
-                        <div className="mt-auto">
-                          <button
-                            className="btn btn-primary w-100"
-                            onClick={() => handleServiceSelect(service)}
-                          >
-                            Select This Service
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    <p className="card-text text-muted mb-4 flex-grow-1">{service.description}</p>
+                    <button
+                      className="btn btn-primary w-100 mt-auto"
+                      onClick={() => handleServiceSelect(service)}
+                    >
+                      Select This Service
+                    </button>
                   </div>
                 </div>
               </div>

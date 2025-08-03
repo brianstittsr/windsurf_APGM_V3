@@ -1,6 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { Elements } from '@stripe/react-stripe-js';
+import stripePromise from '../lib/stripe';
+import StripePaymentForm from './StripePaymentForm';
+import StripeModeIndicator from './StripeModeIndicator';
+import { calculateTotalWithStripeFees, formatCurrency, getStripeFeeExplanation } from '../lib/stripe-fees';
+import { InvoiceEmailService, InvoiceData } from '../services/invoiceEmailService';
 
 interface ServiceItem {
   id: string;
@@ -44,6 +50,10 @@ export default function CheckoutCart({
 }: CheckoutCartProps) {
   const [showGiftCard, setShowGiftCard] = useState(false);
   const [showOrderSummary, setShowOrderSummary] = useState(false);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   const handleInputChange = (field: keyof CheckoutData, value: string | boolean) => {
     onChange({
@@ -52,8 +62,82 @@ export default function CheckoutCart({
     });
   };
 
-  const totalAmount = 659.10;
-  const depositAmount = 200.00;
+  const handlePaymentSuccess = async (paymentIntent: any) => {
+    console.log('Payment successful:', paymentIntent);
+    setPaymentSuccess(true);
+    setPaymentError(null);
+    setShowPaymentForm(false);
+    
+    // Send invoice email
+    try {
+      console.log('📧 Sending invoice email...');
+      
+      const invoiceData: InvoiceData = {
+        invoiceNumber: InvoiceEmailService.generateInvoiceNumber(),
+        clientName: clientName,
+        clientEmail: 'brianstittsr@gmail.com', // Using your email as requested
+        serviceName: service.name,
+        servicePrice: subtotal,
+        tax: tax,
+        processingFee: stripeFee,
+        total: totalAmount,
+        depositPaid: depositAmount + stripeFee,
+        remainingBalance: remainingAmount,
+        appointmentDate: new Date(appointmentDate).toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }),
+        appointmentTime: appointmentTime,
+        businessName: process.env.NEXT_PUBLIC_BUSINESS_NAME || 'A Pretty Girl Matter',
+        businessPhone: process.env.NEXT_PUBLIC_BUSINESS_PHONE || '(919) 441-0932',
+        businessEmail: process.env.NEXT_PUBLIC_BUSINESS_EMAIL || 'victoria@aprettygirlmatter.com',
+        businessAddress: '123 Beauty Lane, Raleigh, NC 27601',
+        paymentIntentId: paymentIntent.id
+      };
+      
+      const emailSent = await InvoiceEmailService.sendInvoiceEmail(invoiceData);
+      
+      if (emailSent) {
+        console.log('✅ Invoice email sent successfully!');
+      } else {
+        console.log('⚠️ Invoice email failed to send, but payment was successful');
+      }
+    } catch (error) {
+      console.error('Error sending invoice email:', error);
+      // Don't fail the payment flow if email fails
+    }
+    
+    // Call onNext to proceed to confirmation
+    setTimeout(() => {
+      onNext();
+    }, 2000);
+  };
+
+  const handlePaymentError = (error: string) => {
+    console.error('Payment error:', error);
+    setPaymentError(error);
+    setPaymentSuccess(false);
+  };
+
+  const handleAddPaymentMethod = () => {
+    setPaymentError(null);
+    setShowPaymentForm(true);
+  };
+
+  // Calculate amounts with Stripe fees included
+  const taxRate = 0.0775; // 7.75% tax
+  const fixedDeposit = 200; // Fixed $200 deposit for all services
+  
+  const feeCalculation = calculateTotalWithStripeFees(service.price, taxRate, fixedDeposit);
+  
+  const subtotal = feeCalculation.subtotal;
+  const tax = feeCalculation.tax;
+  const stripeFee = feeCalculation.stripeFee;
+  const totalAmount = feeCalculation.total;
+  const depositAmount = feeCalculation.deposit;
+  const remainingAmount = feeCalculation.remaining;
 
   return (
     <div className="container py-4">
@@ -64,6 +148,9 @@ export default function CheckoutCart({
             <h2 className="h4 mb-1">Welcome, Brian S</h2>
             <h3 className="h5 text-primary mb-3">A Pretty Girl Matter</h3>
           </div>
+
+          {/* Stripe Mode Indicator */}
+          <StripeModeIndicator />
 
           {/* Who Are You Booking For */}
           <div className="card mb-4">
@@ -135,14 +222,64 @@ export default function CheckoutCart({
               </h5>
               <p className="mb-3">A payment card is required to pay deposit. The remaining balance is due when you arrive at the business.</p>
               
-              <h6 className="mb-3">New Payment Method</h6>
-              <div className="border rounded p-3 text-center text-muted">
-                <i className="fas fa-credit-card fa-2x mb-2"></i>
-                <div>Add payment method for deposit</div>
-                <button className="btn btn-primary btn-sm mt-2">
-                  Add Payment Method
-                </button>
-              </div>
+              {/* Payment Success Message */}
+              {paymentSuccess && (
+                <div className="alert alert-success" role="alert">
+                  <i className="fas fa-check-circle me-2"></i>
+                  Payment successful! Proceeding to confirmation...
+                </div>
+              )}
+              
+              {/* Payment Error Message */}
+              {paymentError && (
+                <div className="alert alert-danger" role="alert">
+                  <i className="fas fa-exclamation-circle me-2"></i>
+                  {paymentError}
+                </div>
+              )}
+              
+              {!showPaymentForm && !paymentSuccess && (
+                <>
+                  <h6 className="mb-3">Payment Method</h6>
+                  <div className="border rounded p-3 text-center text-muted">
+                    <i className="fas fa-credit-card fa-2x mb-2"></i>
+                    <div>Add payment method for deposit</div>
+                    <button 
+                      className="btn btn-primary btn-sm mt-2"
+                      onClick={handleAddPaymentMethod}
+                      disabled={paymentLoading}
+                    >
+                      Add Payment Method
+                    </button>
+                  </div>
+                </>
+              )}
+              
+              {/* Stripe Payment Form */}
+              {showPaymentForm && !paymentSuccess && (
+                <div className="mt-4">
+                  <h6 className="mb-3">Payment Details</h6>
+                  <Elements stripe={stripePromise}>
+                    <StripePaymentForm
+                      amount={depositAmount + stripeFee}
+                      onSuccess={handlePaymentSuccess}
+                      onError={handlePaymentError}
+                      loading={paymentLoading}
+                      setLoading={setPaymentLoading}
+                    />
+                  </Elements>
+                  
+                  <div className="mt-3">
+                    <button 
+                      className="btn btn-outline-secondary btn-sm"
+                      onClick={() => setShowPaymentForm(false)}
+                      disabled={paymentLoading}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -157,22 +294,28 @@ export default function CheckoutCart({
           </div>
 
           {/* Action Buttons */}
-          <div className="d-flex justify-content-between mb-4">
-            <button
-              type="button"
-              className="btn btn-outline-secondary px-4"
-              onClick={onBack}
-            >
-              Back
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary px-4 fw-bold"
-              onClick={onNext}
-            >
-              Book
-            </button>
-          </div>
+          {!showPaymentForm && (
+            <div className="d-flex justify-content-between mb-4">
+              <button
+                type="button"
+                className="btn btn-outline-secondary px-4"
+                onClick={onBack}
+                disabled={paymentLoading}
+              >
+                Back
+              </button>
+              {!paymentSuccess && (
+                <button
+                  type="button"
+                  className="btn btn-outline-primary px-4 fw-bold"
+                  onClick={() => setShowPaymentForm(true)}
+                  disabled={paymentLoading}
+                >
+                  Proceed to Payment
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Order Summary Toggle */}
           <div className="text-center">
@@ -188,12 +331,35 @@ export default function CheckoutCart({
               <div className="card mt-3">
                 <div className="card-body">
                   <div className="d-flex justify-content-between mb-2">
-                    <span>Total:</span>
-                    <span className="fw-bold">${totalAmount.toFixed(2)}</span>
+                    <span>{service.name}:</span>
+                    <span>{formatCurrency(subtotal)}</span>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Tax (7.75%):</span>
+                    <span>{formatCurrency(tax)}</span>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>{getStripeFeeExplanation()}:</span>
+                    <span>{formatCurrency(stripeFee)}</span>
+                  </div>
+                  <hr className="my-2" />
+                  <div className="d-flex justify-content-between mb-2">
+                    <span className="fw-bold">Total:</span>
+                    <span className="fw-bold">{formatCurrency(totalAmount)}</span>
                   </div>
                   <div className="d-flex justify-content-between text-primary">
-                    <span>Due now:</span>
-                    <span className="fw-bold">${depositAmount.toFixed(2)}</span>
+                    <span className="fw-bold">Deposit:</span>
+                    <span className="fw-bold">{formatCurrency(depositAmount)}</span>
+                  </div>
+                  <div className="d-flex justify-content-between text-muted small mt-1">
+                    <span>Remaining balance (due at appointment):</span>
+                    <span>{formatCurrency(remainingAmount)}</span>
+                  </div>
+                  <div className="mt-2 p-2 bg-light rounded">
+                    <small className="text-muted">
+                      <i className="fas fa-info-circle me-1"></i>
+                      Processing fee covers secure payment handling and is added to your total.
+                    </small>
                   </div>
                 </div>
               </div>
@@ -201,8 +367,9 @@ export default function CheckoutCart({
             
             {!showOrderSummary && (
               <div className="mt-2">
-                <div className="h5 mb-1">${totalAmount.toFixed(2)}</div>
-                <div className="text-primary fw-bold">${depositAmount.toFixed(2)} due now</div>
+                <div className="h5 mb-1">{formatCurrency(totalAmount)}</div>
+                <div className="text-primary fw-bold">{formatCurrency(depositAmount)} due now</div>
+                <div className="text-muted small">Includes {formatCurrency(stripeFee)} processing fee</div>
               </div>
             )}
           </div>

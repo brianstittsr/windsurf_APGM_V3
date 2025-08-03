@@ -552,7 +552,7 @@ export default function CandidacyAssessment() {
   return (
     <>
       <Header />
-      <main className="min-vh-100">
+      <main className="min-vh-100" style={{ paddingTop: '140px' }}>
         <div className="container py-5">
           <div className="row justify-content-center">
             <div className="col-lg-8">

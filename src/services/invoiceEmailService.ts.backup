@@ -1,0 +1,452 @@
+/**
+ * Invoice Email Service
+ * Sends professional invoices for permanent makeup services
+ */
+
+import { SMTPEmailService } from './gmailEmailService';
+import * as path from 'path';
+import * as fs from 'fs';
+
+export interface InvoiceData {
+  invoiceNumber: string;
+  clientName: string;
+  clientEmail: string;
+  serviceName: string;
+  servicePrice: number;
+  tax: number;
+  processingFee: number;
+  total: number;
+  depositPaid: number;
+  remainingBalance: number;
+  appointmentDate: string;
+  appointmentTime: string;
+  businessName: string;
+  businessPhone: string;
+  businessEmail: string;
+  businessAddress?: string;
+  paymentIntentId: string;
+}
+
+export interface InvoiceEmailTemplate {
+  subject: string;
+  htmlContent: string;
+  textContent: string;
+  attachments?: any[];
+}
+
+export class InvoiceEmailService {
+  /**
+   * Generate HTML email template with embedded logo
+   */
+  static generateHTMLTemplate(data: InvoiceData): string {
+    const formatCurrency = (amount: number) => 
+      new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+
+    const currentDate = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice ${data.invoiceNumber}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .invoice-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #d4a574 0%, #c8956d 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .logo {
+            max-width: 200px;
+            height: auto;
+            margin-bottom: 15px;
+            filter: brightness(0) invert(1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+        .header-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .invoice-title {
+            font-size: 24px;
+            color: #333;
+            margin: 20px 0 10px 0;
+        }
+        .invoice-number {
+            font-size: 18px;
+            color: #666;
+            margin: 0;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 0 30px;
+        }
+        .two-column {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .column {
+            flex: 1;
+            min-width: 250px;
+            margin-right: 20px;
+        }
+        .column:last-child {
+            margin-right: 0;
+        }
+        .info-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .service-details {
+            background: #fff;
+            border: 2px solid #d4a574;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .line-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .line-item:last-child {
+            border-bottom: none;
+        }
+        .line-item.total {
+            font-weight: bold;
+            font-size: 18px;
+            border-top: 2px solid #d4a574;
+            margin-top: 10px;
+            padding-top: 15px;
+        }
+        .deposit-highlight {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+        .remaining-highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+        }
+        .payment-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            background: #f8f9fa;
+        }
+        .thank-you {
+            color: #d4a574;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            margin: 30px 0;
+        }
+        .line-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .line-item:last-child { border-bottom: none; }
+        .line-item.total { font-weight: bold; font-size: 18px; border-top: 2px solid #AD6269; margin-top: 10px; padding-top: 15px; }
+        .deposit-highlight { background: #e8f5e8; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745; }
+        .remaining-highlight { background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107; }
+        .payment-info { background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #666; }
+        .thank-you { color: #AD6269; font-size: 20px; font-weight: bold; text-align: center; margin: 30px 0; }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <div class="header">
+            <img src="cid:logo" alt="${data.businessName}" class="logo" />
+            <h1>${data.businessName}</h1>
+            <p style="margin: 10px 0 0 0; font-size: 1.1em; opacity: 0.9;">Professional Permanent Makeup Services</p>
+        </div>
+        <!-- Header -->
+        <div class="header">
+            ${data.businessAddress ? `<p style="margin: 5px 0; color: #666;">${data.businessAddress}</p>` : ''}
+            <p style="margin: 5px 0; color: #666;">${data.businessPhone} • ${data.businessEmail}</p>
+            <h2 class="invoice-title">INVOICE</h2>
+            <p class="invoice-number">Invoice #${data.invoiceNumber}</p>
+            <p style="margin: 5px 0; color: #666;">Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        </div>
+
+        <!-- Client and Service Info -->
+        <div class="section">
+            <div class="two-column">
+
+            <!-- Client and Service Info -->
+            <div class="section">
+              <div class="two-column">
+                <div class="column">
+                  <div class="info-box">
+                    <h3 style="margin-top: 0; color: #AD6269;">Bill To:</h3>
+                    <p style="margin: 5px 0; font-weight: bold;">${clientName}</p>
+                    <p style="margin: 5px 0;">${data.clientEmail}</p>
+                  </div>
+                </div>
+                <div class="column">
+                  <div class="info-box">
+                    <h3 style="margin-top: 0; color: #AD6269;">Appointment Details:</h3>
+                    <p style="margin: 5px 0;"><strong>Service:</strong> ${serviceName}</p>
+                    <p style="margin: 5px 0;"><strong>Date:</strong> ${appointmentDate}</p>
+                    <p style="margin: 5px 0;"><strong>Time:</strong> ${appointmentTime}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Service Breakdown -->
+            <div class="section">
+              <div class="service-details">
+                <h3 style="margin-top: 0; color: #AD6269;">Service Breakdown</h3>
+                
+                <div class="line-item">
+                  <span>${serviceName}</span>
+                  <span>${formatCurrency(servicePrice)}</span>
+                </div>
+                
+                <div class="line-item">
+                  <span>Sales Tax (7.75%)</span>
+                  <span>${formatCurrency(tax)}</span>
+                </div>
+                
+                <div class="line-item">
+                  <span>Processing Fee (2.9% + $0.30)</span>
+                  <span>${formatCurrency(processingFee)}</span>
+                </div>
+                
+                <div class="line-item total">
+                  <span>TOTAL</span>
+                  <span>${formatCurrency(total)}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Payment Status -->
+            <div class="section">
+              <div class="deposit-highlight">
+                <h3 style="margin-top: 0; color: #28a745;">✅ Deposit Paid</h3>
+                <p style="margin: 5px 0; font-size: 18px; font-weight: bold;">${formatCurrency(depositPaid)}</p>
+                <p style="margin: 5px 0; font-size: 14px; color: #666;">
+                  Payment processed securely via Stripe
+                  ${paymentIntentId ? `<br>Transaction ID: ${paymentIntentId}` : ''}
+                </p>
+              </div>
+              
+              ${remainingBalance > 0 ? `
+              <div class="remaining-highlight">
+                <h3 style="margin-top: 0; color: #856404;">💰 Remaining Balance</h3>
+                <p style="margin: 5px 0; font-size: 18px; font-weight: bold;">${formatCurrency(remainingBalance)}</p>
+                <p style="margin: 5px 0; font-size: 14px; color: #666;">Due at your appointment</p>
+              </div>
+              ` : ''}
+            </div>
+
+            <!-- Payment Information -->
+            <div class="payment-info">
+              <h3 style="margin-top: 0; color: #1976d2;">💳 Payment Information</h3>
+              <p style="margin: 5px 0;">Your deposit has been securely processed and your appointment is confirmed.</p>
+              <p style="margin: 5px 0;">The remaining balance will be collected at your appointment via cash, card, or other accepted payment methods.</p>
+            </div>
+
+            <!-- Important Notes -->
+            <div class="section">
+              <h3 style="color: #AD6269;">Important Notes</h3>
+              <ul style="color: #666;">
+                <li>Please arrive 15 minutes early for your appointment</li>
+                <li>Bring a valid ID for verification</li>
+                <li>Follow all pre-appointment care instructions provided</li>
+                <li>Cancellations require 48 hours notice to avoid rebooking fees</li>
+                <li>Deposits are non-refundable but will be applied to your service</li>
+              </ul>
+            </div>
+
+            <!-- Thank You -->
+            <div class="thank-you">
+              Thank you for choosing ${businessName}!
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+              <p>This invoice was generated automatically on ${currentDate}</p>
+              <p>For questions about this invoice, please contact us at ${businessEmail} or ${businessPhone}</p>
+              <p style="font-size: 12px; margin-top: 20px;">
+                ${businessName} • Professional Permanent Makeup Services<br>
+                All services performed by licensed professionals
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      textContent: `
+INVOICE #${invoiceNumber}
+${businessName}
+${businessPhone} • ${businessEmail}
+Date: ${currentDate}
+
+BILL TO:
+${clientName}
+${data.clientEmail}
+
+APPOINTMENT DETAILS:
+Service: ${serviceName}
+Date: ${appointmentDate}
+Time: ${appointmentTime}
+
+SERVICE BREAKDOWN:
+${serviceName}: ${formatCurrency(servicePrice)}
+Sales Tax (7.75%): ${formatCurrency(tax)}
+Processing Fee (2.9% + $0.30): ${formatCurrency(processingFee)}
+TOTAL: ${formatCurrency(total)}
+
+PAYMENT STATUS:
+✅ Deposit Paid: ${formatCurrency(depositPaid)}
+${paymentIntentId ? `Transaction ID: ${paymentIntentId}` : ''}
+
+${remainingBalance > 0 ? `💰 Remaining Balance: ${formatCurrency(remainingBalance)} (due at appointment)` : ''}
+
+PAYMENT INFORMATION:
+Your deposit has been securely processed and your appointment is confirmed.
+The remaining balance will be collected at your appointment via cash, card, or other accepted payment methods.
+
+IMPORTANT NOTES:
+- Please arrive 15 minutes early for your appointment
+- Bring a valid ID for verification
+- Follow all pre-appointment care instructions provided
+- Cancellations require 48 hours notice to avoid rebooking fees
+- Deposits are non-refundable but will be applied to your service
+
+Thank you for choosing ${businessName}!
+
+For questions about this invoice, please contact us at ${businessEmail} or ${businessPhone}
+
+${businessName} • Professional Permanent Makeup Services
+All services performed by licensed professionals
+      `
+    };
+  }
+
+  /**
+   * Send invoice email
+   */
+  static async sendInvoiceEmail(data: InvoiceData): Promise<boolean> {
+    try {
+      const template = this.generateInvoiceTemplate(data);
+      
+      console.log('📧 Sending invoice email...');
+      console.log(`   To: ${data.clientEmail}`);
+      console.log(`   Invoice: ${data.invoiceNumber}`);
+      console.log(`   Service: ${data.serviceName}`);
+      console.log(`   Total: ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(data.total)}`);
+
+      // Try SMTP first if configured
+      const smtpHost = process.env.SMTP_HOST;
+      const smtpUser = process.env.SMTP_USER;
+      const smtpPass = process.env.SMTP_PASS;
+      
+      if (smtpHost && smtpUser && smtpPass) {
+        console.log('📧 Using SMTP service...');
+        // Use SMTP_USER as from email to avoid authentication issues
+        const fromEmail = smtpUser || data.businessEmail;
+        // Add CC to Victoria
+        const ccEmails = ['victoria@aprettygirlmatter.com'];
+        return await SMTPEmailService.sendEmail(data.clientEmail, template, fromEmail, ccEmails);
+      }
+      
+      // Try external email service (SendGrid, etc.)
+      if (this.apiKey && this.apiUrl) {
+        console.log('📧 Using external email service...');
+        
+        const response = await fetch(this.apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.apiKey}`
+          },
+          body: JSON.stringify({
+            to: data.clientEmail,
+            subject: template.subject,
+            html: template.htmlContent,
+            text: template.textContent,
+            from: data.businessEmail
+          })
+        });
+
+        if (response.ok) {
+          console.log('✅ Invoice email sent successfully!');
+          return true;
+        } else {
+          console.error('❌ Failed to send invoice email:', response.statusText);
+          return false;
+        }
+      }
+      
+      // Development mode - log email content
+      console.log('\n📧 EMAIL CONTENT (Development Mode):');
+      console.log('Subject:', template.subject);
+      console.log('\n--- TEXT VERSION ---');
+      console.log(template.textContent);
+      console.log('\n--- HTML VERSION ---');
+      console.log('(HTML content available - would be rendered in email client)');
+      console.log('\n💡 To send real emails, configure Gmail or external email service');
+      return true;
+      
+    } catch (error) {
+      console.error('❌ Error sending invoice email:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Generate invoice number
+   */
+  static generateInvoiceNumber(): string {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const time = String(date.getTime()).slice(-4); // Last 4 digits of timestamp
+    
+    return `INV-${year}${month}${day}-${time}`;
+  }
+}

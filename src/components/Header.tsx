@@ -20,12 +20,17 @@ export default function Header() {
   return (
     <header className="bg-white shadow-sm fixed-top">
       {/* Top bar with address */}
-      <div className="bg-light py-1 d-none d-lg-block">
+      <div 
+        className="py-1 d-none d-lg-block" 
+        style={{ 
+          backgroundColor: 'rgba(173, 98, 105, 0.5)' 
+        }}
+      >
         <div className="container">
           <div className="d-flex justify-content-end">
             <button 
               onClick={handleAddressClick}
-              className="btn btn-link text-decoration-none text-secondary p-0 fw-semibold"
+              className="btn btn-link text-decoration-none text-white p-0 fw-semibold"
               style={{ fontSize: '0.9rem' }}
               title="View on Google Maps"
             >
