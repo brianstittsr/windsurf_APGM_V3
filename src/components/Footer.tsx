@@ -15,7 +15,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-dark text-white">
+    <footer className="bg-dark text-white" style={{fontFamily: 'Poppins, sans-serif'}}>
       <div className="container py-5">
         <div className="row g-4">
           {/* Company Info */}
@@ -24,7 +24,7 @@ export default function Footer() {
               <img 
                 src="/APRG_Text_Logo.png" 
                 alt="A Pretty Girl Matter Logo" 
-                style={{height: '80px', width: 'auto'}}
+                style={{height: '120px', width: 'auto'}}
                 className="mb-3"
               />
               <p className="text-light lh-base">

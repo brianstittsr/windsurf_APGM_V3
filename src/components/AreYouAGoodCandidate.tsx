@@ -152,7 +152,7 @@ export default function AreYouAGoodCandidate() {
               <button className="btn btn-outline-primary rounded-pill px-4 fw-semibold book-now-text">
                 Book Now
               </button>
-              <button className="btn btn-outline-secondary rounded-pill px-4 fw-semibold">
+              <button className="btn btn-outline-secondary rounded-pill px-4 fw-semibold book-now-text">
                 Call Us: (919) 441-0932
               </button>
             </div>

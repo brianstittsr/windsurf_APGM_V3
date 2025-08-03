@@ -100,9 +100,9 @@ export default function FinancingPage() {
         <div className="container">
           <div className="row justify-content-center text-center">
             <div className="col-lg-8">
-              <h1 className="display-4 fw-bold text-dark mb-3">PAY YOUR WAY</h1>
-              <p className="lead text-secondary mb-4">Payment options that make it easy.</p>
-              <p className="text-muted">
+              <h1 className="main-heading fw-bold mb-3" style={{color: '#AD6269'}}>PAY YOUR WAY</h1>
+              <p className="sub-heading text-secondary mb-4">Payment options that make it easy.</p>
+              <p className="paragraph-text text-muted">
                 Everyone should be able to get their dream brows. A Pretty Girl Matter offers several ways to pay so that payment doesn&apos;t get in the way!
               </p>
             </div>
@@ -116,8 +116,8 @@ export default function FinancingPage() {
           <div className="row justify-content-center">
             <div className="col-lg-8">
               <div className="text-center mb-4">
-                <h2 className="h3 fw-bold mb-3">Learn About Our Financing Options</h2>
-                <p className="text-muted">Watch this video to understand how our payment plans work</p>
+                <h2 className="sub-heading fw-bold mb-3">Learn About Our Financing Options</h2>
+                <p className="paragraph-text text-muted">Watch this video to understand how our payment plans work</p>
               </div>
               <div className="card border-0 shadow-sm">
                 <div className="card-body p-0">
@@ -166,7 +166,7 @@ export default function FinancingPage() {
               <div className="card h-100 border-0 shadow-sm">
                 <div className="card-body p-4">
                   <div className="d-flex align-items-center mb-3">
-                    <div className="bg-danger rounded-circle p-3 me-3">
+                    <div className="rounded-circle p-3 me-3" style={{backgroundColor: '#AD6269'}}>
                       <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                       </svg>
@@ -176,7 +176,7 @@ export default function FinancingPage() {
                   <p className="text-muted mb-3">
                     Choose from a range of monthly payment plans, with qualifying 0% APR options. Applying is simple and does not impact your credit score. If you&apos;re approved for financing, you can use your funds immediately.
                   </p>
-                  <a href="#" className="btn btn-danger rounded-pill px-4">USE CHERRY</a>
+                  <a href="#" className="btn rounded-pill px-4 book-now-button" style={{backgroundColor: '#AD6269', borderColor: '#AD6269', color: 'white'}}>USE CHERRY</a>
                 </div>
               </div>
             </div>
@@ -196,7 +196,7 @@ export default function FinancingPage() {
                   <p className="text-muted mb-3">
                     A Pretty Girl Matter has partnered with Klarna as a quick and easy financing option! Please submit the form below to request to pay with Klarna. You will receive a payment link via email.
                   </p>
-                  <a href="#" className="btn btn-warning rounded-pill px-4">USE KLARNA</a>
+                  <a href="#" className="btn btn-warning rounded-pill px-4 book-now-button">USE KLARNA</a>
                 </div>
               </div>
             </div>
@@ -224,19 +224,19 @@ export default function FinancingPage() {
       </section>
 
       {/* Cherry Promotion Section */}
-      <section className="py-5 bg-danger text-white">
+      <section className="py-5 text-white" style={{backgroundColor: '#AD6269'}}>
         <div className="container">
           <div className="row align-items-center">
             <div className="col-lg-8">
-              <h2 className="h3 fw-bold mb-3">Get Care Now, Pay Later</h2>
+              <h2 className="sub-heading fw-bold mb-3">Get Care Now, Pay Later</h2>
               <p className="mb-3">with Cherry & A Pretty Girl Matter</p>
               <p className="mb-4">
                 Let your money go further and take better control of your cash flow when you pay over time in smaller installments with Cherry.
               </p>
             </div>
             <div className="col-lg-4 text-lg-end">
-              <a href="#" className="btn btn-light btn-lg rounded-pill px-5 me-3">APPLY</a>
-              <a href="#" className="btn btn-outline-light rounded-pill px-4">CHERRY CONSUMER PORTAL</a>
+              <a href="#" className="btn btn-light btn-lg rounded-pill px-5 me-3 book-now-button">APPLY</a>
+              <a href="#" className="btn btn-outline-light rounded-pill px-4 book-now-button">CHERRY CONSUMER PORTAL</a>
             </div>
           </div>
         </div>
@@ -248,8 +248,8 @@ export default function FinancingPage() {
           <div className="row justify-content-center">
             <div className="col-lg-8">
               <div className="text-center mb-5">
-                <h2 className="h3 fw-bold mb-3">Flexible Payments For Any Budget</h2>
-                <p className="text-muted">Use the payment calculator to simulate what your monthly payments could look like.</p>
+                <h2 className="sub-heading fw-bold mb-3" style={{color: '#AD6269'}}>Flexible Payments For Any Budget</h2>
+                <p className="paragraph-text text-muted">Use the payment calculator to simulate what your monthly payments could look like.</p>
               </div>
               
               <div className="card border-0 shadow-sm">
@@ -282,7 +282,7 @@ export default function FinancingPage() {
                         : 'Enter a purchase amount to see estimated payments'
                       }
                     </p>
-                    <a href="#" className="btn btn-danger btn-lg rounded-pill px-5">Apply</a>
+                    <a href="#" className="btn btn-lg rounded-pill px-5 book-now-button" style={{backgroundColor: '#AD6269', borderColor: '#AD6269', color: 'white'}}>Apply</a>
                   </div>
                   
                   <p className="small text-muted mt-4">
@@ -300,7 +300,7 @@ export default function FinancingPage() {
         <div className="container">
           <div className="row justify-content-center">
             <div className="col-lg-8 text-center">
-              <h2 className="h3 fw-bold mb-4">How It Works</h2>
+              <h2 className="sub-heading fw-bold mb-4">How It Works</h2>
               <p className="text-muted lead">
                 Choose from a range of monthly payment plans, with qualifying 0% APR options. Applying is simple and does not impact your credit score. If you&apos;re approved for financing, you can use your funds immediately. Manage your payment options using Cherry&apos;s self-serve consumer portal.
               </p>
@@ -313,8 +313,8 @@ export default function FinancingPage() {
       <section className="py-5 bg-light">
         <div className="container">
           <div className="text-center mb-5">
-            <h2 className="h3 fw-bold mb-3">Testimonials</h2>
-            <p className="text-muted">Don&apos;t just take our word for it! Here&apos;s what other consumers have to say about Cherry…</p>
+            <h2 className="sub-heading fw-bold mb-3" style={{color: '#AD6269'}}>Testimonials</h2>
+            <p className="paragraph-text text-muted">Don&apos;t just take our word for it! Here&apos;s what other consumers have to say about Cherry…</p>
           </div>
           
           <div className="row g-4">
@@ -350,7 +350,7 @@ export default function FinancingPage() {
           <div className="row justify-content-center">
             <div className="col-lg-8">
               <div className="text-center mb-5">
-                <h2 className="h3 fw-bold">Frequently Asked Questions</h2>
+                <h2 className="sub-heading fw-bold">Frequently Asked Questions</h2>
               </div>
               
               <div className="accordion" id="faqAccordion">
@@ -384,9 +384,9 @@ export default function FinancingPage() {
         <div className="container">
           <div className="row justify-content-center text-center">
             <div className="col-lg-6">
-              <h2 className="h3 fw-bold mb-3">Manage My Plan</h2>
-              <p className="text-muted mb-4">Manage your payment plans inside the Cherry Consumer Portal.</p>
-              <a href="#" className="btn btn-danger btn-lg rounded-pill px-5">CHERRY CONSUMER PORTAL</a>
+              <h2 className="sub-heading fw-bold mb-3" style={{color: '#AD6269'}}>Manage My Plan</h2>
+              <p className="paragraph-text text-muted mb-4">Manage your payment plans inside the Cherry Consumer Portal.</p>
+              <a href="#" className="btn btn-lg rounded-pill px-5 book-now-button" style={{backgroundColor: '#AD6269', borderColor: '#AD6269', color: 'white'}}>CHERRY CONSUMER PORTAL</a>
             </div>
           </div>
         </div>
@@ -397,8 +397,8 @@ export default function FinancingPage() {
         <div className="container">
           <div className="row justify-content-center text-center">
             <div className="col-lg-6">
-              <h2 className="h3 fw-bold mb-3">More Questions?</h2>
-              <a href="#" className="btn btn-outline-primary rounded-pill px-4">Visit our Help Center</a>
+              <h2 className="sub-heading fw-bold mb-3">More Questions?</h2>
+              <a href="#" className="btn btn-outline-primary rounded-pill px-4 book-now-button">Visit our Help Center</a>
             </div>
           </div>
         </div>

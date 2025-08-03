@@ -55,30 +55,9 @@ export default function ContactPage() {
         {/* Hero Section */}
         <section className="bg-primary text-white py-5">
           <div className="container">
-            <div className="row align-items-center">
-              <div className="col-lg-8">
-                <h1 className="display-4 fw-bold mb-3">Contact Us</h1>
-              </div>
-              <div className="col-lg-4 text-lg-end">
-                <div className="bg-white bg-opacity-10 rounded-3 p-4">
-                  <h5 className="fw-bold mb-3">Quick Contact</h5>
-                  <div className="mb-2">
-                    <i className="bi bi-telephone-fill me-2"></i>
-                    <a href="tel:919-441-0932" className="text-white text-decoration-none">
-                      (919) 441-0932
-                    </a>
-                  </div>
-                  <div className="mb-2">
-                    <i className="bi bi-envelope-fill me-2"></i>
-                    <a href="mailto:victoria@aprettygirlmatter.com" className="text-white text-decoration-none">
-                      victoria@aprettygirlmatter.com
-                    </a>
-                  </div>
-                  <div>
-                    <i className="bi bi-geo-alt-fill me-2"></i>
-                    <span>Raleigh, NC</span>
-                  </div>
-                </div>
+            <div className="row justify-content-center">
+              <div className="col-lg-8 text-center">
+                <h1 className="main-heading fw-bold mb-3">Contact Us</h1>
               </div>
             </div>
           </div>
@@ -92,7 +71,7 @@ export default function ContactPage() {
               <div className="col-lg-6">
                 <div className="card border-0 shadow-sm">
                   <div className="card-body p-4">
-                    <h2 className="h3 fw-bold mb-4 text-primary">Send Us a Message</h2>
+                    <h2 className="sub-heading fw-bold mb-4 text-primary">Send Us a Message</h2>
                     
                     {success && (
                       <div className="alert alert-success" role="alert">
@@ -187,7 +166,7 @@ export default function ContactPage() {
                         <div className="col-12">
                           <button
                             type="submit"
-                            className="btn btn-primary btn-lg rounded-pill px-5"
+                            className="btn btn-primary btn-lg rounded-pill px-5 book-now-button"
                             disabled={loading}
                           >
                             {loading ? (
@@ -247,7 +226,7 @@ export default function ContactPage() {
                 <div className="card border-0 shadow-sm mb-4">
                   <div className="card-body p-0">
                     <div className="bg-primary text-white p-3">
-                      <h3 className="h5 fw-bold mb-0">Our Location</h3>
+                      <h3 className="sub-heading fw-bold mb-0">Our Location</h3>
                     </div>
                     <div className="position-relative" style={{height: '350px'}}>
                       <iframe
@@ -270,7 +249,7 @@ export default function ContactPage() {
                     <i className="bi bi-telephone-fill me-2"></i>
                     24/7 Aftercare Support
                   </h6>
-                  <p className="mb-0 small">
+                  <p className="paragraph-text mb-0">
                     For post-treatment questions or concerns, call our 24/7 aftercare line at 
                     <strong> (919) 441-0932</strong>. We&apos;re here to support your healing journey.
                   </p>
@@ -286,8 +265,8 @@ export default function ContactPage() {
             <div className="row justify-content-center">
               <div className="col-lg-8">
                 <div className="text-center mb-5">
-                  <h2 className="h3 fw-bold mb-3">Frequently Asked Questions</h2>
-                  <p className="text-muted">Quick answers to common questions about contacting us and scheduling appointments.</p>
+                  <h2 className="sub-heading fw-bold mb-3">Frequently Asked Questions</h2>
+                  <p className="paragraph-text text-muted">Quick answers to common questions about contacting us and scheduling appointments.</p>
                 </div>
                 
                 <div className="accordion" id="contactFAQ">
@@ -298,7 +277,7 @@ export default function ContactPage() {
                       </button>
                     </h3>
                     <div id="faq1" className="accordion-collapse collapse show" data-bs-parent="#contactFAQ">
-                      <div className="accordion-body">
+                      <div className="accordion-body paragraph-text">
                         We typically respond to all inquiries within 24 hours during business days. For urgent matters, please call us directly at (919) 441-0932.
                       </div>
                     </div>
@@ -311,7 +290,7 @@ export default function ContactPage() {
                       </button>
                     </h3>
                     <div id="faq2" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
-                      <div className="accordion-body">
+                      <div className="accordion-body paragraph-text">
                         Please let us know which service you&apos;re interested in, any specific concerns or questions, and your preferred appointment timeframe. Photos of your current brows are also helpful for consultations.
                       </div>
                     </div>
@@ -324,7 +303,7 @@ export default function ContactPage() {
                       </button>
                     </h3>
                     <div id="faq3" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
-                      <div className="accordion-body">
+                      <div className="accordion-body paragraph-text">
                         Yes! We offer virtual consultations via video call to discuss your goals, answer questions, and determine if you&apos;re a good candidate for permanent makeup services.
                       </div>
                     </div>
@@ -337,7 +316,7 @@ export default function ContactPage() {
                       </button>
                     </h3>
                     <div id="faq4" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
-                      <div className="accordion-body">
+                      <div className="accordion-body paragraph-text">
                         You can schedule by calling us at (919) 441-0932, sending an email, or using the contact form above. We recommend starting with a consultation to discuss your goals and create a personalized treatment plan.
                       </div>
                     </div>

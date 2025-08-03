@@ -125,7 +125,7 @@ export default function Header() {
             </Link>
             <Link
               href="/book-now-custom"
-              className="btn btn-primary rounded-pill px-4 book-now-text"
+              className="btn btn-primary rounded-pill px-4 book-now-button"
             >
               Book Now
             </Link>
@@ -157,7 +157,7 @@ export default function Header() {
             </Link>
             <Link
               href="/book-now-custom"
-              className="btn btn-primary rounded-pill px-4 w-100 book-now-text"
+              className="btn btn-primary rounded-pill px-4 w-100 book-now-button"
             >
               Book Now
             </Link>
