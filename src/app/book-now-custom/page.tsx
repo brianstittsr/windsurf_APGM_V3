@@ -13,6 +13,7 @@ import { Timestamp } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 import { getServiceImagePath } from '@/utils/serviceImageUtils';
 import { calculateTotalWithStripeFees } from '@/lib/stripe-fees';
+import { ClientEmailService, LoginEmailData, HealthFormEmailData } from '@/services/clientEmailService';
 
 function BookNowCustomContent() {
   const searchParams = useSearchParams();
@@ -99,6 +100,53 @@ function BookNowCustomContent() {
     setSelectedDate(date);
     setSelectedTime(time);
     setCurrentStep('profile');
+  };
+
+  const handleHealthFormSubmit = async () => {
+    try {
+      // Send login information email
+      const loginEmailData: LoginEmailData = {
+        clientName: `${clientProfile.firstName} ${clientProfile.lastName}`,
+        clientEmail: clientProfile.email,
+        temporaryPassword: 'TempPass123!', // Generate a temporary password
+        loginUrl: `${window.location.origin}/login`,
+        businessName: 'A Pretty Girl Matter',
+        businessPhone: '(919) 123-4567',
+        businessEmail: 'victoria@aprettygirlmatter.com'
+      };
+      
+      const loginEmailSent = await ClientEmailService.sendLoginEmail(loginEmailData);
+      console.log('Login email sent:', loginEmailSent);
+      
+      // Send health form confirmation email
+      const healthFormEmailData: HealthFormEmailData = {
+        clientName: `${clientProfile.firstName} ${clientProfile.lastName}`,
+        clientEmail: clientProfile.email,
+        healthFormData,
+        clientSignature,
+        submissionDate: new Date().toLocaleString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZoneName: 'short'
+        }),
+        businessName: 'A Pretty Girl Matter',
+        businessPhone: '(919) 123-4567',
+        businessEmail: 'victoria@aprettygirlmatter.com'
+      };
+      
+      const healthFormEmailSent = await ClientEmailService.sendHealthFormEmail(healthFormEmailData);
+      console.log('Health form email sent:', healthFormEmailSent);
+      
+      // Move to checkout step
+      setCurrentStep('checkout');
+    } catch (error) {
+      console.error('Failed to send emails:', error);
+      // Still move to checkout even if emails fail
+      setCurrentStep('checkout');
+    }
   };
 
   const handleBookingComplete = async () => {
@@ -572,7 +620,7 @@ function BookNowCustomContent() {
         <HealthFormWizard
           data={healthFormData}
           onChange={setHealthFormData}
-          onNext={() => setCurrentStep('checkout')}
+          onNext={handleHealthFormSubmit}
           onBack={() => setCurrentStep('profile')}
           clientSignature={clientSignature}
           onSignatureChange={setClientSignature}

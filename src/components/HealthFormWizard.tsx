@@ -124,15 +124,18 @@ export default function HealthFormWizard({
           <div className="card shadow-lg border-0">
             <div className="card-header bg-primary text-white text-center py-4">
               <h2 className="h3 mb-0">Health & Consent Form</h2>
-              <p className="mb-0 opacity-75">Step {currentStepIndex + 1} of {steps.length}</p>
+              <p className="mb-0" style={{ color: 'white' }}>Step {currentStepIndex + 1} of {steps.length}</p>
               
               {/* Progress Bar */}
               <div className="mt-3">
                 <div className="progress" style={{ height: '8px' }}>
                   <div 
-                    className="progress-bar bg-warning" 
+                    className="progress-bar" 
                     role="progressbar" 
-                    style={{ width: `${getProgressPercentage()}%` }}
+                    style={{ 
+                      width: `${getProgressPercentage()}%`,
+                      backgroundColor: 'rgba(173, 98, 105, 0.5)'
+                    }}
                   ></div>
                 </div>
                 <small className="text-white-50 mt-1 d-block">
@@ -154,46 +157,44 @@ export default function HealthFormWizard({
 
               {/* Current Step */}
               <div className="text-center mb-4">
-                <div className="badge bg-light text-dark px-3 py-2 mb-3">
+                <div className={`badge bg-light text-dark px-3 py-2 mb-3 ${
+                  currentStep.category === 'Medical Conditions' ? 'fs-4' : ''
+                }`}>
                   {currentStep.category}
                 </div>
-                <h4 className="text-primary fw-bold mb-4">
+                <h1 className="text-primary fw-bold mb-4">
                   {currentStep.question}
-                </h4>
+                </h1>
               </div>
 
               {/* Question Content */}
               {currentStep.type === 'yesno' ? (
                 <div className="d-flex justify-content-center gap-4 mb-5">
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name={`question-${currentStep.id}`}
-                      id={`question-${currentStep.id}-yes`}
-                      value="yes"
-                      checked={data[currentStep.id] === 'yes'}
-                      onChange={(e) => handleInputChange(e.target.value)}
-                      autoFocus
-                    />
-                    <label className="form-check-label text-black fw-semibold fs-5" htmlFor={`question-${currentStep.id}-yes`}>
-                      Yes
-                    </label>
-                  </div>
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name={`question-${currentStep.id}`}
-                      id={`question-${currentStep.id}-no`}
-                      value="no"
-                      checked={data[currentStep.id] === 'no'}
-                      onChange={(e) => handleInputChange(e.target.value)}
-                    />
-                    <label className="form-check-label text-black fw-semibold fs-5" htmlFor={`question-${currentStep.id}-no`}>
-                      No
-                    </label>
-                  </div>
+                  <button
+                    type="button"
+                    className={`btn btn-lg px-5 py-3 ${
+                      data[currentStep.id] === 'yes' 
+                        ? 'btn-success' 
+                        : 'btn-outline-success'
+                    }`}
+                    onClick={() => handleInputChange('yes')}
+                    autoFocus
+                  >
+                    <i className="fas fa-check me-2"></i>
+                    Yes
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn btn-lg px-5 py-3 ${
+                      data[currentStep.id] === 'no' 
+                        ? 'btn-danger' 
+                        : 'btn-outline-danger'
+                    }`}
+                    onClick={() => handleInputChange('no')}
+                  >
+                    <i className="fas fa-times me-2"></i>
+                    No
+                  </button>
                 </div>
               ) : (
                 <div className="mb-5">
