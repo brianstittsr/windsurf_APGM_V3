@@ -105,7 +105,7 @@ export default function TheProcess() {
                 {index === 4 && (
                   <div className="mb-4">
                     <img
-                      src="/images/theprocess/color.jpg"
+                      src="/images/theprocess/color.png"
                       alt="Color selection for permanent makeup"
                       className="img-fluid shadow-custom"
                       style={{height: '300px', width: '100%', objectFit: 'contain', objectPosition: 'center', borderRadius: '0.5rem'}}
@@ -115,7 +115,7 @@ export default function TheProcess() {
                 {index === 5 && (
                   <div className="mb-4">
                     <img
-                      src="/images/theprocess/consult.jpg"
+                      src="/images/theprocess/touchup.png"
                       alt="Touch-up session for permanent makeup"
                       className="img-fluid shadow-custom"
                       style={{height: '300px', width: '100%', objectFit: 'contain', objectPosition: 'center', borderRadius: '0.5rem'}}
