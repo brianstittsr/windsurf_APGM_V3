@@ -9,8 +9,8 @@ export default function TheProcess() {
     },
     {
       number: "02",
-      title: "Consultation",
-      description: "Complete the Online Consultation Form. We then discuss your goals, assess your features, and create a personalized plan tailored to your lifestyle and preferences."
+      title: "Book Now",
+      description: "Book now and complete the Online Consultation Form. We'll discuss your goals, evaluate your features, and design a personalized plan that fits your lifestyle and enhances your natural beauty."
     },
     {
       number: "03",
