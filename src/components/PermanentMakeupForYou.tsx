@@ -49,10 +49,10 @@ export default function PermanentMakeupForYou() {
               Not sure which service is right for you?
             </h3>
             <p className="paragraph-text text-secondary mb-4">
-              Book a free consultation and let&apos;s discuss the best options for your unique features and lifestyle.
+              Book now to complete your free online consultation, and let&apos;s explore the best options tailored to your unique features and lifestyle.
             </p>
             <button className="btn btn-primary rounded-pill px-4 fw-semibold book-now-text">
-              Book Free Consultation
+              Book Now
             </button>
           </div>
         </div>

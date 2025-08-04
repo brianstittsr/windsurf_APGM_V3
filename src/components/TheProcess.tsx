@@ -56,7 +56,7 @@ export default function TheProcess() {
               <div className="card border-0 shadow-custom rounded-custom p-4 h-100 text-center">
                 {/* Step Number */}
                 <div className="mb-4">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-custom mx-auto" style={{width: '4rem', height: '4rem', fontSize: '1.25rem', backgroundColor: '#AD6269', color: 'white'}}>
+                  <div className="rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-custom mx-auto" style={{width: '4rem', height: '4rem', fontSize: '32px', fontFamily: 'Playfair Display, serif', backgroundColor: '#AD6269', color: 'white'}}>
                     {step.number}
                   </div>
                 </div>
