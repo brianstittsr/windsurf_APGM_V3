@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function PermanentMakeupForYou() {
 
   return (
@@ -51,9 +53,9 @@ export default function PermanentMakeupForYou() {
             <p className="paragraph-text text-secondary mb-4">
               Book now to complete your free online consultation, and let&apos;s explore the best options tailored to your unique features and lifestyle.
             </p>
-            <button className="btn btn-primary rounded-pill px-4 fw-semibold book-now-text">
+            <Link href="/book-now-custom" className="btn btn-primary rounded-pill px-4 fw-semibold book-now-text">
               Book Now
-            </button>
+            </Link>
           </div>
         </div>
       </div>
