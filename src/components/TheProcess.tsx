@@ -65,7 +65,7 @@ export default function TheProcess() {
                 {index === 0 && (
                   <div className="mb-4">
                     <img
-                      src="/images/theprocess/consult.jpg"
+                      src="/images/theprocess/Candidacy.png"
                       alt="Candidacy assessment"
                       className="img-fluid shadow-custom"
                       style={{height: '300px', width: '100%', objectFit: 'contain', objectPosition: 'center', borderRadius: '0.5rem'}}
@@ -75,8 +75,8 @@ export default function TheProcess() {
                 {index === 1 && (
                   <div className="mb-4">
                     <img
-                      src="/images/theprocess/consult.jpg"
-                      alt="Consultation and planning"
+                      src="/images/theprocess/BookNow.png"
+                      alt="Book now for permanent makeup"
                       className="img-fluid shadow-custom"
                       style={{height: '300px', width: '100%', objectFit: 'contain', objectPosition: 'center', borderRadius: '0.5rem'}}
                     />
@@ -139,8 +139,8 @@ export default function TheProcess() {
                 {/* Buttons for Consultation step */}
                 {index === 1 && (
                   <div className="d-flex flex-column gap-2 mt-auto">
-                    <Link href="/contact" className="btn btn-primary rounded-pill px-3 py-2 fw-semibold">
-                      Online Consultation
+                    <Link href="/book-now-custom" className="btn btn-primary rounded-pill px-3 py-2 fw-semibold">
+                      Book Now
                     </Link>
                   </div>
                 )}
