@@ -67,8 +67,8 @@ export default function TheProcess() {
                     <img
                       src="/images/theprocess/consult.jpg"
                       alt="Candidacy assessment"
-                      className="img-fluid rounded-custom shadow-custom"
-                      style={{maxHeight: '200px', width: '100%', objectFit: 'cover'}}
+                      className="img-fluid shadow-custom"
+                      style={{height: '300px', width: '100%', objectFit: 'contain', objectPosition: 'center', borderRadius: '0.5rem'}}
                     />
                   </div>
                 )}
@@ -77,8 +77,8 @@ export default function TheProcess() {
                     <img
                       src="/images/theprocess/consult.jpg"
                       alt="Consultation and planning"
-                      className="img-fluid rounded-custom shadow-custom"
-                      style={{maxHeight: '200px', width: '100%', objectFit: 'cover'}}
+                      className="img-fluid shadow-custom"
+                      style={{height: '300px', width: '100%', objectFit: 'contain', objectPosition: 'center', borderRadius: '0.5rem'}}
                     />
                   </div>
                 )}
@@ -87,8 +87,8 @@ export default function TheProcess() {
                     <img
                       src="/images/theprocess/numbing.jpg"
                       alt="Numbing cream application for permanent makeup"
-                      className="img-fluid rounded-custom shadow-custom"
-                      style={{maxHeight: '200px', width: '100%', objectFit: 'cover'}}
+                      className="img-fluid shadow-custom"
+                      style={{height: '300px', width: '100%', objectFit: 'contain', objectPosition: 'center', borderRadius: '0.5rem'}}
                     />
                   </div>
                 )}
@@ -97,8 +97,8 @@ export default function TheProcess() {
                     <img
                       src="/images/theprocess/shaping.jpg"
                       alt="Eyebrow shaping and mapping process"
-                      className="img-fluid rounded-custom shadow-custom"
-                      style={{maxHeight: '200px', width: '100%', objectFit: 'cover'}}
+                      className="img-fluid shadow-custom"
+                      style={{height: '300px', width: '100%', objectFit: 'contain', objectPosition: 'center', borderRadius: '0.5rem'}}
                     />
                   </div>
                 )}
@@ -106,9 +106,9 @@ export default function TheProcess() {
                   <div className="mb-4">
                     <img
                       src="/images/theprocess/color.jpg"
-                      alt="Permanent makeup procedure being performed"
-                      className="img-fluid rounded-custom shadow-custom"
-                      style={{maxHeight: '200px', width: '100%', objectFit: 'cover'}}
+                      alt="Color selection for permanent makeup"
+                      className="img-fluid shadow-custom"
+                      style={{height: '300px', width: '100%', objectFit: 'contain', objectPosition: 'center', borderRadius: '0.5rem'}}
                     />
                   </div>
                 )}
@@ -117,8 +117,8 @@ export default function TheProcess() {
                     <img
                       src="/images/theprocess/consult.jpg"
                       alt="Touch-up session for permanent makeup"
-                      className="img-fluid rounded-custom shadow-custom"
-                      style={{maxHeight: '200px', width: '100%', objectFit: 'cover'}}
+                      className="img-fluid shadow-custom"
+                      style={{height: '300px', width: '100%', objectFit: 'contain', objectPosition: 'center', borderRadius: '0.5rem'}}
                     />
                   </div>
                 )}
