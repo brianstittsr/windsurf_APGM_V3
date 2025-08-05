@@ -117,6 +117,18 @@ export default function Header() {
 
           {/* CTA Buttons */}
           <div className="d-none d-lg-flex gap-2">
+            {/* Artist Profile Link - Show for authenticated artists/admins */}
+            {isClient && (localStorage.getItem('adminEmail') || 
+              (typeof window !== 'undefined' && window.location.pathname.includes('artist'))) && (
+              <Link
+                href="/artist-profile"
+                className="btn btn-outline-secondary rounded-pill px-4"
+                title="Manage Availability"
+              >
+                <i className="fas fa-calendar-alt me-2"></i>
+                Profile
+              </Link>
+            )}
             <Link
               href="/login"
               className="btn btn-outline-primary rounded-pill px-4 book-now-button"

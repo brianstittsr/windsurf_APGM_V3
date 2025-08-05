@@ -88,7 +88,7 @@ export default function AdminTestPage() {
               <i className="fas fa-user-plus me-2"></i>
               Create Test Admin
             </button>
-            <a href="/admin" className="btn btn-outline-primary">
+            <a href="/dashboard" className="btn btn-outline-primary">
               Go to Real Admin Page
             </a>
           </div>

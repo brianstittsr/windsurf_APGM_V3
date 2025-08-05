@@ -8,6 +8,7 @@ import {
   HealthFormService,
   AvailabilityService
 } from '@/services/database';
+import { AvailabilityService as ArtistAvailabilityService, ArtistAvailability } from '@/services/availabilityService';
 import { 
   Service, 
   Appointment, 
@@ -430,4 +431,86 @@ export function useAvailability(date?: string) {
   };
 
   return { availability, bookTimeSlot, loading, error };
+}
+
+// Hook for artist availability management
+export function useArtistAvailability(artistId?: string) {
+  const [availability, setAvailability] = useState<ArtistAvailability[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!artistId) return;
+
+    const fetchAvailability = async () => {
+      try {
+        setLoading(true);
+        const data = await ArtistAvailabilityService.getArtistAvailability(artistId);
+        setAvailability(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch artist availability');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAvailability();
+  }, [artistId]);
+
+  const updateDayAvailability = async (
+    dayOfWeek: string, 
+    availabilityData: Partial<ArtistAvailability>
+  ) => {
+    if (!artistId) throw new Error('No artist ID provided');
+    
+    try {
+      setError(null);
+      await ArtistAvailabilityService.updateDayAvailability(artistId, dayOfWeek, availabilityData);
+      // Refresh data
+      const data = await ArtistAvailabilityService.getArtistAvailability(artistId);
+      setAvailability(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update availability');
+      throw err;
+    }
+  };
+
+  const toggleDayAvailability = async (dayOfWeek: string, isEnabled: boolean) => {
+    if (!artistId) throw new Error('No artist ID provided');
+    
+    try {
+      setError(null);
+      await ArtistAvailabilityService.toggleDayAvailability(artistId, dayOfWeek, isEnabled);
+      // Refresh data
+      const data = await ArtistAvailabilityService.getArtistAvailability(artistId);
+      setAvailability(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to toggle day availability');
+      throw err;
+    }
+  };
+
+  const initializeAvailability = async () => {
+    if (!artistId) throw new Error('No artist ID provided');
+    
+    try {
+      setError(null);
+      await ArtistAvailabilityService.initializeArtistAvailability(artistId);
+      // Refresh data
+      const data = await ArtistAvailabilityService.getArtistAvailability(artistId);
+      setAvailability(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to initialize availability');
+      throw err;
+    }
+  };
+
+  return { 
+    availability, 
+    updateDayAvailability, 
+    toggleDayAvailability, 
+    initializeAvailability,
+    loading, 
+    error 
+  };
 }

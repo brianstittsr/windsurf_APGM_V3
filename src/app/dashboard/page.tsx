@@ -5,14 +5,30 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import UserManagement from '../../components/UserManagement';
 import { auth, isFirebaseConfigured } from '@/lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { User } from 'firebase/auth';
+import { UserService } from '@/services/database';
+import { User as DatabaseUser } from '@/types/database';
 
 export default function Dashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<DatabaseUser | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'admin'>('dashboard');
+  const [adminUsers, setAdminUsers] = useState<{
+    admins: DatabaseUser[];
+    artists: DatabaseUser[];
+    clients: DatabaseUser[];
+  }>({
+    admins: [],
+    artists: [],
+    clients: []
+  });
+  const [adminLoading, setAdminLoading] = useState(false);
 
   useEffect(() => {
     if (!isFirebaseConfigured() || !auth) {
@@ -23,6 +39,7 @@ export default function Dashboard() {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
+        fetchUserData(currentUser.uid, currentUser.email || '');
       } else {
         router.push('/login');
       }
@@ -31,6 +48,83 @@ export default function Dashboard() {
 
     return () => unsubscribe();
   }, [router]);
+
+  const fetchUserData = async (uid: string, email: string) => {
+    try {
+      // Check for admin@example.com development bypass
+      if (email === 'admin@example.com') {
+        const mockAdminUser: DatabaseUser = {
+          id: 'admin-example',
+          profile: {
+            firstName: 'Admin',
+            lastName: 'User',
+            email: 'admin@example.com',
+            phone: '(555) 000-0000',
+            dateOfBirth: '1990-01-01',
+            address: '123 Admin Street',
+            city: 'Raleigh',
+            state: 'NC',
+            zipCode: '27601',
+            emergencyContactName: 'Emergency Contact',
+            emergencyContactPhone: '(555) 000-0001',
+            preferredContactMethod: 'email',
+            hearAboutUs: 'System Administrator',
+            createdAt: { seconds: 1640995200, nanoseconds: 0 } as any,
+            updatedAt: { seconds: 1640995200, nanoseconds: 0 } as any
+          },
+          role: 'admin',
+          isActive: true
+        };
+        setCurrentUser(mockAdminUser);
+        setUserRole('admin');
+        return;
+      }
+
+      // Try to get user from database
+      const dbUser = await UserService.getUserByEmail(email);
+      if (dbUser) {
+        setCurrentUser(dbUser);
+        setUserRole(dbUser.role);
+      } else {
+        // Default to client role if not found in database
+        setUserRole('client');
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      // Default to client role on error
+      setUserRole('client');
+    }
+  };
+
+  const loadAdminUsers = async () => {
+    if (userRole !== 'admin') return;
+    
+    try {
+      setAdminLoading(true);
+      const [admins, artists, clients] = await Promise.all([
+        UserService.getAdmins(),
+        UserService.getArtists(),
+        UserService.getClients()
+      ]);
+      
+      setAdminUsers({ admins, artists, clients });
+    } catch (error) {
+      console.error('Error loading admin users:', error);
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
+  // Load admin users when user role is admin and tab is admin
+  useEffect(() => {
+    if (userRole === 'admin' && activeTab === 'admin') {
+      loadAdminUsers();
+    }
+  }, [userRole, activeTab]);
+
+  const handleAdminUsersUpdated = () => {
+    loadAdminUsers();
+  };
 
   const handleSignOut = async () => {
     try {
@@ -77,11 +171,26 @@ export default function Dashboard() {
               <div className="card-body p-4">
                 <div className="row align-items-center">
                   <div className="col-md-8">
-                    <h1 className="h3 text-primary fw-bold mb-2">
-                      Welcome back, {user.displayName || user.email}!
-                    </h1>
+                    <div className="d-flex align-items-center mb-2">
+                      <h1 className="h3 text-primary fw-bold mb-0 me-3">
+                        Welcome back, {currentUser?.profile?.firstName || user.displayName || user.email}!
+                      </h1>
+                      {userRole && (
+                        <span className={`badge rounded-pill ${
+                          userRole === 'admin' ? 'bg-danger' :
+                          userRole === 'artist' ? 'bg-success' :
+                          'bg-primary'
+                        }`}>
+                          {userRole === 'admin' ? 'Administrator' :
+                           userRole === 'artist' ? 'Artist' :
+                           'Client'}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-muted mb-0">
-                      Manage your appointments and profile from your dashboard
+                      {userRole === 'admin' ? 'Manage users, appointments, and system settings' :
+                       userRole === 'artist' ? 'Manage your appointments and availability' :
+                       'Manage your appointments and profile'}
                     </p>
                   </div>
                   <div className="col-md-4 text-md-end">
@@ -96,8 +205,43 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Quick Actions */}
-            <div className="row g-4 mb-4">
+            {/* Tab Navigation for Admin Users */}
+            {userRole === 'admin' && (
+              <div className="card border-0 shadow-sm mb-4">
+                <div className="card-body p-0">
+                  <ul className="nav nav-tabs border-0" role="tablist">
+                    <li className="nav-item" role="presentation">
+                      <button
+                        className={`nav-link px-4 py-3 ${activeTab === 'dashboard' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('dashboard')}
+                        type="button"
+                        role="tab"
+                      >
+                        <i className="fas fa-tachometer-alt me-2"></i>
+                        Dashboard
+                      </button>
+                    </li>
+                    <li className="nav-item" role="presentation">
+                      <button
+                        className={`nav-link px-4 py-3 ${activeTab === 'admin' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('admin')}
+                        type="button"
+                        role="tab"
+                      >
+                        <i className="fas fa-users-cog me-2"></i>
+                        User Management
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {/* Dashboard Tab Content */}
+            {activeTab === 'dashboard' && (
+              <>
+                {/* Quick Actions */}
+                <div className="row g-4 mb-4">
               <div className="col-md-6 col-lg-3">
                 <div className="card border-0 shadow-sm h-100">
                   <div className="card-body text-center p-4">
@@ -191,7 +335,39 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-            </div>
+                </div>
+              </>
+            )}
+
+            {/* Admin Tab Content */}
+            {activeTab === 'admin' && userRole === 'admin' && (
+              <div className="card border-0 shadow-sm">
+                <div className="card-header bg-white border-0 pb-0">
+                  <h5 className="card-title text-primary fw-bold">
+                    <i className="fas fa-users-cog me-2"></i>
+                    User Management
+                  </h5>
+                  <p className="text-muted small mb-0">
+                    Manage user accounts, roles, and permissions
+                  </p>
+                </div>
+                <div className="card-body">
+                  {adminLoading ? (
+                    <div className="text-center py-5">
+                      <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Loading users...</span>
+                      </div>
+                      <p className="mt-3 text-muted">Loading user data...</p>
+                    </div>
+                  ) : (
+                    <UserManagement
+                      users={adminUsers}
+                      onUsersUpdated={handleAdminUsersUpdated}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

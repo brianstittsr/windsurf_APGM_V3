@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { auth, isFirebaseConfigured } from '@/lib/firebase';
@@ -11,6 +11,9 @@ import { UserService } from '@/services/database';
 
 export default function Register() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect');
+  const serviceId = searchParams.get('service');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -95,8 +98,14 @@ export default function Register() {
       
       await UserService.createUserWithId(userCredential.user.uid, userData);
 
-      // Redirect to dashboard or home page
-      router.push('/dashboard');
+      // Redirect back to booking flow if coming from there, otherwise go to dashboard
+      if (redirectUrl && serviceId) {
+        router.push(`${redirectUrl}?step=calendar&service=${serviceId}`);
+      } else if (redirectUrl) {
+        router.push(redirectUrl);
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err: any) {
       console.error('Registration error:', err);
       
@@ -284,10 +293,12 @@ export default function Register() {
                 <hr className="my-4" />
 
                 <div className="text-center">
-                  <p className="text-muted mb-2">Already have an account?</p>
-                  <Link href="/login" className="btn btn-outline-primary rounded-pill">
-                    Sign In
-                  </Link>
+                  <div className="d-flex align-items-center justify-content-center gap-3 mb-3">
+                    <span className="fs-5 text-dark fw-medium">Already have an account?</span>
+                    <Link href="/login" className="btn btn-primary rounded-pill px-4">
+                      Sign In
+                    </Link>
+                  </div>
                 </div>
 
                 <div className="text-center mt-4">
