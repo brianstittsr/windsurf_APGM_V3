@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Header from '../../components/Header';
@@ -9,7 +9,7 @@ import { auth, isFirebaseConfigured } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { UserService } from '@/services/database';
 
-export default function Register() {
+function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect');
@@ -313,5 +313,34 @@ export default function Register() {
       </div>
       <Footer />
     </>
+  );
+}
+
+export default function Register() {
+  return (
+    <Suspense fallback={
+      <>
+        <Header />
+        <div className="min-vh-100 d-flex align-items-center" style={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)' }}>
+          <div className="container">
+            <div className="row justify-content-center">
+              <div className="col-lg-6 col-md-8">
+                <div className="card shadow-lg border-0 rounded-4">
+                  <div className="card-body p-5 text-center">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <p className="mt-3 text-muted">Loading registration form...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </>
+    }>
+      <RegisterForm />
+    </Suspense>
   );
 }

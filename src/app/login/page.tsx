@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Header from '../../components/Header';
@@ -8,7 +8,7 @@ import Footer from '../../components/Footer';
 import { auth, isFirebaseConfigured } from '@/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
-export default function Login() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect');
@@ -240,5 +240,34 @@ export default function Login() {
       </div>
       <Footer />
     </>
+  );
+}
+
+export default function Login() {
+  return (
+    <Suspense fallback={
+      <>
+        <Header />
+        <div className="min-vh-100 d-flex align-items-center" style={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)' }}>
+          <div className="container">
+            <div className="row justify-content-center">
+              <div className="col-lg-5 col-md-7 col-sm-9">
+                <div className="card shadow-lg border-0 rounded-4">
+                  <div className="card-body p-5 text-center">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <p className="mt-3 text-muted">Loading login page...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }
