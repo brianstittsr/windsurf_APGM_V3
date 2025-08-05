@@ -121,7 +121,7 @@ export default function Header() {
             {isClient && (localStorage.getItem('adminEmail') || 
               (typeof window !== 'undefined' && window.location.pathname.includes('artist'))) && (
               <Link
-                href="/artist-profile"
+                href="/dashboard"
                 className="btn btn-outline-secondary rounded-pill px-4"
                 title="Manage Availability"
               >

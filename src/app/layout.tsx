@@ -33,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" type="image/png" sizes="48x48" href="/images/APGM-icon2.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/images/APGM-icon2.png" />

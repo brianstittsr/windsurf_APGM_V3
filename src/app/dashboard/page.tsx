@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import UserManagement from '../../components/UserManagement';
+import AvailabilityCalendar from '../../components/AvailabilityCalendar';
 import { auth, isFirebaseConfigured } from '@/lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { User } from 'firebase/auth';
@@ -18,7 +19,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<DatabaseUser | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'admin'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'admin'>('dashboard');
   const [adminUsers, setAdminUsers] = useState<{
     admins: DatabaseUser[];
     artists: DatabaseUser[];
@@ -205,8 +206,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Tab Navigation for Admin Users */}
-            {userRole === 'admin' && (
+            {/* Tab Navigation for Artists and Admins */}
+            {(userRole === 'artist' || userRole === 'admin') && (
               <div className="card border-0 shadow-sm mb-4">
                 <div className="card-body p-0">
                   <ul className="nav nav-tabs border-0" role="tablist">
@@ -221,17 +222,32 @@ export default function Dashboard() {
                         Dashboard
                       </button>
                     </li>
-                    <li className="nav-item" role="presentation">
-                      <button
-                        className={`nav-link px-4 py-3 ${activeTab === 'admin' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('admin')}
-                        type="button"
-                        role="tab"
-                      >
-                        <i className="fas fa-users-cog me-2"></i>
-                        User Management
-                      </button>
-                    </li>
+                    {userRole === 'artist' && (
+                      <li className="nav-item" role="presentation">
+                        <button
+                          className={`nav-link px-4 py-3 ${activeTab === 'profile' ? 'active' : ''}`}
+                          onClick={() => setActiveTab('profile')}
+                          type="button"
+                          role="tab"
+                        >
+                          <i className="fas fa-calendar-alt me-2"></i>
+                          Availability
+                        </button>
+                      </li>
+                    )}
+                    {userRole === 'admin' && (
+                      <li className="nav-item" role="presentation">
+                        <button
+                          className={`nav-link px-4 py-3 ${activeTab === 'admin' ? 'active' : ''}`}
+                          onClick={() => setActiveTab('admin')}
+                          type="button"
+                          role="tab"
+                        >
+                          <i className="fas fa-users-cog me-2"></i>
+                          User Management
+                        </button>
+                      </li>
+                    )}
                   </ul>
                 </div>
               </div>
@@ -337,6 +353,68 @@ export default function Dashboard() {
               </div>
                 </div>
               </>
+            )}
+
+            {/* Artist Profile Tab Content */}
+            {activeTab === 'profile' && userRole === 'artist' && (
+              <div className="card border-0 shadow-sm mb-4">
+                <div className="card-header bg-white border-0 pb-0">
+                  <h5 className="card-title text-primary fw-bold">
+                    <i className="fas fa-calendar-alt me-2"></i>
+                    Availability Management
+                  </h5>
+                  <p className="text-muted small mb-0">
+                    Manage your working hours and availability schedule
+                  </p>
+                </div>
+                <div className="card-body">
+                  {/* User Profile Info */}
+                  <div className="row align-items-center mb-4 p-3 bg-light rounded">
+                    <div className="col-md-8">
+                      <div className="d-flex align-items-center">
+                        <div className="avatar-circle bg-success text-white me-3" style={{
+                          width: '50px',
+                          height: '50px',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '1.2rem',
+                          fontWeight: 'bold'
+                        }}>
+                          {currentUser?.profile?.firstName 
+                            ? currentUser.profile.firstName.charAt(0).toUpperCase() 
+                            : user?.displayName 
+                              ? user.displayName.charAt(0).toUpperCase() 
+                              : user?.email?.charAt(0).toUpperCase()
+                          }
+                        </div>
+                        <div>
+                          <div className="d-flex align-items-center mb-1">
+                            <h6 className="mb-0 me-2">
+                              {currentUser?.profile?.firstName && currentUser?.profile?.lastName
+                                ? `${currentUser.profile.firstName} ${currentUser.profile.lastName}`
+                                : user?.displayName || 'Artist'
+                              }
+                            </h6>
+                            <span className="badge bg-success rounded-pill">Artist</span>
+                          </div>
+                          <p className="text-muted mb-0 small">{user?.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-md-4 text-md-end">
+                      <small className="text-muted">Manage your availability below</small>
+                    </div>
+                  </div>
+
+                  {/* Availability Calendar */}
+                  <AvailabilityCalendar 
+                    artistId={user?.uid || ''} 
+                    isEditable={true}
+                  />
+                </div>
+              </div>
             )}
 
             {/* Admin Tab Content */}

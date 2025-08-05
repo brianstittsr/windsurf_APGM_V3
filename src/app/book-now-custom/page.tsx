@@ -19,7 +19,7 @@ function BookNowCustomContent() {
   const searchParams = useSearchParams();
   const isSetupMode = searchParams.get('setup') === 'true';
   
-  const [currentStep, setCurrentStep] = useState<'services' | 'account-suggestion' | 'calendar' | 'profile' | 'health' | 'checkout' | 'confirmation'>('services');
+  const [currentStep, setCurrentStep] = useState<'services' | 'account-suggestion' | 'calendar' | 'profile' | 'health' | 'pre-post-care' | 'checkout' | 'confirmation'>('services');
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
@@ -72,6 +72,7 @@ function BookNowCustomContent() {
   
   const [healthFormData, setHealthFormData] = useState<HealthFormData>({});
   const [clientSignature, setClientSignature] = useState<string>('');
+  const [prePostCareSignature, setPrePostCareSignature] = useState<string>('');
   
   const [checkoutData, setCheckoutData] = useState<CheckoutData>({
     selectedDate: '',
@@ -164,13 +165,21 @@ function BookNowCustomContent() {
       });
       console.log('Health form email sent:', healthFormResponse.ok);
       
-      // Move to checkout step
-      setCurrentStep('checkout');
+      // Move to pre-post care step
+      setCurrentStep('pre-post-care');
     } catch (error) {
       console.error('Failed to send emails:', error);
-      // Still move to checkout even if emails fail
-      setCurrentStep('checkout');
+      // Still move to pre-post care even if emails fail
+      setCurrentStep('pre-post-care');
     }
+  };
+
+  const handlePrePostCareComplete = () => {
+    if (!prePostCareSignature.trim()) {
+      alert('Please sign your name to acknowledge the pre and post care instructions.');
+      return;
+    }
+    setCurrentStep('checkout');
   };
 
   const handleBookingComplete = async () => {
@@ -530,7 +539,7 @@ function BookNowCustomContent() {
   };
 
   const renderProgressBar = () => {
-    const steps = ['services', 'account-suggestion', 'calendar', 'profile', 'health', 'checkout'];
+    const steps = ['services', 'account-suggestion', 'calendar', 'profile', 'health', 'pre-post-care', 'checkout'];
     const currentIndex = steps.indexOf(currentStep);
     const progress = ((currentIndex + 1) / steps.length) * 100;
 
@@ -556,6 +565,7 @@ function BookNowCustomContent() {
                 <small className={currentStep === 'calendar' ? 'text-white fw-bold' : 'text-white opacity-75'}>Date & Time</small>
                 <small className={currentStep === 'profile' ? 'text-white fw-bold' : 'text-white opacity-75'}>Profile</small>
                 <small className={currentStep === 'health' ? 'text-white fw-bold' : 'text-white opacity-75'}>Health Form</small>
+                <small className={currentStep === 'pre-post-care' ? 'text-white fw-bold' : 'text-white opacity-75'}>Care Instructions</small>
                 <small className={currentStep === 'checkout' ? 'text-white fw-bold' : 'text-white opacity-75'}>Checkout</small>
               </div>
             </div>
@@ -859,6 +869,233 @@ function BookNowCustomContent() {
           onSignatureChange={setClientSignature}
         />
       )}
+      {currentStep === 'pre-post-care' && (
+        <div className="container py-5">
+          <div className="row justify-content-center">
+            <div className="col-lg-8">
+              <div className="card border-0 shadow-lg">
+                <div className="card-header bg-primary text-white text-center py-4">
+                  <h2 className="mb-0">
+                    <i className="fas fa-clipboard-list me-3"></i>
+                    Pre & Post Care Instructions
+                  </h2>
+                  <p className="mb-0 mt-2">Please read and acknowledge these important care instructions</p>
+                </div>
+                <div className="card-body p-5">
+                  {/* Pre Care Instructions */}
+                  <div className="mb-5">
+                    <h4 className="text-primary mb-4">
+                      <i className="fas fa-exclamation-triangle me-2"></i>
+                      Pre Care Instructions
+                    </h4>
+                    <div className="bg-light p-4 rounded">
+                      <ul className="list-unstyled mb-0">
+                        <li className="mb-3">
+                          <i className="fas fa-wine-glass text-danger me-2"></i>
+                          <strong>No excessive alcohol consumption</strong> 24 hours before your procedure.
+                        </li>
+                        <li className="mb-3">
+                          <i className="fas fa-sun text-warning me-2"></i>
+                          <strong>Avoid sun and tanning</strong> one week prior to the procedure.
+                        </li>
+                        <li className="mb-3">
+                          <i className="fas fa-pills text-info me-2"></i>
+                          <strong>Do not take Aspirin, Niacin (Vitamin B3), Vitamin E or Advil/Ibuprofen</strong> 24 hours before the procedure.
+                        </li>
+                        <li className="mb-3">
+                          <i className="fas fa-spa text-success me-2"></i>
+                          <strong>No brow waxing, tinting, microdermabrasion or chemical peels</strong> 1-2 weeks prior.
+                        </li>
+                        <li className="mb-3">
+                          <i className="fas fa-prescription-bottle text-primary me-2"></i>
+                          <strong>Discontinue the use of Accutane/Retin-A or any other acne medication</strong> at least 6 months prior to the procedure.
+                        </li>
+                        <li className="mb-3">
+                          <i className="fas fa-syringe text-secondary me-2"></i>
+                          <strong>No Botox/filler around the brow area or forehead</strong> 4 weeks prior.
+                        </li>
+                        <li className="mb-0">
+                          <i className="fas fa-eye text-dark me-2"></i>
+                          <strong>Discontinue eyelash growth serums</strong> 1 week prior to the procedure.
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Post Care Instructions */}
+                  <div className="mb-5">
+                    <h4 className="text-primary mb-4">
+                      <i className="fas fa-heart me-2"></i>
+                      Post Care Instructions
+                    </h4>
+                    <div className="bg-light p-4 rounded">
+                      <ul className="list-unstyled mb-0">
+                        <li className="mb-3">
+                          <i className="fas fa-makeup text-danger me-2"></i>
+                          <strong>No make-up application on the brows.</strong>
+                        </li>
+                        <li className="mb-3">
+                          <i className="fas fa-swimming-pool text-info me-2"></i>
+                          <strong>No sun tanning, swimming or excessive sweating.</strong>
+                        </li>
+                        <li className="mb-3">
+                          <i className="fas fa-soap text-warning me-2"></i>
+                          <strong>No soap, moisturizer, make-up, creams or sunscreen on the brow area.</strong>
+                        </li>
+                        <li className="mb-3">
+                          <i className="fas fa-hand-paper text-danger me-2"></i>
+                          <strong>Do not rub or pick at the dry flaky skin/scab.</strong>
+                        </li>
+                        <li className="mb-3">
+                          <i className="fas fa-hand-sparkles text-success me-2"></i>
+                          <strong>Do not touch the treated area unless it is for cleansing purposes.</strong>
+                        </li>
+                        <li className="mb-3">
+                          <i className="fas fa-prescription-bottle-alt text-primary me-2"></i>
+                          <strong>Apply a grain size of MicroBlam 2-3 times a day for up to 14 days of recovery.</strong>
+                        </li>
+                        <li className="mb-3">
+                          <i className="fas fa-stethoscope text-danger me-2"></i>
+                          <strong>Should an infection occur, please seek medical attention.</strong>
+                        </li>
+                        <li className="mb-0">
+                          <i className="fas fa-water text-info me-2"></i>
+                          <strong>It is very important that you wash the eyebrow area very gently during the next 7–10 days as it heals. Do not rub brows to dry them, please gently pat dry with a clean cloth or tissue.</strong>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Healing Process */}
+                  <div className="mb-5">
+                    <h4 className="text-primary mb-4">
+                      <i className="fas fa-calendar-alt me-2"></i>
+                      Eyebrow Healing Process
+                    </h4>
+                    <div className="row">
+                      <div className="col-md-4 mb-4">
+                        <div className="card h-100 border-primary">
+                          <div className="card-header bg-primary text-white text-center">
+                            <h6 className="mb-0">Day 1-3</h6>
+                          </div>
+                          <div className="card-body">
+                            <ul className="list-unstyled small mb-0">
+                              <li className="mb-2">• Brows will look darker and thicker as scabbing starts to form.</li>
+                              <li className="mb-0">• Brows feel tender & sore and may look warm and/or reddish.</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-md-4 mb-4">
+                        <div className="card h-100 border-warning">
+                          <div className="card-header bg-warning text-dark text-center">
+                            <h6 className="mb-0">Day 4-5</h6>
+                          </div>
+                          <div className="card-body">
+                            <ul className="list-unstyled small mb-0">
+                              <li className="mb-2">• Redness should be reduced.</li>
+                              <li className="mb-2">• Flaking and crusting of the eyebrows may occur.</li>
+                              <li className="mb-0">• Eyebrows may feel dry and itchy.</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-md-4 mb-4">
+                        <div className="card h-100 border-info">
+                          <div className="card-header bg-info text-white text-center">
+                            <h6 className="mb-0">Day 6-12</h6>
+                          </div>
+                          <div className="card-body">
+                            <ul className="list-unstyled small mb-0">
+                              <li className="mb-2">• Scabs peel off in random pieces and look patchy.</li>
+                              <li className="mb-2">• The areas without the scabs may look lighter in colour.</li>
+                              <li className="mb-2">• Scabs continue to peel off in random pieces.</li>
+                              <li className="mb-0">• 70-100% of scabs should fall off during this time.</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="row justify-content-center">
+                      <div className="col-md-6">
+                        <div className="card border-success">
+                          <div className="card-header bg-success text-white text-center">
+                            <h6 className="mb-0">Day 13-21</h6>
+                          </div>
+                          <div className="card-body">
+                            <ul className="list-unstyled small mb-0">
+                              <li className="mb-2">• Colour looks very light and the shape may look thinner.</li>
+                              <li className="mb-2">• Some areas may have lost more colour compared to other areas.</li>
+                              <li className="mb-2">• Colour can look uneven.</li>
+                              <li className="mb-2">• Brow colour gradually darkens as the skin fully heals.</li>
+                              <li className="mb-0">• The fully healed colour will be 30-50% lighter from the initial appointment and retention can vary according to skin type.</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Signature Section */}
+                  <div className="border-top pt-4">
+                    <div className="row align-items-center">
+                      <div className="col-md-8">
+                        <h5 className="text-primary mb-3">
+                          <i className="fas fa-signature me-2"></i>
+                          Client Acknowledgment
+                        </h5>
+                        <p className="mb-3">
+                          By signing below, I acknowledge that I have read and understand all pre-care and post-care instructions. 
+                          I agree to follow these instructions to ensure the best possible results and healing process.
+                        </p>
+                        <div className="mb-3">
+                          <label htmlFor="prePostCareSignature" className="form-label fw-bold">
+                            Client Signature (Type your full name):
+                          </label>
+                          <input
+                            type="text"
+                            className="form-control form-control-lg"
+                            id="prePostCareSignature"
+                            value={prePostCareSignature}
+                            onChange={(e) => setPrePostCareSignature(e.target.value)}
+                            placeholder="Type your full name here"
+                            required
+                          />
+                        </div>
+                        <p className="small text-muted mb-0">
+                          <i className="fas fa-calendar me-1"></i>
+                          Date: {new Date().toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Navigation Buttons */}
+                  <div className="d-flex justify-content-between mt-5">
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary btn-lg px-4"
+                      onClick={() => setCurrentStep('health')}
+                    >
+                      <i className="fas fa-arrow-left me-2"></i>
+                      Back to Health Form
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-lg px-4"
+                      onClick={handlePrePostCareComplete}
+                      disabled={!prePostCareSignature.trim()}
+                    >
+                      I Acknowledge & Continue
+                      <i className="fas fa-arrow-right ms-2"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {currentStep === 'checkout' && selectedService && (
         <CheckoutCart
           service={selectedService}
@@ -868,7 +1105,7 @@ function BookNowCustomContent() {
           data={checkoutData}
           onChange={setCheckoutData}
           onNext={handleBookingComplete}
-          onBack={() => setCurrentStep('health')}
+          onBack={() => setCurrentStep('pre-post-care')}
         />
       )}
       {currentStep === 'confirmation' && renderConfirmation()}
