@@ -29,11 +29,15 @@ interface UserFormData {
   emergencyContactPhone: string;
   preferredContactMethod: string;
   hearAboutUs: string;
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 }
 
 export default function UserManagement({ users, onUsersUpdated }: UserManagementProps) {
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [activeTab, setActiveTab] = useState<'personal' | 'contact' | 'security'>('personal');
   const [formData, setFormData] = useState<UserFormData>({
     firstName: '',
     lastName: '',
@@ -48,7 +52,10 @@ export default function UserManagement({ users, onUsersUpdated }: UserManagement
     emergencyContactName: '',
     emergencyContactPhone: '',
     preferredContactMethod: 'email',
-    hearAboutUs: ''
+    hearAboutUs: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -68,7 +75,10 @@ export default function UserManagement({ users, onUsersUpdated }: UserManagement
       emergencyContactName: '',
       emergencyContactPhone: '',
       preferredContactMethod: 'email',
-      hearAboutUs: ''
+      hearAboutUs: '',
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
     });
     setError('');
     setEditingUser(null);
@@ -94,7 +104,10 @@ export default function UserManagement({ users, onUsersUpdated }: UserManagement
       emergencyContactName: user.profile.emergencyContactName,
       emergencyContactPhone: user.profile.emergencyContactPhone,
       preferredContactMethod: user.profile.preferredContactMethod,
-      hearAboutUs: user.profile.hearAboutUs
+      hearAboutUs: user.profile.hearAboutUs,
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
     });
     setEditingUser(user);
     setShowAddUserModal(true);
@@ -331,213 +344,495 @@ export default function UserManagement({ users, onUsersUpdated }: UserManagement
       <UserTable title="Artists" userList={users.artists} roleColor="warning" />
       <UserTable title="Clients" userList={users.clients} roleColor="info" />
 
-      {/* Add/Edit User Modal */}
+      {/* Enhanced Add/Edit User Modal with Tabs */}
       {showAddUserModal && (
         <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {editingUser ? 'Edit User' : 'Add New User'}
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => {
-                    setShowAddUserModal(false);
-                    resetForm();
-                  }}
-                ></button>
-              </div>
+          <div className="modal-dialog modal-xl">
+            <div className="modal-content border-0 shadow-lg">
               <form onSubmit={handleSubmit}>
-                <div className="modal-body">
+                {/* Enhanced Modal Header */}
+                <div className="modal-header border-0 py-4" style={{ background: 'linear-gradient(135deg, #AD6269 0%, #8B4A52 100%)' }}>
+                  <div className="d-flex align-items-center">
+                    <div className="avatar-circle me-3" style={{ 
+                      width: '50px', 
+                      height: '50px', 
+                      background: 'rgba(255,255,255,0.2)', 
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <i className={`fas ${editingUser ? 'fa-user-edit' : 'fa-user-plus'} text-white fs-5`}></i>
+                    </div>
+                    <div>
+                      <h4 className="mb-1 text-white fw-bold">
+                        {editingUser ? `Edit ${formData.firstName} ${formData.lastName}` : 'Add New User'}
+                      </h4>
+                      <p className="mb-0 text-white-50 small">
+                        {editingUser ? 'Update user information and settings' : 'Create a new user account'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-close btn-close-white"
+                    onClick={() => {
+                      setShowAddUserModal(false);
+                      resetForm();
+                      setActiveTab('personal');
+                    }}
+                  ></button>
+                </div>
+
+                {/* Tab Navigation */}
+                <div className="modal-header border-0 bg-light py-2">
+                  <ul className="nav nav-pills nav-fill w-100" role="tablist">
+                    <li className="nav-item" role="presentation">
+                      <button
+                        className={`nav-link rounded-pill px-4 py-2 fw-semibold ${activeTab === 'personal' ? 'active' : ''}`}
+                        type="button"
+                        onClick={() => setActiveTab('personal')}
+                        style={{ 
+                          backgroundColor: activeTab === 'personal' ? '#AD6269' : 'transparent',
+                          borderColor: activeTab === 'personal' ? '#AD6269' : '#dee2e6',
+                          color: activeTab === 'personal' ? 'white' : '#6c757d'
+                        }}
+                      >
+                        <i className="fas fa-user me-2"></i>
+                        Personal Info
+                      </button>
+                    </li>
+                    <li className="nav-item" role="presentation">
+                      <button
+                        className={`nav-link rounded-pill px-4 py-2 fw-semibold ${activeTab === 'contact' ? 'active' : ''}`}
+                        type="button"
+                        onClick={() => setActiveTab('contact')}
+                        style={{ 
+                          backgroundColor: activeTab === 'contact' ? '#AD6269' : 'transparent',
+                          borderColor: activeTab === 'contact' ? '#AD6269' : '#dee2e6',
+                          color: activeTab === 'contact' ? 'white' : '#6c757d'
+                        }}
+                      >
+                        <i className="fas fa-address-book me-2"></i>
+                        Contact & Address
+                      </button>
+                    </li>
+                    <li className="nav-item" role="presentation">
+                      <button
+                        className={`nav-link rounded-pill px-4 py-2 fw-semibold ${activeTab === 'security' ? 'active' : ''}`}
+                        type="button"
+                        onClick={() => setActiveTab('security')}
+                        style={{ 
+                          backgroundColor: activeTab === 'security' ? '#AD6269' : 'transparent',
+                          borderColor: activeTab === 'security' ? '#AD6269' : '#dee2e6',
+                          color: activeTab === 'security' ? 'white' : '#6c757d'
+                        }}
+                      >
+                        <i className="fas fa-shield-alt me-2"></i>
+                        Security & Role
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Modal Body with Tab Content */}
+                <div className="modal-body p-4">
                   {error && (
-                    <div className="alert alert-danger" role="alert">
+                    <div className="alert alert-danger border-0 rounded-3 mb-4" role="alert">
+                      <i className="fas fa-exclamation-triangle me-2"></i>
                       {error}
                     </div>
                   )}
 
-                  <div className="row">
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">First Name *</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formData.firstName}
-                        onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                        required
-                      />
+                  {/* Personal Information Tab */}
+                  {activeTab === 'personal' && (
+                    <div className="tab-pane fade show active">
+                      <div className="row g-4">
+                        <div className="col-12">
+                          <h6 className="text-primary fw-bold mb-3">
+                            <i className="fas fa-id-card me-2"></i>
+                            Basic Information
+                          </h6>
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label fw-semibold text-dark">
+                            <i className="fas fa-user me-2 text-muted"></i>
+                            First Name *
+                          </label>
+                          <input
+                            type="text"
+                            className="form-control form-control-lg border-2 rounded-3"
+                            value={formData.firstName}
+                            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                            required
+                            placeholder="Enter first name"
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label fw-semibold text-dark">
+                            <i className="fas fa-user me-2 text-muted"></i>
+                            Last Name *
+                          </label>
+                          <input
+                            type="text"
+                            className="form-control form-control-lg border-2 rounded-3"
+                            value={formData.lastName}
+                            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                            required
+                            placeholder="Enter last name"
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label fw-semibold text-dark">
+                            <i className="fas fa-envelope me-2 text-muted"></i>
+                            Email Address *
+                          </label>
+                          <input
+                            type="email"
+                            className="form-control form-control-lg border-2 rounded-3"
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            required
+                            placeholder="Enter email address"
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label fw-semibold text-dark">
+                            <i className="fas fa-phone me-2 text-muted"></i>
+                            Phone Number
+                          </label>
+                          <input
+                            type="tel"
+                            className="form-control form-control-lg border-2 rounded-3"
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            placeholder="(555) 123-4567"
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label fw-semibold text-dark">
+                            <i className="fas fa-calendar me-2 text-muted"></i>
+                            Date of Birth
+                          </label>
+                          <input
+                            type="date"
+                            className="form-control form-control-lg border-2 rounded-3"
+                            value={formData.dateOfBirth}
+                            onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label fw-semibold text-dark">
+                            <i className="fas fa-comment me-2 text-muted"></i>
+                            Preferred Contact Method
+                          </label>
+                          <select
+                            className="form-select form-select-lg border-2 rounded-3"
+                            value={formData.preferredContactMethod}
+                            onChange={(e) => setFormData({ ...formData, preferredContactMethod: e.target.value })}
+                          >
+                            <option value="email">Email</option>
+                            <option value="phone">Phone Call</option>
+                            <option value="text">Text Message</option>
+                          </select>
+                        </div>
+                        <div className="col-12">
+                          <label className="form-label fw-semibold text-dark">
+                            <i className="fas fa-bullhorn me-2 text-muted"></i>
+                            How did you hear about us?
+                            {formData.role === 'client' && (
+                              <span className="badge bg-info ms-2 small">Client Marketing Data</span>
+                            )}
+                          </label>
+                          <select
+                            className="form-select form-select-lg border-2 rounded-3"
+                            value={formData.hearAboutUs}
+                            onChange={(e) => setFormData({ ...formData, hearAboutUs: e.target.value })}
+                          >
+                            <option value="">Select how they heard about us...</option>
+                            <option value="Google Search">Google Search</option>
+                            <option value="Social Media - Instagram">Social Media - Instagram</option>
+                            <option value="Social Media - Facebook">Social Media - Facebook</option>
+                            <option value="Social Media - TikTok">Social Media - TikTok</option>
+                            <option value="Word of Mouth/Referral">Word of Mouth/Referral</option>
+                            <option value="Existing Client Referral">Existing Client Referral</option>
+                            <option value="Yelp/Google Reviews">Yelp/Google Reviews</option>
+                            <option value="Website">Website</option>
+                            <option value="Print Advertisement">Print Advertisement</option>
+                            <option value="Radio/TV">Radio/TV</option>
+                            <option value="Event/Trade Show">Event/Trade Show</option>
+                            <option value="Other">Other</option>
+                          </select>
+                          {formData.role === 'client' && (
+                            <div className="form-text text-muted small mt-2">
+                              <i className="fas fa-info-circle me-1"></i>
+                              This information helps us track our most effective marketing channels for client acquisition.
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Last Name *</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formData.lastName}
-                        onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
+                  )}
 
-                  <div className="row">
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Email *</label>
-                      <input
-                        type="email"
-                        className="form-control"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        required
-                      />
+                  {/* Contact & Address Tab */}
+                  {activeTab === 'contact' && (
+                    <div className="tab-pane fade show active">
+                      <div className="row g-4">
+                        <div className="col-12">
+                          <h6 className="text-primary fw-bold mb-3">
+                            <i className="fas fa-map-marker-alt me-2"></i>
+                            Address Information
+                          </h6>
+                        </div>
+                        <div className="col-12">
+                          <label className="form-label fw-semibold text-dark">
+                            <i className="fas fa-home me-2 text-muted"></i>
+                            Street Address
+                          </label>
+                          <input
+                            type="text"
+                            className="form-control form-control-lg border-2 rounded-3"
+                            value={formData.address}
+                            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                            placeholder="123 Main Street"
+                          />
+                        </div>
+                        <div className="col-md-4">
+                          <label className="form-label fw-semibold text-dark">
+                            <i className="fas fa-city me-2 text-muted"></i>
+                            City
+                          </label>
+                          <input
+                            type="text"
+                            className="form-control form-control-lg border-2 rounded-3"
+                            value={formData.city}
+                            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                            placeholder="Charlotte"
+                          />
+                        </div>
+                        <div className="col-md-4">
+                          <label className="form-label fw-semibold text-dark">
+                            <i className="fas fa-flag me-2 text-muted"></i>
+                            State
+                          </label>
+                          <input
+                            type="text"
+                            className="form-control form-control-lg border-2 rounded-3"
+                            value={formData.state}
+                            onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                            placeholder="North Carolina"
+                          />
+                        </div>
+                        <div className="col-md-4">
+                          <label className="form-label fw-semibold text-dark">
+                            <i className="fas fa-mail-bulk me-2 text-muted"></i>
+                            ZIP Code
+                          </label>
+                          <input
+                            type="text"
+                            className="form-control form-control-lg border-2 rounded-3"
+                            value={formData.zipCode}
+                            onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+                            placeholder="28202"
+                          />
+                        </div>
+                        <div className="col-12">
+                          <h6 className="text-primary fw-bold mb-3 mt-4">
+                            <i className="fas fa-phone-alt me-2"></i>
+                            Emergency Contact
+                          </h6>
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label fw-semibold text-dark">
+                            <i className="fas fa-user-friends me-2 text-muted"></i>
+                            Emergency Contact Name
+                          </label>
+                          <input
+                            type="text"
+                            className="form-control form-control-lg border-2 rounded-3"
+                            value={formData.emergencyContactName}
+                            onChange={(e) => setFormData({ ...formData, emergencyContactName: e.target.value })}
+                            placeholder="Full name of emergency contact"
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label fw-semibold text-dark">
+                            <i className="fas fa-phone me-2 text-muted"></i>
+                            Emergency Contact Phone
+                          </label>
+                          <input
+                            type="tel"
+                            className="form-control form-control-lg border-2 rounded-3"
+                            value={formData.emergencyContactPhone}
+                            onChange={(e) => setFormData({ ...formData, emergencyContactPhone: e.target.value })}
+                            placeholder="(555) 123-4567"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Phone *</label>
-                      <input
-                        type="tel"
-                        className="form-control"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
+                  )}
 
-                  <div className="row">
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Role *</label>
-                      <select
-                        className="form-select"
-                        value={formData.role}
-                        onChange={(e) => setFormData({ ...formData, role: e.target.value as 'client' | 'admin' | 'artist' })}
-                        required
-                      >
-                        <option value="client">Client</option>
-                        <option value="artist">Artist</option>
-                        <option value="admin">Admin</option>
-                      </select>
+                  {/* Security & Role Tab */}
+                  {activeTab === 'security' && (
+                    <div className="tab-pane fade show active">
+                      <div className="row g-4">
+                        <div className="col-12">
+                          <h6 className="text-primary fw-bold mb-3">
+                            <i className="fas fa-user-cog me-2"></i>
+                            User Role & Permissions
+                          </h6>
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label fw-semibold text-dark">
+                            <i className="fas fa-user-tag me-2 text-muted"></i>
+                            User Role *
+                          </label>
+                          <select
+                            className="form-select form-select-lg border-2 rounded-3"
+                            value={formData.role}
+                            onChange={(e) => setFormData({ ...formData, role: e.target.value as 'client' | 'admin' | 'artist' })}
+                            required
+                          >
+                            <option value="client">Client - Book appointments and manage profile</option>
+                            <option value="artist">Artist - Manage schedule and appointments</option>
+                            <option value="admin">Admin - Full system access</option>
+                          </select>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="p-3 bg-light rounded-3 border">
+                            <h6 className="fw-bold text-dark mb-2">Role Permissions</h6>
+                            <ul className="list-unstyled small mb-0">
+                              {formData.role === 'client' && (
+                                <>
+                                  <li><i className="fas fa-check text-success me-2"></i>Book appointments</li>
+                                  <li><i className="fas fa-check text-success me-2"></i>Manage personal profile</li>
+                                  <li><i className="fas fa-check text-success me-2"></i>View appointment history</li>
+                                </>
+                              )}
+                              {formData.role === 'artist' && (
+                                <>
+                                  <li><i className="fas fa-check text-success me-2"></i>Manage schedule and availability</li>
+                                  <li><i className="fas fa-check text-success me-2"></i>View client appointments</li>
+                                  <li><i className="fas fa-check text-success me-2"></i>Update appointment status</li>
+                                </>
+                              )}
+                              {formData.role === 'admin' && (
+                                <>
+                                  <li><i className="fas fa-check text-success me-2"></i>Full system administration</li>
+                                  <li><i className="fas fa-check text-success me-2"></i>Manage all users and roles</li>
+                                  <li><i className="fas fa-check text-success me-2"></i>Access all system features</li>
+                                </>
+                              )}
+                            </ul>
+                          </div>
+                        </div>
+                        
+                        {editingUser && (
+                          <>
+                            <div className="col-12">
+                              <h6 className="text-primary fw-bold mb-3 mt-4">
+                                <i className="fas fa-key me-2"></i>
+                                Change Password
+                              </h6>
+                              <div className="alert alert-info border-0 rounded-3">
+                                <i className="fas fa-info-circle me-2"></i>
+                                Leave password fields empty to keep the current password unchanged.
+                              </div>
+                            </div>
+                            <div className="col-md-4">
+                              <label className="form-label fw-semibold text-dark">
+                                <i className="fas fa-lock me-2 text-muted"></i>
+                                Current Password
+                              </label>
+                              <input
+                                type="password"
+                                className="form-control form-control-lg border-2 rounded-3"
+                                value={formData.currentPassword}
+                                onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
+                                placeholder="Enter current password"
+                              />
+                            </div>
+                            <div className="col-md-4">
+                              <label className="form-label fw-semibold text-dark">
+                                <i className="fas fa-key me-2 text-muted"></i>
+                                New Password
+                              </label>
+                              <input
+                                type="password"
+                                className="form-control form-control-lg border-2 rounded-3"
+                                value={formData.newPassword}
+                                onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                                placeholder="Enter new password"
+                              />
+                            </div>
+                            <div className="col-md-4">
+                              <label className="form-label fw-semibold text-dark">
+                                <i className="fas fa-check-circle me-2 text-muted"></i>
+                                Confirm New Password
+                              </label>
+                              <input
+                                type="password"
+                                className="form-control form-control-lg border-2 rounded-3"
+                                value={formData.confirmPassword}
+                                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                placeholder="Confirm new password"
+                              />
+                            </div>
+                            {formData.newPassword && formData.confirmPassword && formData.newPassword !== formData.confirmPassword && (
+                              <div className="col-12">
+                                <div className="alert alert-warning border-0 rounded-3">
+                                  <i className="fas fa-exclamation-triangle me-2"></i>
+                                  Passwords do not match. Please check your entries.
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Date of Birth</label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        value={formData.dateOfBirth}
-                        onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Address</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="row">
-                    <div className="col-md-4 mb-3">
-                      <label className="form-label">City</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formData.city}
-                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      />
-                    </div>
-                    <div className="col-md-4 mb-3">
-                      <label className="form-label">State</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formData.state}
-                        onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                      />
-                    </div>
-                    <div className="col-md-4 mb-3">
-                      <label className="form-label">ZIP Code</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formData.zipCode}
-                        onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="row">
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Emergency Contact Name</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formData.emergencyContactName}
-                        onChange={(e) => setFormData({ ...formData, emergencyContactName: e.target.value })}
-                      />
-                    </div>
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Emergency Contact Phone</label>
-                      <input
-                        type="tel"
-                        className="form-control"
-                        value={formData.emergencyContactPhone}
-                        onChange={(e) => setFormData({ ...formData, emergencyContactPhone: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="row">
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Preferred Contact Method</label>
-                      <select
-                        className="form-select"
-                        value={formData.preferredContactMethod}
-                        onChange={(e) => setFormData({ ...formData, preferredContactMethod: e.target.value })}
-                      >
-                        <option value="email">Email</option>
-                        <option value="phone">Phone</option>
-                        <option value="text">Text Message</option>
-                      </select>
-                    </div>
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">How did you hear about us?</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formData.hearAboutUs}
-                        onChange={(e) => setFormData({ ...formData, hearAboutUs: e.target.value })}
-                      />
-                    </div>
-                  </div>
+                  )}
                 </div>
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => {
-                      setShowAddUserModal(false);
-                      resetForm();
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        {editingUser ? 'Updating...' : 'Creating...'}
-                      </>
-                    ) : (
-                      editingUser ? 'Update User' : 'Create User'
-                    )}
-                  </button>
+
+                {/* Enhanced Modal Footer */}
+                <div className="modal-footer border-0 bg-light p-4">
+                  <div className="d-flex justify-content-between align-items-center w-100">
+                    <div className="text-muted small">
+                      <i className="fas fa-info-circle me-1"></i>
+                      Fields marked with * are required
+                    </div>
+                    <div className="d-flex gap-2">
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary rounded-pill px-4"
+                        onClick={() => {
+                          setShowAddUserModal(false);
+                          resetForm();
+                          setActiveTab('personal');
+                        }}
+                      >
+                        <i className="fas fa-times me-2"></i>
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="btn rounded-pill px-4"
+                        style={{ backgroundColor: '#AD6269', borderColor: '#AD6269', color: 'white' }}
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            {editingUser ? 'Updating User...' : 'Creating User...'}
+                          </>
+                        ) : (
+                          <>
+                            <i className={`fas ${editingUser ? 'fa-save' : 'fa-plus'} me-2`}></i>
+                            {editingUser ? 'Update User' : 'Create User'}
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </form>
             </div>

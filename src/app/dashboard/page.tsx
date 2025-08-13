@@ -8,6 +8,7 @@ import Footer from '../../components/Footer';
 import UserManagement from '../../components/UserManagement';
 import AvailabilityCalendar from '../../components/AvailabilityCalendar';
 import AdminAvailabilityManager from '../../components/AdminAvailabilityManager';
+import MarketingAnalytics from '../../components/MarketingAnalytics';
 import { auth, isFirebaseConfigured } from '@/lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { User } from 'firebase/auth';
@@ -20,7 +21,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<DatabaseUser | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'availability' | 'admin'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'availability' | 'admin' | 'analytics'>('dashboard');
   const [adminUsers, setAdminUsers] = useState<{
     admins: DatabaseUser[];
     artists: DatabaseUser[];
@@ -275,6 +276,17 @@ export default function Dashboard() {
                             User Management
                           </button>
                         </li>
+                        <li className="nav-item" role="presentation">
+                          <button
+                            className={`nav-link px-4 py-3 ${activeTab === 'analytics' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('analytics')}
+                            type="button"
+                            role="tab"
+                          >
+                            <i className="fas fa-chart-bar me-2"></i>
+                            Marketing Analytics
+                          </button>
+                        </li>
                       </>
                     )}
                   </ul>
@@ -479,6 +491,11 @@ export default function Dashboard() {
                   )}
                 </div>
               </div>
+            )}
+
+            {/* Marketing Analytics Tab Content */}
+            {activeTab === 'analytics' && userRole === 'admin' && (
+              <MarketingAnalytics />
             )}
           </div>
         </div>
