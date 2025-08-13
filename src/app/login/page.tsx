@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Header from '../../components/Header';
@@ -15,8 +15,20 @@ function LoginForm() {
   const serviceId = searchParams.get('service');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Load saved credentials on component mount
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('rememberedEmail');
+    const wasRemembered = localStorage.getItem('rememberMe') === 'true';
+    
+    if (savedEmail && wasRemembered) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +39,16 @@ function LoginForm() {
     if (email === 'admin@example.com' && password === 'admin123') {
       console.log('Development admin bypass activated');
       localStorage.setItem('adminEmail', email);
+      
+      // Handle Remember Me functionality
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', email);
+        localStorage.setItem('rememberMe', 'true');
+      } else {
+        localStorage.removeItem('rememberedEmail');
+        localStorage.removeItem('rememberMe');
+      }
+      
       // Redirect back to booking flow if coming from there, otherwise go to admin
       if (redirectUrl && serviceId) {
         router.push(`${redirectUrl}?step=calendar&service=${serviceId}`);
@@ -51,6 +73,15 @@ function LoginForm() {
       }
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       console.log('Login successful:', userCredential.user.email);
+      
+      // Handle Remember Me functionality
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', email);
+        localStorage.setItem('rememberMe', 'true');
+      } else {
+        localStorage.removeItem('rememberedEmail');
+        localStorage.removeItem('rememberMe');
+      }
       
       // Redirect back to booking flow if coming from there, otherwise go to dashboard
       if (redirectUrl && serviceId) {
@@ -176,7 +207,13 @@ function LoginForm() {
                     <div className="mb-4">
                       <div className="d-flex justify-content-between align-items-center">
                         <div className="form-check">
-                          <input type="checkbox" className="form-check-input" id="rememberMe" />
+                          <input 
+                            type="checkbox" 
+                            className="form-check-input" 
+                            id="rememberMe"
+                            checked={rememberMe}
+                            onChange={(e) => setRememberMe(e.target.checked)}
+                          />
                           <label className="form-check-label text-muted" htmlFor="rememberMe">
                             Remember me
                           </label>
