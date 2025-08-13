@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
     // your project has TypeScript errors.
     ignoreBuildErrors: true,
   },
+  // Uncomment the following lines for static export deployment
+  // output: 'export',
+  // distDir: 'out',
+  // trailingSlash: true,
+  // images: {
+  //   unoptimized: true,
+  // },
 };
 
 export default nextConfig;

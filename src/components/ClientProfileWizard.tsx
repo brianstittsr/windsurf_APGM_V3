@@ -32,6 +32,7 @@ interface WizardStep {
   type: 'text' | 'email' | 'tel' | 'date' | 'select';
   placeholder?: string;
   required: boolean;
+  defaultValue?: string;
   options?: { value: string; label: string }[];
   validation?: (value: string) => string | null;
 }
@@ -132,6 +133,7 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
       question: 'What state do you live in?',
       type: 'select',
       required: true,
+      defaultValue: 'NC',
       options: [
         { value: '', label: 'Select your state' },
         { value: 'AL', label: 'Alabama' },
@@ -343,7 +345,7 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
                 {currentStep.type === 'select' ? (
                   <select
                     className="form-select form-select-lg"
-                    value={data[currentStep.id] || ''}
+                    value={data[currentStep.id] || currentStep.defaultValue || ''}
                     onChange={(e) => handleInputChange(e.target.value)}
                     autoFocus
                   >

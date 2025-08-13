@@ -35,9 +35,7 @@ async function testStripeKey(secretKey: string, mode: 'test' | 'live'): Promise<
     }
 
     // Initialize Stripe with the key
-    const stripe = new Stripe(secretKey, {
-      apiVersion: '2025-07-30.basil',
-    });
+    const stripe = new Stripe(secretKey);
 
     // Test the connection by retrieving account information
     const account = await stripe.accounts.retrieve();
@@ -124,7 +122,7 @@ async function testStripeConnections() {
   
   // Summary
   console.log('\n📊 SUMMARY:');
-  console.log('=' * 50);
+  console.log('='.repeat(50));
   
   results.forEach(result => {
     const status = result.success ? '✅ WORKING' : '❌ FAILED';

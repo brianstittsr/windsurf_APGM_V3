@@ -32,9 +32,7 @@ export function getStripeMode(): StripeMode {
 function isBuildTime(): boolean {
   // During Next.js build, we want to avoid throwing errors
   // Check for common build-time indicators
-  return process.env.NODE_ENV === undefined || 
-         process.env.NEXT_PHASE === 'phase-production-build' ||
-         process.env.VERCEL_ENV === undefined;
+  return process.env.NEXT_PHASE === 'phase-production-build';
 }
 
 /**

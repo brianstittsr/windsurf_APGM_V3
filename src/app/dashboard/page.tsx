@@ -7,6 +7,7 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import UserManagement from '../../components/UserManagement';
 import AvailabilityCalendar from '../../components/AvailabilityCalendar';
+import AdminAvailabilityManager from '../../components/AdminAvailabilityManager';
 import { auth, isFirebaseConfigured } from '@/lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { User } from 'firebase/auth';
@@ -19,7 +20,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<DatabaseUser | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'admin'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'availability' | 'admin'>('dashboard');
   const [adminUsers, setAdminUsers] = useState<{
     admins: DatabaseUser[];
     artists: DatabaseUser[];
@@ -32,6 +33,21 @@ export default function Dashboard() {
   const [adminLoading, setAdminLoading] = useState(false);
 
   useEffect(() => {
+    // Check for development bypass first
+    const adminEmail = localStorage.getItem('adminEmail');
+    if (adminEmail === 'admin@example.com') {
+      // Development bypass - create mock user and proceed
+      const mockUser = {
+        uid: 'admin-example',
+        email: 'admin@example.com',
+        displayName: 'Admin User'
+      } as User;
+      setUser(mockUser);
+      fetchUserData(mockUser.uid, mockUser.email || '');
+      setLoading(false);
+      return;
+    }
+
     if (!isFirebaseConfigured() || !auth) {
       router.push('/login');
       return;
@@ -236,17 +252,30 @@ export default function Dashboard() {
                       </li>
                     )}
                     {userRole === 'admin' && (
-                      <li className="nav-item" role="presentation">
-                        <button
-                          className={`nav-link px-4 py-3 ${activeTab === 'admin' ? 'active' : ''}`}
-                          onClick={() => setActiveTab('admin')}
-                          type="button"
-                          role="tab"
-                        >
-                          <i className="fas fa-users-cog me-2"></i>
-                          User Management
-                        </button>
-                      </li>
+                      <>
+                        <li className="nav-item" role="presentation">
+                          <button
+                            className={`nav-link px-4 py-3 ${activeTab === 'availability' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('availability')}
+                            type="button"
+                            role="tab"
+                          >
+                            <i className="fas fa-calendar-check me-2"></i>
+                            Artist Schedules
+                          </button>
+                        </li>
+                        <li className="nav-item" role="presentation">
+                          <button
+                            className={`nav-link px-4 py-3 ${activeTab === 'admin' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('admin')}
+                            type="button"
+                            role="tab"
+                          >
+                            <i className="fas fa-users-cog me-2"></i>
+                            User Management
+                          </button>
+                        </li>
+                      </>
                     )}
                   </ul>
                 </div>
@@ -415,6 +444,11 @@ export default function Dashboard() {
                   />
                 </div>
               </div>
+            )}
+
+            {/* Admin Availability Management Tab Content */}
+            {activeTab === 'availability' && userRole === 'admin' && (
+              <AdminAvailabilityManager />
             )}
 
             {/* Admin Tab Content */}

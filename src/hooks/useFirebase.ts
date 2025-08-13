@@ -9,6 +9,7 @@ import {
   AvailabilityService
 } from '@/services/database';
 import { AvailabilityService as ArtistAvailabilityService, ArtistAvailability } from '@/services/availabilityService';
+import { TimeSlotService, DayTimeSlots, TimeSlot } from '@/services/timeSlotService';
 import { 
   Service, 
   Appointment, 
@@ -512,5 +513,97 @@ export function useArtistAvailability(artistId?: string) {
     initializeAvailability,
     loading, 
     error 
+  };
+}
+
+// Hook for time slot availability
+export function useTimeSlots(date?: string) {
+  const [timeSlots, setTimeSlots] = useState<DayTimeSlots | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!date) {
+      setTimeSlots(null);
+      return;
+    }
+
+    const fetchTimeSlots = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const slots = await TimeSlotService.getAvailableTimeSlots(date);
+        setTimeSlots(slots);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch time slots');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTimeSlots();
+  }, [date]);
+
+  const refreshTimeSlots = async () => {
+    if (!date) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      const slots = await TimeSlotService.getAvailableTimeSlots(date);
+      setTimeSlots(slots);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to refresh time slots');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const checkTimeSlotAvailability = async (time: string, artistId: string): Promise<boolean> => {
+    if (!date) return false;
+    
+    try {
+      return await TimeSlotService.isTimeSlotAvailable(date, time, artistId);
+    } catch (err) {
+      console.error('Error checking time slot availability:', err);
+      return false;
+    }
+  };
+
+  return { 
+    timeSlots, 
+    loading, 
+    error, 
+    refreshTimeSlots,
+    checkTimeSlotAvailability
+  };
+}
+
+// Hook for getting next available date
+export function useNextAvailableDate() {
+  const [nextAvailable, setNextAvailable] = useState<{ date: string; timeSlots: TimeSlot[] } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const findNextAvailableDate = async (fromDate?: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await TimeSlotService.getNextAvailableDate(fromDate);
+      setNextAvailable(result);
+      return result;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to find next available date');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { 
+    nextAvailable, 
+    loading, 
+    error, 
+    findNextAvailableDate
   };
 }

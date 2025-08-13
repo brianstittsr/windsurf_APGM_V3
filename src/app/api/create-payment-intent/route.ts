@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getStripeSecretKey, getStripeModeDescription } from '@/lib/stripe-config';
 
-const stripe = new Stripe(getStripeSecretKey(), {
-  apiVersion: '2025-07-30.basil',
-});
+const stripe = new Stripe(getStripeSecretKey());
 
 export async function POST(request: NextRequest) {
   try {

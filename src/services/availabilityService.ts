@@ -56,15 +56,21 @@ export class AvailabilityService {
       const availabilityRef = collection(db, 'artistAvailability');
       const q = query(
         availabilityRef, 
-        where('artistId', '==', artistId),
-        orderBy('dayOfWeek')
+        where('artistId', '==', artistId)
       );
       const snapshot = await getDocs(q);
+      
+      // Sort client-side to avoid needing a composite index
+      const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
       
       return snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      } as ArtistAvailability));
+      } as ArtistAvailability)).sort((a, b) => {
+        const aIndex = dayOrder.indexOf(a.dayOfWeek.toLowerCase());
+        const bIndex = dayOrder.indexOf(b.dayOfWeek.toLowerCase());
+        return aIndex - bIndex;
+      });
     } catch (error) {
       console.error('Error fetching artist availability:', error);
       return [];
@@ -101,10 +107,17 @@ export class AvailabilityService {
       const docId = `${artistId}_${dayOfWeek}`;
       const docRef = doc(db, 'artistAvailability', docId);
       
-      await updateDoc(docRef, {
+      // Use setDoc with merge to handle both existing and non-existing documents
+      await setDoc(docRef, {
+        id: docId,
+        artistId,
+        dayOfWeek,
         isEnabled,
-        updatedAt: Timestamp.now()
-      });
+        timeRanges: [],
+        servicesOffered: ['all'],
+        updatedAt: Timestamp.now(),
+        createdAt: Timestamp.now()
+      }, { merge: true });
     } catch (error) {
       console.error('Error toggling day availability:', error);
       throw error;
@@ -239,15 +252,17 @@ export class AvailabilityService {
       const exceptionsRef = collection(db, 'artistScheduleExceptions');
       const q = query(
         exceptionsRef, 
-        where('artistId', '==', artistId),
-        orderBy('date')
+        where('artistId', '==', artistId)
       );
       const snapshot = await getDocs(q);
       
+      // Sort client-side to avoid needing a composite index
       return snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      } as ScheduleException));
+      } as ScheduleException)).sort((a, b) => {
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
+      });
     } catch (error) {
       console.error('Error fetching schedule exceptions:', error);
       return [];
@@ -268,6 +283,25 @@ export class AvailabilityService {
       });
     } catch (error) {
       console.error('Error adding schedule exception:', error);
+      throw error;
+    }
+  }
+
+  // Update services offered for a specific day
+  static async updateServicesOffered(artistId: string, dayOfWeek: string, servicesOffered: string[]): Promise<void> {
+    try {
+      const docId = `${artistId}_${dayOfWeek}`;
+      const docRef = doc(db, 'artistAvailability', docId);
+      
+      await setDoc(docRef, {
+        id: docId,
+        artistId,
+        dayOfWeek,
+        servicesOffered,
+        updatedAt: Timestamp.now()
+      }, { merge: true });
+    } catch (error) {
+      console.error('Error updating services offered:', error);
       throw error;
     }
   }
