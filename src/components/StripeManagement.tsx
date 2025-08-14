@@ -1,0 +1,458 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
+
+interface StripeManagementProps {
+  // Add any props if needed
+}
+
+interface PaymentTestResult {
+  success: boolean;
+  message: string;
+  paymentIntentId?: string;
+  amount?: number;
+  timestamp?: string;
+}
+
+export default function StripeManagement({}: StripeManagementProps) {
+  const [stripeMode, setStripeMode] = useState<'test' | 'live'>('test');
+  const [isLoading, setIsLoading] = useState(false);
+  const [testResults, setTestResults] = useState<PaymentTestResult[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState('');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [stripeConfig, setStripeConfig] = useState({
+    testPublishableKey: '',
+    testSecretKey: '',
+    livePublishableKey: '',
+    liveSecretKey: '',
+    currentMode: 'test'
+  });
+
+  // Sample products for testing
+  const products = [
+    { id: 'eyebrows', name: 'Eyebrow Microblading', price: 450 },
+    { id: 'eyeliner', name: 'Permanent Eyeliner', price: 350 },
+    { id: 'lips', name: 'Lip Blushing', price: 400 },
+    { id: 'combo', name: 'Combo Package', price: 1000 },
+    { id: 'touchup', name: 'Touch-up Session', price: 150 }
+  ];
+
+  useEffect(() => {
+    loadStripeConfig();
+  }, []);
+
+  const loadStripeConfig = async () => {
+    try {
+      // In a real implementation, this would fetch from your backend/database
+      // For now, we'll use environment variables and localStorage for persistence
+      const savedMode = localStorage.getItem('stripeMode') || 'test';
+      setStripeMode(savedMode as 'test' | 'live');
+      
+      setStripeConfig({
+        testPublishableKey: process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY || '',
+        testSecretKey: process.env.STRIPE_TEST_SECRET_KEY || '',
+        livePublishableKey: process.env.NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY || '',
+        liveSecretKey: process.env.STRIPE_LIVE_SECRET_KEY || '',
+        currentMode: savedMode
+      });
+    } catch (error) {
+      console.error('Error loading Stripe config:', error);
+    }
+  };
+
+  const toggleStripeMode = async () => {
+    setIsLoading(true);
+    try {
+      const newMode = stripeMode === 'test' ? 'live' : 'test';
+      
+      // Save to localStorage (in production, you'd save to your backend)
+      localStorage.setItem('stripeMode', newMode);
+      setStripeMode(newMode);
+      
+      // Update the config
+      setStripeConfig(prev => ({
+        ...prev,
+        currentMode: newMode
+      }));
+
+      // Add a test result entry
+      const result: PaymentTestResult = {
+        success: true,
+        message: `Stripe mode switched to ${newMode.toUpperCase()}`,
+        timestamp: new Date().toISOString()
+      };
+      
+      setTestResults(prev => [result, ...prev.slice(0, 9)]); // Keep last 10 results
+      
+    } catch (error) {
+      console.error('Error toggling Stripe mode:', error);
+      const result: PaymentTestResult = {
+        success: false,
+        message: `Failed to switch Stripe mode: ${error}`,
+        timestamp: new Date().toISOString()
+      };
+      setTestResults(prev => [result, ...prev.slice(0, 9)]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const testPayment = async () => {
+    if (!selectedProduct) {
+      alert('Please select a product to test payment');
+      return;
+    }
+
+    setIsProcessingPayment(true);
+    try {
+      const product = products.find(p => p.id === selectedProduct);
+      if (!product) throw new Error('Product not found');
+
+      // Create payment intent for $1.00 (100 cents)
+      const response = await fetch('/api/create-test-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: 100, // $1.00 in cents
+          currency: 'usd',
+          productName: product.name,
+          stripeMode: stripeMode,
+          isTestPayment: true
+        }),
+      });
+
+      const { clientSecret, paymentIntentId } = await response.json();
+
+      if (!response.ok) {
+        throw new Error('Failed to create payment intent');
+      }
+
+      // Load Stripe with the appropriate key
+      const publishableKey = stripeMode === 'test' 
+        ? stripeConfig.testPublishableKey 
+        : stripeConfig.livePublishableKey;
+      
+      const stripe = await loadStripe(publishableKey);
+      if (!stripe) throw new Error('Failed to load Stripe');
+
+      // For testing purposes, we'll simulate a successful payment
+      // In a real implementation, you'd redirect to a payment form
+      const result: PaymentTestResult = {
+        success: true,
+        message: `$1.00 test payment created for ${product.name} in ${stripeMode.toUpperCase()} mode`,
+        paymentIntentId,
+        amount: 1.00,
+        timestamp: new Date().toISOString()
+      };
+
+      setTestResults(prev => [result, ...prev.slice(0, 9)]);
+
+    } catch (error) {
+      console.error('Payment test failed:', error);
+      const result: PaymentTestResult = {
+        success: false,
+        message: `Payment test failed: ${error}`,
+        timestamp: new Date().toISOString()
+      };
+      setTestResults(prev => [result, ...prev.slice(0, 9)]);
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  const clearTestResults = () => {
+    setTestResults([]);
+  };
+
+  return (
+    <div className="container-fluid">
+      {/* Header Section */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <div className="card border-0 shadow-sm">
+            <div className="card-header border-0 py-4" style={{ background: 'linear-gradient(135deg, #AD6269 0%, #8B4A52 100%)' }}>
+              <div className="d-flex justify-content-between align-items-center">
+                <div className="d-flex align-items-center">
+                  <div className="avatar-circle me-3" style={{ 
+                    width: '50px', 
+                    height: '50px', 
+                    background: 'rgba(255,255,255,0.2)', 
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <i className="fas fa-credit-card text-white fs-5"></i>
+                  </div>
+                  <div>
+                    <h4 className="mb-1 text-white fw-bold">Stripe Payment Management</h4>
+                    <p className="mb-0 text-white-50 small">Configure payment processing and test transactions</p>
+                  </div>
+                </div>
+                <div className="d-flex align-items-center gap-3">
+                  <div className="text-white text-center">
+                    <div className="small text-white-50">Current Mode</div>
+                    <div className={`badge fs-6 px-3 py-2 ${stripeMode === 'test' ? 'bg-warning' : 'bg-success'}`}>
+                      <i className={`fas ${stripeMode === 'test' ? 'fa-flask' : 'fa-shield-alt'} me-2`}></i>
+                      {stripeMode.toUpperCase()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="row g-4">
+        {/* Stripe Mode Toggle */}
+        <div className="col-lg-6">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-header border-0 bg-light py-3">
+              <h5 className="mb-0 fw-bold text-dark">
+                <i className="fas fa-toggle-on me-2 text-primary"></i>
+                Stripe Mode Control
+              </h5>
+            </div>
+            <div className="card-body p-4">
+              <div className="row g-3">
+                <div className="col-12">
+                  <div className="d-flex justify-content-between align-items-center p-3 rounded-3 bg-light">
+                    <div>
+                      <h6 className="mb-1 fw-bold">Payment Processing Mode</h6>
+                      <p className="mb-0 text-muted small">
+                        {stripeMode === 'test' 
+                          ? 'Using test keys - no real charges will be made' 
+                          : 'Using live keys - real payments will be processed'}
+                      </p>
+                    </div>
+                    <div className="form-check form-switch">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="stripeModeToggle"
+                        checked={stripeMode === 'live'}
+                        onChange={toggleStripeMode}
+                        disabled={isLoading}
+                        style={{ transform: 'scale(1.5)' }}
+                      />
+                      <label className="form-check-label visually-hidden" htmlFor="stripeModeToggle">
+                        Toggle Stripe Mode
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="col-12">
+                  <div className="alert alert-info border-0 rounded-3">
+                    <i className="fas fa-info-circle me-2"></i>
+                    <strong>Important:</strong> Make sure you have configured both test and live Stripe keys in your environment variables before switching modes.
+                  </div>
+                </div>
+
+                {stripeMode === 'live' && (
+                  <div className="col-12">
+                    <div className="alert alert-warning border-0 rounded-3">
+                      <i className="fas fa-exclamation-triangle me-2"></i>
+                      <strong>Live Mode Active:</strong> Real payments will be processed. Use the $1 test feature below to verify everything is working correctly.
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Payment Test Section */}
+        <div className="col-lg-6">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-header border-0 bg-light py-3">
+              <h5 className="mb-0 fw-bold text-dark">
+                <i className="fas fa-dollar-sign me-2 text-primary"></i>
+                $1 Payment Test
+              </h5>
+            </div>
+            <div className="card-body p-4">
+              <div className="row g-3">
+                <div className="col-12">
+                  <label className="form-label fw-semibold">Select Product for Testing</label>
+                  <select
+                    className="form-select form-select-lg border-2 rounded-3"
+                    value={selectedProduct}
+                    onChange={(e) => setSelectedProduct(e.target.value)}
+                  >
+                    <option value="">Choose a product...</option>
+                    {products.map(product => (
+                      <option key={product.id} value={product.id}>
+                        {product.name} (${product.price})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-12">
+                  <button
+                    className="btn btn-lg w-100 rounded-pill"
+                    style={{ backgroundColor: '#AD6269', borderColor: '#AD6269', color: 'white' }}
+                    onClick={testPayment}
+                    disabled={!selectedProduct || isProcessingPayment}
+                  >
+                    {isProcessingPayment ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                        Processing Test Payment...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-credit-card me-2"></i>
+                        Create $1.00 Test Payment
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="col-12">
+                  <div className="alert alert-info border-0 rounded-3 small">
+                    <i className="fas fa-lightbulb me-2"></i>
+                    This creates a $1.00 payment intent to test your Stripe configuration without processing large amounts.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Test Results Section */}
+      {testResults.length > 0 && (
+        <div className="row mt-4">
+          <div className="col-12">
+            <div className="card border-0 shadow-sm">
+              <div className="card-header border-0 bg-light py-3 d-flex justify-content-between align-items-center">
+                <h5 className="mb-0 fw-bold text-dark">
+                  <i className="fas fa-history me-2 text-primary"></i>
+                  Test Results History
+                </h5>
+                <button
+                  className="btn btn-outline-secondary btn-sm rounded-pill"
+                  onClick={clearTestResults}
+                >
+                  <i className="fas fa-trash me-1"></i>
+                  Clear History
+                </button>
+              </div>
+              <div className="card-body p-0">
+                <div className="table-responsive">
+                  <table className="table table-hover mb-0">
+                    <thead className="table-light">
+                      <tr>
+                        <th className="border-0 fw-bold">Status</th>
+                        <th className="border-0 fw-bold">Message</th>
+                        <th className="border-0 fw-bold">Amount</th>
+                        <th className="border-0 fw-bold">Payment ID</th>
+                        <th className="border-0 fw-bold">Timestamp</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {testResults.map((result, index) => (
+                        <tr key={index}>
+                          <td className="align-middle">
+                            <span className={`badge rounded-pill ${result.success ? 'bg-success' : 'bg-danger'}`}>
+                              <i className={`fas ${result.success ? 'fa-check' : 'fa-times'} me-1`}></i>
+                              {result.success ? 'Success' : 'Failed'}
+                            </span>
+                          </td>
+                          <td className="align-middle">{result.message}</td>
+                          <td className="align-middle">
+                            {result.amount ? `$${result.amount.toFixed(2)}` : '-'}
+                          </td>
+                          <td className="align-middle">
+                            {result.paymentIntentId ? (
+                              <code className="small">{result.paymentIntentId.substring(0, 20)}...</code>
+                            ) : '-'}
+                          </td>
+                          <td className="align-middle">
+                            {result.timestamp ? new Date(result.timestamp).toLocaleString() : '-'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Configuration Status */}
+      <div className="row mt-4">
+        <div className="col-12">
+          <div className="card border-0 shadow-sm">
+            <div className="card-header border-0 bg-light py-3">
+              <h5 className="mb-0 fw-bold text-dark">
+                <i className="fas fa-cog me-2 text-primary"></i>
+                Configuration Status
+              </h5>
+            </div>
+            <div className="card-body p-4">
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <div className="p-3 rounded-3 border">
+                    <h6 className="fw-bold text-warning mb-2">
+                      <i className="fas fa-flask me-2"></i>
+                      Test Mode Configuration
+                    </h6>
+                    <div className="small">
+                      <div className="d-flex justify-content-between">
+                        <span>Publishable Key:</span>
+                        <span className={stripeConfig.testPublishableKey ? 'text-success' : 'text-danger'}>
+                          <i className={`fas ${stripeConfig.testPublishableKey ? 'fa-check' : 'fa-times'}`}></i>
+                          {stripeConfig.testPublishableKey ? 'Configured' : 'Missing'}
+                        </span>
+                      </div>
+                      <div className="d-flex justify-content-between">
+                        <span>Secret Key:</span>
+                        <span className={stripeConfig.testSecretKey ? 'text-success' : 'text-danger'}>
+                          <i className={`fas ${stripeConfig.testSecretKey ? 'fa-check' : 'fa-times'}`}></i>
+                          {stripeConfig.testSecretKey ? 'Configured' : 'Missing'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="p-3 rounded-3 border">
+                    <h6 className="fw-bold text-success mb-2">
+                      <i className="fas fa-shield-alt me-2"></i>
+                      Live Mode Configuration
+                    </h6>
+                    <div className="small">
+                      <div className="d-flex justify-content-between">
+                        <span>Publishable Key:</span>
+                        <span className={stripeConfig.livePublishableKey ? 'text-success' : 'text-danger'}>
+                          <i className={`fas ${stripeConfig.livePublishableKey ? 'fa-check' : 'fa-times'}`}></i>
+                          {stripeConfig.livePublishableKey ? 'Configured' : 'Missing'}
+                        </span>
+                      </div>
+                      <div className="d-flex justify-content-between">
+                        <span>Secret Key:</span>
+                        <span className={stripeConfig.liveSecretKey ? 'text-success' : 'text-danger'}>
+                          <i className={`fas ${stripeConfig.liveSecretKey ? 'fa-check' : 'fa-times'}`}></i>
+                          {stripeConfig.liveSecretKey ? 'Configured' : 'Missing'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

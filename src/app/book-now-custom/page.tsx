@@ -13,6 +13,7 @@ import { Timestamp } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 import { getServiceImagePath } from '@/utils/serviceImageUtils';
 import { calculateTotalWithStripeFees } from '@/lib/stripe-fees';
+import { useWorkflowTrigger } from '@/hooks/useWorkflowTrigger';
 // Email services moved to API routes to avoid client-side imports
 
 function BookNowCustomContent() {
@@ -57,6 +58,9 @@ function BookNowCustomContent() {
   const { availability, bookTimeSlot } = useAvailability(selectedDate);
   const { timeSlots, loading, error } = useTimeSlots(selectedDate);
   const { nextAvailable, findNextAvailableDate } = useNextAvailableDate();
+  
+  // Workflow trigger hook
+  const { triggerNewClientWorkflow, triggerAppointmentBookedWorkflow } = useWorkflowTrigger();
   
   const [clientProfile, setClientProfile] = useState<ClientProfileData>({
     firstName: '',
@@ -245,6 +249,35 @@ function BookNowCustomContent() {
       
       // Book the time slot
       await bookTimeSlot(selectedTime, appointmentId, 'default-artist');
+      
+      // Trigger marketing workflows
+      try {
+        const clientId = 'temp-client-id'; // In production, this would be the actual user ID
+        const clientEmail = clientProfile.email;
+        
+        // Check if this is a new client (in production, you'd check if user exists in database)
+        const isNewClient = true; // This would be determined by checking user history
+        
+        if (isNewClient && clientEmail) {
+          // Trigger new client welcome workflow
+          await triggerNewClientWorkflow(clientId, clientEmail);
+        }
+        
+        if (clientEmail) {
+          // Trigger appointment booked workflow
+          await triggerAppointmentBookedWorkflow(clientId, clientEmail, {
+            appointmentId,
+            serviceType: selectedService.name,
+            appointmentDate: selectedDate,
+            artistId: selectedArtistId || 'default-artist'
+          });
+        }
+        
+        console.log('Marketing workflows triggered successfully');
+      } catch (workflowError) {
+        console.error('Failed to trigger marketing workflows:', workflowError);
+        // Don't fail the booking if workflows fail
+      }
       
       console.log('Booking completed successfully:', appointmentId);
       setCurrentStep('confirmation');
