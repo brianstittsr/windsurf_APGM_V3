@@ -537,7 +537,7 @@ function BookNowCustomContent() {
                           {timeSlots.hasAvailability ? (
                             <div className="row justify-content-center g-4">
                               {timeSlots.timeSlots
-                                .filter(slot => slot.available)
+                                .filter(slot => slot.available && slot.artistName !== 'Admin')
                                 .map((slot, index) => (
                                   <div key={index} className="col-12 col-sm-6 col-md-5 col-lg-4 col-xl-3">
                                     <div
