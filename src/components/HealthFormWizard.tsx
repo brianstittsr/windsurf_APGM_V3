@@ -38,8 +38,7 @@ const steps: WizardStep[] = [
   { id: 12, question: "Have you consumed alcohol within the last 24 hours?", type: 'yesno', category: 'Pre-Treatment' },
   { id: 13, question: "Do you understand the risks and aftercare requirements?", type: 'yesno', category: 'Understanding' },
   { id: 14, question: "Are you over 18 years of age?", type: 'yesno', category: 'Legal Requirements' },
-  { id: 15, question: "Do you consent to before/after photos for portfolio use?", type: 'yesno', category: 'Consent' },
-  { id: 16, question: "Have you read and understood all policies and procedures?", type: 'yesno', category: 'Policies' },
+
   { id: 17, question: "Do you understand that results may vary and touch-ups may be needed?", type: 'yesno', category: 'Expectations' },
   { id: 18, question: "Electronic Signature & Consent", type: 'signature', category: 'Final Consent' }
 ];

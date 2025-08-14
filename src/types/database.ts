@@ -15,6 +15,7 @@ export interface UserProfile {
   emergencyContactPhone: string;
   preferredContactMethod: string;
   hearAboutUs: string;
+  notes?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

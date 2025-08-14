@@ -14,7 +14,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-dark text-white" style={{fontFamily: 'Poppins, sans-serif'}}>
+    <footer className="text-white" style={{fontFamily: 'Poppins, sans-serif', backgroundColor: 'black'}}>
       <div className="container py-5">
         <div className="row g-4">
           {/* Company Info */}

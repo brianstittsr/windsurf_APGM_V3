@@ -165,7 +165,7 @@ export class ClientEmailService {
                     <li><strong>Make Online Payments:</strong> Pay remaining balances securely</li>
                     <li><strong>Upcoming Appointments:</strong> View and manage your scheduled appointments</li>
                     <li><strong>Procedure Notes:</strong> Access your treatment records and aftercare instructions</li>
-                    <li><strong>Before/After Photos:</strong> View your transformation progress</li>
+
                     <li><strong>Contact Information:</strong> Update your details anytime</li>
                     <li><strong>Appointment History:</strong> Review all your past visits</li>
                 </ul>
@@ -206,7 +206,7 @@ WHAT YOU CAN DO IN YOUR PORTAL:
 • Make Online Payments - Pay remaining balances securely
 • Upcoming Appointments - View and manage your scheduled appointments
 • Procedure Notes - Access your treatment records and aftercare instructions
-• Before/After Photos - View your transformation progress
+
 • Contact Information - Update your details anytime
 • Appointment History - Review all your past visits
 
@@ -246,8 +246,7 @@ Thank you for choosing ${data.businessName}!
       "Have you consumed alcohol within the last 24 hours?",
       "Do you understand the risks and aftercare requirements?",
       "Are you over 18 years of age?",
-      "Do you consent to before/after photos for portfolio use?",
-      "Have you read and understood all policies and procedures?",
+
       "Do you understand that results may vary and touch-ups may be needed?"
     ];
 

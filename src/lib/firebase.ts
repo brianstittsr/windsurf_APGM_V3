@@ -5,9 +5,19 @@ import { getStorage, connectStorageEmulator } from 'firebase/storage';
 
 // Check if Firebase environment variables are configured
 const isFirebaseConfigured = () => {
-  return !!(process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
-    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN &&
-    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+  const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+  const authDomain = process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  
+  // Check if we have real Firebase config (not demo values)
+  const hasRealConfig = !!(apiKey && 
+    authDomain && 
+    projectId && 
+    apiKey !== 'demo-api-key' &&
+    authDomain !== 'aprettygirlmatterllc.firebaseapp.com' &&
+    projectId !== 'aprettygirlmatterllc');
+    
+  return hasRealConfig;
 };
 
 // Firebase configuration
@@ -32,20 +42,16 @@ if (!getApps().length) {
 let db, auth, storage;
 
 try {
-  if (isFirebaseConfigured()) {
-    // Production Firebase configuration
-    db = getFirestore(app);
-    auth = getAuth(app);
-    storage = getStorage(app);
-  } else {
-    // Development mode with emulators or mock services
+  // Always initialize Firebase services
+  db = getFirestore(app);
+  auth = getAuth(app);
+  storage = getStorage(app);
+  
+  if (!isFirebaseConfigured()) {
+    // Development mode warning
     console.warn('⚠️ Firebase environment variables not configured. Using demo configuration.');
     console.log('📝 Please copy env-template.txt to .env.local and configure your Firebase project.');
     console.log('🔗 Project setup: https://console.firebase.google.com/u/0/project/aprettygirlmatterllc');
-    
-    db = getFirestore(app);
-    auth = getAuth(app);
-    storage = getStorage(app);
     
     // Connect to emulators in development if available
     if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true') {
@@ -62,10 +68,8 @@ try {
   }
 } catch (error) {
   console.error('Firebase initialization error:', error);
-  // Create mock services for development
-  db = null;
-  auth = null;
-  storage = null;
+  // Re-throw the error so it can be handled by the calling code
+  throw new Error(`Firebase initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
 }
 
 export { db, auth, storage, isFirebaseConfigured };

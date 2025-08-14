@@ -32,12 +32,13 @@ interface UserFormData {
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
+  notes: string;
 }
 
 export default function UserManagement({ users, onUsersUpdated }: UserManagementProps) {
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<'personal' | 'contact' | 'security'>('personal');
+  const [activeTab, setActiveTab] = useState<'personal' | 'contact' | 'security' | 'notes'>('personal');
   const [formData, setFormData] = useState<UserFormData>({
     firstName: '',
     lastName: '',
@@ -55,7 +56,8 @@ export default function UserManagement({ users, onUsersUpdated }: UserManagement
     hearAboutUs: '',
     currentPassword: '',
     newPassword: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    notes: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -78,7 +80,8 @@ export default function UserManagement({ users, onUsersUpdated }: UserManagement
       hearAboutUs: '',
       currentPassword: '',
       newPassword: '',
-      confirmPassword: ''
+      confirmPassword: '',
+      notes: ''
     });
     setError('');
     setEditingUser(null);
@@ -107,7 +110,8 @@ export default function UserManagement({ users, onUsersUpdated }: UserManagement
       hearAboutUs: user.profile.hearAboutUs,
       currentPassword: '',
       newPassword: '',
-      confirmPassword: ''
+      confirmPassword: '',
+      notes: user.profile.notes || ''
     });
     setEditingUser(user);
     setShowAddUserModal(true);
@@ -137,6 +141,7 @@ export default function UserManagement({ users, onUsersUpdated }: UserManagement
             emergencyContactPhone: formData.emergencyContactPhone,
             preferredContactMethod: formData.preferredContactMethod,
             hearAboutUs: formData.hearAboutUs,
+            notes: formData.notes,
             updatedAt: Timestamp.now()
           },
           role: formData.role
@@ -430,6 +435,21 @@ export default function UserManagement({ users, onUsersUpdated }: UserManagement
                       >
                         <i className="fas fa-shield-alt me-2"></i>
                         Security & Role
+                      </button>
+                    </li>
+                    <li className="nav-item" role="presentation">
+                      <button
+                        className={`nav-link rounded-pill px-4 py-2 fw-semibold ${activeTab === 'notes' ? 'active' : ''}`}
+                        type="button"
+                        onClick={() => setActiveTab('notes')}
+                        style={{ 
+                          backgroundColor: activeTab === 'notes' ? '#AD6269' : 'transparent',
+                          borderColor: activeTab === 'notes' ? '#AD6269' : '#dee2e6',
+                          color: activeTab === 'notes' ? 'white' : '#6c757d'
+                        }}
+                      >
+                        <i className="fas fa-sticky-note me-2"></i>
+                        Notes
                       </button>
                     </li>
                   </ul>
@@ -788,6 +808,39 @@ export default function UserManagement({ users, onUsersUpdated }: UserManagement
                             )}
                           </>
                         )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notes Tab */}
+                  {activeTab === 'notes' && (
+                    <div className="tab-pane fade show active">
+                      <div className="row g-4">
+                        <div className="col-12">
+                          <h6 className="text-primary fw-bold mb-3">
+                            <i className="fas fa-sticky-note me-2"></i>
+                            Client Notes
+                          </h6>
+                        </div>
+                        <div className="col-12">
+                          <label className="form-label fw-semibold text-dark">
+                            <i className="fas fa-comment-alt me-2 text-muted"></i>
+                            Notes & Comments
+                          </label>
+                          <textarea
+                            className="form-control form-control-lg border-2 rounded-3"
+                            rows={8}
+                            value={formData.notes}
+                            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                            placeholder="Add any notes, comments, or important information about this client..."
+                            style={{ resize: 'vertical' }}
+                          />
+                          <div className="form-text text-muted mt-2">
+                            <i className="fas fa-info-circle me-1"></i>
+                            Use this space to record important client information, preferences, special instructions, 
+                            appointment history notes, or any other relevant details that will help provide better service.
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}

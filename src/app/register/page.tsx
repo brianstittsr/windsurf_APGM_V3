@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { auth, isFirebaseConfigured } from '@/lib/firebase';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, Auth } from 'firebase/auth';
 import { UserService } from '@/services/database';
 
 function RegisterForm() {
@@ -57,21 +57,23 @@ function RegisterForm() {
       return;
     }
 
-    if (!isFirebaseConfigured()) {
-      setError('Firebase is not configured. Please set up your environment variables.');
-      return;
-    }
-
     setIsLoading(true);
 
     try {
       if (!auth) {
-        throw new Error('Firebase Auth is not initialized');
+        throw new Error('Firebase Auth is not initialized. Please check your Firebase configuration.');
+      }
+      
+      const authInstance = auth as Auth;
+
+      // Check if Firebase is properly configured
+      if (!isFirebaseConfigured()) {
+        console.warn('Using demo Firebase configuration. This may cause authentication issues.');
       }
       
       // Create user account with Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(
-        auth,
+        authInstance,
         formData.email,
         formData.password
       );
