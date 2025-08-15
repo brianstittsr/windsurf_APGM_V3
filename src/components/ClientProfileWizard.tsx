@@ -80,8 +80,9 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
       placeholder: '(555) 123-4567',
       required: true,
       validation: (value: string) => {
-        if (value && !/^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/.test(value)) {
-          return 'Please enter a valid phone number';
+        const digits = value.replace(/\D/g, '');
+        if (value && digits.length !== 10) {
+          return 'Please enter a valid 10-digit phone number';
         }
         return null;
       }
@@ -194,7 +195,13 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
       question: 'What is your ZIP code?',
       type: 'text',
       placeholder: '12345',
-      required: true
+      required: true,
+      validation: (value: string) => {
+        if (value && !/^\d{5}$/.test(value)) {
+          return 'Please enter a valid 5-digit ZIP code';
+        }
+        return null;
+      }
     },
     {
       id: 'emergencyContactName',
@@ -212,8 +219,9 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
       placeholder: '(555) 123-4567',
       required: true,
       validation: (value: string) => {
-        if (value && !/^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/.test(value)) {
-          return 'Please enter a valid phone number';
+        const digits = value.replace(/\D/g, '');
+        if (value && digits.length !== 10) {
+          return 'Please enter a valid 10-digit phone number';
         }
         return null;
       }
@@ -252,10 +260,40 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
 
   const currentStep = steps[currentStepIndex];
 
+  // Phone number formatting function
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, '');
+    
+    // Format as (XXX) XXX-XXXX
+    if (digits.length <= 3) {
+      return digits;
+    } else if (digits.length <= 6) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    } else {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+    }
+  };
+
+  // ZIP code formatting function
+  const formatZipCode = (value: string) => {
+    // Remove all non-digits and limit to 5 digits
+    return value.replace(/\D/g, '').slice(0, 5);
+  };
+
   const handleInputChange = (value: string) => {
+    let formattedValue = value;
+    
+    // Apply formatting based on field type
+    if (currentStep.id === 'phone' || currentStep.id === 'emergencyContactPhone') {
+      formattedValue = formatPhoneNumber(value);
+    } else if (currentStep.id === 'zipCode') {
+      formattedValue = formatZipCode(value);
+    }
+    
     onChange({
       ...data,
-      [currentStep.id]: value
+      [currentStep.id]: formattedValue
     });
     setErrors([]); // Clear errors when user types
   };
@@ -263,13 +301,14 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
   const validateCurrentStep = () => {
     const newErrors: string[] = [];
     const value = data[currentStep.id];
+    const effectiveValue = value || currentStep.defaultValue;
 
-    if (currentStep.required && !value?.trim()) {
+    if (currentStep.required && !effectiveValue?.trim()) {
       newErrors.push(`${currentStep.question.replace('?', '')} is required`);
     }
 
-    if (currentStep.validation && value) {
-      const validationError = currentStep.validation(value);
+    if (currentStep.validation && effectiveValue) {
+      const validationError = currentStep.validation(effectiveValue);
       if (validationError) {
         newErrors.push(validationError);
       }

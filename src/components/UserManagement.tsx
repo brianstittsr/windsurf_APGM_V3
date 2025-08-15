@@ -19,7 +19,7 @@ interface UserFormData {
   lastName: string;
   email: string;
   phone: string;
-  role: 'client' | 'admin' | 'artist';
+  role: string;
   dateOfBirth: string;
   address: string;
   city: string;
@@ -29,7 +29,6 @@ interface UserFormData {
   emergencyContactPhone: string;
   preferredContactMethod: string;
   hearAboutUs: string;
-  currentPassword: string;
   newPassword: string;
   confirmPassword: string;
   notes: string;
@@ -54,7 +53,6 @@ export default function UserManagement({ users, onUsersUpdated }: UserManagement
     emergencyContactPhone: '',
     preferredContactMethod: 'email',
     hearAboutUs: '',
-    currentPassword: '',
     newPassword: '',
     confirmPassword: '',
     notes: ''
@@ -78,7 +76,6 @@ export default function UserManagement({ users, onUsersUpdated }: UserManagement
       emergencyContactPhone: '',
       preferredContactMethod: 'email',
       hearAboutUs: '',
-      currentPassword: '',
       newPassword: '',
       confirmPassword: '',
       notes: ''
@@ -108,7 +105,6 @@ export default function UserManagement({ users, onUsersUpdated }: UserManagement
       emergencyContactPhone: user.profile.emergencyContactPhone,
       preferredContactMethod: user.profile.preferredContactMethod,
       hearAboutUs: user.profile.hearAboutUs,
-      currentPassword: '',
       newPassword: '',
       confirmPassword: '',
       notes: user.profile.notes || ''
@@ -759,20 +755,7 @@ export default function UserManagement({ users, onUsersUpdated }: UserManagement
                                 Leave password fields empty to keep the current password unchanged.
                               </div>
                             </div>
-                            <div className="col-md-4">
-                              <label className="form-label fw-semibold text-dark">
-                                <i className="fas fa-lock me-2 text-muted"></i>
-                                Current Password
-                              </label>
-                              <input
-                                type="password"
-                                className="form-control form-control-lg border-2 rounded-3"
-                                value={formData.currentPassword}
-                                onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                                placeholder="Enter current password"
-                              />
-                            </div>
-                            <div className="col-md-4">
+                            <div className="col-md-6">
                               <label className="form-label fw-semibold text-dark">
                                 <i className="fas fa-key me-2 text-muted"></i>
                                 New Password
@@ -785,7 +768,7 @@ export default function UserManagement({ users, onUsersUpdated }: UserManagement
                                 placeholder="Enter new password"
                               />
                             </div>
-                            <div className="col-md-4">
+                            <div className="col-md-6">
                               <label className="form-label fw-semibold text-dark">
                                 <i className="fas fa-check-circle me-2 text-muted"></i>
                                 Confirm New Password

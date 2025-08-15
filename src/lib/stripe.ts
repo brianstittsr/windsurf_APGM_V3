@@ -12,6 +12,12 @@ if (typeof window === 'undefined') {
 function getClientSidePublishableKey(): string {
   // Try public environment variables first (for client-side)
   const publicKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+  console.log('🔍 Frontend Stripe key check:', {
+    hasPublicKey: !!publicKey,
+    keyPrefix: publicKey?.substring(0, 20) + '...',
+    isClient: typeof window !== 'undefined'
+  });
+  
   if (publicKey) {
     return publicKey;
   }

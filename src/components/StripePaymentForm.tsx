@@ -55,8 +55,9 @@ export default function StripePaymentForm({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-
+    
     if (!stripe || !elements) {
+      console.error('❌ Stripe not loaded');
       return;
     }
 
@@ -64,7 +65,12 @@ export default function StripePaymentForm({
     setLoading?.(true);
 
     try {
+      console.log('🔧 Starting payment process...');
+      console.log('Amount:', amount, 'USD');
+      console.log('🔍 Frontend using publishable key:', process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.substring(0, 20) + '...');
+      
       // Create payment intent on the server
+      console.log('📡 Calling /api/create-payment-intent...');
       const response = await fetch('/api/create-payment-intent', {
         method: 'POST',
         headers: {
@@ -76,11 +82,26 @@ export default function StripePaymentForm({
         }),
       });
 
-      const { client_secret } = await response.json();
+      console.log('📡 API Response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API Error Response:', errorText);
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+      }
+
+      const responseData = await response.json();
+      console.log('📡 API Response data:', responseData);
+      
+      const { client_secret, payment_intent_id } = responseData;
 
       if (!client_secret) {
-        throw new Error('Failed to create payment intent');
+        console.error('❌ No client_secret in response:', responseData);
+        throw new Error('Failed to create payment intent - no client_secret returned');
       }
+      
+      console.log('✅ Payment intent created:', payment_intent_id);
+      console.log('🔑 Client secret received:', client_secret.substring(0, 20) + '...');
 
       // Confirm payment with the card element
       const cardElement = elements.getElement(CardNumberElement) || elements.getElement(CardElement);
@@ -89,6 +110,10 @@ export default function StripePaymentForm({
         throw new Error('Card element not found');
       }
 
+      console.log('💳 Confirming payment with Stripe...');
+      console.log('Card element found:', !!cardElement);
+      console.log('Cardholder name:', cardholderName);
+      
       const { error, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
         payment_method: {
           card: cardElement,
@@ -98,17 +123,48 @@ export default function StripePaymentForm({
           },
         },
       });
+      
+      console.log('💳 Stripe confirmation result:');
+      console.log('Error:', error);
+      console.log('Payment Intent:', paymentIntent);
 
       if (error) {
-        console.error('Payment failed:', error);
-        onError(error.message || 'Payment failed');
+        console.error('❌ Payment failed:', error);
+        console.error('Error type:', error.type);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        
+        // Provide more specific error messages
+        let errorMessage = error.message || 'Payment failed';
+        if (error.code === 'payment_intent_unexpected_state') {
+          errorMessage = 'Payment intent is in an unexpected state. Please try again.';
+        } else if (error.message?.includes('No such payment_intent')) {
+          errorMessage = 'Payment session expired. Please refresh the page and try again.';
+        }
+        
+        onError(errorMessage);
       } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-        console.log('Payment succeeded:', paymentIntent);
+        console.log('✅ Payment succeeded:', paymentIntent);
         onSuccess(paymentIntent);
+      } else {
+        console.error('❌ Unexpected payment state:', paymentIntent?.status);
+        onError('Payment completed but status is unclear. Please contact support.');
       }
     } catch (err) {
-      console.error('Payment error:', err);
-      onError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      console.error('❌ Payment process error:', err);
+      console.error('Error stack:', err instanceof Error ? err.stack : 'No stack trace');
+      
+      let errorMessage = 'An unexpected error occurred';
+      if (err instanceof Error) {
+        errorMessage = err.message;
+        if (err.message.includes('Failed to fetch')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (err.message.includes('API Error')) {
+          errorMessage = 'Server error. Please try again or contact support.';
+        }
+      }
+      
+      onError(errorMessage);
     } finally {
       setProcessing(false);
       setLoading?.(false);

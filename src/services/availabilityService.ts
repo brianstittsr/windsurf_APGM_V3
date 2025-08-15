@@ -222,17 +222,36 @@ export class AvailabilityService {
   static async initializeArtistAvailability(artistId: string): Promise<void> {
     const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     
+    // Default working hours for Victoria
+    const defaultSchedule: Record<string, { start: string; end: string; isWorking: boolean }> = {
+      monday: { start: "9:00 AM", end: "5:00 PM", isWorking: true },
+      tuesday: { start: "9:00 AM", end: "5:00 PM", isWorking: true },
+      wednesday: { start: "9:00 AM", end: "5:00 PM", isWorking: true },
+      thursday: { start: "9:00 AM", end: "5:00 PM", isWorking: true },
+      friday: { start: "9:00 AM", end: "5:00 PM", isWorking: true },
+      saturday: { start: "10:00 AM", end: "4:00 PM", isWorking: true },
+      sunday: { start: "10:00 AM", end: "4:00 PM", isWorking: false }
+    };
+    
     try {
       const promises = daysOfWeek.map(day => {
         const docId = `${artistId}_${day}`;
         const docRef = doc(db, 'artistAvailability', docId);
+        const daySchedule = defaultSchedule[day];
+        
+        const timeRanges: TimeRange[] = daySchedule.isWorking ? [{
+          id: `${day}_default`,
+          startTime: daySchedule.start,
+          endTime: daySchedule.end,
+          isActive: true
+        }] : [];
         
         return setDoc(docRef, {
           id: docId,
           artistId,
           dayOfWeek: day,
-          isEnabled: false,
-          timeRanges: [],
+          isEnabled: daySchedule.isWorking,
+          timeRanges,
           servicesOffered: ['all'],
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now()

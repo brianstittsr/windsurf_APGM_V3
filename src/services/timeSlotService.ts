@@ -150,24 +150,56 @@ export class TimeSlotService {
           const dayAvailability = artistAvailability.find(a => a.dayOfWeek === dayOfWeek);
           
           if (dayAvailability && dayAvailability.isEnabled) {
+            const artistSlots: TimeSlot[] = [];
+            const seenTimes = new Set<string>();
+            
+            // Debug logging for Saturday availability
+            if (dayOfWeek === 'saturday' && artist.name === 'Victoria') {
+              console.log('🔍 Victoria Saturday availability debug:', {
+                dayOfWeek,
+                isEnabled: dayAvailability.isEnabled,
+                timeRanges: dayAvailability.timeRanges.map(tr => ({
+                  startTime: tr.startTime,
+                  endTime: tr.endTime,
+                  isActive: tr.isActive
+                }))
+              });
+            }
+            
             // Generate time slots from each time range
             dayAvailability.timeRanges.forEach(timeRange => {
               const slots = this.generateTimeSlots(timeRange, artist.id, artist.name);
               
-              // Check if slots are already booked
+              // Debug logging for Saturday slots
+              if (dayOfWeek === 'saturday' && artist.name === 'Victoria') {
+                console.log('🔍 Generated slots for time range:', {
+                  timeRange: { startTime: timeRange.startTime, endTime: timeRange.endTime },
+                  generatedSlots: slots.map(s => s.time)
+                });
+              }
+              
+              // Only add slots that haven't been seen before for this artist
               slots.forEach(slot => {
-                const bookingKey = `${slot.artistId}_${slot.time}`;
-                const bookedAppointment = bookedSlots.get(bookingKey);
-                
-                if (bookedAppointment) {
-                  slot.available = false;
-                  slot.appointmentId = bookedAppointment.id;
-                  slot.reason = 'Booked';
+                if (!seenTimes.has(slot.time)) {
+                  seenTimes.add(slot.time);
+                  artistSlots.push(slot);
                 }
               });
-              
-              allTimeSlots.push(...slots);
             });
+            
+            // Check if slots are already booked
+            artistSlots.forEach(slot => {
+              const bookingKey = `${slot.artistId}_${slot.time}`;
+              const bookedAppointment = bookedSlots.get(bookingKey);
+              
+              if (bookedAppointment) {
+                slot.available = false;
+                slot.appointmentId = bookedAppointment.id;
+                slot.reason = 'Booked';
+              }
+            });
+            
+            allTimeSlots.push(...artistSlots);
           }
         } catch (error) {
           console.error(`Error fetching availability for artist ${artist.id}:`, error);

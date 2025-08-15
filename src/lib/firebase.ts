@@ -9,13 +9,14 @@ const isFirebaseConfigured = () => {
   const authDomain = process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
   const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
   
-  // Check if we have real Firebase config (not demo values)
+  // Check if we have real Firebase config (not demo/placeholder values)
   const hasRealConfig = !!(apiKey && 
     authDomain && 
     projectId && 
     apiKey !== 'demo-api-key' &&
-    authDomain !== 'aprettygirlmatterllc.firebaseapp.com' &&
-    projectId !== 'aprettygirlmatterllc');
+    apiKey !== 'your_api_key_here' &&
+    authDomain !== 'your_project_id.firebaseapp.com' &&
+    projectId !== 'your_project_id');
     
   return hasRealConfig;
 };
