@@ -6,7 +6,7 @@ const stripe = new Stripe(getStripeSecretKey());
 
 export async function POST(request: NextRequest) {
   try {
-    const { amount, currency = 'usd' } = await request.json();
+    const { amount, currency = 'usd', payment_method_types } = await request.json();
 
     if (!amount || amount < 50) { // Minimum 50 cents
       return NextResponse.json(
@@ -16,19 +16,47 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`💳 Creating payment intent in ${getStripeModeDescription()} mode for $${(amount / 100).toFixed(2)}`);
+    console.log(`💳 Payment methods requested: ${payment_method_types ? payment_method_types.join(', ') : 'automatic'}`);
 
     // Create a PaymentIntent with the order amount and currency
-    const paymentIntent = await stripe.paymentIntents.create({
+    const paymentIntentConfig: Stripe.PaymentIntentCreateParams = {
       amount: Math.round(amount), // Amount in cents
       currency,
-      automatic_payment_methods: {
-        enabled: true,
-      },
       metadata: {
         business: 'A Pretty Girl Matter',
         service_type: 'permanent_makeup',
       },
-    });
+    };
+
+    // Configure payment methods
+    if (payment_method_types && payment_method_types.length > 0) {
+      paymentIntentConfig.payment_method_types = payment_method_types;
+      
+      // Add payment method specific options
+      const paymentMethodOptions: any = {};
+      
+      if (payment_method_types.includes('klarna')) {
+        paymentMethodOptions.klarna = {
+          preferred_locale: 'en-US',
+        };
+      }
+      
+      if (payment_method_types.includes('affirm')) {
+        paymentMethodOptions.affirm = {
+          preferred_locale: 'en-US',
+        };
+      }
+      
+      if (Object.keys(paymentMethodOptions).length > 0) {
+        paymentIntentConfig.payment_method_options = paymentMethodOptions;
+      }
+    } else {
+      paymentIntentConfig.automatic_payment_methods = {
+        enabled: true,
+      };
+    }
+
+    const paymentIntent = await stripe.paymentIntents.create(paymentIntentConfig);
 
     return NextResponse.json({
       client_secret: paymentIntent.client_secret,

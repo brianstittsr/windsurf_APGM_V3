@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
 import stripePromise from '../lib/stripe';
-import StripePaymentForm from './StripePaymentForm';
+import MultiPaymentForm from './MultiPaymentForm';
 import StripeModeIndicator from './StripeModeIndicator';
 import { calculateTotalWithStripeFees, formatCurrency, getStripeFeeExplanation } from '../lib/stripe-fees';
 
@@ -266,7 +266,7 @@ export default function CheckoutCart({
                 <div className="mt-4">
                   <h6 className="mb-3">Payment Details</h6>
                   <Elements stripe={stripePromise}>
-                    <StripePaymentForm
+                    <MultiPaymentForm
                       amount={depositAmount + stripeFee}
                       onSuccess={handlePaymentSuccess}
                       onError={handlePaymentError}
