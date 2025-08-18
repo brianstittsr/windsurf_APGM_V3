@@ -67,14 +67,50 @@ export default function CheckoutCart({
     setPaymentError(null);
     setShowPaymentForm(false);
     
-    // Send invoice email
     try {
+      // 1. Create appointment in Firebase
+      console.log('📅 Creating appointment in Firebase...');
+      
+      const appointmentData = {
+        clientId: 'temp-client-id', // This should be replaced with actual client ID from auth
+        clientName: clientName,
+        clientEmail: 'brianstittsr@gmail.com', // Using your email as requested
+        serviceId: service.id,
+        serviceName: service.name,
+        artistId: 'victoria', // Default artist - should be dynamic based on selection
+        scheduledDate: appointmentDate,
+        scheduledTime: appointmentTime,
+        status: 'confirmed' as const,
+        paymentStatus: 'deposit_paid' as const,
+        totalAmount: totalAmount,
+        depositAmount: depositAmount + stripeFee,
+        remainingAmount: remainingAmount,
+        paymentIntentId: paymentIntent.id,
+        specialRequests: data.specialRequests || '',
+        giftCardCode: data.giftCard || undefined,
+        rescheduleCount: 0,
+        confirmationSent: false,
+        reminderSent: false
+      };
+
+      // Import the services we need
+      const { AppointmentService, AvailabilityService } = await import('@/services/database');
+      
+      const appointmentId = await AppointmentService.createAppointment(appointmentData);
+      console.log('✅ Appointment created:', appointmentId);
+
+      // 2. Remove availability for the booked time slot
+      console.log('🚫 Removing availability for booked time slot...');
+      await AvailabilityService.bookTimeSlot(appointmentDate, appointmentTime, appointmentId, 'victoria');
+      console.log('✅ Time slot marked as unavailable');
+
+      // 3. Send invoice email
       console.log('📧 Sending invoice email...');
       
       const invoiceData = {
         invoiceNumber: `INV-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
         clientName: clientName,
-        clientEmail: 'brianstittsr@gmail.com', // Using your email as requested
+        clientEmail: 'brianstittsr@gmail.com',
         serviceName: service.name,
         servicePrice: subtotal,
         tax: tax,
@@ -93,10 +129,10 @@ export default function CheckoutCart({
         businessPhone: process.env.NEXT_PUBLIC_BUSINESS_PHONE || '(919) 441-0932',
         businessEmail: process.env.NEXT_PUBLIC_BUSINESS_EMAIL || 'victoria@aprettygirlmatter.com',
         businessAddress: '123 Beauty Lane, Raleigh, NC 27601',
-        paymentIntentId: paymentIntent.id
+        paymentIntentId: paymentIntent.id,
+        appointmentId: appointmentId
       };
       
-      // Send invoice via API
       const invoiceResponse = await fetch('/api/send-invoice', {
         method: 'POST',
         headers: {
@@ -110,9 +146,11 @@ export default function CheckoutCart({
       } else {
         console.log('⚠️ Invoice email failed to send, but payment was successful');
       }
+
     } catch (error) {
-      console.error('Error sending invoice email:', error);
-      // Don't fail the payment flow if email fails
+      console.error('Error in post-payment processing:', error);
+      // Don't fail the payment flow, but log the error
+      console.log('⚠️ Payment succeeded but there was an issue with booking creation or availability update');
     }
     
     // Call onNext to proceed to confirmation
