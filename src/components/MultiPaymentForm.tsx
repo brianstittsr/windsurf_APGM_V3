@@ -13,13 +13,14 @@ import {
 
 interface MultiPaymentFormProps {
   amount: number;
+  totalAmount?: number;
   onSuccess: (paymentIntent: any) => void;
   onError: (error: string) => void;
   loading?: boolean;
   setLoading?: (loading: boolean) => void;
 }
 
-type PaymentMethod = 'card' | 'klarna' | 'affirm';
+type PaymentMethod = 'card' | 'klarna' | 'affirm' | 'cherry';
 
 const CARD_ELEMENT_OPTIONS = {
   style: {
@@ -39,6 +40,7 @@ const CARD_ELEMENT_OPTIONS = {
 
 export default function MultiPaymentForm({
   amount,
+  totalAmount,
   onSuccess,
   onError,
   loading = false,
@@ -50,6 +52,18 @@ export default function MultiPaymentForm({
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('card');
   const [clientSecret, setClientSecret] = useState<string>('');
   const [paymentIntentId, setPaymentIntentId] = useState<string>('');
+  
+  // Determine payment amount based on method
+  const getPaymentAmount = (method: PaymentMethod) => {
+    // Cherry, Klarna, and Affirm require full payment
+    if (method === 'cherry' || method === 'klarna' || method === 'affirm') {
+      return totalAmount || amount;
+    }
+    // Card payments use deposit amount
+    return amount;
+  };
+  
+  const currentPaymentAmount = getPaymentAmount(selectedPaymentMethod);
   
   // Card payment states
   const [cardholderName, setCardholderName] = useState('');
@@ -70,7 +84,7 @@ export default function MultiPaymentForm({
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        amount: Math.round(amount * 100), // Convert to cents
+        amount: Math.round(currentPaymentAmount * 100), // Convert to cents
         currency: 'usd',
         payment_method_types: paymentMethodTypes,
       }),
@@ -97,6 +111,12 @@ export default function MultiPaymentForm({
 
   const handlePaymentMethodChange = async (method: PaymentMethod) => {
     setSelectedPaymentMethod(method);
+    
+    // Cherry doesn't need a payment intent since it's external
+    if (method === 'cherry') {
+      return;
+    }
+    
     try {
       let paymentMethodTypes: string[];
       if (method === 'klarna') {
@@ -170,10 +190,32 @@ export default function MultiPaymentForm({
     return { error, paymentIntent };
   };
 
+  const handleCherryPayment = async () => {
+    console.log('🍒 Redirecting to Cherry payment...');
+    
+    // Cherry uses external payment flow - redirect to their payment page
+    const cherryUrl = 'https://pay.withcherry.com/a-pretty-girl-matter-llc?utm_source=practice&m=64197';
+    
+    // Open Cherry payment in new tab/window
+    window.open(cherryUrl, '_blank');
+    
+    // Return a mock success result since Cherry handles payment externally
+    // The actual payment confirmation will happen through Cherry's system
+    return { 
+      error: null, 
+      paymentIntent: { 
+        id: 'cherry_redirect', 
+        status: 'requires_action',
+        payment_method_types: ['cherry']
+      } 
+    };
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     
-    if (!stripe || !elements) {
+    // Cherry doesn't need Stripe
+    if (selectedPaymentMethod !== 'cherry' && (!stripe || !elements)) {
       console.error('❌ Stripe not loaded');
       return;
     }
@@ -188,9 +230,16 @@ export default function MultiPaymentForm({
       
       let currentClientSecret = clientSecret;
       
-      // Create payment intent if not already created
-      if (!currentClientSecret) {
-        const paymentMethodTypes = selectedPaymentMethod === 'klarna' ? ['klarna'] : ['card'];
+      // Create payment intent if not already created (skip for Cherry)
+      if (!currentClientSecret && selectedPaymentMethod !== 'cherry') {
+        let paymentMethodTypes: string[];
+        if (selectedPaymentMethod === 'klarna') {
+          paymentMethodTypes = ['klarna'];
+        } else if (selectedPaymentMethod === 'affirm') {
+          paymentMethodTypes = ['affirm'];
+        } else {
+          paymentMethodTypes = ['card'];
+        }
         const result = await createPaymentIntent(paymentMethodTypes);
         currentClientSecret = result.client_secret;
       }
@@ -203,6 +252,8 @@ export default function MultiPaymentForm({
         result = await handleKlarnaPayment(currentClientSecret);
       } else if (selectedPaymentMethod === 'affirm') {
         result = await handleAffirmPayment(currentClientSecret);
+      } else if (selectedPaymentMethod === 'cherry') {
+        result = await handleCherryPayment();
       } else {
         throw new Error('Invalid payment method selected');
       }
@@ -274,7 +325,9 @@ export default function MultiPaymentForm({
     billingAddress.postal_code.trim() !== ''
   );
 
-  const isFormValid = isCardFormValid && isKlarnaFormValid && isAffirmFormValid;
+  const isCherryFormValid = selectedPaymentMethod !== 'cherry' || true; // Cherry doesn't require form validation
+
+  const isFormValid = isCardFormValid && isKlarnaFormValid && isAffirmFormValid && isCherryFormValid;
 
   return (
     <form onSubmit={handleSubmit} className="multi-payment-form">
@@ -282,7 +335,7 @@ export default function MultiPaymentForm({
       <div className="mb-4">
         <h5 className="mb-3">Choose Payment Method</h5>
         <div className="row">
-          <div className="col-md-4 mb-2">
+          <div className="col-md-3 mb-2">
             <div 
               className={`card payment-method-card ${selectedPaymentMethod === 'card' ? 'border-primary' : ''}`}
               style={{ cursor: 'pointer' }}
@@ -295,7 +348,7 @@ export default function MultiPaymentForm({
               </div>
             </div>
           </div>
-          <div className="col-md-4 mb-2">
+          <div className="col-md-3 mb-2">
             <div 
               className={`card payment-method-card ${selectedPaymentMethod === 'klarna' ? 'border-primary' : ''}`}
               style={{ cursor: 'pointer' }}
@@ -308,7 +361,7 @@ export default function MultiPaymentForm({
               </div>
             </div>
           </div>
-          <div className="col-md-4 mb-2">
+          <div className="col-md-3 mb-2">
             <div 
               className={`card payment-method-card ${selectedPaymentMethod === 'affirm' ? 'border-primary' : ''}`}
               style={{ cursor: 'pointer' }}
@@ -318,6 +371,19 @@ export default function MultiPaymentForm({
                 <i className="fas fa-calendar-check fa-2x mb-2" style={{ color: '#0FA8E6' }}></i>
                 <h6 className="mb-0">Affirm</h6>
                 <small className="text-muted">Monthly payments as low as 0% APR</small>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-3 mb-2">
+            <div 
+              className={`card payment-method-card ${selectedPaymentMethod === 'cherry' ? 'border-primary' : ''}`}
+              style={{ cursor: 'pointer' }}
+              onClick={() => handlePaymentMethodChange('cherry')}
+            >
+              <div className="card-body text-center py-3">
+                <i className="fas fa-heart fa-2x mb-2" style={{ color: '#E91E63' }}></i>
+                <h6 className="mb-0">Cherry</h6>
+                <small className="text-muted">Flexible payment plans</small>
               </div>
             </div>
           </div>
@@ -422,7 +488,70 @@ export default function MultiPaymentForm({
         </div>
       )}
 
-      {/* Billing Address (for all payment methods) */}
+      {/* Klarna Payment Information */}
+      {selectedPaymentMethod === 'klarna' && (
+        <div className="klarna-payment-section">
+          <div className="alert alert-warning">
+            <h6 className="alert-heading">
+              <i className="fas fa-shopping-bag me-2" style={{ color: '#FFB3C7' }}></i>
+              Klarna Full Payment Required
+            </h6>
+            <p className="mb-2">
+              <strong>Full Payment:</strong> ${currentPaymentAmount.toFixed(2)} total (no remaining balance)
+            </p>
+            <p className="mb-0">
+              Klarna will allow you to pay in 4 interest-free installments, but the full service amount is processed upfront.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Affirm Payment Information */}
+      {selectedPaymentMethod === 'affirm' && (
+        <div className="affirm-payment-section">
+          <div className="alert alert-info">
+            <h6 className="alert-heading">
+              <i className="fas fa-calendar-check me-2" style={{ color: '#0FA8E6' }}></i>
+              Affirm Full Payment Required
+            </h6>
+            <p className="mb-2">
+              <strong>Full Payment:</strong> ${currentPaymentAmount.toFixed(2)} total (no remaining balance)
+            </p>
+            <p className="mb-0">
+              Affirm offers monthly payment plans with rates as low as 0% APR, but the full service amount is processed upfront.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Cherry Payment Information */}
+      {selectedPaymentMethod === 'cherry' && (
+        <div className="cherry-payment-section">
+          <div className="alert alert-info">
+            <h6 className="alert-heading">
+              <i className="fas fa-heart me-2" style={{ color: '#E91E63' }}></i>
+              Cherry Payment Process
+            </h6>
+            <p className="mb-2">Cherry requires full payment upfront with flexible payment plans. Here's what happens next:</p>
+            <ol className="mb-2">
+              <li><strong>Get Pre-Approved:</strong> Click "Continue with Cherry" to get pre-approved for the full amount</li>
+              <li><strong>Book Your Appointment:</strong> Contact us directly to schedule your treatment</li>
+              <li><strong>Say "I'm paying with Cherry":</strong> When booking, mention you'll use Cherry financing</li>
+              <li><strong>Secure Checkout:</strong> We'll send you a secure checkout link to complete full payment</li>
+              <li><strong>Select Payment Plan:</strong> Choose your preferred payment plan and pay the initial down payment</li>
+            </ol>
+            <p className="mb-2">
+              <strong>Full Payment Required:</strong> ${currentPaymentAmount.toFixed(2)} total (no remaining balance)
+            </p>
+            <p className="mb-0">
+              <strong>Contact us:</strong> Call or text to book your appointment after Cherry approval.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Billing Address (for Card, Klarna and Affirm only) */}
+      {selectedPaymentMethod !== 'cherry' && (
       <div className="billing-address-section">
         <h6 className="mb-3">Billing Address</h6>
         
@@ -489,6 +618,7 @@ export default function MultiPaymentForm({
           </div>
         </div>
       </div>
+      )}
 
       <div className="d-grid">
         <button
@@ -502,11 +632,13 @@ export default function MultiPaymentForm({
               Processing...
             </>
           ) : selectedPaymentMethod === 'klarna' ? (
-            `Continue with Klarna - $${amount.toFixed(2)}`
+            `Pay Full Amount with Klarna - $${currentPaymentAmount.toFixed(2)}`
           ) : selectedPaymentMethod === 'affirm' ? (
-            `Continue with Affirm - $${amount.toFixed(2)}`
+            `Pay Full Amount with Affirm - $${currentPaymentAmount.toFixed(2)}`
+          ) : selectedPaymentMethod === 'cherry' ? (
+            `Continue with Cherry - Full Payment Required`
           ) : (
-            `Pay $${amount.toFixed(2)} Deposit`
+            `Pay $${currentPaymentAmount.toFixed(2)} Deposit`
           )}
         </button>
       </div>

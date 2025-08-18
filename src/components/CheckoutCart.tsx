@@ -71,6 +71,12 @@ export default function CheckoutCart({
       // 1. Create appointment in Firebase
       console.log('📅 Creating appointment in Firebase...');
       
+      // Determine if this is a full payment or deposit based on payment method
+      const isFullPayment = paymentIntent.payment_method_types?.includes('klarna') || 
+                           paymentIntent.payment_method_types?.includes('affirm') || 
+                           paymentIntent.payment_method_types?.includes('cherry') ||
+                           paymentIntent.id === 'cherry_redirect';
+      
       const appointmentData = {
         clientId: 'temp-client-id', // This should be replaced with actual client ID from auth
         clientName: clientName,
@@ -81,10 +87,10 @@ export default function CheckoutCart({
         scheduledDate: appointmentDate,
         scheduledTime: appointmentTime,
         status: 'confirmed' as const,
-        paymentStatus: 'deposit_paid' as const,
+        paymentStatus: isFullPayment ? 'paid_in_full' as const : 'deposit_paid' as const,
         totalAmount: totalAmount,
-        depositAmount: depositAmount + stripeFee,
-        remainingAmount: remainingAmount,
+        depositAmount: isFullPayment ? totalAmount : depositAmount + stripeFee,
+        remainingAmount: isFullPayment ? 0 : remainingAmount,
         paymentIntentId: paymentIntent.id,
         specialRequests: data.specialRequests || '',
         giftCardCode: data.giftCard || undefined,
@@ -306,6 +312,7 @@ export default function CheckoutCart({
                   <Elements stripe={stripePromise}>
                     <MultiPaymentForm
                       amount={depositAmount + stripeFee}
+                      totalAmount={totalAmount}
                       onSuccess={handlePaymentSuccess}
                       onError={handlePaymentError}
                       loading={paymentLoading}
@@ -412,8 +419,9 @@ export default function CheckoutCart({
             {!showOrderSummary && (
               <div className="mt-2">
                 <div className="h5 mb-1">{formatCurrency(totalAmount)}</div>
-                <div className="text-primary fw-bold">{formatCurrency(depositAmount)} due now</div>
+                <div className="text-primary fw-bold">{formatCurrency(depositAmount)} due now (deposit)</div>
                 <div className="text-muted small">Includes {formatCurrency(stripeFee)} processing fee</div>
+                <div className="text-muted small">Note: Cherry, Klarna, and Affirm require full payment upfront</div>
               </div>
             )}
           </div>

@@ -47,7 +47,10 @@ export interface Service {
 export interface Appointment {
   id: string;
   clientId: string;
+  clientName: string;
+  clientEmail: string;
   serviceId: string;
+  serviceName: string;
   artistId: string;
   scheduledDate: string;
   scheduledTime: string;
@@ -55,7 +58,8 @@ export interface Appointment {
   totalAmount: number;
   depositAmount: number;
   remainingAmount: number;
-  paymentStatus: 'pending' | 'deposit_paid' | 'fully_paid' | 'refunded';
+  paymentStatus: 'pending' | 'deposit_paid' | 'paid_in_full' | 'refunded';
+  paymentIntentId: string;
   specialRequests: string;
   giftCardCode?: string;
   giftCardAmount?: number;
