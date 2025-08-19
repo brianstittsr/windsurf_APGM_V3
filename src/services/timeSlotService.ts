@@ -118,10 +118,9 @@ export class TimeSlotService {
 
   // Get all artists (for now, return mock data - this should be replaced with actual artist service)
   private static async getArtists(): Promise<Array<{ id: string; name: string }>> {
-    // TODO: Replace with actual artist service when implemented
+    // Only return Victoria as the available artist
     return [
-      { id: 'victoria', name: 'Victoria' },
-      { id: 'admin', name: 'Admin' }
+      { id: 'victoria', name: 'Victoria' }
     ];
   }
 
