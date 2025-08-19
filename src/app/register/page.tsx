@@ -150,183 +150,216 @@ function RegisterForm() {
   return (
     <>
       <Header />
-      <div className="container-fluid" style={{ paddingTop: '140px', minHeight: '100vh' }}>
-        <div className="row justify-content-center">
-          <div className="col-lg-5 col-md-7">
-            <div className="card shadow-sm border-0">
-              <div className="card-body p-5">
-                <div className="text-center mb-4">
-                  <h1 className="h3 text-primary fw-bold">Create Your Account</h1>
-                  <p className="text-muted">Join A Pretty Girl Matter for exclusive access</p>
-                </div>
-
-                {error && (
-                  <div className="alert alert-danger" role="alert">
-                    {error}
+      <div className="min-vh-100 d-flex align-items-center" style={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)', paddingTop: '140px', paddingBottom: '60px' }}>
+        <div className="container">
+          <div className="row justify-content-center">
+            <div className="col-lg-6 col-md-8 col-sm-10">
+              <div className="card shadow-lg border-0 rounded-4">
+                <div className="card-body p-5">
+                  <div className="text-center mb-5">
+                    <div className="mb-3">
+                      <div className="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10 p-3 mb-3">
+                        <i className="fas fa-user-plus text-primary fs-2"></i>
+                      </div>
+                    </div>
+                    <h1 className="h2 fw-bold text-dark mb-2">Create Your Account</h1>
+                    <p className="text-muted fs-6">Join A Pretty Girl Matter for exclusive access to premium services</p>
                   </div>
-                )}
 
-                <form onSubmit={handleSubmit}>
-                  <div className="row">
-                    <div className="col-md-6 mb-3">
-                      <label htmlFor="firstName" className="form-label">
-                        First Name *
-                      </label>
+                  {error && (
+                    <div className="alert alert-danger border-0 rounded-3 d-flex align-items-center" role="alert">
+                      <i className="fas fa-exclamation-triangle me-2"></i>
+                      {error}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSubmit} className="needs-validation" noValidate>
+                    <div className="row g-3">
+                      <div className="col-md-6">
+                        <div className="form-floating">
+                          <input
+                            type="text"
+                            className="form-control rounded-3"
+                            id="firstName"
+                            name="firstName"
+                            value={formData.firstName}
+                            onChange={handleInputChange}
+                            required
+                            placeholder="First Name"
+                          />
+                          <label htmlFor="firstName" className="text-muted">
+                            <i className="fas fa-user me-2"></i>First Name *
+                          </label>
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-floating">
+                          <input
+                            type="text"
+                            className="form-control rounded-3"
+                            id="lastName"
+                            name="lastName"
+                            value={formData.lastName}
+                            onChange={handleInputChange}
+                            required
+                            placeholder="Last Name"
+                          />
+                          <label htmlFor="lastName" className="text-muted">
+                            <i className="fas fa-user me-2"></i>Last Name *
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="form-floating mt-3">
                       <input
-                        type="text"
-                        className="form-control"
-                        id="firstName"
-                        name="firstName"
-                        value={formData.firstName}
+                        type="email"
+                        className="form-control rounded-3"
+                        id="email"
+                        name="email"
+                        value={formData.email}
                         onChange={handleInputChange}
                         required
-                        placeholder="Enter your first name"
+                        placeholder="Email Address"
                       />
-                    </div>
-                    <div className="col-md-6 mb-3">
-                      <label htmlFor="lastName" className="form-label">
-                        Last Name *
+                      <label htmlFor="email" className="text-muted">
+                        <i className="fas fa-envelope me-2"></i>Email Address *
                       </label>
+                    </div>
+
+                    <div className="form-floating mt-3">
                       <input
-                        type="text"
-                        className="form-control"
-                        id="lastName"
-                        name="lastName"
-                        value={formData.lastName}
+                        type="tel"
+                        className="form-control rounded-3"
+                        id="phone"
+                        name="phone"
+                        value={formData.phone}
                         onChange={handleInputChange}
                         required
-                        placeholder="Enter your last name"
+                        placeholder="Phone Number"
                       />
+                      <label htmlFor="phone" className="text-muted">
+                        <i className="fas fa-phone me-2"></i>Phone Number *
+                      </label>
                     </div>
+
+                    <div className="form-floating mt-3">
+                      <input
+                        type="password"
+                        className="form-control rounded-3"
+                        id="password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="Password"
+                        minLength={6}
+                      />
+                      <label htmlFor="password" className="text-muted">
+                        <i className="fas fa-lock me-2"></i>Password (min 6 characters) *
+                      </label>
+                    </div>
+
+                    <div className="form-floating mt-3">
+                      <input
+                        type="password"
+                        className="form-control rounded-3"
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleInputChange}
+                        required
+                        placeholder="Confirm Password"
+                      />
+                      <label htmlFor="confirmPassword" className="text-muted">
+                        <i className="fas fa-lock me-2"></i>Confirm Password *
+                      </label>
+                    </div>
+
+                    <div className="mt-4">
+                      <div className="form-check d-flex align-items-start">
+                        <input
+                          type="checkbox"
+                          className="form-check-input mt-1 me-3 rounded"
+                          id="agreeToTerms"
+                          name="agreeToTerms"
+                          checked={formData.agreeToTerms}
+                          onChange={handleInputChange}
+                          required
+                          style={{ transform: 'scale(1.2)' }}
+                        />
+                        <label className="form-check-label text-muted" htmlFor="agreeToTerms">
+                          I agree to the{' '}
+                          <Link href="/terms" className="text-primary text-decoration-none fw-medium">
+                            Terms of Service
+                          </Link>{' '}
+                          and{' '}
+                          <Link href="/privacy" className="text-primary text-decoration-none fw-medium">
+                            Privacy Policy
+                          </Link>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="d-grid mt-4">
+                      <button
+                        type="submit"
+                        className="btn btn-primary btn-lg rounded-pill py-3 fw-bold"
+                        disabled={isLoading}
+                        style={{ 
+                          background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
+                          border: 'none',
+                          boxShadow: '0 4px 15px rgba(0, 123, 255, 0.3)'
+                        }}
+                      >
+                        {isLoading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Creating Account...
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-user-plus me-2"></i>
+                            Create Account
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+
+                  <div className="position-relative my-5">
+                    <hr className="border-0" style={{ height: '1px', background: 'linear-gradient(90deg, transparent, #dee2e6, transparent)' }} />
+                    <span className="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small">
+                      OR
+                    </span>
                   </div>
 
-                  <div className="mb-3">
-                    <label htmlFor="email" className="form-label">
-                      Email Address *
-                    </label>
-                    <input
-                      type="email"
-                      className="form-control"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="Enter your email"
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <label htmlFor="phone" className="form-label">
-                      Phone Number *
-                    </label>
-                    <input
-                      type="tel"
-                      className="form-control"
-                      id="phone"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="(555) 123-4567"
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <label htmlFor="password" className="form-label">
-                      Password *
-                    </label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      id="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="Create a password (min 6 characters)"
-                      minLength={6}
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <label htmlFor="confirmPassword" className="form-label">
-                      Confirm Password *
-                    </label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="Confirm your password"
-                    />
-                  </div>
-
-                  <div className="mb-4 form-check">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="agreeToTerms"
-                      name="agreeToTerms"
-                      checked={formData.agreeToTerms}
-                      onChange={handleInputChange}
-                      required
-                    />
-                    <label className="form-check-label" htmlFor="agreeToTerms">
-                      I agree to the{' '}
-                      <Link href="/terms" className="text-primary text-decoration-none">
-                        Terms of Service
-                      </Link>{' '}
-                      and{' '}
-                      <Link href="/privacy" className="text-primary text-decoration-none">
-                        Privacy Policy
-                      </Link>
-                    </label>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="btn btn-primary w-100 rounded-pill"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Creating Account...
-                      </>
-                    ) : (
-                      'Create Account'
-                    )}
-                  </button>
-                </form>
-
-                <hr className="my-4" />
-
-                <div className="text-center">
-                  <div className="d-flex align-items-center justify-content-center gap-3 mb-3">
-                    <span className="fs-5 text-dark fw-medium">Already have an account?</span>
-                    <Link href="/login" className="btn btn-primary rounded-pill px-4">
-                      Sign In
+                  <div className="text-center">
+                    <p className="text-muted mb-3">Already have an account?</p>
+                    <Link 
+                      href="/login" 
+                      className="btn btn-outline-primary rounded-pill px-4 py-2 fw-medium"
+                      style={{ borderWidth: '2px' }}
+                    >
+                      <i className="fas fa-sign-in-alt me-2"></i>
+                      Sign In Instead
                     </Link>
                   </div>
-                </div>
 
-                <div className="text-center mt-4">
-                  <Link href="/" className="text-decoration-none text-muted">
-                    ← Back to Home
-                  </Link>
+                  <div className="text-center mt-4">
+                    <Link href="/" className="text-decoration-none text-muted d-inline-flex align-items-center">
+                      <i className="fas fa-arrow-left me-2"></i>
+                      Back to Home
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      <Footer />
-    </>
-  );
+        <Footer />
+      </>
+    );
 }
 
 export default function Register() {

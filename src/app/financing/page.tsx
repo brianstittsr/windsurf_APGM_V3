@@ -232,8 +232,12 @@ export default function FinancingPage() {
               <div className="card h-100 border-0 shadow-sm">
                 <div className="card-body p-4">
                   <div className="d-flex align-items-center mb-3">
-                    <div className="rounded-circle p-3 me-3" style={{backgroundColor: '#0070BA'}}>
-                      <i className="fab fa-paypal" style={{fontSize: '24px', color: 'white'}}></i>
+                    <div className="d-flex align-items-center justify-content-center me-3" style={{width: '60px', height: '60px', backgroundColor: 'white', borderRadius: '50%'}}>
+                      <img 
+                        src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png" 
+                        alt="PayPal Logo" 
+                        style={{width: '40px', height: '40px'}}
+                      />
                     </div>
                     <h3 className="h4 fw-bold mb-0">Pay with PayPal Credit</h3>
                   </div>

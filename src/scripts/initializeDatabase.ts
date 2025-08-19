@@ -5,50 +5,31 @@ import { Service, BusinessSettings } from '@/types/database';
 // Initialize default services
 const defaultServices: Omit<Service, 'id' | 'createdAt' | 'updatedAt'>[] = [
   {
-    name: "Powder Eyebrows",
-    price: 600,
-    duration: "2-3 hours",
-    description: "Powder brows offer a semi-permanent cosmetic tattoo solution that delivers soft, shaded, and natural-looking eyebrows, replicating the effect of makeup.",
-    category: "eyebrows",
-    image: "/images/services/POWDER.png",
-    isActive: true,
-    requirements: [
-      "Must be 18 years or older",
-      "Not pregnant or breastfeeding",
-      "No blood-thinning medications 48 hours prior"
-    ],
-    contraindications: [
-      "Pregnancy or breastfeeding",
-      "Active skin conditions in treatment area",
-      "Recent Botox or facial treatments (within 2 weeks)"
-    ]
-  },
-  {
-    name: "Strokes Eyebrows",
-    price: 550,
-    duration: "2-3 hours",
-    description: "Hair-stroke technique that creates natural-looking eyebrows with precise individual strokes.",
-    category: "eyebrows",
-    image: "/images/services/STROKES.png",
-    isActive: true,
-    requirements: [
-      "Must be 18 years or older",
-      "Not pregnant or breastfeeding",
-      "No blood-thinning medications 48 hours prior"
-    ],
-    contraindications: [
-      "Pregnancy or breastfeeding",
-      "Active skin conditions in treatment area",
-      "Recent Botox or facial treatments (within 2 weeks)"
-    ]
-  },
-  {
     name: "Bold Combo Eyebrows",
     price: 708,
     duration: "3-4 hours",
     description: "Experience the perfect blend of artistry combining microbladed strokes for natural texture and shaded areas for enhanced definition.",
     category: "eyebrows",
     image: "/images/services/BOLD-COMBO.png",
+    isActive: true,
+    requirements: [
+      "Must be 18 years or older",
+      "Not pregnant or breastfeeding",
+      "No blood-thinning medications 48 hours prior"
+    ],
+    contraindications: [
+      "Pregnancy or breastfeeding",
+      "Active skin conditions in treatment area",
+      "Recent Botox or facial treatments (within 2 weeks)"
+    ]
+  },
+  {
+    name: "Combo Eyebrows",
+    price: 640,
+    duration: "3-4 hours",
+    description: "Combo brows combine the precision of microbladed strokes with a shaded body and tail, creating a beautifully defined look.",
+    category: "eyebrows",
+    image: "/images/services/COMBO.png",
     isActive: true,
     requirements: [
       "Must be 18 years or older",
@@ -81,6 +62,25 @@ const defaultServices: Omit<Service, 'id' | 'createdAt' | 'updatedAt'>[] = [
     ]
   },
   {
+    name: "Strokes Eyebrows",
+    price: 600,
+    duration: "2-3 hours",
+    description: "Hair-stroke technique that creates natural-looking eyebrows with precise individual strokes.",
+    category: "eyebrows",
+    image: "/images/services/STROKES.png",
+    isActive: true,
+    requirements: [
+      "Must be 18 years or older",
+      "Not pregnant or breastfeeding",
+      "No blood-thinning medications 48 hours prior"
+    ],
+    contraindications: [
+      "Pregnancy or breastfeeding",
+      "Active skin conditions in treatment area",
+      "Recent Botox or facial treatments (within 2 weeks)"
+    ]
+  },
+  {
     name: "Ombre Eyebrows",
     price: 620,
     duration: "2-3 hours",
@@ -100,12 +100,12 @@ const defaultServices: Omit<Service, 'id' | 'createdAt' | 'updatedAt'>[] = [
     ]
   },
   {
-    name: "Combo Eyebrows",
-    price: 640,
-    duration: "3-4 hours",
-    description: "Combo brows combine the precision of microbladed strokes with a shaded body and tail, creating a beautifully defined look.",
+    name: "Powder Eyebrows",
+    price: 600,
+    duration: "2-3 hours",
+    description: "Powder brows offer a semi-permanent cosmetic tattoo solution that delivers soft, shaded, and natural-looking eyebrows, replicating the effect of makeup.",
     category: "eyebrows",
-    image: "/images/services/COMBO.png",
+    image: "/images/services/POWDER.png",
     isActive: true,
     requirements: [
       "Must be 18 years or older",
