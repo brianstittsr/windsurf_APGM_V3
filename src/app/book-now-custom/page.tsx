@@ -132,12 +132,19 @@ function BookNowCustomContent() {
     }
   }, [nextAvailable, selectedDate]);
 
-  // Find next available date when service is selected
+  // Find next available date when service is selected or calendar step is reached
   useEffect(() => {
     if (selectedService && !selectedDate) {
       findNextAvailableDate();
     }
   }, [selectedService, findNextAvailableDate, selectedDate]);
+
+  // Auto-navigate to next available date when calendar step becomes active
+  useEffect(() => {
+    if (currentStep === 'calendar' && selectedService && !selectedDate) {
+      findNextAvailableDate();
+    }
+  }, [currentStep, selectedService, selectedDate, findNextAvailableDate]);
 
   // Services are now loaded from Firebase via useServices hook
 
