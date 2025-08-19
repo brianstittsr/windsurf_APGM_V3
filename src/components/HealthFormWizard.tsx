@@ -63,6 +63,17 @@ export default function HealthFormWizard({
         ...data,
         [currentStep.id]: value
       });
+      
+      // Auto-advance for Yes/No questions
+      if (currentStep.type === 'yesno') {
+        setTimeout(() => {
+          if (currentStepIndex < steps.length - 1) {
+            setCurrentStepIndex(currentStepIndex + 1);
+          } else {
+            onNext();
+          }
+        }, 300); // Small delay for visual feedback
+      }
     }
     setErrors([]); // Clear errors when user types
   };
