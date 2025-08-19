@@ -848,9 +848,11 @@ function BookNowCustomContent() {
           )}
           
           {!servicesLoading && !servicesError && (
-            <div className="row g-4">
-              {services.map((service) => (
-              <div key={service.id} className="col-lg-4 col-md-6">
+            <>
+              {/* Row 1: Services 1, 2, 3 */}
+              <div className="row g-4 mb-4">
+                {services.slice(0, 3).map((service) => (
+                <div key={service.id} className="col-lg-4 col-md-4">
                 <div 
                   className={`card h-100 shadow-sm service-card ${
                     selectedService?.id === service.id ? 'border-primary border-2' : 'border-0'
@@ -900,9 +902,67 @@ function BookNowCustomContent() {
                     </button>
                   </div>
                 </div>
+                </div>
+                ))}
               </div>
-              ))}
-            </div>
+              
+              {/* Row 2: Services 4, 5, 6 */}
+              <div className="row g-4">
+                {services.slice(3, 6).map((service) => (
+                <div key={service.id} className="col-lg-4 col-md-4">
+                <div 
+                  className={`card h-100 shadow-sm service-card ${
+                    selectedService?.id === service.id ? 'border-primary border-2' : 'border-0'
+                  }`}
+                  style={{ 
+                    cursor: 'pointer', 
+                    transition: 'all 0.3s ease',
+                    backgroundColor: selectedService?.id === service.id 
+                      ? 'rgba(173, 98, 105, 0.15)' 
+                      : 'white'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-5px)';
+                    e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+                    e.currentTarget.style.backgroundColor = 'rgba(173, 98, 105, 0.25)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                    e.currentTarget.style.backgroundColor = selectedService?.id === service.id 
+                      ? 'rgba(173, 98, 105, 0.15)' 
+                      : 'white';
+                  }}
+                  onClick={() => handleServiceSelect(service)}
+                >
+                  <div className="position-relative" style={{ height: '250px', overflow: 'hidden' }}>
+                    <Image
+                      src={getServiceImagePath(service)}
+                      alt={service.name}
+                      fill
+                      className="card-img-top"
+                      style={{ objectFit: 'contain' }}
+                    />
+                  </div>
+                  <div className="card-body d-flex flex-column">
+                    <h5 className="card-title text-primary fw-bold mb-3">{service.name}</h5>
+                    <div className="mb-3">
+                      <span className="badge bg-primary me-2 fs-6">${service.price}</span>
+                      <span className="badge bg-secondary fs-6">{service.duration}</span>
+                    </div>
+                    <p className="card-text text-muted mb-4 flex-grow-1">{service.description}</p>
+                    <button
+                      className="btn btn-primary w-100 mt-auto"
+                      onClick={() => handleServiceSelect(service)}
+                    >
+                      Select This Service
+                    </button>
+                  </div>
+                </div>
+                </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
