@@ -270,6 +270,8 @@ export class TimeSlotService {
   // Get next available date with time slots
   static async getNextAvailableDate(fromDate?: string): Promise<{ date: string; timeSlots: TimeSlot[] } | null> {
     const startDate = fromDate ? new Date(fromDate) : new Date();
+    // Start checking from tomorrow, not today
+    startDate.setDate(startDate.getDate() + 1);
     const maxDaysToCheck = 30; // Check up to 30 days ahead
     
     for (let i = 0; i < maxDaysToCheck; i++) {
@@ -279,7 +281,7 @@ export class TimeSlotService {
       
       try {
         const daySlots = await this.getAvailableTimeSlots(dateString);
-        if (daySlots.hasAvailability) {
+        if (daySlots.hasAvailability && daySlots.timeSlots.some(slot => slot.available)) {
           return {
             date: dateString,
             timeSlots: daySlots.timeSlots.filter(slot => slot.available)
