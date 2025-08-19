@@ -587,12 +587,15 @@ export function useNextAvailableDate() {
 
   const findNextAvailableDate = async (fromDate?: string) => {
     try {
+      console.log('findNextAvailableDate called with fromDate:', fromDate);
       setLoading(true);
       setError(null);
       const result = await TimeSlotService.getNextAvailableDate(fromDate);
+      console.log('findNextAvailableDate result:', result);
       setNextAvailable(result);
       return result;
     } catch (err) {
+      console.error('findNextAvailableDate error:', err);
       setError(err instanceof Error ? err.message : 'Failed to find next available date');
       return null;
     } finally {

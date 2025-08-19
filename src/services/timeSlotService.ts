@@ -269,22 +269,31 @@ export class TimeSlotService {
 
   // Get next available date with time slots
   static async getNextAvailableDate(fromDate?: string): Promise<{ date: string; timeSlots: TimeSlot[] } | null> {
+    console.log('getNextAvailableDate called with fromDate:', fromDate);
     const startDate = fromDate ? new Date(fromDate) : new Date();
     // Start checking from tomorrow, not today
     startDate.setDate(startDate.getDate() + 1);
     const maxDaysToCheck = 30; // Check up to 30 days ahead
+    
+    console.log('Starting search from date:', startDate.toISOString().split('T')[0]);
     
     for (let i = 0; i < maxDaysToCheck; i++) {
       const checkDate = new Date(startDate);
       checkDate.setDate(startDate.getDate() + i);
       const dateString = checkDate.toISOString().split('T')[0];
       
+      console.log(`Checking availability for ${dateString}...`);
+      
       try {
         const daySlots = await this.getAvailableTimeSlots(dateString);
+        console.log(`${dateString} - hasAvailability: ${daySlots.hasAvailability}, available slots: ${daySlots.timeSlots.filter(slot => slot.available).length}`);
+        
         if (daySlots.hasAvailability && daySlots.timeSlots.some(slot => slot.available)) {
+          const availableSlots = daySlots.timeSlots.filter(slot => slot.available);
+          console.log(`Found next available date: ${dateString} with ${availableSlots.length} slots`);
           return {
             date: dateString,
-            timeSlots: daySlots.timeSlots.filter(slot => slot.available)
+            timeSlots: availableSlots
           };
         }
       } catch (error) {
@@ -292,6 +301,7 @@ export class TimeSlotService {
       }
     }
     
+    console.log('No available dates found in the next 30 days');
     return null;
   }
 }

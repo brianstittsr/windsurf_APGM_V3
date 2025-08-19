@@ -118,7 +118,9 @@ function BookNowCustomContent() {
 
   // Auto-navigate to next available date when nextAvailable is found
   useEffect(() => {
+    console.log('nextAvailable useEffect triggered:', { nextAvailable, selectedDate });
     if (nextAvailable && !selectedDate) {
+      console.log('Setting calendar to next available date:', nextAvailable.date);
       const nextAvailableDate = new Date(nextAvailable.date);
       const nextWeekStart = new Date(nextAvailableDate);
       nextWeekStart.setDate(nextAvailableDate.getDate() - nextAvailableDate.getDay());
@@ -139,14 +141,18 @@ function BookNowCustomContent() {
 
   // Find next available date when service is selected or calendar step is reached
   useEffect(() => {
+    console.log('Service selection useEffect triggered:', { selectedService, selectedDate });
     if (selectedService && !selectedDate) {
+      console.log('Calling findNextAvailableDate from service selection');
       findNextAvailableDate();
     }
   }, [selectedService, findNextAvailableDate, selectedDate]);
 
   // Auto-navigate to next available date when calendar step becomes active
   useEffect(() => {
+    console.log('Calendar step useEffect triggered:', { currentStep, selectedService, selectedDate });
     if (currentStep === 'calendar' && selectedService && !selectedDate) {
+      console.log('Calling findNextAvailableDate from calendar step');
       findNextAvailableDate();
     }
   }, [currentStep, selectedService, selectedDate, findNextAvailableDate]);
