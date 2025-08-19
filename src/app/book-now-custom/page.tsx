@@ -801,9 +801,22 @@ function BookNowCustomContent() {
                             <div className="text-center mt-4">
                               <button
                                 className="btn btn-primary btn-lg"
-                                onClick={() => setCurrentStep('profile')}
+                                onClick={() => {
+                                  // For authenticated users with complete profile, skip to health form
+                                  if (isAuthenticated && userProfile && 
+                                      clientProfile.firstName && clientProfile.lastName && 
+                                      clientProfile.email && clientProfile.phone) {
+                                    setCurrentStep('health');
+                                  } else {
+                                    setCurrentStep('profile');
+                                  }
+                                }}
                               >
-                                Continue to Profile
+                                {isAuthenticated && userProfile && 
+                                 clientProfile.firstName && clientProfile.lastName && 
+                                 clientProfile.email && clientProfile.phone 
+                                  ? 'Continue to Health Form' 
+                                  : 'Continue to Profile'}
                                 <i className="fas fa-arrow-right ms-2"></i>
                               </button>
                             </div>
