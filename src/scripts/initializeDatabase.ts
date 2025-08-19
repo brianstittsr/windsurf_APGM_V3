@@ -195,10 +195,16 @@ export async function initializeDatabase() {
     await ServiceService.deleteServicesByName('Microbladed Eyebrows');
     await ServiceService.deleteServicesByName('Microblading');
 
-    // Initialize services
-    console.log('Creating default services...');
-    for (const service of defaultServices) {
-      await ServiceService.createService(service);
+    // Initialize services with order field
+    console.log('Creating default services with correct order...');
+    for (let i = 0; i < defaultServices.length; i++) {
+      const service = defaultServices[i];
+      const serviceWithOrder = {
+        ...service,
+        order: i // Add order field based on array index
+      };
+      await ServiceService.createService(serviceWithOrder);
+      console.log(`Created: ${service.name} - $${service.price} (Order: ${i})`);
     }
 
     // Initialize business settings
