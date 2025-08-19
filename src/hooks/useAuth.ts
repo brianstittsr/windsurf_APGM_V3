@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from '@/lib/firebase';
 import { UserService } from '@/services/userService';
@@ -103,7 +103,7 @@ export function useAuth() {
 
   const isAuthenticated = authState.user !== null || authState.userProfile?.role === 'admin';
   
-  const getClientProfileData = () => {
+  const getClientProfileData = useCallback(() => {
     if (!authState.userProfile) return null;
     
     const profile = authState.userProfile.profile;
@@ -122,7 +122,7 @@ export function useAuth() {
       preferredContactMethod: profile.preferredContactMethod || '',
       hearAboutUs: profile.hearAboutUs || ''
     };
-  };
+  }, [authState.userProfile]);
 
   return {
     ...authState,
