@@ -27,12 +27,7 @@ function BookNowCustomContent() {
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [selectedArtistId, setSelectedArtistId] = useState<string>('');
 
-  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
-    const today = new Date();
-    const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - today.getDay()); // Start of current week (Sunday)
-    return weekStart;
-  });
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date | null>(null);
 
   
   // Show database setup if setup parameter is present
@@ -131,6 +126,16 @@ function BookNowCustomContent() {
       setSelectedDate(nextAvailable.date);
     }
   }, [nextAvailable, selectedDate]);
+
+  // Initialize currentWeekStart to current week if no next available date is found
+  useEffect(() => {
+    if (!currentWeekStart && !nextAvailable) {
+      const today = new Date();
+      const weekStart = new Date(today);
+      weekStart.setDate(today.getDate() - today.getDay());
+      setCurrentWeekStart(weekStart);
+    }
+  }, [currentWeekStart, nextAvailable]);
 
   // Find next available date when service is selected or calendar step is reached
   useEffect(() => {
@@ -336,12 +341,14 @@ function BookNowCustomContent() {
 
   // Calendar navigation functions
   const goToPreviousWeek = () => {
+    if (!currentWeekStart) return;
     const newWeekStart = new Date(currentWeekStart);
     newWeekStart.setDate(newWeekStart.getDate() - 7);
     setCurrentWeekStart(newWeekStart);
   };
 
   const goToNextWeek = () => {
+    if (!currentWeekStart) return;
     const newWeekStart = new Date(currentWeekStart);
     newWeekStart.setDate(newWeekStart.getDate() + 7);
     setCurrentWeekStart(newWeekStart);
@@ -349,6 +356,24 @@ function BookNowCustomContent() {
 
   const renderCalendarSelection = () => {
     const currentDate = new Date();
+    
+    // Don't render calendar if currentWeekStart is not set yet
+    if (!currentWeekStart) {
+      return (
+        <div className="container-fluid py-5">
+          <div className="row justify-content-center">
+            <div className="col-lg-8">
+              <div className="text-center">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading calendar...</span>
+                </div>
+                <p className="mt-3 text-muted">Finding next available date...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
     
     // Generate week days based on the current week state
     const weekDays = [];
