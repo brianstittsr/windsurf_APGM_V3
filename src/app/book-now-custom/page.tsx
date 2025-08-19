@@ -279,7 +279,7 @@ function BookNowCustomContent() {
         paymentStatus: 'pending' as const,
         paymentIntentId: '', // Will be set during payment processing
         specialRequests: checkoutData.specialRequests,
-        giftCardCode: checkoutData.giftCard || undefined,
+        ...(checkoutData.giftCard && { giftCardCode: checkoutData.giftCard }),
         rescheduleCount: 0,
         confirmationSent: false,
         reminderSent: false
