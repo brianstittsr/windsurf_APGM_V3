@@ -2,14 +2,17 @@
 const { initializeApp } = require('firebase/app');
 const { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, addDoc } = require('firebase/firestore');
 
+// Load environment variables
+require('dotenv').config({ path: '.env.local' });
+
 // Firebase config from environment
 const firebaseConfig = {
-  apiKey: "AIzaSyDvQJKOQQQQQQQQQQQQQQQQQQQQQQQQQQQ", // Replace with actual key
-  authDomain: "apgm-v3.firebaseapp.com",
-  projectId: "apgm-v3",
-  storageBucket: "apgm-v3.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdefghijklmnop"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
 // Initialize Firebase

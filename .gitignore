@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# temporary scripts and files with potential secrets
+*-service*.js
+*-update*.js
+*-firebase*.js
+test-*.js
+debug-*.js
+firebase-service-account.json
