@@ -357,9 +357,10 @@ function RegisterForm() {
             </div>
           </div>
         </div>
-        <Footer />
-      </>
-    );
+      </div>
+      <Footer />
+    </>
+  );
 }
 
 export default function Register() {
