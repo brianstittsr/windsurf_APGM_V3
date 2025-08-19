@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   ServiceService, 
   AppointmentService, 
@@ -585,7 +585,7 @@ export function useNextAvailableDate() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const findNextAvailableDate = async (fromDate?: string) => {
+  const findNextAvailableDate = useCallback(async (fromDate?: string) => {
     try {
       console.log('findNextAvailableDate called with fromDate:', fromDate);
       setLoading(true);
@@ -601,7 +601,7 @@ export function useNextAvailableDate() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return { 
     nextAvailable, 
