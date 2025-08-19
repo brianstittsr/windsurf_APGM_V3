@@ -5,7 +5,9 @@ import { Elements } from '@stripe/react-stripe-js';
 import stripePromise from '../lib/stripe';
 import MultiPaymentForm from './MultiPaymentForm';
 import StripeModeIndicator from './StripeModeIndicator';
+import CouponInput from './CouponInput';
 import { calculateTotalWithStripeFees, formatCurrency, getStripeFeeExplanation } from '../lib/stripe-fees';
+import { CouponCode } from '@/types/database';
 
 interface ServiceItem {
   id: string;
@@ -53,12 +55,19 @@ export default function CheckoutCart({
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<CouponCode | null>(null);
+  const [couponDiscount, setCouponDiscount] = useState(0);
 
   const handleInputChange = (field: keyof CheckoutData, value: string | boolean) => {
     onChange({
       ...data,
       [field]: value
     });
+  };
+
+  const handleCouponApplied = (coupon: CouponCode | null, discount: number) => {
+    setAppliedCoupon(coupon);
+    setCouponDiscount(discount);
   };
 
   const handlePaymentSuccess = async (paymentIntent: any) => {
@@ -94,6 +103,8 @@ export default function CheckoutCart({
         paymentIntentId: paymentIntent.id,
         specialRequests: data.specialRequests || '',
         giftCardCode: data.giftCard || undefined,
+        couponCode: appliedCoupon?.code || undefined,
+        couponDiscount: couponDiscount || 0,
         rescheduleCount: 0,
         confirmationSent: false,
         reminderSent: false
@@ -110,7 +121,15 @@ export default function CheckoutCart({
       await AvailabilityService.bookTimeSlot(appointmentDate, appointmentTime, appointmentId, 'victoria');
       console.log('✅ Time slot marked as unavailable');
 
-      // 3. Send invoice email
+      // 3. Apply coupon usage if one was used
+      if (appliedCoupon) {
+        console.log('🎫 Applying coupon usage...');
+        const { CouponService } = await import('@/services/couponService');
+        await CouponService.applyCoupon(appliedCoupon.id);
+        console.log('✅ Coupon usage applied');
+      }
+
+      // 4. Send invoice email
       console.log('📧 Sending invoice email...');
       
       const invoiceData = {
@@ -118,7 +137,10 @@ export default function CheckoutCart({
         clientName: clientName,
         clientEmail: 'brianstittsr@gmail.com',
         serviceName: service.name,
-        servicePrice: subtotal,
+        servicePrice: service.price,
+        couponCode: appliedCoupon?.code,
+        couponDiscount: couponDiscount,
+        discountedPrice: subtotal,
         tax: tax,
         processingFee: stripeFee,
         total: totalAmount,
@@ -180,7 +202,10 @@ export default function CheckoutCart({
   const taxRate = 0.0775; // 7.75% tax
   const fixedDeposit = 200; // Fixed $200 deposit for all services
   
-  const feeCalculation = calculateTotalWithStripeFees(service.price, taxRate, fixedDeposit);
+  // Apply coupon discount to service price before calculating fees
+  const discountedServicePrice = Math.max(0, service.price - couponDiscount);
+  
+  const feeCalculation = calculateTotalWithStripeFees(discountedServicePrice, taxRate, fixedDeposit);
   
   const subtotal = feeCalculation.subtotal;
   const tax = feeCalculation.tax;
@@ -262,6 +287,14 @@ export default function CheckoutCart({
               )}
             </div>
           </div>
+
+          {/* Coupon Code Section */}
+          <CouponInput
+            serviceId={service.id}
+            orderAmount={service.price}
+            onCouponApplied={handleCouponApplied}
+            appliedCoupon={appliedCoupon}
+          />
 
           {/* Deposit Information */}
           <div className="card mb-4">
@@ -383,6 +416,19 @@ export default function CheckoutCart({
                 <div className="card-body">
                   <div className="d-flex justify-content-between mb-2">
                     <span>{service.name}:</span>
+                    <span>{formatCurrency(service.price)}</span>
+                  </div>
+                  {appliedCoupon && couponDiscount > 0 && (
+                    <div className="d-flex justify-content-between mb-2 text-success">
+                      <span>
+                        <i className="fas fa-tag me-1"></i>
+                        Coupon ({appliedCoupon.code}):
+                      </span>
+                      <span>-{formatCurrency(couponDiscount)}</span>
+                    </div>
+                  )}
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Subtotal:</span>
                     <span>{formatCurrency(subtotal)}</span>
                   </div>
                   <div className="d-flex justify-content-between mb-2">
@@ -406,6 +452,14 @@ export default function CheckoutCart({
                     <span>Remaining balance (due at appointment):</span>
                     <span>{formatCurrency(remainingAmount)}</span>
                   </div>
+                  {appliedCoupon && (
+                    <div className="mt-2 p-2 bg-success bg-opacity-10 rounded">
+                      <small className="text-success">
+                        <i className="fas fa-check-circle me-1"></i>
+                        You saved {formatCurrency(couponDiscount)} with coupon {appliedCoupon.code}!
+                      </small>
+                    </div>
+                  )}
                   <div className="mt-2 p-2 bg-light rounded">
                     <small className="text-muted">
                       <i className="fas fa-info-circle me-1"></i>

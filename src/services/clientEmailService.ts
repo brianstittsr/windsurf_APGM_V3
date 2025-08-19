@@ -244,7 +244,6 @@ Thank you for choosing ${data.businessName}!
       "Are you currently taking any medications that affect blood clotting?",
       "Do you have any metal allergies or sensitivities?",
       "Have you consumed alcohol within the last 24 hours?",
-      "Do you understand the risks and aftercare requirements?",
       "Are you over 18 years of age?",
 
       "Do you understand that results may vary and touch-ups may be needed?"

@@ -355,7 +355,13 @@ export default function MultiPaymentForm({
               onClick={() => handlePaymentMethodChange('klarna')}
             >
               <div className="card-body text-center py-3">
-                <i className="fas fa-shopping-bag fa-2x mb-2" style={{ color: '#FFB3C7' }}></i>
+                <div className="d-flex justify-content-center mb-2">
+                  <img 
+                    src="https://logos-world.net/wp-content/uploads/2024/06/Klarna-Symbol.png" 
+                    alt="Klarna Logo" 
+                    style={{ width: '48px', height: '48px' }}
+                  />
+                </div>
                 <h6 className="mb-0">Klarna</h6>
                 <small className="text-muted">Pay in 4 interest-free installments</small>
               </div>
@@ -368,7 +374,13 @@ export default function MultiPaymentForm({
               onClick={() => handlePaymentMethodChange('affirm')}
             >
               <div className="card-body text-center py-3">
-                <i className="fas fa-calendar-check fa-2x mb-2" style={{ color: '#0FA8E6' }}></i>
+                <div className="d-flex justify-content-center mb-2">
+                  <img 
+                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQASxDA7wX68xJ32zCBksW76SH8skp63-eZw&s" 
+                    alt="Affirm Logo" 
+                    style={{ width: '48px', height: '48px' }}
+                  />
+                </div>
                 <h6 className="mb-0">Affirm</h6>
                 <small className="text-muted">Monthly payments as low as 0% APR</small>
               </div>
@@ -377,11 +389,17 @@ export default function MultiPaymentForm({
           <div className="col-md-3 mb-2">
             <div 
               className={`card payment-method-card ${selectedPaymentMethod === 'cherry' ? 'border-primary' : ''}`}
-              style={{ cursor: 'pointer' }}
               onClick={() => handlePaymentMethodChange('cherry')}
+              style={{ cursor: 'pointer' }}
             >
               <div className="card-body text-center py-3">
-                <i className="fas fa-heart fa-2x mb-2" style={{ color: '#E91E63' }}></i>
+                <div className="d-flex justify-content-center mb-2">
+                  <img 
+                    src="https://cdn.prod.website-files.com/681bf1d6f7dea459fe255c59/68252146834983973a92051f_cherry-logo-primary.svg" 
+                    alt="Cherry Logo" 
+                    style={{ width: '48px', height: '48px' }}
+                  />
+                </div>
                 <h6 className="mb-0">Cherry</h6>
                 <small className="text-muted">Flexible payment plans</small>
               </div>

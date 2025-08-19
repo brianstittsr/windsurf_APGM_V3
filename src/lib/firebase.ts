@@ -1,7 +1,7 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getStorage, connectStorageEmulator } from 'firebase/storage';
+import { getFirestore, connectFirestoreEmulator, Firestore } from 'firebase/firestore';
+import { getAuth, connectAuthEmulator, Auth } from 'firebase/auth';
+import { getStorage, connectStorageEmulator, FirebaseStorage } from 'firebase/storage';
 
 // Check if Firebase environment variables are configured
 const isFirebaseConfigured = () => {
@@ -40,7 +40,9 @@ if (!getApps().length) {
 }
 
 // Initialize Firebase services with error handling
-let db, auth, storage;
+let db: Firestore;
+let auth: Auth;
+let storage: FirebaseStorage;
 
 try {
   // Always initialize Firebase services

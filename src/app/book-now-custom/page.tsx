@@ -9,6 +9,7 @@ import HealthFormWizard, { HealthFormData } from '../../components/HealthFormWiz
 import CheckoutCart, { CheckoutData, ServiceItem } from '../../components/CheckoutCart';
 import DatabaseSetup from '../../components/DatabaseSetup';
 import { useServices, useAppointments, useHealthForm, useAvailability, useTimeSlots, useNextAvailableDate } from '@/hooks/useFirebase';
+import { useAuth } from '@/hooks/useAuth';
 import { Timestamp } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 import { getServiceImagePath } from '@/utils/serviceImageUtils';
@@ -32,6 +33,7 @@ function BookNowCustomContent() {
     weekStart.setDate(today.getDate() - today.getDay()); // Start of current week (Sunday)
     return weekStart;
   });
+
   
   // Show database setup if setup parameter is present
   if (isSetupMode) {
@@ -58,6 +60,9 @@ function BookNowCustomContent() {
   const { availability, bookTimeSlot } = useAvailability(selectedDate);
   const { timeSlots, loading, error } = useTimeSlots(selectedDate);
   const { nextAvailable, findNextAvailableDate } = useNextAvailableDate();
+  
+  // Auth hook for user profile auto-population
+  const { isAuthenticated, userProfile, getClientProfileData } = useAuth();
   
   // Workflow trigger hook
   const { triggerNewClientWorkflow, triggerAppointmentBookedWorkflow } = useWorkflowTrigger();
@@ -92,7 +97,7 @@ function BookNowCustomContent() {
     agreeToPolicy: false
   });
 
-  // Handle URL parameters for returning from login/register
+  // Handle URL parameters for returning from login/register and auto-populate user data
   useEffect(() => {
     const step = searchParams.get('step');
     const serviceParam = searchParams.get('service');
@@ -106,7 +111,33 @@ function BookNowCustomContent() {
         setCurrentStep('calendar');
       }
     }
-  }, [searchParams, services]);
+    
+    // Auto-populate client profile data for authenticated users
+    if (isAuthenticated && userProfile) {
+      const profileData = getClientProfileData();
+      if (profileData) {
+        setClientProfile(profileData);
+      }
+    }
+  }, [searchParams, services, isAuthenticated, userProfile, getClientProfileData]);
+
+  // Auto-navigate to next available date when nextAvailable is found
+  useEffect(() => {
+    if (nextAvailable && !selectedDate) {
+      const nextAvailableDate = new Date(nextAvailable.date);
+      const nextWeekStart = new Date(nextAvailableDate);
+      nextWeekStart.setDate(nextAvailableDate.getDate() - nextAvailableDate.getDay());
+      setCurrentWeekStart(nextWeekStart);
+      setSelectedDate(nextAvailable.date);
+    }
+  }, [nextAvailable, selectedDate]);
+
+  // Find next available date when service is selected
+  useEffect(() => {
+    if (selectedService && !selectedDate) {
+      findNextAvailableDate();
+    }
+  }, [selectedService, findNextAvailableDate, selectedDate]);
 
   // Services are now loaded from Firebase via useServices hook
 
@@ -126,7 +157,12 @@ function BookNowCustomContent() {
 
   const handleServiceSelect = (service: ServiceItem) => {
     setSelectedService(service);
-    setCurrentStep('account-suggestion');
+    // Skip account suggestion step if user is already authenticated
+    if (isAuthenticated) {
+      setCurrentStep('calendar');
+    } else {
+      setCurrentStep('account-suggestion');
+    }
   };
 
   const handleDateTimeSelect = (date: string, time: string) => {
@@ -204,9 +240,12 @@ function BookNowCustomContent() {
     try {
       // Create appointment in Firebase
       const appointmentData = {
-        clientId: 'temp-client-id', // In a real app, this would be the authenticated user's ID
+        clientId: userProfile?.id || 'temp-client-id', // Use authenticated user's ID if available
+        clientName: `${clientProfile.firstName} ${clientProfile.lastName}`,
+        clientEmail: clientProfile.email,
         serviceId: selectedService.id,
-        artistId: 'default-artist', // You might want to implement artist selection
+        serviceName: selectedService.name,
+        artistId: selectedArtistId || 'default-artist',
         scheduledDate: selectedDate,
         scheduledTime: selectedTime,
         status: 'pending' as const,
@@ -220,6 +259,7 @@ function BookNowCustomContent() {
           };
         })(),
         paymentStatus: 'pending' as const,
+        paymentIntentId: '', // Will be set during payment processing
         specialRequests: checkoutData.specialRequests,
         giftCardCode: checkoutData.giftCard || undefined,
         rescheduleCount: 0,
@@ -368,7 +408,7 @@ function BookNowCustomContent() {
                     onClick={goToPreviousWeek}
                     title="Previous Week"
                   >
-                    <i className="fas fa-chevron-left"></i>
+                    <i className="fas fa-less-than"></i>
                   </button>
 
                   {/* Week Days */}
@@ -421,7 +461,7 @@ function BookNowCustomContent() {
                     onClick={goToNextWeek}
                     title="Next Week"
                   >
-                    <i className="fas fa-chevron-right"></i>
+                    <i className="fas fa-greater-than"></i>
                   </button>
                 </div>
 
@@ -434,7 +474,7 @@ function BookNowCustomContent() {
                       onClick={goToPreviousWeek}
                       title="Previous Week"
                     >
-                      <i className="fas fa-chevron-left"></i>
+                      <i className="fas fa-less-than"></i>
                     </button>
                     <h5 className="mb-0 fw-bold">
                       {weekMonth} {weekYear}
@@ -444,7 +484,7 @@ function BookNowCustomContent() {
                       onClick={goToNextWeek}
                       title="Next Week"
                     >
-                      <i className="fas fa-chevron-right"></i>
+                      <i className="fas fa-greater-than"></i>
                     </button>
                   </div>
 

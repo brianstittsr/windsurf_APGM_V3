@@ -166,10 +166,12 @@ export default function FinancingPage() {
               <div className="card h-100 border-0 shadow-sm">
                 <div className="card-body p-4">
                   <div className="d-flex align-items-center mb-3">
-                    <div className="rounded-circle p-3 me-3" style={{backgroundColor: '#AD6269'}}>
-                      <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                      </svg>
+                    <div className="d-flex align-items-center justify-content-center me-3" style={{width: '60px', height: '60px', backgroundColor: 'white', borderRadius: '50%'}}>
+                      <img 
+                        src="https://cdn.prod.website-files.com/681bf1d6f7dea459fe255c59/68252146834983973a92051f_cherry-logo-primary.svg" 
+                        alt="Cherry Logo" 
+                        style={{width: '40px', height: '40px'}}
+                      />
                     </div>
                     <h3 className="h4 fw-bold mb-0">Pay with Cherry</h3>
                   </div>
@@ -186,10 +188,12 @@ export default function FinancingPage() {
               <div className="card h-100 border-0 shadow-sm">
                 <div className="card-body p-4">
                   <div className="d-flex align-items-center mb-3">
-                    <div className="bg-warning rounded-circle p-3 me-3">
-                      <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
-                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-                      </svg>
+                    <div className="d-flex align-items-center justify-content-center me-3" style={{width: '60px', height: '60px', backgroundColor: 'white', borderRadius: '50%'}}>
+                      <img 
+                        src="https://logos-world.net/wp-content/uploads/2024/06/Klarna-Symbol.png" 
+                        alt="Klarna Logo" 
+                        style={{width: '40px', height: '40px'}}
+                      />
                     </div>
                     <h3 className="h4 fw-bold mb-0">Pay with Klarna</h3>
                   </div>
@@ -201,15 +205,35 @@ export default function FinancingPage() {
               </div>
             </div>
 
+            {/* Pay with Affirm */}
+            <div className="col-lg-6">
+              <div className="card h-100 border-0 shadow-sm">
+                <div className="card-body p-4">
+                  <div className="d-flex align-items-center mb-3">
+                    <div className="d-flex align-items-center justify-content-center me-3" style={{width: '60px', height: '60px', backgroundColor: 'white', borderRadius: '50%'}}>
+                      <img 
+                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQASxDA7wX68xJ32zCBksW76SH8skp63-eZw&s" 
+                        alt="Affirm Logo" 
+                        style={{width: '40px', height: '40px'}}
+                      />
+                    </div>
+                    <h3 className="h4 fw-bold mb-0">Pay with Affirm</h3>
+                  </div>
+                  <p className="text-muted mb-3">
+                    Buy now, pay later with Affirm. Choose from flexible monthly payment plans with transparent terms and no hidden fees. Get instant approval and pay over time.
+                  </p>
+                  <a href="#" className="btn rounded-pill px-4 book-now-button" style={{backgroundColor: '#0FA8E6', borderColor: '#0FA8E6', color: 'white'}}>USE AFFIRM</a>
+                </div>
+              </div>
+            </div>
+
             {/* Pay with PayPal Credit */}
             <div className="col-lg-6">
               <div className="card h-100 border-0 shadow-sm">
                 <div className="card-body p-4">
                   <div className="d-flex align-items-center mb-3">
-                    <div className="bg-info rounded-circle p-3 me-3">
-                      <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
-                      </svg>
+                    <div className="rounded-circle p-3 me-3" style={{backgroundColor: '#0070BA'}}>
+                      <i className="fab fa-paypal" style={{fontSize: '24px', color: 'white'}}></i>
                     </div>
                     <h3 className="h4 fw-bold mb-0">Pay with PayPal Credit</h3>
                   </div>

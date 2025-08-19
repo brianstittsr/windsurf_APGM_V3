@@ -7,6 +7,7 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { auth, isFirebaseConfigured } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, updateProfile, Auth } from 'firebase/auth';
+import type { Auth as AuthType } from 'firebase/auth';
 import { UserService } from '@/services/database';
 
 function RegisterForm() {
@@ -64,11 +65,21 @@ function RegisterForm() {
         throw new Error('Firebase Auth is not initialized. Please check your Firebase configuration.');
       }
       
-      const authInstance = auth as Auth;
+      const authInstance = auth as AuthType;
+
+      // Debug logging for production
+      console.log('Environment check:', {
+        hasApiKey: !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+        hasAuthDomain: !!process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+        hasProjectId: !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        isConfigured: isFirebaseConfigured(),
+        environment: process.env.NODE_ENV
+      });
 
       // Check if Firebase is properly configured
       if (!isFirebaseConfigured()) {
         console.warn('Using demo Firebase configuration. This may cause authentication issues.');
+        throw new Error('Firebase is not properly configured. Please check environment variables.');
       }
       
       // Create user account with Firebase Auth

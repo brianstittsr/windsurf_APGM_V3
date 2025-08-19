@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface ClientProfileData {
   firstName: string;
@@ -40,6 +40,13 @@ interface WizardStep {
 export default function ClientProfileWizard({ data, onChange, onNext, onBack }: ClientProfileWizardProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [errors, setErrors] = useState<string[]>([]);
+  const [isPrePopulated, setIsPrePopulated] = useState(false);
+
+  // Check if data is pre-populated (user is authenticated)
+  useEffect(() => {
+    const hasPrePopulatedData = Object.values(data).some(value => value && value.trim() !== '');
+    setIsPrePopulated(hasPrePopulatedData);
+  }, [data]);
 
   const steps: WizardStep[] = [
     {
@@ -353,6 +360,14 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
             <div className="card-header bg-primary text-white text-center py-4">
               <h2 className="h3 mb-0">{currentStep.title}</h2>
               <p className="mb-0 opacity-75">Step {currentStepIndex + 1} of {steps.length}</p>
+              {isPrePopulated && (
+                <div className="mt-2">
+                  <small className="badge bg-success">
+                    <i className="fas fa-user-check me-1"></i>
+                    Profile information loaded
+                  </small>
+                </div>
+              )}
               
               {/* Progress Bar */}
               <div className="mt-3">
@@ -381,9 +396,19 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
               <div className="text-center mb-4">
                 <h4 className="text-dark fw-bold mb-3">{currentStep.question}</h4>
                 
+                {/* Show pre-populated indicator for current field */}
+                {data[currentStep.id] && data[currentStep.id].trim() !== '' && (
+                  <div className="mb-3">
+                    <small className="text-success">
+                      <i className="fas fa-check-circle me-1"></i>
+                      Information from your profile - you can edit if needed
+                    </small>
+                  </div>
+                )}
+                
                 {currentStep.type === 'select' ? (
                   <select
-                    className="form-select form-select-lg"
+                    className={`form-select form-select-lg ${data[currentStep.id] && data[currentStep.id].trim() !== '' ? 'border-success' : ''}`}
                     value={data[currentStep.id] || currentStep.defaultValue || ''}
                     onChange={(e) => handleInputChange(e.target.value)}
                     autoFocus
@@ -395,19 +420,25 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
                     ))}
                   </select>
                 ) : (
-                  <input
-                    type={currentStep.type}
-                    className="form-control form-control-lg text-center"
-                    value={data[currentStep.id] || ''}
-                    onChange={(e) => handleInputChange(e.target.value)}
-                    placeholder={currentStep.placeholder}
-                    autoFocus
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        handleNext();
-                      }
-                    }}
-                  />
+                  <div className="position-relative">
+                    <input
+                      type={currentStep.type}
+                      className={`form-control form-control-lg text-center ${data[currentStep.id] && data[currentStep.id].trim() !== '' ? 'border-success' : ''}`}
+                      value={data[currentStep.id] || ''}
+                      onChange={(e) => handleInputChange(e.target.value)}
+                      placeholder={currentStep.placeholder}
+                      autoFocus
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          handleNext();
+                        }
+                      }}
+                    />
+                    {data[currentStep.id] && data[currentStep.id].trim() !== '' && (
+                      <i className="fas fa-check-circle text-success position-absolute" 
+                         style={{ right: '15px', top: '50%', transform: 'translateY(-50%)' }}></i>
+                    )}
+                  </div>
                 )}
                 
                 {!currentStep.required && (

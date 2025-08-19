@@ -36,7 +36,6 @@ const steps: WizardStep[] = [
   { id: 10, question: "Are you currently taking any medications that affect blood clotting?", type: 'yesno', category: 'Medications' },
   { id: 11, question: "Do you have any metal allergies or sensitivities?", type: 'yesno', category: 'Allergies' },
   { id: 12, question: "Have you consumed alcohol within the last 24 hours?", type: 'yesno', category: 'Pre-Treatment' },
-  { id: 13, question: "Do you understand the risks and aftercare requirements?", type: 'yesno', category: 'Understanding' },
   { id: 14, question: "Are you over 18 years of age?", type: 'yesno', category: 'Legal Requirements' },
 
   { id: 17, question: "Do you understand that results may vary and touch-ups may be needed?", type: 'yesno', category: 'Expectations' },

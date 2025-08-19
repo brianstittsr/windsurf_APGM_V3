@@ -63,6 +63,8 @@ export interface Appointment {
   specialRequests: string;
   giftCardCode?: string;
   giftCardAmount?: number;
+  couponCode?: string;
+  couponDiscount?: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
   cancelledAt?: Timestamp;
@@ -293,4 +295,23 @@ export interface DayAnalytics {
     contactForms: number;
     assessments: number;
   };
+}
+
+// Coupon Code Types
+export interface CouponCode {
+  id: string;
+  code: string;
+  description: string;
+  discountType: 'percentage' | 'fixed_amount';
+  discountValue: number; // Percentage (0-100) or fixed dollar amount
+  minimumOrderAmount?: number;
+  maxUses?: number;
+  currentUses: number;
+  isActive: boolean;
+  validFrom: Date;
+  validUntil: Date;
+  applicableServices?: string[]; // Service IDs, empty array means all services
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: string; // User ID of admin who created it
 }

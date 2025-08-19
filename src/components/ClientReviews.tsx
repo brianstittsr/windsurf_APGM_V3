@@ -6,6 +6,17 @@ import Link from 'next/link';
 export default function ClientReviews() {
   const [currentReview, setCurrentReview] = useState(0);
 
+  // Helper function to mask last name
+  const maskLastName = (fullName: string) => {
+    const nameParts = fullName.split(' ');
+    if (nameParts.length < 2) return fullName;
+    
+    const firstName = nameParts[0];
+    const lastNameInitial = nameParts[nameParts.length - 1].charAt(0);
+    
+    return `${firstName} ${lastNameInitial}.`;
+  };
+
   const reviews = [
     {
       name: "Sarah Johnson",
@@ -129,7 +140,7 @@ export default function ClientReviews() {
                         style={{width: '4rem', height: '4rem', objectFit: 'cover'}}
                       />
                       <div>
-                        <div className="fw-semibold text-dark">{review.name}</div>
+                        <div className="fw-semibold text-dark">{maskLastName(review.name)}</div>
                         <div className="text-primary">{review.service}</div>
                       </div>
                     </div>
@@ -207,7 +218,7 @@ export default function ClientReviews() {
                     style={{width: '3rem', height: '3rem', objectFit: 'cover'}}
                   />
                   <div>
-                    <div className="fw-semibold text-dark small">{review.name}</div>
+                    <div className="fw-semibold text-dark small">{maskLastName(review.name)}</div>
                     <div className="text-primary small">{review.service}</div>
                   </div>
                 </div>
