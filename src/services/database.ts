@@ -329,7 +329,7 @@ export class ServiceService {
     return DatabaseService.query<Service>(
       COLLECTIONS.SERVICES,
       [{ field: 'isActive', operator: '==', value: true }],
-      'createdAt'
+      'order'
     );
   }
 
