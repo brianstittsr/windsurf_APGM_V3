@@ -326,11 +326,18 @@ export class UserService {
 
 export class ServiceService {
   static async getAllServices(): Promise<Service[]> {
-    return DatabaseService.query<Service>(
+    const services = await DatabaseService.query<Service>(
       COLLECTIONS.SERVICES,
-      [{ field: 'isActive', operator: '==', value: true }],
-      'order'
+      [{ field: 'isActive', operator: '==', value: true }]
     );
+    
+    // Sort by order field if it exists, otherwise by createdAt
+    return services.sort((a, b) => {
+      if ('order' in a && 'order' in b) {
+        return (a as any).order - (b as any).order;
+      }
+      return a.createdAt.toMillis() - b.createdAt.toMillis();
+    });
   }
 
   static async getServiceById(id: string): Promise<Service | null> {
