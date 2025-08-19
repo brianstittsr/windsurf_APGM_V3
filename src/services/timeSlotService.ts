@@ -277,6 +277,8 @@ export class TimeSlotService {
     
     console.log('Starting search from date:', startDate.toISOString().split('T')[0]);
     
+    let bestDate: { date: string; timeSlots: TimeSlot[]; score: number } | null = null;
+    
     for (let i = 0; i < maxDaysToCheck; i++) {
       const checkDate = new Date(startDate);
       checkDate.setDate(startDate.getDate() + i);
@@ -286,19 +288,43 @@ export class TimeSlotService {
       
       try {
         const daySlots = await this.getAvailableTimeSlots(dateString);
-        console.log(`${dateString} - hasAvailability: ${daySlots.hasAvailability}, available slots: ${daySlots.timeSlots.filter(slot => slot.available).length}`);
+        const availableSlots = daySlots.timeSlots.filter(slot => slot.available);
+        console.log(`${dateString} - hasAvailability: ${daySlots.hasAvailability}, available slots: ${availableSlots.length}`);
         
-        if (daySlots.hasAvailability && daySlots.timeSlots.some(slot => slot.available)) {
-          const availableSlots = daySlots.timeSlots.filter(slot => slot.available);
-          console.log(`Found next available date: ${dateString} with ${availableSlots.length} slots`);
-          return {
-            date: dateString,
-            timeSlots: availableSlots
-          };
+        if (daySlots.hasAvailability && availableSlots.length > 0) {
+          // Calculate a score for this date (prefer more slots and weekend days)
+          const dayOfWeek = checkDate.getDay(); // 0 = Sunday, 6 = Saturday
+          const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+          const score = availableSlots.length + (isWeekend ? 10 : 0); // Bonus points for weekends
+          
+          console.log(`${dateString} - score: ${score} (slots: ${availableSlots.length}, weekend: ${isWeekend})`);
+          
+          if (!bestDate || score > bestDate.score) {
+            bestDate = {
+              date: dateString,
+              timeSlots: availableSlots,
+              score: score
+            };
+            console.log(`New best date: ${dateString} with score ${score}`);
+          }
+          
+          // If we found a weekend with multiple slots, that's probably good enough
+          if (isWeekend && availableSlots.length >= 2) {
+            console.log(`Found excellent weekend date: ${dateString} with ${availableSlots.length} slots`);
+            break;
+          }
         }
       } catch (error) {
         console.error(`Error checking availability for ${dateString}:`, error);
       }
+    }
+    
+    if (bestDate) {
+      console.log(`Returning best available date: ${bestDate.date} with ${bestDate.timeSlots.length} slots`);
+      return {
+        date: bestDate.date,
+        timeSlots: bestDate.timeSlots
+      };
     }
     
     console.log('No available dates found in the next 30 days');
