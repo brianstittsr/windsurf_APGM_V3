@@ -43,6 +43,42 @@ export interface Service {
   updatedAt: Timestamp;
 }
 
+// Gift Card Types
+export interface GiftCard {
+  id: string;
+  code: string;
+  originalAmount: number;
+  remainingAmount: number;
+  purchaserName: string;
+  purchaserEmail: string;
+  recipientName?: string;
+  recipientEmail?: string;
+  message?: string;
+  isActive: boolean;
+  isRedeemed: boolean;
+  expirationDate?: Timestamp;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+// Coupon Code Types
+export interface CouponCode {
+  id: string;
+  code: string;
+  type: 'percentage' | 'fixed';
+  value: number; // percentage (0-100) or fixed amount in cents
+  description: string;
+  minOrderAmount?: number;
+  maxDiscountAmount?: number;
+  usageLimit?: number;
+  usedCount: number;
+  isActive: boolean;
+  expirationDate?: Timestamp;
+  applicableServices?: string[]; // service IDs, empty means all services
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
 // Appointment Types
 export interface Appointment {
   id: string;
@@ -308,10 +344,10 @@ export interface CouponCode {
   maxUses?: number;
   currentUses: number;
   isActive: boolean;
-  validFrom: Date;
-  validUntil: Date;
+  validFrom: Timestamp;
+  validUntil: Timestamp;
   applicableServices?: string[]; // Service IDs, empty array means all services
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
   createdBy: string; // User ID of admin who created it
 }

@@ -19,14 +19,12 @@ export class CouponService {
   private static collectionName = 'coupons';
 
   // Create a new coupon code
-  static async createCoupon(couponData: Omit<CouponCode, 'id' | 'createdAt' | 'updatedAt' | 'currentUses'>): Promise<string> {
+  static async createCoupon(couponData: Omit<CouponCode, 'id' | 'createdAt' | 'updatedAt' | 'usedCount'>): Promise<string> {
     const docRef = await addDoc(collection(db, this.collectionName), {
       ...couponData,
-      currentUses: 0,
+      usedCount: 0,
       createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-      validFrom: Timestamp.fromDate(couponData.validFrom),
-      validUntil: Timestamp.fromDate(couponData.validUntil)
+      updatedAt: Timestamp.now()
     });
     return docRef.id;
   }
@@ -52,19 +50,18 @@ export class CouponService {
     return {
       id: doc.id,
       code: data.code,
+      type: data.type,
+      value: data.value,
       description: data.description,
-      discountType: data.discountType,
-      discountValue: data.discountValue,
-      minimumOrderAmount: data.minimumOrderAmount,
-      maxUses: data.maxUses,
-      currentUses: data.currentUses,
+      minOrderAmount: data.minOrderAmount,
+      maxDiscountAmount: data.maxDiscountAmount,
+      usageLimit: data.usageLimit,
+      usedCount: data.usedCount || 0,
       isActive: data.isActive,
-      validFrom: data.validFrom.toDate(),
-      validUntil: data.validUntil.toDate(),
+      expirationDate: data.expirationDate,
       applicableServices: data.applicableServices || [],
-      createdAt: data.createdAt.toDate(),
-      updatedAt: data.updatedAt.toDate(),
-      createdBy: data.createdBy
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt
     };
   }
 

@@ -103,8 +103,8 @@ export default function CheckoutCart({
         paymentIntentId: paymentIntent.id,
         specialRequests: data.specialRequests || '',
         giftCardCode: data.giftCard || undefined,
-        couponCode: appliedCoupon?.code || undefined,
-        couponDiscount: couponDiscount || 0,
+        ...(appliedCoupon && { couponCode: appliedCoupon.code }),
+        ...(couponDiscount > 0 && { couponDiscount }),
         rescheduleCount: 0,
         confirmationSent: false,
         reminderSent: false
