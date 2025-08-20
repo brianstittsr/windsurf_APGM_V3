@@ -30,12 +30,12 @@ export async function POST(request: NextRequest) {
       VERCEL_ENV: process.env.VERCEL_ENV
     });
 
-    // For development, use fallback SMTP configuration if main variables are missing
+    // Use Vercel environment variables (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS)
     const smtpConfig = {
-      host: process.env.SMTP_HOST || process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || process.env.EMAIL_PORT || '587'),
-      user: process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER,
-      pass: process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.GMAIL_PASS
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
     };
 
     console.log('SMTP Config:', {
@@ -60,15 +60,16 @@ export async function POST(request: NextRequest) {
       // Return more specific error for production debugging
       return NextResponse.json(
         { 
-          error: 'Email service not configured. Missing SMTP credentials.',
-          details: process.env.NODE_ENV === 'development' ? {
-            host: !!smtpConfig.host,
-            port: !!smtpConfig.port,
-            user: !!smtpConfig.user,
-            pass: !!smtpConfig.pass,
+          error: 'Email service not configured. Missing SMTP credentials in Vercel.',
+          details: {
+            message: 'Verify SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS are set in Vercel Environment Variables',
+            host: !!smtpConfig.host ? 'configured' : 'missing',
+            port: smtpConfig.port || 'missing',
+            user: !!smtpConfig.user ? 'configured' : 'missing',
+            pass: !!smtpConfig.pass ? 'configured' : 'missing',
             isVercel: !!process.env.VERCEL,
-            vercelEnv: process.env.VERCEL_ENV
-          } : 'Check Vercel environment variables'
+            vercelEnv: process.env.VERCEL_ENV || 'unknown'
+          }
         },
         { status: 500 }
       );
@@ -88,13 +89,19 @@ export async function POST(request: NextRequest) {
     // Test connection
     try {
       await transporter.verify();
-      console.log('SMTP connection verified successfully');
+      console.log('SMTP connection verified successfully for Vercel production');
     } catch (verifyError) {
-      console.error('SMTP verification failed:', verifyError);
+      console.error('SMTP verification failed on Vercel:', verifyError);
       return NextResponse.json(
         { 
           error: 'Email server connection failed',
-          details: process.env.NODE_ENV === 'development' ? (verifyError as Error).message : undefined
+          details: {
+            message: (verifyError as Error).message,
+            host: smtpConfig.host,
+            port: smtpConfig.port,
+            isVercel: !!process.env.VERCEL,
+            suggestion: 'Check if SMTP credentials are correct in Vercel Environment Variables'
+          }
         },
         { status: 500 }
       );
