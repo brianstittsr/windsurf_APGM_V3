@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
 export async function POST(request: NextRequest) {
+  console.log('=== Contact Form API Called ===');
+  console.log('Request method:', request.method);
+  console.log('Request URL:', request.url);
+  
   try {
-    const { name, email, phone, service, message } = await request.json();
+    const body = await request.json();
+    console.log('Request body received:', { ...body, message: body.message?.substring(0, 50) + '...' });
+    const { name, email, phone, service, message } = body;
 
     // Validate required fields
     if (!name || !email || !message) {
@@ -249,21 +255,35 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
+    console.error('=== CRITICAL ERROR in Contact Form API ===');
     console.error('Error sending contact email:', error);
     
-    // More detailed error logging
+    // More detailed error logging for Vercel
     if (error instanceof Error) {
       console.error('Error details:', {
         message: error.message,
         stack: error.stack,
-        name: error.name
+        name: error.name,
+        cause: error.cause
       });
     }
     
+    // Log all environment variables for debugging
+    console.error('All environment variables:', Object.keys(process.env).sort());
+    console.error('SMTP-related env vars:', Object.keys(process.env).filter(key => 
+      key.includes('SMTP') || key.includes('EMAIL') || key.includes('MAIL')
+    ));
+    
     return NextResponse.json(
       { 
-        error: 'Failed to send message. Please try again.',
-        details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+        error: 'Failed to send message. Server error occurred.',
+        details: {
+          message: (error as Error).message,
+          type: (error as Error).name,
+          isVercel: !!process.env.VERCEL,
+          nodeEnv: process.env.NODE_ENV,
+          timestamp: new Date().toISOString()
+        }
       },
       { status: 500 }
     );
