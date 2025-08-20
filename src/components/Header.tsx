@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     setIsClient(true);
@@ -15,6 +17,19 @@ export default function Header() {
     const address = "4040 Barrett Drive Suite 3, Raleigh, NC 27609";
     const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
     window.open(googleMapsUrl, '_blank');
+  };
+
+  const handleNavClick = (anchor: string) => {
+    if (pathname === '/') {
+      // If on home page, scroll to anchor
+      const element = document.getElementById(anchor);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      // If on other pages, navigate to home page with anchor
+      window.location.href = `http://localhost:3001/#${anchor}`;
+    }
   };
 
   return (
@@ -65,12 +80,20 @@ export default function Header() {
         {/* Navigation */}
         <div className={`collapse navbar-collapse ${isMenuOpen ? 'show' : ''}`}>
           <nav className="navbar-nav mx-auto">
-            <Link href="http://localhost:3001/#about" className="nav-link text-secondary">
+            <button 
+              onClick={() => handleNavClick('about')} 
+              className="nav-link text-secondary btn btn-link p-0 border-0 me-3"
+              style={{ textDecoration: 'none' }}
+            >
               ABOUT
-            </Link>
-            <Link href="http://localhost:3001/#reviews" className="nav-link text-secondary">
+            </button>
+            <button 
+              onClick={() => handleNavClick('reviews')} 
+              className="nav-link text-secondary btn btn-link p-0 border-0"
+              style={{ textDecoration: 'none' }}
+            >
               REVIEWS
-            </Link>
+            </button>
             <Link href="/financing" className="nav-link text-secondary">
               FINANCING
             </Link>

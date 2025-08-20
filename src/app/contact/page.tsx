@@ -292,24 +292,12 @@ export default function ContactPage() {
                       </h5>
                     </div>
                     <div className="card-body p-4">
-                      <div className="row g-2 text-center">
-                        <div className="col-6">
-                          <div className="p-2 rounded" style={{ backgroundColor: 'rgba(173, 98, 105, 0.05)' }}>
-                            <strong>Mon-Fri</strong><br/>
-                            <small className="text-muted">9:00 AM - 6:00 PM</small>
-                          </div>
-                        </div>
-                        <div className="col-6">
-                          <div className="p-2 rounded" style={{ backgroundColor: 'rgba(173, 98, 105, 0.05)' }}>
-                            <strong>Saturday</strong><br/>
-                            <small className="text-muted">10:00 AM - 4:00 PM</small>
-                          </div>
-                        </div>
-                        <div className="col-12 mt-2">
-                          <div className="p-2 rounded" style={{ backgroundColor: 'rgba(173, 98, 105, 0.05)' }}>
-                            <strong>Sunday</strong><br/>
-                            <small className="text-muted">Closed</small>
-                          </div>
+                      <div className="text-center">
+                        <div className="p-4 rounded" style={{ backgroundColor: 'rgba(173, 98, 105, 0.05)' }}>
+                          <strong className="d-block mb-2" style={{ color: '#AD6269', fontSize: '1.1rem' }}>By Appointment Only</strong>
+                          <small className="text-muted">
+                            Please call or book online to schedule your consultation
+                          </small>
                         </div>
                       </div>
                     </div>
