@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const pathname = usePathname();
+  const { userProfile, loading } = useAuth();
 
   useEffect(() => {
     setIsClient(true);
@@ -140,9 +142,8 @@ export default function Header() {
 
           {/* CTA Buttons */}
           <div className="d-none d-lg-flex gap-2">
-            {/* Artist Profile Link - Show for authenticated artists/admins */}
-            {isClient && (localStorage.getItem('adminEmail') || 
-              (typeof window !== 'undefined' && window.location.pathname.includes('artist'))) && (
+            {/* Artist Profile Link - Show only for authenticated admin users */}
+            {isClient && !loading && userProfile?.role === 'admin' && (
               <Link
                 href="/dashboard"
                 className="btn btn-outline-secondary rounded-pill px-4"

@@ -19,31 +19,48 @@ export async function POST(request: NextRequest) {
       SMTP_PORT: !!process.env.SMTP_PORT,
       SMTP_USER: !!process.env.SMTP_USER,
       SMTP_PASS: !!process.env.SMTP_PASS,
-      NODE_ENV: process.env.NODE_ENV
+      NODE_ENV: process.env.NODE_ENV,
+      SMTP_HOST_VALUE: process.env.SMTP_HOST,
+      SMTP_PORT_VALUE: process.env.SMTP_PORT
     });
 
-    // Check environment variables
-    if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-      console.error('Missing email configuration:', {
-        SMTP_HOST: !!process.env.SMTP_HOST,
-        SMTP_PORT: !!process.env.SMTP_PORT,
-        SMTP_USER: !!process.env.SMTP_USER,
-        SMTP_PASS: !!process.env.SMTP_PASS
+    // For development, use fallback SMTP configuration if main variables are missing
+    const smtpConfig = {
+      host: process.env.SMTP_HOST || process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || process.env.EMAIL_PORT || '587'),
+      user: process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER,
+      pass: process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.GMAIL_PASS
+    };
+
+    console.log('SMTP Config:', {
+      host: smtpConfig.host,
+      port: smtpConfig.port,
+      user: !!smtpConfig.user,
+      pass: !!smtpConfig.pass
+    });
+
+    // Check if we have valid SMTP configuration
+    if (!smtpConfig.host || !smtpConfig.port || !smtpConfig.user || !smtpConfig.pass) {
+      console.error('Missing email configuration after fallbacks:', {
+        host: !!smtpConfig.host,
+        port: !!smtpConfig.port,
+        user: !!smtpConfig.user,
+        pass: !!smtpConfig.pass
       });
       return NextResponse.json(
-        { error: 'Email service not configured' },
+        { error: 'Email service not configured. Please check environment variables.' },
         { status: 500 }
       );
     }
 
-    // Create transporter
+    // Create transporter using validated config
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT),
-      secure: process.env.SMTP_PORT === '465',
+      host: smtpConfig.host,
+      port: smtpConfig.port,
+      secure: smtpConfig.port === 465,
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: smtpConfig.user,
+        pass: smtpConfig.pass,
       },
     });
 
@@ -131,7 +148,7 @@ export async function POST(request: NextRequest) {
 
     // Send email to Victoria
     await transporter.sendMail({
-      from: process.env.SMTP_USER,
+      from: smtpConfig.user,
       to: 'victoria@aprettygirlmatter.com',
       subject: `New Contact Form Submission from ${name}`,
       html: htmlContent,
@@ -192,7 +209,7 @@ export async function POST(request: NextRequest) {
     `;
 
     await transporter.sendMail({
-      from: process.env.SMTP_USER,
+      from: smtpConfig.user,
       to: email,
       subject: 'Thank you for contacting A Pretty Girl Matter!',
       html: confirmationHtml,
