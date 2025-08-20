@@ -46,6 +46,16 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
   useEffect(() => {
     const hasPrePopulatedData = Object.values(data).some(value => value && value.trim() !== '');
     setIsPrePopulated(hasPrePopulatedData);
+    
+    // If user has complete profile data, show confirmation instead of form
+    if (hasPrePopulatedData) {
+      const requiredFields = ['firstName', 'lastName', 'email', 'phone'];
+      const isComplete = requiredFields.every(field => data[field as keyof ClientProfileData]?.trim());
+      if (isComplete) {
+        // Skip to the end to show confirmation
+        setCurrentStepIndex(steps.length - 1);
+      }
+    }
   }, [data]);
 
   const steps: WizardStep[] = [

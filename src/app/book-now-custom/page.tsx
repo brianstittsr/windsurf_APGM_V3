@@ -15,6 +15,9 @@ import { useSearchParams } from 'next/navigation';
 import { getServiceImagePath } from '@/utils/serviceImageUtils';
 import { calculateTotalWithStripeFees } from '@/lib/stripe-fees';
 import { useWorkflowTrigger } from '@/hooks/useWorkflowTrigger';
+import { useFormPersistence } from '@/hooks/useFormPersistence';
+import FormDataRecoveryBanner from '../../components/FormDataRecoveryBanner';
+import ProfileConfirmation from '../../components/ProfileConfirmation';
 // Email services moved to API routes to avoid client-side imports
 
 function BookNowCustomContent() {
@@ -92,6 +95,70 @@ function BookNowCustomContent() {
     agreeToPolicy: false
   });
 
+  const [showRecoveryBanner, setShowRecoveryBanner] = useState(false);
+  const [savedFormData, setSavedFormData] = useState<any>(null);
+  const [showProfileConfirmation, setShowProfileConfirmation] = useState(false);
+
+  // Form persistence for all booking data
+  const bookingFormData = {
+    currentStep,
+    selectedService,
+    selectedDate,
+    selectedTime,
+    selectedArtistId,
+    clientProfile,
+    healthFormData,
+    clientSignature,
+    prePostCareSignature,
+    checkoutData
+  };
+
+  const { loadData, clearData } = useFormPersistence({
+    key: 'booking_session',
+    data: bookingFormData,
+    enabled: true
+  });
+
+  // Load saved form data on component mount
+  useEffect(() => {
+    const savedData = loadData();
+    if (savedData && Object.keys(savedData).length > 0) {
+      // Check if there's meaningful data to restore (not just empty initial state)
+      const hasData = savedData.selectedService || 
+                     savedData.selectedDate || 
+                     savedData.clientProfile?.firstName ||
+                     Object.keys(savedData.healthFormData || {}).length > 0;
+      
+      if (hasData) {
+        setSavedFormData(savedData);
+        setShowRecoveryBanner(true);
+      }
+    }
+  }, [loadData]);
+
+  const handleRestoreData = () => {
+    if (savedFormData) {
+      // Restore all form state from saved data
+      if (savedFormData.currentStep) setCurrentStep(savedFormData.currentStep);
+      if (savedFormData.selectedService) setSelectedService(savedFormData.selectedService);
+      if (savedFormData.selectedDate) setSelectedDate(savedFormData.selectedDate);
+      if (savedFormData.selectedTime) setSelectedTime(savedFormData.selectedTime);
+      if (savedFormData.selectedArtistId) setSelectedArtistId(savedFormData.selectedArtistId);
+      if (savedFormData.clientProfile) setClientProfile(savedFormData.clientProfile);
+      if (savedFormData.healthFormData) setHealthFormData(savedFormData.healthFormData);
+      if (savedFormData.clientSignature) setClientSignature(savedFormData.clientSignature);
+      if (savedFormData.prePostCareSignature) setPrePostCareSignature(savedFormData.prePostCareSignature);
+      if (savedFormData.checkoutData) setCheckoutData(savedFormData.checkoutData);
+    }
+    setShowRecoveryBanner(false);
+  };
+
+  const handleDismissRecovery = () => {
+    clearData();
+    setShowRecoveryBanner(false);
+    setSavedFormData(null);
+  };
+
   // Handle URL parameters for returning from login/register and auto-populate user data
   useEffect(() => {
     const step = searchParams.get('step');
@@ -111,7 +178,10 @@ function BookNowCustomContent() {
     if (isAuthenticated && userProfile) {
       const profileData = getClientProfileData();
       if (profileData) {
-        setClientProfile(profileData);
+        setClientProfile(prev => ({
+          ...prev,
+          ...profileData
+        }));
       }
     }
   }, [searchParams, services, isAuthenticated, userProfile, getClientProfileData]);
@@ -186,7 +256,24 @@ function BookNowCustomContent() {
   const handleDateTimeSelect = (date: string, time: string) => {
     setSelectedDate(date);
     setSelectedTime(time);
-    setCurrentStep('profile');
+    
+    // Check if user is authenticated and has complete profile data
+    if (isAuthenticated && userProfile) {
+      const profileData = getClientProfileData();
+      if (profileData && profileData.firstName && profileData.lastName && profileData.email && profileData.phone) {
+        // User has complete profile, show confirmation
+        setShowProfileConfirmation(true);
+        setCurrentStep('profile');
+      } else {
+        // User needs to complete profile
+        setShowProfileConfirmation(false);
+        setCurrentStep('profile');
+      }
+    } else {
+      // User not authenticated, go to profile step
+      setShowProfileConfirmation(false);
+      setCurrentStep('profile');
+    }
   };
 
   const handleHealthFormSubmit = async () => {
@@ -338,6 +425,8 @@ function BookNowCustomContent() {
       }
       
       console.log('Booking completed successfully:', appointmentId);
+      // Clear saved form data after successful booking
+      clearData();
       setCurrentStep('confirmation');
     } catch (error) {
       console.error('Failed to complete booking:', error);
@@ -406,6 +495,17 @@ function BookNowCustomContent() {
         <div className="row justify-content-center">
           <div className="col-lg-10">
             <div className="card border-0 shadow-lg">
+              {/* Form Recovery Banner */}
+              {showRecoveryBanner && (
+                <div className="card-header bg-white border-0 py-3">
+                  <FormDataRecoveryBanner
+                    onRestore={handleRestoreData}
+                    onDismiss={handleDismissRecovery}
+                    show={showRecoveryBanner}
+                  />
+                </div>
+              )}
+              
               {/* Header */}
               <div className="card-header bg-white border-0 text-center py-4">
                 <h1 className="h2 fw-bold text-dark mb-2">Book Your Appointment</h1>
@@ -1208,13 +1308,22 @@ function BookNowCustomContent() {
         {currentStep === 'account-suggestion' && renderAccountSuggestion()}
         {currentStep === 'calendar' && renderCalendarSelection()}
         {currentStep === 'profile' && (
-        <ClientProfileWizard
-          data={clientProfile}
-          onChange={setClientProfile}
-          onNext={() => setCurrentStep('health')}
-          onBack={() => setCurrentStep('calendar')}
-        />
-      )}
+          showProfileConfirmation ? (
+            <ProfileConfirmation
+              data={clientProfile}
+              onConfirm={() => setCurrentStep('health')}
+              onEdit={() => setShowProfileConfirmation(false)}
+              onBack={() => setCurrentStep('calendar')}
+            />
+          ) : (
+            <ClientProfileWizard
+              data={clientProfile}
+              onChange={setClientProfile}
+              onNext={() => setCurrentStep('health')}
+              onBack={() => setCurrentStep('calendar')}
+            />
+          )
+        )}
       {currentStep === 'health' && (
         <HealthFormWizard
           data={healthFormData}

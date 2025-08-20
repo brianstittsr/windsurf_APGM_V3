@@ -321,27 +321,9 @@ export default function CheckoutCart({
                 </div>
               )}
               
-              {!showPaymentForm && !paymentSuccess && (
-                <>
-                  <h6 className="mb-3">Payment Method</h6>
-                  <div className="border rounded p-3 text-center text-muted">
-                    <i className="fas fa-credit-card fa-2x mb-2"></i>
-                    <div>Add payment method for deposit</div>
-                    <button 
-                      className="btn btn-primary btn-sm mt-2"
-                      onClick={handleAddPaymentMethod}
-                      disabled={paymentLoading}
-                    >
-                      Add Payment Method
-                    </button>
-                  </div>
-                </>
-              )}
-              
-              {/* Stripe Payment Form */}
-              {showPaymentForm && !paymentSuccess && (
+              {!paymentSuccess && (
                 <div className="mt-4">
-                  <h6 className="mb-3">Payment Details</h6>
+                  <h6 className="mb-3">Payment Options</h6>
                   <Elements stripe={stripePromise}>
                     <MultiPaymentForm
                       amount={depositAmount + stripeFee}
@@ -352,16 +334,6 @@ export default function CheckoutCart({
                       setLoading={setPaymentLoading}
                     />
                   </Elements>
-                  
-                  <div className="mt-3">
-                    <button 
-                      className="btn btn-outline-secondary btn-sm"
-                      onClick={() => setShowPaymentForm(false)}
-                      disabled={paymentLoading}
-                    >
-                      Cancel
-                    </button>
-                  </div>
                 </div>
               )}
             </div>
@@ -378,28 +350,16 @@ export default function CheckoutCart({
           </div>
 
           {/* Action Buttons */}
-          {!showPaymentForm && (
-            <div className="d-flex justify-content-between mb-4">
-              <button
-                type="button"
-                className="btn btn-outline-secondary px-4"
-                onClick={onBack}
-                disabled={paymentLoading}
-              >
-                Back
-              </button>
-              {!paymentSuccess && (
-                <button
-                  type="button"
-                  className="btn btn-outline-primary px-4 fw-bold"
-                  onClick={() => setShowPaymentForm(true)}
-                  disabled={paymentLoading}
-                >
-                  Proceed to Payment
-                </button>
-              )}
-            </div>
-          )}
+          <div className="d-flex justify-content-between mb-4">
+            <button
+              type="button"
+              className="btn btn-outline-secondary px-4"
+              onClick={onBack}
+              disabled={paymentLoading}
+            >
+              Back
+            </button>
+          </div>
 
           {/* Order Summary Toggle */}
           <div className="text-center">

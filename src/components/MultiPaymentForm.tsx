@@ -355,11 +355,11 @@ export default function MultiPaymentForm({
               onClick={() => handlePaymentMethodChange('klarna')}
             >
               <div className="card-body text-center py-3">
-                <div className="d-flex justify-content-center mb-2">
+                <div className="d-flex justify-content-center mb-2" style={{ height: '48px' }}>
                   <img 
                     src="https://logos-world.net/wp-content/uploads/2024/06/Klarna-Symbol.png" 
                     alt="Klarna Logo" 
-                    style={{ width: '48px', height: '48px' }}
+                    style={{ width: '48px', height: '48px', objectFit: 'contain' }}
                   />
                 </div>
                 <h6 className="mb-0">Klarna</h6>
@@ -374,11 +374,11 @@ export default function MultiPaymentForm({
               onClick={() => handlePaymentMethodChange('affirm')}
             >
               <div className="card-body text-center py-3">
-                <div className="d-flex justify-content-center mb-2">
+                <div className="d-flex justify-content-center mb-2" style={{ height: '48px' }}>
                   <img 
                     src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQASxDA7wX68xJ32zCBksW76SH8skp63-eZw&s" 
                     alt="Affirm Logo" 
-                    style={{ width: '48px', height: '48px' }}
+                    style={{ width: '48px', height: '48px', objectFit: 'contain' }}
                   />
                 </div>
                 <h6 className="mb-0">Affirm</h6>
@@ -393,11 +393,11 @@ export default function MultiPaymentForm({
               style={{ cursor: 'pointer' }}
             >
               <div className="card-body text-center py-3">
-                <div className="d-flex justify-content-center mb-2">
+                <div className="d-flex justify-content-center mb-2" style={{ height: '48px' }}>
                   <img 
                     src="https://cdn.prod.website-files.com/681bf1d6f7dea459fe255c59/68252146834983973a92051f_cherry-logo-primary.svg" 
                     alt="Cherry Logo" 
-                    style={{ width: '48px', height: '48px' }}
+                    style={{ width: '48px', height: '48px', objectFit: 'contain' }}
                   />
                 </div>
                 <h6 className="mb-0">Cherry</h6>
