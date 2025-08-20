@@ -6,10 +6,10 @@ export default function Footer() {
   // Services section removed as requested
 
   const quickLinks = [
-    { name: "Home", href: "#hero" },
-    { name: "Process", href: "#process" },
-    { name: "About Victoria", href: "#about" },
-    { name: "Client Reviews", href: "#reviews" },
+    { name: "Home", href: "http://localhost:3001/#hero" },
+    { name: "Process", href: "http://localhost:3001/#process" },
+    { name: "About Victoria", href: "http://localhost:3001/#about" },
+    { name: "Client Reviews", href: "http://localhost:3001/#reviews" },
     { name: "Contact Us", href: "/contact" }
   ];
 
