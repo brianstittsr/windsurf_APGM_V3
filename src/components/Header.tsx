@@ -65,10 +65,10 @@ export default function Header() {
         {/* Navigation */}
         <div className={`collapse navbar-collapse ${isMenuOpen ? 'show' : ''}`}>
           <nav className="navbar-nav mx-auto">
-            <Link href="#about" className="nav-link text-secondary">
+            <Link href="http://localhost:3001/#about" className="nav-link text-secondary">
               ABOUT
             </Link>
-            <Link href="#reviews" className="nav-link text-secondary">
+            <Link href="http://localhost:3001/#reviews" className="nav-link text-secondary">
               REVIEWS
             </Link>
             <Link href="/financing" className="nav-link text-secondary">
