@@ -13,6 +13,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Log environment check for debugging
+    console.log('Environment check:', {
+      SMTP_HOST: !!process.env.SMTP_HOST,
+      SMTP_PORT: !!process.env.SMTP_PORT,
+      SMTP_USER: !!process.env.SMTP_USER,
+      SMTP_PASS: !!process.env.SMTP_PASS,
+      NODE_ENV: process.env.NODE_ENV
+    });
+
     // Check environment variables
     if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
       console.error('Missing email configuration:', {
@@ -39,7 +48,19 @@ export async function POST(request: NextRequest) {
     });
 
     // Test connection
-    await transporter.verify();
+    try {
+      await transporter.verify();
+      console.log('SMTP connection verified successfully');
+    } catch (verifyError) {
+      console.error('SMTP verification failed:', verifyError);
+      return NextResponse.json(
+        { 
+          error: 'Email server connection failed',
+          details: process.env.NODE_ENV === 'development' ? (verifyError as Error).message : undefined
+        },
+        { status: 500 }
+      );
+    }
 
     // Email content for Victoria
     const htmlContent = `
