@@ -19,9 +19,15 @@ export async function POST(request: NextRequest) {
       SMTP_PORT: !!process.env.SMTP_PORT,
       SMTP_USER: !!process.env.SMTP_USER,
       SMTP_PASS: !!process.env.SMTP_PASS,
+      EMAIL_HOST: !!process.env.EMAIL_HOST,
+      EMAIL_PORT: !!process.env.EMAIL_PORT,
+      EMAIL_USER: !!process.env.EMAIL_USER,
+      EMAIL_PASS: !!process.env.EMAIL_PASS,
+      GMAIL_USER: !!process.env.GMAIL_USER,
+      GMAIL_PASS: !!process.env.GMAIL_PASS,
       NODE_ENV: process.env.NODE_ENV,
-      SMTP_HOST_VALUE: process.env.SMTP_HOST,
-      SMTP_PORT_VALUE: process.env.SMTP_PORT
+      VERCEL: !!process.env.VERCEL,
+      VERCEL_ENV: process.env.VERCEL_ENV
     });
 
     // For development, use fallback SMTP configuration if main variables are missing
@@ -45,10 +51,25 @@ export async function POST(request: NextRequest) {
         host: !!smtpConfig.host,
         port: !!smtpConfig.port,
         user: !!smtpConfig.user,
-        pass: !!smtpConfig.pass
+        pass: !!smtpConfig.pass,
+        availableEnvVars: Object.keys(process.env).filter(key => 
+          key.includes('SMTP') || key.includes('EMAIL') || key.includes('GMAIL')
+        )
       });
+      
+      // Return more specific error for production debugging
       return NextResponse.json(
-        { error: 'Email service not configured. Please check environment variables.' },
+        { 
+          error: 'Email service not configured. Missing SMTP credentials.',
+          details: process.env.NODE_ENV === 'development' ? {
+            host: !!smtpConfig.host,
+            port: !!smtpConfig.port,
+            user: !!smtpConfig.user,
+            pass: !!smtpConfig.pass,
+            isVercel: !!process.env.VERCEL,
+            vercelEnv: process.env.VERCEL_ENV
+          } : 'Check Vercel environment variables'
+        },
         { status: 500 }
       );
     }
