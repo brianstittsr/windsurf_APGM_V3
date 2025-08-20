@@ -13,14 +13,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check environment variables
+    if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.error('Missing email configuration:', {
+        SMTP_HOST: !!process.env.SMTP_HOST,
+        SMTP_PORT: !!process.env.SMTP_PORT,
+        SMTP_USER: !!process.env.SMTP_USER,
+        SMTP_PASS: !!process.env.SMTP_PASS
+      });
+      return NextResponse.json(
+        { error: 'Email service not configured' },
+        { status: 500 }
+      );
+    }
+
     // Create transporter
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT),
+      secure: process.env.SMTP_PORT === '465',
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_APP_PASSWORD,
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
       },
     });
+
+    // Test connection
+    await transporter.verify();
 
     // Email content for Victoria
     const htmlContent = `
@@ -91,7 +110,7 @@ export async function POST(request: NextRequest) {
 
     // Send email to Victoria
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: process.env.SMTP_USER,
       to: 'victoria@aprettygirlmatter.com',
       subject: `New Contact Form Submission from ${name}`,
       html: htmlContent,
@@ -152,7 +171,7 @@ export async function POST(request: NextRequest) {
     `;
 
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: process.env.SMTP_USER,
       to: email,
       subject: 'Thank you for contacting A Pretty Girl Matter!',
       html: confirmationHtml,
@@ -165,8 +184,21 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error sending contact email:', error);
+    
+    // More detailed error logging
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to send message. Please try again.' },
+      { 
+        error: 'Failed to send message. Please try again.',
+        details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+      },
       { status: 500 }
     );
   }
