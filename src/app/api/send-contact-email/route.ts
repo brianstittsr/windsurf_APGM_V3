@@ -181,6 +181,7 @@ export async function POST(request: NextRequest) {
     `;
 
     // Send email to Victoria
+    console.log('Attempting to send email to Victoria...');
     await transporter.sendMail({
       from: smtpConfig.user,
       to: 'victoria@aprettygirlmatter.com',
@@ -188,8 +189,10 @@ export async function POST(request: NextRequest) {
       html: htmlContent,
       replyTo: email,
     });
+    console.log('Email to Victoria sent successfully');
 
     // Send confirmation email to customer
+    console.log('Attempting to send confirmation email to customer...');
     const confirmationHtml = `
       <!DOCTYPE html>
       <html>
@@ -248,7 +251,9 @@ export async function POST(request: NextRequest) {
       subject: 'Thank you for contacting A Pretty Girl Matter!',
       html: confirmationHtml,
     });
+    console.log('Confirmation email sent successfully');
 
+    console.log('=== Contact form completed successfully ===');
     return NextResponse.json({ 
       success: true, 
       message: 'Message sent successfully!' 
