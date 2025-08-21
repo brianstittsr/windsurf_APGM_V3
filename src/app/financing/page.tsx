@@ -110,34 +110,6 @@ export default function FinancingPage() {
         </div>
       </section>
 
-      {/* Video Section */}
-      <section className="py-5">
-        <div className="container">
-          <div className="row justify-content-center">
-            <div className="col-lg-8">
-              <div className="text-center mb-4">
-                <h2 className="sub-heading fw-bold mb-3">Learn About Our Financing Options</h2>
-                <p className="paragraph-text text-muted">Watch this video to understand how our payment plans work</p>
-              </div>
-              <div className="card border-0 shadow-sm">
-                <div className="card-body p-0">
-                  <div className="ratio ratio-16x9">
-                    <iframe
-                      src="https://player.vimeo.com/video/940910554?h=785e3d133f&badge=0&autopause=0&player_id=0&app_id=58479"
-                      frameBorder="0"
-                      allow="autoplay; fullscreen; picture-in-picture"
-                      allowFullScreen
-                      title="Financing Options Video"
-                      className="rounded"
-                    ></iframe>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Payment Options */}
       <section className="py-5">
         <div className="container">
@@ -178,7 +150,6 @@ export default function FinancingPage() {
                   <p className="text-muted mb-3">
                     Choose from a range of monthly payment plans, with qualifying 0% APR options. Applying is simple and does not impact your credit score. If you&apos;re approved for financing, you can use your funds immediately.
                   </p>
-                  <a href="#" className="btn rounded-pill px-4 book-now-button" style={{backgroundColor: '#AD6269', borderColor: '#AD6269', color: 'white'}}>USE CHERRY</a>
                 </div>
               </div>
             </div>
@@ -200,7 +171,6 @@ export default function FinancingPage() {
                   <p className="text-muted mb-3">
                     A Pretty Girl Matter has partnered with Klarna as a quick and easy financing option! Please submit the form below to request to pay with Klarna. You will receive a payment link via email.
                   </p>
-                  <a href="#" className="btn btn-warning rounded-pill px-4 book-now-button">USE KLARNA</a>
                 </div>
               </div>
             </div>
@@ -222,7 +192,6 @@ export default function FinancingPage() {
                   <p className="text-muted mb-3">
                     Buy now, pay later with Affirm. Choose from flexible monthly payment plans with transparent terms and no hidden fees. Get instant approval and pay over time.
                   </p>
-                  <a href="#" className="btn rounded-pill px-4 book-now-button" style={{backgroundColor: '#0FA8E6', borderColor: '#0FA8E6', color: 'white'}}>USE AFFIRM</a>
                 </div>
               </div>
             </div>
@@ -251,6 +220,34 @@ export default function FinancingPage() {
         </div>
       </section>
 
+      {/* Video Section */}
+      <section className="py-5">
+        <div className="container">
+          <div className="row justify-content-center">
+            <div className="col-lg-8">
+              <div className="text-center mb-4">
+                <h2 className="sub-heading fw-bold mb-3">Learn About Our Financing Options</h2>
+                <p className="paragraph-text text-muted">Watch this video to understand how our payment plans work</p>
+              </div>
+              <div className="card border-0 shadow-sm">
+                <div className="card-body p-0">
+                  <div className="ratio ratio-16x9">
+                    <iframe
+                      src="https://player.vimeo.com/video/940910554?h=785e3d133f&badge=0&autopause=0&player_id=0&app_id=58479"
+                      frameBorder="0"
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      allowFullScreen
+                      title="Financing Options Video"
+                      className="rounded"
+                    ></iframe>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Cherry Promotion Section */}
       <section className="py-5 text-white" style={{backgroundColor: '#AD6269'}}>
         <div className="container">
@@ -263,8 +260,6 @@ export default function FinancingPage() {
               </p>
             </div>
             <div className="col-lg-4 text-lg-end">
-              <a href="#" className="btn btn-light btn-lg rounded-pill px-5 me-3 book-now-button">APPLY</a>
-              <a href="#" className="btn btn-outline-light rounded-pill px-4 book-now-button">CHERRY CONSUMER PORTAL</a>
             </div>
           </div>
         </div>
@@ -310,7 +305,6 @@ export default function FinancingPage() {
                         : 'Enter a purchase amount to see estimated payments'
                       }
                     </p>
-                    <a href="#" className="btn btn-lg rounded-pill px-5 book-now-button" style={{backgroundColor: '#AD6269', borderColor: '#AD6269', color: 'white'}}>Apply</a>
                   </div>
                   
                   <p className="small text-muted mt-4">
@@ -414,7 +408,6 @@ export default function FinancingPage() {
             <div className="col-lg-6">
               <h2 className="sub-heading fw-bold mb-3" style={{color: '#AD6269'}}>Manage My Plan</h2>
               <p className="paragraph-text text-muted mb-4">Manage your payment plans inside the Cherry Consumer Portal.</p>
-              <a href="#" className="btn btn-lg rounded-pill px-5 book-now-button" style={{backgroundColor: '#AD6269', borderColor: '#AD6269', color: 'white'}}>CHERRY CONSUMER PORTAL</a>
             </div>
           </div>
         </div>
@@ -426,14 +419,13 @@ export default function FinancingPage() {
           <div className="row justify-content-center text-center">
             <div className="col-lg-6">
               <h2 className="sub-heading fw-bold mb-3">More Questions?</h2>
-              <a href="#" className="btn btn-outline-primary rounded-pill px-4 book-now-button">Visit our Help Center</a>
             </div>
           </div>
         </div>
       </section>
 
       {/* Footer Disclaimer */}
-      <section className="py-4 bg-dark text-white">
+      <section className="py-4">
         <div className="container">
           <div className="text-center">
             <p className="small mb-2">

@@ -30,7 +30,7 @@ export default function Header() {
       }
     } else {
       // If on other pages, navigate to home page with anchor
-      window.location.href = `http://localhost:3001/#${anchor}`;
+      window.location.href = `https://www.aprettygirlmatter.com/#${anchor}`;
     }
   };
 
