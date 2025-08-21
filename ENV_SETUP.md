@@ -5,9 +5,10 @@
 Create a `.env.local` file in the root directory with these variables:
 
 ```bash
-# Resend Email Service (Required for contact form)
-# Get your API key from https://resend.com/api-keys
-RESEND_API_KEY=re_your_api_key_here
+# Gmail SMTP (Primary method for contact form)
+# Use Gmail account with App Password enabled
+GMAIL_USER=your_gmail@gmail.com
+GMAIL_PASS=your_app_password_here
 
 # Firebase Configuration (if using Firebase features)
 NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
@@ -28,10 +29,11 @@ ADMIN_EMAIL=your_admin_email@example.com
 
 ## Setup Instructions
 
-1. **Resend Email Service** (Required for contact form):
-   - Sign up at https://resend.com
-   - Get your API key from the dashboard
-   - Add `RESEND_API_KEY=re_your_key_here` to `.env.local`
+1. **Gmail SMTP Setup** (Primary contact form method):
+   - Use a Gmail account for sending emails
+   - Enable 2-Factor Authentication on the Gmail account
+   - Generate an App Password: Google Account → Security → App passwords
+   - Add `GMAIL_USER=youremail@gmail.com` and `GMAIL_PASS=your_app_password` to `.env.local`
 
 2. **For Production (Vercel)**:
    - Add all environment variables in Vercel Dashboard
@@ -41,8 +43,10 @@ ADMIN_EMAIL=your_admin_email@example.com
 ## Contact Form Status
 
 The contact form will:
-- ✅ Work with Resend API key configured
-- ⚠️ Fall back to console logging if no API key
-- ❌ Show error if API key is invalid
+- ✅ Work with Gmail SMTP configured (primary method)
+- ✅ Fall back to FormSubmit service (no configuration needed)
+- ✅ Always log submissions for backup
 
-Make sure to add the `RESEND_API_KEY` to fix the contact form.
+**Email Recipients:**
+- TO: victoria@aprettygirlmatter.com
+- CC: brianstittsr@gmail.com
