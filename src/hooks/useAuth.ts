@@ -22,49 +22,92 @@ export function useAuth() {
   });
 
   useEffect(() => {
-    if (!isFirebaseConfigured()) {
-      // In development mode, check for admin bypass
-      const adminEmail = localStorage.getItem('adminEmail');
-      if (adminEmail === 'admin@example.com') {
-        // Create a mock user profile for admin bypass
-        const mockProfile: User = {
-          id: 'admin-mock',
-          profile: {
-            firstName: 'Admin',
-            lastName: 'User',
-            email: 'admin@example.com',
-            phone: '',
-            dateOfBirth: '',
-            address: '',
-            city: '',
-            state: '',
-            zipCode: '',
-            emergencyContactName: '',
-            emergencyContactPhone: '',
-            preferredContactMethod: '',
-            hearAboutUs: '',
-            createdAt: new Date() as any,
-            updatedAt: new Date() as any
-          },
-          role: 'admin',
-          isActive: true
-        };
+    console.log('useAuth: Effect running, Firebase configured:', isFirebaseConfigured());
+    
+    const checkAuthState = () => {
+      if (!isFirebaseConfigured()) {
+        // In development mode, check for admin bypass
+        const adminEmail = localStorage.getItem('adminEmail');
+        console.log('useAuth: Admin email from localStorage:', adminEmail);
         
-        setAuthState({
-          user: null,
-          userProfile: mockProfile,
-          loading: false,
-          error: null
-        });
-      } else {
-        setAuthState({
-          user: null,
-          userProfile: null,
-          loading: false,
-          error: null
-        });
+        if (adminEmail === 'admin@example.com') {
+          console.log('useAuth: Creating mock admin profile');
+          // Create a mock user profile for admin bypass
+          const mockProfile: User = {
+            id: 'admin-mock',
+            profile: {
+              firstName: 'Admin',
+              lastName: 'User',
+              email: 'admin@example.com',
+              phone: '',
+              dateOfBirth: '',
+              address: '',
+              city: '',
+              state: '',
+              zipCode: '',
+              emergencyContactName: '',
+              emergencyContactPhone: '',
+              preferredContactMethod: '',
+              hearAboutUs: '',
+              createdAt: new Date() as any,
+              updatedAt: new Date() as any
+            },
+            role: 'admin',
+            isActive: true
+          };
+          
+          setAuthState({
+            user: null,
+            userProfile: mockProfile,
+            loading: false,
+            error: null
+          });
+          console.log('useAuth: Mock admin profile set');
+        } else {
+          console.log('useAuth: No admin email found, setting unauthenticated state');
+          setAuthState({
+            user: null,
+            userProfile: null,
+            loading: false,
+            error: null
+          });
+        }
+        return;
       }
-      return;
+    };
+
+    // Initial check
+    checkAuthState();
+
+    // Listen for localStorage changes (for development mode)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'adminEmail') {
+        console.log('useAuth: localStorage adminEmail changed, rechecking auth state');
+        checkAuthState();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also check periodically in case localStorage was changed in the same tab
+    const interval = setInterval(() => {
+      if (!isFirebaseConfigured()) {
+        const currentAdminEmail = localStorage.getItem('adminEmail');
+        const hasProfile = authState.userProfile !== null;
+        const shouldHaveProfile = currentAdminEmail === 'admin@example.com';
+        
+        if (hasProfile !== shouldHaveProfile) {
+          console.log('useAuth: Auth state mismatch detected, rechecking');
+          checkAuthState();
+        }
+      }
+    }, 1000);
+
+    if (!isFirebaseConfigured()) {
+      return () => {
+        window.removeEventListener('storage', handleStorageChange);
+        clearInterval(interval);
+      };
     }
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -102,6 +145,13 @@ export function useAuth() {
   }, []);
 
   const isAuthenticated = authState.user !== null || authState.userProfile?.role === 'admin';
+  
+  console.log('useAuth: Authentication state:', {
+    user: authState.user ? 'Firebase user exists' : 'No Firebase user',
+    userProfile: authState.userProfile ? `Profile exists (${authState.userProfile.role})` : 'No profile',
+    isAuthenticated,
+    loading: authState.loading
+  });
   
   const getClientProfileData = useCallback(() => {
     if (!authState.userProfile) return null;
