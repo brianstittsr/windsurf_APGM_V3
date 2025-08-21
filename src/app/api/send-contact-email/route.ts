@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
         const victoriaEmail = await resend.emails.send({
           from: 'onboarding@resend.dev',
           to: ['victoria@aprettygirlmatter.com'],
+          cc: ['victoria@aprettygirlmatter.com'],
           subject: `New Contact Form Submission from ${name}`,
           html: emailToVictoria,
           replyTo: email
