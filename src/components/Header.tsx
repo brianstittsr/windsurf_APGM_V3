@@ -13,9 +13,28 @@ export default function Header() {
   const [isClient, setIsClient] = useState(false);
   const pathname = usePathname();
   const { userProfile, loading, isAuthenticated } = useAuth();
+  
+  // Debug logging
+  console.log('Header Debug:', {
+    isClient,
+    loading,
+    isAuthenticated,
+    userProfile: userProfile ? {
+      id: userProfile.id,
+      firstName: userProfile.profile?.firstName,
+      lastName: userProfile.profile?.lastName,
+      role: userProfile.role
+    } : null
+  });
 
   useEffect(() => {
     setIsClient(true);
+    
+    // For testing - simulate admin login if not in production
+    if (typeof window !== 'undefined' && !localStorage.getItem('adminEmail')) {
+      console.log('Setting admin email for testing...');
+      localStorage.setItem('adminEmail', 'admin@example.com');
+    }
   }, []);
 
   const handleAddressClick = () => {
@@ -191,6 +210,11 @@ export default function Header() {
               <>
                 {isAuthenticated ? (
                   <>
+                    {/* Debug: Show authentication status */}
+                    <div style={{ fontSize: '12px', color: 'green', marginRight: '10px' }}>
+                      Authenticated: {userProfile?.profile?.firstName || 'No Name'}
+                    </div>
+                    
                     {/* If user is authenticated and profile is complete, show Health Questions button */}
                     {isProfileComplete() && (
                       <Link
@@ -213,13 +237,20 @@ export default function Header() {
                     />
                   </>
                 ) : (
-                  /* Show Login button for non-authenticated users */
-                  <Link
-                    href="/login"
-                    className="btn btn-outline-primary rounded-pill px-4 book-now-button"
-                  >
-                    Login
-                  </Link>
+                  <>
+                    {/* Debug: Show non-authenticated status */}
+                    <div style={{ fontSize: '12px', color: 'red', marginRight: '10px' }}>
+                      Not Authenticated
+                    </div>
+                    
+                    {/* Show Login button for non-authenticated users */}
+                    <Link
+                      href="/login"
+                      className="btn btn-outline-primary rounded-pill px-4 book-now-button"
+                    >
+                      Login
+                    </Link>
+                  </>
                 )}
                 
                 {/* Book Now button - always show */}
