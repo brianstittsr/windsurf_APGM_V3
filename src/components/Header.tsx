@@ -63,10 +63,13 @@ export default function Header() {
       } else {
         // Development mode - clear admin bypass
         localStorage.removeItem('adminEmail');
-        window.location.reload();
       }
+      // Always reload the page to ensure auth state updates
+      window.location.reload();
     } catch (error) {
       console.error('Error signing out:', error);
+      // Still reload on error to clear any cached state
+      window.location.reload();
     }
   };
 

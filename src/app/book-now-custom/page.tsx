@@ -902,12 +902,25 @@ function BookNowCustomContent() {
                               <button
                                 className="btn btn-primary btn-lg"
                                 onClick={() => {
+                                  console.log('Continue button clicked - selectedTime:', selectedTime, 'selectedArtistId:', selectedArtistId);
+                                  console.log('isAuthenticated:', isAuthenticated, 'userProfile:', userProfile);
+                                  console.log('clientProfile:', clientProfile);
+                                  
+                                  // Update checkout data with selected date and time
+                                  setCheckoutData(prev => ({
+                                    ...prev,
+                                    selectedDate,
+                                    selectedTime
+                                  }));
+                                  
                                   // For authenticated users with complete profile, skip to health form
                                   if (isAuthenticated && userProfile && 
                                       clientProfile.firstName && clientProfile.lastName && 
                                       clientProfile.email && clientProfile.phone) {
+                                    console.log('Going to health form for authenticated user');
                                     setCurrentStep('health');
                                   } else {
+                                    console.log('Going to profile form');
                                     setCurrentStep('profile');
                                   }
                                 }}
