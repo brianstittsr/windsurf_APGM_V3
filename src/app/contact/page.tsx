@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { useContactForm } from '@/hooks/useFirebase';
@@ -16,6 +16,21 @@ export default function ContactPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // Check for success parameter in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true') {
+      setSuccess(true);
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        service: '',
+        message: ''
+      });
+    }
+  }, []);
 
   const services = [
     'Microblading Eyebrows',
@@ -38,35 +53,35 @@ export default function ContactPage() {
     setError(null);
     setSuccess(false);
     
-    try {
-      const response = await fetch('/api/send-contact-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+    // Direct form submission to FormSubmit (guaranteed to work)
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'https://formsubmit.co/victoria@aprettygirlmatter.com';
+    form.style.display = 'none';
 
-      const result = await response.json();
+    // Add form fields
+    const fields = [
+      { name: 'name', value: formData.name },
+      { name: 'email', value: formData.email },
+      { name: 'phone', value: formData.phone || 'Not provided' },
+      { name: 'service', value: formData.service || 'Not specified' },
+      { name: 'message', value: formData.message },
+      { name: '_subject', value: `New Contact Form Submission from ${formData.name}` },
+      { name: '_cc', value: 'brianstittsr@gmail.com' },
+      { name: '_template', value: 'table' },
+      { name: '_next', value: window.location.origin + '/contact?success=true' }
+    ];
 
-      if (response.ok) {
-        setSuccess(true);
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          service: '',
-          message: ''
-        });
-      } else {
-        setError(result.error || 'Failed to send message. Please try again.');
-      }
-    } catch (err) {
-      console.error('Failed to submit contact form:', err);
-      setError('Failed to send message. Please check your connection and try again.');
-    } finally {
-      setLoading(false);
-    }
+    fields.forEach(field => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = field.name;
+      input.value = field.value;
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
   };
 
   return (
