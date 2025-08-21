@@ -282,12 +282,20 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
     // Remove all non-digits
     const digits = value.replace(/\D/g, '');
     
+    // Don't format if empty or too short
+    if (digits.length === 0) {
+      return '';
+    }
+    
     // Format as (XXX) XXX-XXXX
     if (digits.length <= 3) {
       return digits;
     } else if (digits.length <= 6) {
       return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    } else if (digits.length <= 10) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
     } else {
+      // Limit to 10 digits
       return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
     }
   };
