@@ -220,33 +220,6 @@ export default function FinancingPage() {
         </div>
       </section>
 
-      {/* Video Section */}
-      <section className="py-5">
-        <div className="container">
-          <div className="row justify-content-center">
-            <div className="col-lg-8">
-              <div className="text-center mb-4">
-                <h2 className="sub-heading fw-bold mb-3">Learn About Our Financing Options</h2>
-                <p className="paragraph-text text-muted">Watch this video to understand how our payment plans work</p>
-              </div>
-              <div className="card border-0 shadow-sm">
-                <div className="card-body p-0">
-                  <div className="ratio ratio-16x9">
-                    <iframe
-                      src="https://player.vimeo.com/video/940910554?h=785e3d133f&badge=0&autopause=0&player_id=0&app_id=58479"
-                      frameBorder="0"
-                      allow="autoplay; fullscreen; picture-in-picture"
-                      allowFullScreen
-                      title="Financing Options Video"
-                      className="rounded"
-                    ></iframe>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Cherry Promotion Section */}
       <section className="py-5 text-white" style={{backgroundColor: '#AD6269'}}>
@@ -413,16 +386,6 @@ export default function FinancingPage() {
         </div>
       </section>
 
-      {/* More Questions */}
-      <section className="py-5">
-        <div className="container">
-          <div className="row justify-content-center text-center">
-            <div className="col-lg-6">
-              <h2 className="sub-heading fw-bold mb-3">More Questions?</h2>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Footer Disclaimer */}
       <section className="py-4">
