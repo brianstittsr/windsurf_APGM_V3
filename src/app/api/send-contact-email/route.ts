@@ -1,42 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Resend } from 'resend';
 
-// Simple email sending using fetch to a reliable email service
-async function sendEmailViaAPI(to: string, subject: string, html: string, replyTo?: string) {
-  // Use a simple HTTP-based email service that works well with Vercel
-  const emailData = {
-    from: process.env.SMTP_USER,
-    to,
-    subject,
-    html,
-    replyTo
-  };
+// Initialize Resend with API key
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-  // For now, we'll use a simple SMTP over HTTP approach
-  const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      service_id: 'default_service',
-      template_id: 'template_contact',
-      user_id: process.env.EMAILJS_USER_ID,
-      template_params: {
-        from_email: emailData.from,
-        to_email: emailData.to,
-        subject: emailData.subject,
-        html_content: emailData.html,
-        reply_to: emailData.replyTo
-      }
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error(`Email service responded with status: ${response.status}`);
-  }
-
-  return response.json();
-}
 
 export async function GET(request: NextRequest) {
   return NextResponse.json({
@@ -92,52 +59,31 @@ export async function POST(request: NextRequest) {
       victoria@aprettygirlmatter.com | (919) 441-0932</p>
     `;
 
-    // Use Resend API for reliable email delivery on Vercel
-    const resendApiKey = process.env.RESEND_API_KEY;
-    
-    if (resendApiKey) {
-      console.log('Using Resend API for email delivery...');
+    // Use Resend SDK for reliable email delivery on Vercel
+    if (process.env.RESEND_API_KEY) {
+      console.log('Using Resend SDK for email delivery...');
       
       try {
-        // Send notification to Victoria using Resend
-        const emailResponse = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${resendApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: 'contact@aprettygirlmatter.com',
-            to: ['victoria@aprettygirlmatter.com'],
-            subject: `New Contact Form Submission from ${name}`,
-            html: emailToVictoria,
-            reply_to: email
-          })
+        // Send notification to Victoria using Resend SDK
+        await resend.emails.send({
+          from: 'onboarding@resend.dev',
+          to: ['brianstittsr@gmail.com'],
+          subject: `New Contact Form Submission from ${name}`,
+          html: emailToVictoria,
+          replyTo: email
         });
-
-        if (!emailResponse.ok) {
-          const errorText = await emailResponse.text();
-          throw new Error(`Resend API error: ${errorText}`);
-        }
 
         // Send confirmation email to customer
-        await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${resendApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: 'contact@aprettygirlmatter.com',
-            to: [email],
-            subject: 'Thank you for contacting A Pretty Girl Matter!',
-            html: confirmationEmail
-          })
+        await resend.emails.send({
+          from: 'onboarding@resend.dev',
+          to: [email],
+          subject: 'Thank you for contacting A Pretty Girl Matter!',
+          html: confirmationEmail
         });
 
-        console.log('Emails sent successfully via Resend API');
+        console.log('Emails sent successfully via Resend SDK');
       } catch (resendError) {
-        console.error('Resend API failed, falling back to logging:', resendError);
+        console.error('Resend SDK failed, falling back to logging:', resendError);
         // Fall back to logging if Resend fails
       }
     } else {
