@@ -33,9 +33,11 @@ export function useAuth() {
     const checkAuthState = () => {
       // Always check for admin bypass first (works regardless of Firebase config)
       const adminEmail = localStorage.getItem('adminEmail');
-      console.log('useAuth: Admin email from localStorage:', adminEmail);
+      const rememberMe = localStorage.getItem('rememberMe') === 'true';
+      console.log('useAuth: Admin email from localStorage:', adminEmail, 'rememberMe:', rememberMe);
       
-      if (adminEmail === 'admin@example.com') {
+      // Only auto-login if remember me is enabled
+      if (adminEmail === 'admin@example.com' && rememberMe) {
         console.log('useAuth: Creating mock admin profile');
         // Create a mock user profile for admin bypass
         const mockProfile: User = {
@@ -100,10 +102,11 @@ export function useAuth() {
     // Also check periodically in case localStorage was changed in the same tab
     const interval = setInterval(() => {
       const currentAdminEmail = localStorage.getItem('adminEmail');
+      const currentRememberMe = localStorage.getItem('rememberMe') === 'true';
       const hasProfile = authState.userProfile !== null;
-      const shouldHaveProfile = currentAdminEmail === 'admin@example.com';
+      const shouldHaveProfile = currentAdminEmail === 'admin@example.com' && currentRememberMe;
       
-      console.log('useAuth: Periodic check - adminEmail:', currentAdminEmail, 'hasProfile:', hasProfile, 'shouldHaveProfile:', shouldHaveProfile);
+      console.log('useAuth: Periodic check - adminEmail:', currentAdminEmail, 'rememberMe:', currentRememberMe, 'hasProfile:', hasProfile, 'shouldHaveProfile:', shouldHaveProfile);
       
       if (hasProfile !== shouldHaveProfile) {
         console.log('useAuth: Auth state mismatch detected, rechecking');

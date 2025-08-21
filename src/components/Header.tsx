@@ -61,14 +61,19 @@ export default function Header() {
       if (isFirebaseConfigured()) {
         await signOut(auth);
       } else {
-        // Development mode - clear admin bypass
+        // Development mode - clear admin bypass and remember me
         localStorage.removeItem('adminEmail');
+        localStorage.removeItem('rememberMe');
+        localStorage.removeItem('rememberedEmail');
       }
       // Always reload the page to ensure auth state updates
       window.location.reload();
     } catch (error) {
       console.error('Error signing out:', error);
-      // Still reload on error to clear any cached state
+      // Still clear localStorage on error
+      localStorage.removeItem('adminEmail');
+      localStorage.removeItem('rememberMe');
+      localStorage.removeItem('rememberedEmail');
       window.location.reload();
     }
   };
