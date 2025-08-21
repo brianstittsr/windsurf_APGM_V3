@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
         // Send notification to Victoria using Resend SDK
         await resend.emails.send({
           from: 'onboarding@resend.dev',
-          to: ['brianstittsr@gmail.com'],
+          to: ['victoria@aprettygirlmatter.com'],
           subject: `New Contact Form Submission from ${name}`,
           html: emailToVictoria,
           replyTo: email
