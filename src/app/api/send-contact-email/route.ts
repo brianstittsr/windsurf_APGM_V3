@@ -1,11 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Resend } from 'resend';
-
-// Initialize Resend only when API key is available
-let resend: Resend | null = null;
-if (process.env.RESEND_API_KEY) {
-  resend = new Resend(process.env.RESEND_API_KEY);
-}
 
 
 export async function GET(request: NextRequest) {
@@ -34,11 +27,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if Resend API key is configured
-    const hasResendKey = !!process.env.RESEND_API_KEY;
-    console.log('Resend API key configured:', hasResendKey);
-
-    // Create simple email content
+    // Create email content
     const emailToVictoria = `
       <h2>New Contact Form Submission</h2>
       <p><strong>Name:</strong> ${name}</p>
@@ -67,50 +56,98 @@ export async function POST(request: NextRequest) {
     let emailSent = false;
     let emailError = null;
 
-    // Use Resend SDK for reliable email delivery
-    if (hasResendKey && resend) {
-      console.log('Using Resend SDK for email delivery...');
-      
+    // Try multiple email sending methods
+    console.log('Attempting to send emails via multiple methods...');
+
+    // Method 1: Try Resend API via fetch
+    if (process.env.RESEND_API_KEY) {
+      console.log('Trying Resend API via fetch...');
       try {
-        // Send notification to Victoria using Resend SDK
-        const victoriaEmail = await resend.emails.send({
-          from: 'onboarding@resend.dev',
-          to: ['victoria@aprettygirlmatter.com'],
-          cc: ['victoria@aprettygirlmatter.com', 'brianstittsr@gmail.com'],
-          subject: `New Contact Form Submission from ${name}`,
-          html: emailToVictoria,
-          replyTo: email
+        // Send notification email
+        const notificationResponse = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'onboarding@resend.dev',
+            to: ['victoria@aprettygirlmatter.com'],
+            cc: ['brianstittsr@gmail.com'],
+            subject: `New Contact Form Submission from ${name}`,
+            html: emailToVictoria,
+            reply_to: email
+          }),
         });
 
-        console.log('Victoria notification sent:', victoriaEmail.data?.id);
+        if (notificationResponse.ok) {
+          const notificationResult = await notificationResponse.json();
+          console.log('Notification email sent via Resend API:', notificationResult.id);
 
-        // Send confirmation email to customer
-        const customerEmail = await resend.emails.send({
-          from: 'onboarding@resend.dev',
-          to: [email],
-          subject: 'Thank you for contacting A Pretty Girl Matter!',
-          html: confirmationEmail
-        });
-
-        console.log('Customer confirmation sent:', customerEmail.data?.id);
-        emailSent = true;
-        console.log('Emails sent successfully via Resend SDK');
-      } catch (resendError) {
-        console.error('Resend SDK failed:', resendError);
-        emailError = resendError;
-        
-        // More detailed error logging
-        if (resendError instanceof Error) {
-          console.error('Resend error details:', {
-            message: resendError.message,
-            name: resendError.name,
-            stack: resendError.stack
+          // Send confirmation email
+          const confirmationResponse = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              from: 'onboarding@resend.dev',
+              to: [email],
+              subject: 'Thank you for contacting A Pretty Girl Matter!',
+              html: confirmationEmail
+            }),
           });
+
+          if (confirmationResponse.ok) {
+            const confirmationResult = await confirmationResponse.json();
+            console.log('Confirmation email sent via Resend API:', confirmationResult.id);
+            emailSent = true;
+          } else {
+            console.error('Confirmation email failed:', await confirmationResponse.text());
+          }
+        } else {
+          console.error('Notification email failed:', await notificationResponse.text());
         }
+      } catch (fetchError) {
+        console.error('Resend API fetch failed:', fetchError);
+        emailError = fetchError;
       }
-    } else {
-      console.log('⚠️  No Resend API key found - emails will not be sent');
-      console.log('Add RESEND_API_KEY to environment variables to enable email sending');
+    }
+
+    // Method 2: Fallback to EmailJS or other service
+    if (!emailSent) {
+      console.log('Resend failed, trying alternative email service...');
+      
+      // Try sending via a webhook or alternative service
+      try {
+        const webhookResponse = await fetch('https://formsubmit.co/victoria@aprettygirlmatter.com', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            phone: phone || 'Not provided',
+            service: service || 'Not specified',
+            message,
+            _subject: `New Contact Form Submission from ${name}`,
+            _cc: 'brianstittsr@gmail.com',
+            _template: 'table'
+          })
+        });
+
+        if (webhookResponse.ok) {
+          console.log('Email sent via FormSubmit webhook');
+          emailSent = true;
+        } else {
+          console.error('FormSubmit webhook failed:', await webhookResponse.text());
+        }
+      } catch (webhookError) {
+        console.error('Webhook email failed:', webhookError);
+      }
     }
     
     // Always log the contact for backup
@@ -122,31 +159,24 @@ export async function POST(request: NextRequest) {
       service,
       message,
       emailSent,
-      hasResendKey
+      method: emailSent ? 'email_service' : 'logged_only'
     };
     
     console.log('Contact form submission logged:', contactData);
 
-    // Return appropriate response
-    if (hasResendKey && emailSent) {
+    // Return response based on email success
+    if (emailSent) {
       console.log('=== Contact form completed successfully with email ===');
       return NextResponse.json({ 
         success: true, 
         message: 'Message sent successfully! You should receive a confirmation email shortly.' 
       });
-    } else if (hasResendKey && !emailSent) {
+    } else {
       console.log('=== Contact form logged but email failed ===');
       return NextResponse.json({ 
         success: true, 
         message: 'Message received and logged. We will respond within 24 hours.',
         warning: 'Email delivery temporarily unavailable'
-      });
-    } else {
-      console.log('=== Contact form logged (no email service configured) ===');
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Message received and logged. We will respond within 24 hours.',
-        info: 'Email notifications not configured'
       });
     }
 
@@ -164,22 +194,13 @@ export async function POST(request: NextRequest) {
       });
     }
     
-    // Check environment configuration
-    const hasResendKey = !!process.env.RESEND_API_KEY;
-    console.error('Environment check:', {
-      hasResendKey,
-      nodeEnv: process.env.NODE_ENV,
-      isVercel: !!process.env.VERCEL
-    });
-    
     return NextResponse.json(
       { 
         error: 'Failed to process contact form. Please try again or call (919) 441-0932.',
         details: {
           message: (error as Error).message,
           type: (error as Error).name,
-          timestamp: new Date().toISOString(),
-          hasResendKey
+          timestamp: new Date().toISOString()
         }
       },
       { status: 500 }
