@@ -51,6 +51,7 @@ export default function MultiPaymentForm({
   const [processing, setProcessing] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('card');
   const [clientSecret, setClientSecret] = useState<string>('');
+  const [paymentIntentCreatedAt, setPaymentIntentCreatedAt] = useState<number>(0);
   const [paymentIntentId, setPaymentIntentId] = useState<string>('');
   
   // Determine payment amount based on method
@@ -104,9 +105,32 @@ export default function MultiPaymentForm({
 
     setClientSecret(client_secret);
     setPaymentIntentId(payment_intent_id);
+    setPaymentIntentCreatedAt(Date.now());
     
     console.log('✅ Payment intent created:', payment_intent_id);
     return { client_secret, payment_intent_id };
+  };
+
+  const isPaymentIntentExpired = () => {
+    const EXPIRY_TIME = 20 * 60 * 1000; // 20 minutes in milliseconds
+    return Date.now() - paymentIntentCreatedAt > EXPIRY_TIME;
+  };
+
+  const refreshPaymentIntentIfNeeded = async (method: PaymentMethod) => {
+    if (method === 'cherry') return;
+    
+    if (!clientSecret || isPaymentIntentExpired()) {
+      console.log('🔄 Refreshing payment intent (expired or missing)');
+      let paymentMethodTypes: string[];
+      if (method === 'klarna') {
+        paymentMethodTypes = ['klarna'];
+      } else if (method === 'affirm') {
+        paymentMethodTypes = ['affirm'];
+      } else {
+        paymentMethodTypes = ['card'];
+      }
+      await createPaymentIntent(paymentMethodTypes);
+    }
   };
 
   const handlePaymentMethodChange = async (method: PaymentMethod) => {
@@ -214,46 +238,38 @@ export default function MultiPaymentForm({
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     
-    // Cherry doesn't need Stripe
-    if (selectedPaymentMethod !== 'cherry' && (!stripe || !elements)) {
-      console.error('❌ Stripe not loaded');
+    if (!stripe || !elements) {
+      onError('Stripe has not loaded yet. Please wait a moment and try again.');
+      return;
+    }
+
+    if (processing) {
       return;
     }
 
     setProcessing(true);
-    setLoading?.(true);
+    if (setLoading) setLoading(true);
 
     try {
-      console.log('🔧 Starting payment process...');
-      console.log('Amount:', amount, 'USD');
-      console.log('Payment method:', selectedPaymentMethod);
-      
-      let currentClientSecret = clientSecret;
-      
-      // Create payment intent if not already created (skip for Cherry)
-      if (!currentClientSecret && selectedPaymentMethod !== 'cherry') {
-        let paymentMethodTypes: string[];
-        if (selectedPaymentMethod === 'klarna') {
-          paymentMethodTypes = ['klarna'];
-        } else if (selectedPaymentMethod === 'affirm') {
-          paymentMethodTypes = ['affirm'];
-        } else {
-          paymentMethodTypes = ['card'];
-        }
-        const result = await createPaymentIntent(paymentMethodTypes);
-        currentClientSecret = result.client_secret;
+      if (selectedPaymentMethod === 'cherry') {
+        await handleCherryPayment();
+        return;
+      }
+
+      // Always refresh payment intent before processing to avoid expiration
+      await refreshPaymentIntentIfNeeded(selectedPaymentMethod);
+
+      if (!clientSecret) {
+        throw new Error('Failed to create or refresh payment session. Please try again.');
       }
 
       let result;
-      
       if (selectedPaymentMethod === 'card') {
-        result = await handleCardPayment(currentClientSecret);
+        result = await handleCardPayment(clientSecret);
       } else if (selectedPaymentMethod === 'klarna') {
-        result = await handleKlarnaPayment(currentClientSecret);
+        result = await handleKlarnaPayment(clientSecret);
       } else if (selectedPaymentMethod === 'affirm') {
-        result = await handleAffirmPayment(currentClientSecret);
-      } else if (selectedPaymentMethod === 'cherry') {
-        result = await handleCherryPayment();
+        result = await handleAffirmPayment(clientSecret);
       } else {
         throw new Error('Invalid payment method selected');
       }
@@ -270,8 +286,16 @@ export default function MultiPaymentForm({
         let errorMessage = error.message || 'Payment failed';
         if (error.code === 'payment_intent_unexpected_state') {
           errorMessage = 'Payment intent is in an unexpected state. Please try again.';
-        } else if (error.message?.includes('No such payment_intent')) {
-          errorMessage = 'Payment session expired. Please refresh the page and try again.';
+        } else if (error.message?.includes('No such payment_intent') || error.code === 'payment_intent_not_found') {
+          // Try to refresh the payment intent automatically
+          try {
+            console.log('🔄 Payment intent not found, attempting to refresh...');
+            await refreshPaymentIntentIfNeeded(selectedPaymentMethod);
+            errorMessage = 'Payment session was refreshed. Please try your payment again.';
+          } catch (refreshError) {
+            console.error('Failed to refresh payment intent:', refreshError);
+            errorMessage = 'Payment session expired. Please refresh the page and try again.';
+          }
         }
         
         onError(errorMessage);

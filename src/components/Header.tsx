@@ -4,12 +4,15 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import UserAvatar from './UserAvatar';
+import { signOut } from 'firebase/auth';
+import { auth, isFirebaseConfigured } from '@/lib/firebase';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const pathname = usePathname();
-  const { userProfile, loading } = useAuth();
+  const { userProfile, loading, isAuthenticated } = useAuth();
 
   useEffect(() => {
     setIsClient(true);
@@ -32,6 +35,35 @@ export default function Header() {
       // If on other pages, navigate to home page with anchor
       window.location.href = `https://www.aprettygirlmatter.com/#${anchor}`;
     }
+  };
+
+  const handleLogout = async () => {
+    try {
+      if (isFirebaseConfigured()) {
+        await signOut(auth);
+      } else {
+        // Development mode - clear admin bypass
+        localStorage.removeItem('adminEmail');
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const isProfileComplete = () => {
+    if (!userProfile?.profile) return false;
+    const profile = userProfile.profile;
+    return !!
+      profile.firstName &&
+      profile.lastName &&
+      profile.email &&
+      profile.phone &&
+      profile.dateOfBirth &&
+      profile.address &&
+      profile.city &&
+      profile.state &&
+      profile.zipCode;
   };
 
   return (
@@ -141,7 +173,7 @@ export default function Header() {
           </div>
 
           {/* CTA Buttons */}
-          <div className="d-none d-lg-flex gap-2">
+          <div className="d-none d-lg-flex gap-2 align-items-center">
             {/* Artist Profile Link - Show only for authenticated admin users */}
             {isClient && !loading && userProfile?.role === 'admin' && (
               <Link
@@ -153,18 +185,70 @@ export default function Header() {
                 Profile
               </Link>
             )}
-            <Link
-              href="/login"
-              className="btn btn-outline-primary rounded-pill px-4 book-now-button"
-            >
-              Login
-            </Link>
-            <Link
-              href="/book-now-custom"
-              className="btn btn-primary rounded-pill px-4 book-now-button"
-            >
-              Book Now
-            </Link>
+            
+            {/* Show different buttons based on authentication and profile status */}
+            {isClient && !loading && (
+              <>
+                {isAuthenticated ? (
+                  <>
+                    {/* If user is authenticated and profile is complete, show Health Questions button */}
+                    {isProfileComplete() && (
+                      <Link
+                        href="/book-now-custom?step=health"
+                        className="btn btn-outline-success rounded-pill px-4"
+                        title="Go directly to health questions"
+                      >
+                        <i className="fas fa-clipboard-list me-2"></i>
+                        Health Questions
+                      </Link>
+                    )}
+                    
+                    {/* User Avatar with dropdown */}
+                    <UserAvatar
+                      firstName={userProfile?.profile?.firstName || 'User'}
+                      lastName={userProfile?.profile?.lastName || ''}
+                      size="md"
+                      showDropdown={true}
+                      onLogout={handleLogout}
+                    />
+                  </>
+                ) : (
+                  /* Show Login button for non-authenticated users */
+                  <Link
+                    href="/login"
+                    className="btn btn-outline-primary rounded-pill px-4 book-now-button"
+                  >
+                    Login
+                  </Link>
+                )}
+                
+                {/* Book Now button - always show */}
+                <Link
+                  href="/book-now-custom"
+                  className="btn btn-primary rounded-pill px-4 book-now-button"
+                >
+                  Book Now
+                </Link>
+              </>
+            )}
+            
+            {/* Loading state or client not ready */}
+            {(!isClient || loading) && (
+              <>
+                <Link
+                  href="/login"
+                  className="btn btn-outline-primary rounded-pill px-4 book-now-button"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/book-now-custom"
+                  className="btn btn-primary rounded-pill px-4 book-now-button"
+                >
+                  Book Now
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Address, Phone & CTA */}
@@ -185,12 +269,66 @@ export default function Header() {
                 📞 919-441-0932
               </div>
             )}
-            <Link
-              href="/login"
-              className="btn btn-outline-primary rounded-pill px-4 w-100 mb-2"
-            >
-              Login
-            </Link>
+            
+            {/* Mobile Authentication Buttons */}
+            {isClient && !loading && (
+              <>
+                {isAuthenticated ? (
+                  <>
+                    {/* User info for mobile */}
+                    <div className="d-flex align-items-center justify-content-between bg-light rounded-pill px-4 py-2 mb-2">
+                      <div className="d-flex align-items-center">
+                        <UserAvatar
+                          firstName={userProfile?.profile?.firstName || 'User'}
+                          lastName={userProfile?.profile?.lastName || ''}
+                          size="sm"
+                          showDropdown={false}
+                        />
+                        <span className="ms-2 fw-semibold">
+                          {userProfile?.profile?.firstName} {userProfile?.profile?.lastName}
+                        </span>
+                      </div>
+                      <button
+                        onClick={handleLogout}
+                        className="btn btn-sm btn-outline-danger rounded-pill"
+                        title="Sign Out"
+                      >
+                        <i className="fas fa-sign-out-alt"></i>
+                      </button>
+                    </div>
+                    
+                    {/* Health Questions button for mobile */}
+                    {isProfileComplete() && (
+                      <Link
+                        href="/book-now-custom?step=health"
+                        className="btn btn-outline-success rounded-pill px-4 w-100 mb-2"
+                      >
+                        <i className="fas fa-clipboard-list me-2"></i>
+                        Health Questions
+                      </Link>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    href="/login"
+                    className="btn btn-outline-primary rounded-pill px-4 w-100 mb-2"
+                  >
+                    Login
+                  </Link>
+                )}
+              </>
+            )}
+            
+            {/* Loading state for mobile */}
+            {(!isClient || loading) && (
+              <Link
+                href="/login"
+                className="btn btn-outline-primary rounded-pill px-4 w-100 mb-2"
+              >
+                Login
+              </Link>
+            )}
+            
             <Link
               href="/book-now-custom"
               className="btn btn-primary rounded-pill px-4 w-100 book-now-button"
