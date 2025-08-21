@@ -49,13 +49,16 @@ function LoginForm() {
         localStorage.removeItem('rememberMe');
       }
       
+      // Force a page reload to trigger useAuth hook re-evaluation
+      console.log('Forcing page reload to update auth state');
+      
       // Redirect back to booking flow if coming from there, otherwise go to admin
       if (redirectUrl && serviceId) {
-        router.push(`${redirectUrl}?step=calendar&service=${serviceId}`);
+        window.location.href = `${redirectUrl}?step=calendar&service=${serviceId}`;
       } else if (redirectUrl) {
-        router.push(redirectUrl);
+        window.location.href = redirectUrl;
       } else {
-        router.push('/dashboard');
+        window.location.href = '/dashboard';
       }
       setIsLoading(false);
       return;
