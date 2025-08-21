@@ -38,6 +38,14 @@ async function sendEmailViaAPI(to: string, subject: string, html: string, replyT
   return response.json();
 }
 
+export async function GET(request: NextRequest) {
+  return NextResponse.json({
+    message: 'Contact form API endpoint',
+    method: 'This endpoint only accepts POST requests',
+    usage: 'Submit the contact form to send a POST request'
+  });
+}
+
 export async function POST(request: NextRequest) {
   console.log('=== Contact Form API Called ===');
   console.log('Request method:', request.method);
