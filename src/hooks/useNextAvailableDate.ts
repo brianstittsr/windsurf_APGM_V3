@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 interface NextAvailableDate {
@@ -20,35 +20,42 @@ export function useNextAvailableDate() {
       const today = new Date();
       const todayString = today.toISOString().split('T')[0];
 
-      // Query availability collection for dates >= today with available slots
+      // Query availability collection for all documents
       const availabilityRef = collection(db, 'availability');
-      const q = query(
-        availabilityRef,
-        where('hasAvailability', '==', true),
-        orderBy('__name__'),
-        limit(30) // Check next 30 days
-      );
-
-      const snapshot = await getDocs(q);
+      const snapshot = await getDocs(availabilityRef);
       
-      for (const doc of snapshot.docs) {
+      // Filter and sort dates manually
+      const availableDates: { date: string; timeSlots: any[] }[] = [];
+      
+      snapshot.docs.forEach(doc => {
         const dateString = doc.id;
+        
+        // Only consider dates >= today
         if (dateString >= todayString) {
           const data = doc.data();
-          const availableSlots = data.timeSlots?.filter((slot: any) => slot.available) || [];
+          const availableSlots = data.timeSlots?.filter((slot: any) => 
+            slot.available && slot.artistName !== 'Admin'
+          ) || [];
           
           if (availableSlots.length > 0) {
-            setNextAvailable({
+            availableDates.push({
               date: dateString,
               timeSlots: availableSlots
             });
-            return;
           }
         }
-      }
+      });
 
-      // No available dates found
-      setNextAvailable(null);
+      // Sort by date and get the earliest available date
+      availableDates.sort((a, b) => a.date.localeCompare(b.date));
+      
+      if (availableDates.length > 0) {
+        setNextAvailable(availableDates[0]);
+        console.log('Found next available date:', availableDates[0].date);
+      } else {
+        setNextAvailable(null);
+        console.log('No available dates found');
+      }
     } catch (err) {
       console.error('Error finding next available date:', err);
       setError(err instanceof Error ? err.message : 'Failed to find next available date');
