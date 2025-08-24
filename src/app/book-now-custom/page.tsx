@@ -4,10 +4,24 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Timestamp } from 'firebase/firestore';
 import { ServiceItem } from '@/types/service';
+
+interface CheckoutData {
+  selectedDate: string;
+  selectedTime: string;
+  paymentMethod: string;
+  specialRequests: string;
+  giftCard: string;
+  agreeToTerms: boolean;
+  agreeToPolicy: boolean;
+}
 import { useServices } from '@/hooks/useServices';
 import { useAvailability } from '@/hooks/useAvailability';
 import { useAuth } from '@/hooks/useAuth';
 import { useFormPersistence } from '@/hooks/useFormPersistence';
+import { useAppointments } from '@/hooks/useAppointments';
+import { useHealthForm } from '@/hooks/useHealthForm';
+import { useTimeSlots } from '@/hooks/useTimeSlots';
+import { useNextAvailableDate } from '@/hooks/useNextAvailableDate';
 import ServiceSelection from '@/components/ServiceSelection';
 import CalendarView from '@/components/CalendarView';
 import ClientProfileWizard, { ClientProfileData } from '@/components/ClientProfileWizard';
@@ -15,9 +29,7 @@ import HealthFormWizard, { HealthFormData } from '@/components/HealthFormWizard'
 import PrePostCareForm from '@/components/PrePostCareForm';
 import CheckoutCart from '@/components/CheckoutCart';
 import FormDataRecoveryBanner from '@/components/FormDataRecoveryBanner';
-import { createAppointment, submitHealthForm } from '@/services/database';
-import { bookTimeSlot } from '@/services/availability';
-import { triggerNewClientWorkflow, triggerAppointmentBookedWorkflow } from '@/services/marketingWorkflows';
+// Removed unused service imports - using hooks instead
 import { getServiceImagePath } from '@/utils/serviceImageUtils';
 import { calculateTotalWithStripeFees } from '@/lib/stripe-fees';
 import { useWorkflowTrigger } from '@/hooks/useWorkflowTrigger';
