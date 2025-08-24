@@ -23,12 +23,6 @@ export function useAuth() {
 
   useEffect(() => {
     const firebaseConfigured = isFirebaseConfigured();
-    console.log('useAuth: Effect running, Firebase configured:', firebaseConfigured);
-    console.log('useAuth: Environment variables:', {
-      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? 'Set' : 'Not set',
-      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ? 'Set' : 'Not set',
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? 'Set' : 'Not set'
-    });
     
     const checkAuthState = () => {
       // Check for admin bypass (works regardless of Firebase config)
@@ -36,11 +30,9 @@ export function useAuth() {
       const rememberMe = localStorage.getItem('rememberMe') === 'true';
       const sessionLogin = sessionStorage.getItem('currentLogin') === 'true';
       
-      console.log('useAuth: Checking auth state - adminEmail:', adminEmail, 'rememberMe:', rememberMe, 'sessionLogin:', sessionLogin);
       
       // Only authenticate if it's a current session login (not auto-login from previous session)
       if (adminEmail === 'admin@example.com' && sessionLogin) {
-        console.log('useAuth: Creating mock admin profile for current session');
         // Create a mock user profile for admin bypass
         const mockProfile: User = {
           id: 'admin-mock',
@@ -71,14 +63,12 @@ export function useAuth() {
           loading: false,
           error: null
         });
-        console.log('useAuth: Mock admin profile set');
         return;
       }
 
       // Check for client login in development mode
       const clientEmail = localStorage.getItem('clientEmail');
       if (clientEmail && sessionLogin) {
-        console.log('useAuth: Creating mock client profile for current session');
         // Create a mock user profile for client
         const mockProfile: User = {
           id: 'client-mock',
@@ -109,13 +99,11 @@ export function useAuth() {
           loading: false,
           error: null
         });
-        console.log('useAuth: Mock client profile set');
         return;
       }
       
       // Clear stale data if no current session
       if ((adminEmail || clientEmail) && !sessionLogin) {
-        console.log('useAuth: Clearing stale authentication data (no current session)');
         localStorage.removeItem('adminEmail');
         localStorage.removeItem('clientEmail');
         localStorage.removeItem('rememberedEmail');
@@ -126,7 +114,6 @@ export function useAuth() {
       
       // If no admin bypass and Firebase not configured, set unauthenticated
       if (!isFirebaseConfigured()) {
-        console.log('useAuth: No admin email found and Firebase not configured, setting unauthenticated state');
         setAuthState({
           user: null,
           userProfile: null,
@@ -204,12 +191,6 @@ export function useAuth() {
 
   const isAuthenticated = authState.user !== null || authState.userProfile?.role === 'admin';
   
-  console.log('useAuth: Authentication state:', {
-    user: authState.user ? 'Firebase user exists' : 'No Firebase user',
-    userProfile: authState.userProfile ? `Profile exists (${authState.userProfile.role})` : 'No profile',
-    isAuthenticated,
-    loading: authState.loading
-  });
   
   const getClientProfileData = useCallback(() => {
     if (!authState.userProfile) return null;

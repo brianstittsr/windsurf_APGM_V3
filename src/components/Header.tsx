@@ -14,18 +14,6 @@ export default function Header() {
   const pathname = usePathname();
   const { userProfile, loading, isAuthenticated } = useAuth();
   
-  // Debug logging
-  console.log('Header Debug:', {
-    isClient,
-    loading,
-    isAuthenticated,
-    userProfile: userProfile ? {
-      id: userProfile.id,
-      firstName: userProfile.profile?.firstName,
-      lastName: userProfile.profile?.lastName,
-      role: userProfile.role
-    } : null
-  });
 
   useEffect(() => {
     setIsClient(true);

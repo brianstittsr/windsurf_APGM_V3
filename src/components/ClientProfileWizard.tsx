@@ -47,15 +47,8 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
     const hasPrePopulatedData = Object.values(data).some(value => value && value.trim() !== '');
     setIsPrePopulated(hasPrePopulatedData);
     
-    // If user has complete profile data, show confirmation instead of form
-    if (hasPrePopulatedData) {
-      const requiredFields = ['firstName', 'lastName', 'email', 'phone'];
-      const isComplete = requiredFields.every(field => data[field as keyof ClientProfileData]?.trim());
-      if (isComplete) {
-        // Skip to the end to show confirmation
-        setCurrentStepIndex(steps.length - 1);
-      }
-    }
+    // Don't auto-skip steps - let user navigate manually
+    // This prevents the wizard from jumping ahead when phone number is entered
   }, [data]);
 
   const steps: WizardStep[] = [
@@ -312,6 +305,14 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
     // Apply formatting based on field type
     if (currentStep.id === 'phone' || currentStep.id === 'emergencyContactPhone') {
       formattedValue = formatPhoneNumber(value);
+      
+      // Don't auto-advance on phone number formatting
+      onChange({
+        ...data,
+        [currentStep.id]: formattedValue
+      });
+      setErrors([]); // Clear errors when user types
+      return; // Exit early to prevent auto-advance
     } else if (currentStep.id === 'zipCode') {
       formattedValue = formatZipCode(value);
     }

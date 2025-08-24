@@ -139,7 +139,6 @@ function BookNowCustomContent() {
   const handleRestoreData = () => {
     if (savedFormData) {
       // Restore all form state from saved data
-      if (savedFormData.currentStep) setCurrentStep(savedFormData.currentStep);
       if (savedFormData.selectedService) setSelectedService(savedFormData.selectedService);
       if (savedFormData.selectedDate) setSelectedDate(savedFormData.selectedDate);
       if (savedFormData.selectedTime) setSelectedTime(savedFormData.selectedTime);
@@ -149,6 +148,24 @@ function BookNowCustomContent() {
       if (savedFormData.clientSignature) setClientSignature(savedFormData.clientSignature);
       if (savedFormData.prePostCareSignature) setPrePostCareSignature(savedFormData.prePostCareSignature);
       if (savedFormData.checkoutData) setCheckoutData(savedFormData.checkoutData);
+      
+      // Smart step restoration: check if user now has complete profile
+      if (savedFormData.currentStep) {
+        const restoredStep = savedFormData.currentStep;
+        
+        // If restoring to profile step, but user is authenticated with complete profile, skip to health
+        if (restoredStep === 'profile' && isAuthenticated && userProfile) {
+          const profileData = getClientProfileData();
+          if (profileData && profileData.firstName && profileData.lastName && profileData.email && profileData.phone) {
+            console.log('User now has complete profile, skipping to health form');
+            setCurrentStep('health');
+          } else {
+            setCurrentStep(restoredStep);
+          }
+        } else {
+          setCurrentStep(restoredStep);
+        }
+      }
     }
     setShowRecoveryBanner(false);
   };

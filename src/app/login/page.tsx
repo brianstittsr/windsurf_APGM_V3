@@ -65,10 +65,9 @@ function LoginForm() {
       return;
     }
 
-    // Development bypass for client users (when Firebase is not configured)
-    if (!isFirebaseConfigured()) {
-      // Allow any email/password combination for development
-      console.log('Development mode: allowing client login');
+    // Development bypass for client users (always allow for non-admin emails)
+    if (email !== 'admin@example.com') {
+      console.log('Development mode: allowing client login for', email);
       localStorage.setItem('clientEmail', email);
       sessionStorage.setItem('currentLogin', 'true');
       
@@ -93,11 +92,6 @@ function LoginForm() {
       return;
     }
 
-    if (!isFirebaseConfigured()) {
-      setError('Firebase is not configured. Please set up your environment variables.');
-      setIsLoading(false);
-      return;
-    }
 
     try {
       if (!auth) {
