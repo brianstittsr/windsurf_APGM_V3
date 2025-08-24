@@ -22,38 +22,66 @@ export function useNextAvailableDate() {
       const todayString = today.toISOString().split('T')[0];
       console.log('📅 Today string:', todayString);
 
-      // Query availability collection for all documents
-      const availabilityRef = collection(db, 'availability');
+      // Query artistAvailability collection for all documents
+      const availabilityRef = collection(db, 'artistAvailability');
       const snapshot = await getDocs(availabilityRef);
-      console.log('📊 Total availability documents:', snapshot.docs.length);
+      console.log('📊 Total artistAvailability documents:', snapshot.docs.length);
       
-      // Filter and sort dates manually
+      // Generate available dates based on artist availability patterns
       const availableDates: { date: string; timeSlots: any[] }[] = [];
       
-      snapshot.docs.forEach(doc => {
-        const dateString = doc.id;
-        console.log('🗓️ Checking date:', dateString);
+      // Get next 30 days to check
+      for (let i = 0; i < 30; i++) {
+        const checkDate = new Date(today);
+        checkDate.setDate(today.getDate() + i);
+        const dateString = checkDate.toISOString().split('T')[0];
         
-        // Only consider dates >= today
         if (dateString >= todayString) {
-          const data = doc.data();
-          const allSlots = data.timeSlots || [];
-          const availableSlots = allSlots.filter((slot: any) => 
-            slot.available && slot.artistName !== 'Admin'
-          );
+          const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][checkDate.getDay()];
+          console.log(`🗓️ Checking ${dateString} (${dayOfWeek})`);
           
-          console.log(`  - Date ${dateString}: ${allSlots.length} total slots, ${availableSlots.length} available`);
+          // Find artist availability for this day of week
+          const dayAvailability = snapshot.docs.find(doc => {
+            const data = doc.data();
+            return data.dayOfWeek === dayOfWeek && data.isEnabled;
+          });
           
-          if (availableSlots.length > 0) {
-            availableDates.push({
-              date: dateString,
-              timeSlots: availableSlots
+          if (dayAvailability) {
+            const data = dayAvailability.data();
+            const timeRanges = data.timeRanges || [];
+            
+            // Generate time slots from time ranges
+            const timeSlots: any[] = [];
+            timeRanges.forEach((range: any) => {
+              if (range.isActive) {
+                // Generate hourly slots between start and end time
+                const startHour = parseInt(range.startTime.split(':')[0]);
+                const endHour = parseInt(range.endTime.split(':')[0]);
+                
+                for (let hour = startHour; hour < endHour; hour++) {
+                  timeSlots.push({
+                    time: `${hour.toString().padStart(2, '0')}:00`,
+                    available: true,
+                    artistId: data.artistId,
+                    artistName: 'Victoria' // Default artist name
+                  });
+                }
+              }
             });
+            
+            console.log(`  - Date ${dateString}: ${timeSlots.length} available slots`);
+            
+            if (timeSlots.length > 0) {
+              availableDates.push({
+                date: dateString,
+                timeSlots
+              });
+            }
+          } else {
+            console.log(`  - Date ${dateString}: no availability for ${dayOfWeek}`);
           }
-        } else {
-          console.log(`  - Date ${dateString}: skipped (past date)`);
         }
-      });
+      }
 
       // Sort by date and get the earliest available date
       availableDates.sort((a, b) => a.date.localeCompare(b.date));
