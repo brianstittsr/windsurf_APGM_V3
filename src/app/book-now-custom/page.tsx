@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { Timestamp } from 'firebase/firestore';
 import { ServiceItem } from '@/types/service';
 
