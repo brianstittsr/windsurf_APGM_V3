@@ -144,7 +144,7 @@ function BookNowCustomContent() {
 
   // Auto-navigate to next available date when nextAvailable is found
   useEffect(() => {
-    console.log('nextAvailable useEffect triggered:', { nextAvailable, selectedDate });
+    console.log('nextAvailable useEffect triggered:', { nextAvailable, selectedDate, currentWeekStart });
     if (nextAvailable && !selectedDate) {
       console.log('Setting calendar to next available date:', nextAvailable.date);
       const nextAvailableDate = new Date(nextAvailable.date);
@@ -153,35 +153,51 @@ function BookNowCustomContent() {
       setCurrentWeekStart(nextWeekStart);
       setSelectedDate(nextAvailable.date);
     }
-  }, [nextAvailable, selectedDate]);
+  }, [nextAvailable, selectedDate, currentWeekStart]);
 
-  // Initialize currentWeekStart to current week if no next available date is found
+  // Initialize currentWeekStart to current week ONLY after we've checked for next available date
   useEffect(() => {
-    if (!currentWeekStart && !nextAvailable) {
+    // Only initialize to current week if:
+    // 1. No currentWeekStart is set
+    // 2. We've already tried to find next available date (nextAvailable is null, not undefined)
+    // 3. We're on the calendar step
+    if (!currentWeekStart && nextAvailable === null && currentStep === 'calendar') {
+      console.log('No available dates found, initializing to current week');
       const today = new Date();
       const weekStart = new Date(today);
       weekStart.setDate(today.getDate() - today.getDay());
       setCurrentWeekStart(weekStart);
     }
-  }, [currentWeekStart, nextAvailable]);
+  }, [currentWeekStart, nextAvailable, currentStep]);
 
   // Find next available date when service is selected or calendar step is reached
   useEffect(() => {
-    console.log('Service selection useEffect triggered:', { selectedService, selectedDate });
-    if (selectedService && !selectedDate) {
+    console.log('Service selection useEffect triggered:', { 
+      selectedService: selectedService?.name, 
+      selectedDate, 
+      nextAvailable: nextAvailable?.date,
+      currentStep 
+    });
+    if (selectedService && !selectedDate && !nextAvailable) {
       console.log('Calling findNextAvailableDate from service selection');
       findNextAvailableDate();
     }
-  }, [selectedService, findNextAvailableDate, selectedDate]);
+  }, [selectedService, findNextAvailableDate, selectedDate, nextAvailable, currentStep]);
 
   // Auto-navigate to next available date when calendar step becomes active
   useEffect(() => {
-    console.log('Calendar step useEffect triggered:', { currentStep, selectedService, selectedDate });
-    if (currentStep === 'calendar' && selectedService && !selectedDate) {
+    console.log('Calendar step useEffect triggered:', { 
+      currentStep, 
+      selectedService: selectedService?.name, 
+      selectedDate,
+      nextAvailable: nextAvailable?.date,
+      currentWeekStart: currentWeekStart?.toDateString()
+    });
+    if (currentStep === 'calendar' && selectedService && !selectedDate && !nextAvailable) {
       console.log('Calling findNextAvailableDate from calendar step');
       findNextAvailableDate();
     }
-  }, [currentStep, selectedService, selectedDate, findNextAvailableDate]);
+  }, [currentStep, selectedService, selectedDate, findNextAvailableDate, nextAvailable, currentWeekStart]);
 
   // Services are now loaded from Firebase via useServices hook
 
