@@ -43,6 +43,7 @@ export function useNextAvailableDate() {
           // Find artist availability for this day of week
           const dayAvailability = snapshot.docs.find(doc => {
             const data = doc.data();
+            console.log(`    🔍 Checking doc ${doc.id}: dayOfWeek=${data.dayOfWeek}, isEnabled=${data.isEnabled}, looking for ${dayOfWeek}`);
             return data.dayOfWeek === dayOfWeek && data.isEnabled;
           });
           
