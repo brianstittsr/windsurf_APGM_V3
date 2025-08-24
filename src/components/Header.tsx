@@ -61,20 +61,22 @@ export default function Header() {
       if (isFirebaseConfigured()) {
         await signOut(auth);
       } else {
-        // Development mode - clear admin bypass and remember me
+        // Development mode - clear admin bypass and session
         localStorage.removeItem('adminEmail');
         localStorage.removeItem('rememberMe');
         localStorage.removeItem('rememberedEmail');
+        sessionStorage.removeItem('currentLogin');
       }
-      // Always reload the page to ensure auth state updates
-      window.location.reload();
+      // Redirect to home page after logout
+      window.location.href = '/';
     } catch (error) {
       console.error('Error signing out:', error);
-      // Still clear localStorage on error
+      // Still clear localStorage and sessionStorage on error
       localStorage.removeItem('adminEmail');
       localStorage.removeItem('rememberMe');
       localStorage.removeItem('rememberedEmail');
-      window.location.reload();
+      sessionStorage.removeItem('currentLogin');
+      window.location.href = '/';
     }
   };
 
@@ -218,11 +220,6 @@ export default function Header() {
               <>
                 {isAuthenticated ? (
                   <>
-                    {/* Debug: Show authentication status */}
-                    <div style={{ fontSize: '12px', color: 'green', marginRight: '10px' }}>
-                      Authenticated: {userProfile?.profile?.firstName || 'No Name'}
-                    </div>
-                    
                     {/* If user is authenticated and profile is complete, show Health Questions button */}
                     {isProfileComplete() && (
                       <Link
@@ -242,15 +239,11 @@ export default function Header() {
                       size="md"
                       showDropdown={true}
                       onLogout={handleLogout}
+                      userRole={userProfile?.role || 'client'}
                     />
                   </>
                 ) : (
                   <>
-                    {/* Debug: Show non-authenticated status */}
-                    <div style={{ fontSize: '12px', color: 'red', marginRight: '10px' }}>
-                      Not Authenticated
-                    </div>
-                    
                     {/* Show Login button for non-authenticated users */}
                     <Link
                       href="/login"
@@ -322,6 +315,7 @@ export default function Header() {
                           lastName={userProfile?.profile?.lastName || ''}
                           size="sm"
                           showDropdown={false}
+                          userRole={userProfile?.role || 'client'}
                         />
                         <span className="ms-2 fw-semibold">
                           {userProfile?.profile?.firstName} {userProfile?.profile?.lastName}

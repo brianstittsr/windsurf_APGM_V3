@@ -31,14 +31,16 @@ export function useAuth() {
     });
     
     const checkAuthState = () => {
-      // Always check for admin bypass first (works regardless of Firebase config)
+      // Check for admin bypass (works regardless of Firebase config)
       const adminEmail = localStorage.getItem('adminEmail');
       const rememberMe = localStorage.getItem('rememberMe') === 'true';
-      console.log('useAuth: Admin email from localStorage:', adminEmail, 'rememberMe:', rememberMe);
+      const sessionLogin = sessionStorage.getItem('currentLogin') === 'true';
       
-      // Only auto-login if remember me is enabled
-      if (adminEmail === 'admin@example.com' && rememberMe) {
-        console.log('useAuth: Creating mock admin profile');
+      console.log('useAuth: Checking auth state - adminEmail:', adminEmail, 'rememberMe:', rememberMe, 'sessionLogin:', sessionLogin);
+      
+      // Only authenticate if it's a current session login (not auto-login from previous session)
+      if (adminEmail === 'admin@example.com' && sessionLogin) {
+        console.log('useAuth: Creating mock admin profile for current session');
         // Create a mock user profile for admin bypass
         const mockProfile: User = {
           id: 'admin-mock',
@@ -72,6 +74,55 @@ export function useAuth() {
         console.log('useAuth: Mock admin profile set');
         return;
       }
+
+      // Check for client login in development mode
+      const clientEmail = localStorage.getItem('clientEmail');
+      if (clientEmail && sessionLogin) {
+        console.log('useAuth: Creating mock client profile for current session');
+        // Create a mock user profile for client
+        const mockProfile: User = {
+          id: 'client-mock',
+          profile: {
+            firstName: 'Client',
+            lastName: 'User',
+            email: clientEmail,
+            phone: '(555) 123-4567',
+            dateOfBirth: '1990-01-01',
+            address: '123 Main St',
+            city: 'Anytown',
+            state: 'NC',
+            zipCode: '27701',
+            emergencyContactName: 'Emergency Contact',
+            emergencyContactPhone: '(555) 987-6543',
+            preferredContactMethod: 'email',
+            hearAboutUs: 'Google Search',
+            createdAt: new Date() as any,
+            updatedAt: new Date() as any
+          },
+          role: 'client',
+          isActive: true
+        };
+        
+        setAuthState({
+          user: null,
+          userProfile: mockProfile,
+          loading: false,
+          error: null
+        });
+        console.log('useAuth: Mock client profile set');
+        return;
+      }
+      
+      // Clear stale data if no current session
+      if ((adminEmail || clientEmail) && !sessionLogin) {
+        console.log('useAuth: Clearing stale authentication data (no current session)');
+        localStorage.removeItem('adminEmail');
+        localStorage.removeItem('clientEmail');
+        localStorage.removeItem('rememberedEmail');
+        if (!rememberMe) {
+          localStorage.removeItem('rememberMe');
+        }
+      }
       
       // If no admin bypass and Firebase not configured, set unauthenticated
       if (!isFirebaseConfigured()) {
@@ -99,25 +150,15 @@ export function useAuth() {
 
     window.addEventListener('storage', handleStorageChange);
 
-    // Also check periodically in case localStorage was changed in the same tab
-    const interval = setInterval(() => {
-      const currentAdminEmail = localStorage.getItem('adminEmail');
-      const currentRememberMe = localStorage.getItem('rememberMe') === 'true';
-      const hasProfile = authState.userProfile !== null;
-      const shouldHaveProfile = currentAdminEmail === 'admin@example.com' && currentRememberMe;
-      
-      console.log('useAuth: Periodic check - adminEmail:', currentAdminEmail, 'rememberMe:', currentRememberMe, 'hasProfile:', hasProfile, 'shouldHaveProfile:', shouldHaveProfile);
-      
-      if (hasProfile !== shouldHaveProfile) {
-        console.log('useAuth: Auth state mismatch detected, rechecking');
-        checkAuthState();
-      }
-    }, 2000);
+    // Disable periodic checking to prevent auto-login
+    // const interval = setInterval(() => {
+    //   // Periodic checking disabled to prevent automatic authentication
+    // }, 2000);
 
     // Always set up cleanup regardless of Firebase config
     const cleanup = () => {
       window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
+      // clearInterval(interval); // Disabled since interval is commented out
     };
 
     if (!isFirebaseConfigured()) {

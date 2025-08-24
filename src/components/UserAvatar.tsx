@@ -8,6 +8,7 @@ interface UserAvatarProps {
   size?: 'sm' | 'md' | 'lg';
   showDropdown?: boolean;
   onLogout?: () => void;
+  userRole?: string;
 }
 
 export default function UserAvatar({ 
@@ -15,7 +16,8 @@ export default function UserAvatar({
   lastName, 
   size = 'md', 
   showDropdown = false,
-  onLogout 
+  onLogout,
+  userRole = 'client'
 }: UserAvatarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -102,6 +104,7 @@ export default function UserAvatar({
           </div>
           
           <div className="py-1">
+            {/* Client Options */}
             <button 
               className="dropdown-item btn btn-link text-start w-100 border-0 p-2"
               onClick={() => {
@@ -117,12 +120,41 @@ export default function UserAvatar({
               className="dropdown-item btn btn-link text-start w-100 border-0 p-2"
               onClick={() => {
                 setIsDropdownOpen(false);
-                window.location.href = '/profile';
+                window.location.href = '/book-now-custom';
               }}
             >
-              <i className="fas fa-user me-2"></i>
-              Profile Settings
+              <i className="fas fa-plus-circle me-2"></i>
+              Book New Procedure
             </button>
+            
+            {/* Admin-only Options */}
+            {userRole === 'admin' && (
+              <>
+                <hr className="dropdown-divider my-1" />
+                
+                <button 
+                  className="dropdown-item btn btn-link text-start w-100 border-0 p-2"
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    window.location.href = '/dashboard';
+                  }}
+                >
+                  <i className="fas fa-cog me-2"></i>
+                  Admin Dashboard
+                </button>
+                
+                <button 
+                  className="dropdown-item btn btn-link text-start w-100 border-0 p-2"
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    window.location.href = '/profile';
+                  }}
+                >
+                  <i className="fas fa-user me-2"></i>
+                  Profile Settings
+                </button>
+              </>
+            )}
             
             <hr className="dropdown-divider my-1" />
             

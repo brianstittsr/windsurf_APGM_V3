@@ -39,6 +39,7 @@ function LoginForm() {
     if (email === 'admin@example.com' && password === 'admin123') {
       console.log('Development admin bypass activated');
       localStorage.setItem('adminEmail', email);
+      sessionStorage.setItem('currentLogin', 'true'); // Mark as current session login
       
       // Handle Remember Me functionality
       if (rememberMe) {
@@ -59,6 +60,34 @@ function LoginForm() {
         window.location.href = redirectUrl;
       } else {
         window.location.href = '/dashboard';
+      }
+      setIsLoading(false);
+      return;
+    }
+
+    // Development bypass for client users (when Firebase is not configured)
+    if (!isFirebaseConfigured()) {
+      // Allow any email/password combination for development
+      console.log('Development mode: allowing client login');
+      localStorage.setItem('clientEmail', email);
+      sessionStorage.setItem('currentLogin', 'true');
+      
+      // Handle Remember Me functionality
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', email);
+        localStorage.setItem('rememberMe', 'true');
+      } else {
+        localStorage.removeItem('rememberedEmail');
+        localStorage.removeItem('rememberMe');
+      }
+      
+      // Redirect to my-appointments for client users
+      if (redirectUrl && serviceId) {
+        window.location.href = `${redirectUrl}?step=calendar&service=${serviceId}`;
+      } else if (redirectUrl) {
+        window.location.href = redirectUrl;
+      } else {
+        window.location.href = '/my-appointments';
       }
       setIsLoading(false);
       return;
