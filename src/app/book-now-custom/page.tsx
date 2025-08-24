@@ -5,6 +5,16 @@ import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Timestamp } from 'firebase/firestore';
 import { ServiceItem } from '@/types/service';
+import { useServices } from '@/hooks/useServices';
+import { useAvailability } from '@/hooks/useAvailability';
+import { useAuth } from '@/hooks/useAuth';
+import { useAppointments } from '@/hooks/useAppointments';
+import { useHealthForm } from '@/hooks/useHealthForm';
+import { useTimeSlots } from '@/hooks/useTimeSlots';
+import { useNextAvailableDate } from '@/hooks/useNextAvailableDate';
+import ClientProfileWizard, { ClientProfileData } from '@/components/ClientProfileWizard';
+import HealthFormWizard, { HealthFormData } from '@/components/HealthFormWizard';
+import CheckoutCart from '@/components/CheckoutCart';
 
 interface CheckoutData {
   selectedDate: string;
@@ -15,21 +25,7 @@ interface CheckoutData {
   agreeToTerms: boolean;
   agreeToPolicy: boolean;
 }
-import { useServices } from '@/hooks/useServices';
-import { useAvailability } from '@/hooks/useAvailability';
-import { useAuth } from '@/hooks/useAuth';
-import { useFormPersistence } from '@/hooks/useFormPersistence';
-import { useAppointments } from '@/hooks/useAppointments';
-import { useHealthForm } from '@/hooks/useHealthForm';
-import { useTimeSlots } from '@/hooks/useTimeSlots';
-import { useNextAvailableDate } from '@/hooks/useNextAvailableDate';
-import ServiceSelection from '@/components/ServiceSelection';
-import CalendarView from '@/components/CalendarView';
-import ClientProfileWizard, { ClientProfileData } from '@/components/ClientProfileWizard';
-import HealthFormWizard, { HealthFormData } from '@/components/HealthFormWizard';
-import PrePostCareForm from '@/components/PrePostCareForm';
-import CheckoutCart from '@/components/CheckoutCart';
-import FormDataRecoveryBanner from '@/components/FormDataRecoveryBanner';
+// Removed FormDataRecoveryBanner - form recovery feature disabled
 // Removed unused service imports - using hooks instead
 import { getServiceImagePath } from '@/utils/serviceImageUtils';
 import { calculateTotalWithStripeFees } from '@/lib/stripe-fees';
@@ -115,86 +111,9 @@ function BookNowCustomContent() {
     agreeToPolicy: false
   });
 
-  const [showRecoveryBanner, setShowRecoveryBanner] = useState(false);
-  const [savedFormData, setSavedFormData] = useState<any>(null);
   const [showProfileConfirmation, setShowProfileConfirmation] = useState(false);
 
-  // Form persistence for all booking data
-  const bookingFormData = {
-    currentStep,
-    selectedService,
-    selectedDate,
-    selectedTime,
-    selectedArtistId,
-    clientProfile,
-    healthFormData,
-    clientSignature,
-    prePostCareSignature,
-    checkoutData
-  };
-
-  const { loadData, clearData } = useFormPersistence({
-    key: 'booking_session',
-    data: bookingFormData,
-    enabled: true
-  });
-
-  // Load saved form data on component mount
-  useEffect(() => {
-    const savedData = loadData();
-    if (savedData && Object.keys(savedData).length > 0) {
-      // Check if there's meaningful data to restore (not just empty initial state)
-      const hasData = savedData.selectedService || 
-                     savedData.selectedDate || 
-                     savedData.clientProfile?.firstName ||
-                     Object.keys(savedData.healthFormData || {}).length > 0;
-      
-      if (hasData) {
-        setSavedFormData(savedData);
-        setShowRecoveryBanner(true);
-      }
-    }
-  }, [loadData]);
-
-  const handleRestoreData = () => {
-    if (savedFormData) {
-      // Restore all form state from saved data
-      if (savedFormData.selectedService) setSelectedService(savedFormData.selectedService);
-      if (savedFormData.selectedDate) setSelectedDate(savedFormData.selectedDate);
-      if (savedFormData.selectedTime) setSelectedTime(savedFormData.selectedTime);
-      if (savedFormData.selectedArtistId) setSelectedArtistId(savedFormData.selectedArtistId);
-      if (savedFormData.clientProfile) setClientProfile(savedFormData.clientProfile);
-      if (savedFormData.healthFormData) setHealthFormData(savedFormData.healthFormData);
-      if (savedFormData.clientSignature) setClientSignature(savedFormData.clientSignature);
-      if (savedFormData.prePostCareSignature) setPrePostCareSignature(savedFormData.prePostCareSignature);
-      if (savedFormData.checkoutData) setCheckoutData(savedFormData.checkoutData);
-      
-      // Smart step restoration: check if user now has complete profile
-      if (savedFormData.currentStep) {
-        const restoredStep = savedFormData.currentStep;
-        
-        // If restoring to profile step, but user is authenticated with complete profile, skip to health
-        if (restoredStep === 'profile' && isAuthenticated && userProfile) {
-          const profileData = getClientProfileData();
-          if (profileData && profileData.firstName && profileData.lastName && profileData.email && profileData.phone) {
-            console.log('User now has complete profile, skipping to health form');
-            setCurrentStep('health');
-          } else {
-            setCurrentStep(restoredStep);
-          }
-        } else {
-          setCurrentStep(restoredStep);
-        }
-      }
-    }
-    setShowRecoveryBanner(false);
-  };
-
-  const handleDismissRecovery = () => {
-    clearData();
-    setShowRecoveryBanner(false);
-    setSavedFormData(null);
-  };
+  // Form persistence feature removed
 
   // Handle URL parameters for returning from login/register and auto-populate user data
   useEffect(() => {
@@ -204,7 +123,7 @@ function BookNowCustomContent() {
     // If user is returning from login/register with service info
     if (step === 'calendar' && serviceParam && services && services.length > 0) {
       // Find the service by ID
-      const service = services.find(s => s.id === serviceParam);
+      const service = services.find((s: ServiceItem) => s.id === serviceParam);
       if (service) {
         setSelectedService(service);
         setCurrentStep('calendar');
@@ -496,8 +415,7 @@ function BookNowCustomContent() {
       }
       
       console.log('Booking completed successfully:', appointmentId);
-      // Clear saved form data after successful booking
-      clearData();
+      // Form persistence removed - no data to clear
       setCurrentStep('confirmation');
     } catch (error) {
       console.error('Failed to complete booking:', error);
@@ -566,16 +484,7 @@ function BookNowCustomContent() {
         <div className="row justify-content-center">
           <div className="col-lg-10">
             <div className="card border-0 shadow-lg">
-              {/* Form Recovery Banner */}
-              {showRecoveryBanner && (
-                <div className="card-header bg-white border-0 py-3">
-                  <FormDataRecoveryBanner
-                    onRestore={handleRestoreData}
-                    onDismiss={handleDismissRecovery}
-                    show={showRecoveryBanner}
-                  />
-                </div>
-              )}
+              {/* Form Recovery Banner removed */}
               
               {/* Header */}
               <div className="card-header bg-white border-0 text-center py-4">
@@ -1086,7 +995,7 @@ function BookNowCustomContent() {
             <>
               {/* Row 1: Services 1, 2, 3 */}
               <div className="row g-4 mb-4">
-                {services.slice(0, 3).map((service) => (
+                {services.slice(0, 3).map((service: ServiceItem) => (
                 <div key={service.id} className="col-lg-4 col-md-4">
                 <div 
                   className={`card h-100 shadow-sm service-card ${
@@ -1143,7 +1052,7 @@ function BookNowCustomContent() {
               
               {/* Row 2: Services 4, 5, 6 */}
               <div className="row g-4">
-                {services.slice(3, 6).map((service) => (
+                {services.slice(3, 6).map((service: ServiceItem) => (
                 <div key={service.id} className="col-lg-4 col-md-4">
                 <div 
                   className={`card h-100 shadow-sm service-card ${
