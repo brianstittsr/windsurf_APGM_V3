@@ -76,12 +76,22 @@ export function getStripeConfig(): StripeConfig {
     secretKey = process.env.STRIPE_TEST_SECRET_KEY || '';
     webhookSecret = process.env.STRIPE_TEST_WEBHOOK_SECRET || '';
     
-    // Validate test keys (only at runtime)
-    if (!publishableKey.startsWith('pk_test_')) {
-      throw new Error('Invalid or missing Stripe test publishable key');
+    // Validate test keys (only at runtime) - allow empty for development
+    if (publishableKey && !publishableKey.startsWith('pk_test_')) {
+      throw new Error('Invalid Stripe test publishable key format');
     }
-    if (!secretKey.startsWith('sk_test_')) {
-      throw new Error('Invalid or missing Stripe test secret key');
+    if (secretKey && !secretKey.startsWith('sk_test_')) {
+      throw new Error('Invalid Stripe test secret key format');
+    }
+    
+    // Provide fallback test keys if missing
+    if (!publishableKey) {
+      console.warn('⚠️ STRIPE_TEST_PUBLISHABLE_KEY not set, using placeholder');
+      publishableKey = 'pk_test_placeholder_for_development';
+    }
+    if (!secretKey) {
+      console.warn('⚠️ STRIPE_TEST_SECRET_KEY not set, using placeholder');
+      secretKey = 'sk_test_placeholder_for_development';
     }
   }
   

@@ -2,10 +2,30 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getStripeSecretKey, getStripeModeDescription } from '@/lib/stripe-config';
 
-const stripe = new Stripe(getStripeSecretKey());
+let stripe: Stripe;
+
+try {
+  const secretKey = getStripeSecretKey();
+  if (secretKey.includes('placeholder')) {
+    console.warn('⚠️ Using placeholder Stripe key - payments will not work');
+  }
+  stripe = new Stripe(secretKey);
+} catch (error) {
+  console.error('❌ Stripe initialization failed:', error);
+  throw error;
+}
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Stripe is properly initialized
+    const secretKey = getStripeSecretKey();
+    if (secretKey.includes('placeholder')) {
+      return NextResponse.json(
+        { error: 'Payment system not configured. Please set up Stripe environment variables.' },
+        { status: 500 }
+      );
+    }
+
     const { amount, currency = 'usd', payment_method_types } = await request.json();
 
     if (!amount || amount < 50) { // Minimum 50 cents

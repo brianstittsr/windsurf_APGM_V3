@@ -61,8 +61,16 @@ export function useFormPersistence({ key, data, enabled = true }: FormPersistenc
   // Auto-save data when it changes
   useEffect(() => {
     if (enabled && data) {
-      const timeoutId = setTimeout(saveData, 500); // Debounce saves
-      return () => clearTimeout(timeoutId);
+      // Check if data has meaningful content before saving
+      const hasContent = data.selectedService || 
+                        data.selectedDate || 
+                        data.clientProfile?.firstName ||
+                        Object.keys(data.healthFormData || {}).length > 0;
+      
+      if (hasContent) {
+        const timeoutId = setTimeout(saveData, 500); // Debounce saves
+        return () => clearTimeout(timeoutId);
+      }
     }
   }, [data, enabled, saveData]);
 

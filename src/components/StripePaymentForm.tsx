@@ -97,7 +97,14 @@ export default function StripePaymentForm({
 
       if (!client_secret) {
         console.error('❌ No client_secret in response:', responseData);
-        throw new Error('Failed to create payment intent - no client_secret returned');
+        console.error('❌ Full response data:', JSON.stringify(responseData, null, 2));
+        
+        // Check if it's a Stripe configuration error
+        if (responseData.error && responseData.error.includes('Stripe')) {
+          throw new Error('Payment system configuration error. Please contact support.');
+        }
+        
+        throw new Error('Failed to create payment session. Please try again or contact support.');
       }
       
       console.log('✅ Payment intent created:', payment_intent_id);

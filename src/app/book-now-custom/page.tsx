@@ -1,22 +1,32 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import Image from 'next/image';
-import Header from '../../components/Header';
-import Footer from '../../components/Footer';
-import ClientProfileWizard, { ClientProfileData } from '../../components/ClientProfileWizard';
-import HealthFormWizard, { HealthFormData } from '../../components/HealthFormWizard';
-import CheckoutCart, { CheckoutData, ServiceItem } from '../../components/CheckoutCart';
-import DatabaseSetup from '../../components/DatabaseSetup';
-import { useServices, useAppointments, useHealthForm, useAvailability, useTimeSlots, useNextAvailableDate } from '@/hooks/useFirebase';
-import { useAuth } from '@/hooks/useAuth';
-import { Timestamp } from 'firebase/firestore';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { Timestamp } from 'firebase/firestore';
+import { ServiceItem } from '@/types/service';
+import { useServices } from '@/hooks/useServices';
+import { useAvailability } from '@/hooks/useAvailability';
+import { useAuth } from '@/hooks/useAuth';
+import { useFormPersistence } from '@/hooks/useFormPersistence';
+import ServiceSelection from '@/components/ServiceSelection';
+import CalendarView from '@/components/CalendarView';
+import ClientProfileWizard, { ClientProfileData } from '@/components/ClientProfileWizard';
+import HealthFormWizard, { HealthFormData } from '@/components/HealthFormWizard';
+import PrePostCareForm from '@/components/PrePostCareForm';
+import CheckoutCart from '@/components/CheckoutCart';
+import FormDataRecoveryBanner from '@/components/FormDataRecoveryBanner';
+import { createAppointment, submitHealthForm } from '@/services/database';
+import { bookTimeSlot } from '@/services/availability';
+import { triggerNewClientWorkflow, triggerAppointmentBookedWorkflow } from '@/services/marketingWorkflows';
+import { calculateTotalWithStripeFees } from '@/lib/pricing';
 import { getServiceImagePath } from '@/utils/serviceImageUtils';
 import { calculateTotalWithStripeFees } from '@/lib/stripe-fees';
 import { useWorkflowTrigger } from '@/hooks/useWorkflowTrigger';
 import { useFormPersistence } from '@/hooks/useFormPersistence';
 import FormDataRecoveryBanner from '../../components/FormDataRecoveryBanner';
+import Header from '../../components/Header';
+import Footer from '../../components/Footer';
+import DatabaseSetup from '../../components/DatabaseSetup';
 import ProfileConfirmation from '../../components/ProfileConfirmation';
 // Email services moved to API routes to avoid client-side imports
 
@@ -360,6 +370,40 @@ function BookNowCustomContent() {
     if (!selectedService) return;
     
     try {
+      // Update user profile in database if user is authenticated
+      if (isAuthenticated && userProfile?.id) {
+        try {
+          const { UserService } = await import('@/services/userService');
+          
+          // Update the user's profile with the form data
+          const profileUpdates = {
+            profile: {
+              ...userProfile.profile,
+              firstName: clientProfile.firstName,
+              lastName: clientProfile.lastName,
+              email: clientProfile.email,
+              phone: clientProfile.phone,
+              dateOfBirth: clientProfile.dateOfBirth,
+              address: clientProfile.address,
+              city: clientProfile.city,
+              state: clientProfile.state,
+              zipCode: clientProfile.zipCode,
+              emergencyContactName: clientProfile.emergencyContactName,
+              emergencyContactPhone: clientProfile.emergencyContactPhone,
+              preferredContactMethod: clientProfile.preferredContactMethod,
+              hearAboutUs: clientProfile.hearAboutUs,
+              updatedAt: Timestamp.now()
+            }
+          };
+          
+          await UserService.updateUser(userProfile.id, profileUpdates);
+          console.log('✅ User profile updated successfully in database');
+        } catch (profileError) {
+          console.error('❌ Failed to update user profile:', profileError);
+          // Don't fail the booking if profile update fails
+        }
+      }
+      
       // Create appointment in Firebase
       const appointmentData = {
         clientId: userProfile?.id || 'temp-client-id', // Use authenticated user's ID if available
