@@ -189,19 +189,31 @@ export default function MultiPaymentForm({
   };
 
   const handleCardPayment = async (client_secret: string) => {
+    if (!stripe) {
+      throw new Error('Stripe not initialized');
+    }
+    
     if (!elements) {
       throw new Error('Stripe Elements not initialized');
     }
     
+    // Wait for elements to be ready
     const cardElement = elements.getElement(CardNumberElement) || elements.getElement(CardElement);
     
     if (!cardElement) {
-      throw new Error('Card element not found');
+      throw new Error('Card element not found. Please refresh the page and try again.');
     }
 
     console.log('💳 Confirming card payment...');
     
-    const { error, paymentIntent } = await stripe!.confirmCardPayment(client_secret, {
+    // Ensure the card element is ready before confirming payment
+    try {
+      cardElement.focus();
+    } catch (focusError) {
+      console.warn('Card element focus warning:', focusError);
+    }
+    
+    const { error, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
       payment_method: {
         card: cardElement,
         billing_details: {
@@ -269,8 +281,13 @@ export default function MultiPaymentForm({
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     
-    if (!stripe || !elements) {
+    if (!stripe) {
       onError('Stripe has not loaded yet. Please wait a moment and try again.');
+      return;
+    }
+
+    if (!elements) {
+      onError('Stripe Elements have not loaded yet. Please wait a moment and try again.');
       return;
     }
 
@@ -391,6 +408,18 @@ export default function MultiPaymentForm({
 
   const isFormValid = isCardFormValid && isKlarnaFormValid && isAffirmFormValid && isCherryFormValid;
 
+  // Show loading state if Stripe hasn't loaded yet
+  if (!stripe) {
+    return (
+      <div className="text-center py-4">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <p className="mt-2 text-muted">Loading payment system...</p>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="multi-payment-form">
       {/* Payment Method Selection */}
@@ -475,49 +504,62 @@ export default function MultiPaymentForm({
         <div className="card-payment-section">
           <h6 className="mb-3">Card Information</h6>
           
-          <div className="row">
-            <div className="col-12 mb-3">
-              <label htmlFor="cardholder-name" className="form-label">
-                Cardholder Name <span className="text-danger">*</span>
-              </label>
-              <input
-                id="cardholder-name"
-                type="text"
-                className="form-control"
-                value={cardholderName}
-                onChange={(e) => setCardholderName(e.target.value)}
-                placeholder="Full name on card"
-                required
-              />
-            </div>
-
-            <div className="col-12 mb-3">
-              <label className="form-label">
-                Card Number <span className="text-danger">*</span>
-              </label>
-              <div className="form-control" style={{ padding: '12px' }}>
-                <CardNumberElement options={CARD_ELEMENT_OPTIONS} />
+          {!elements && (
+            <div className="alert alert-info">
+              <div className="d-flex align-items-center">
+                <div className="spinner-border spinner-border-sm me-2" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                Loading card payment form...
               </div>
             </div>
+          )}
+          
+          {elements && (
+            <div className="row">
+              <div className="col-12 mb-3">
+                <label htmlFor="cardholder-name" className="form-label">
+                  Cardholder Name <span className="text-danger">*</span>
+                </label>
+                <input
+                  id="cardholder-name"
+                  type="text"
+                  className="form-control"
+                  value={cardholderName}
+                  onChange={(e) => setCardholderName(e.target.value)}
+                  placeholder="Full name on card"
+                  required
+                />
+              </div>
 
-            <div className="col-md-6 mb-3">
-              <label className="form-label">
-                Expiry Date <span className="text-danger">*</span>
-              </label>
-              <div className="form-control" style={{ padding: '12px' }}>
-                <CardExpiryElement options={CARD_ELEMENT_OPTIONS} />
+              <div className="col-12 mb-3">
+                <label className="form-label">
+                  Card Number <span className="text-danger">*</span>
+                </label>
+                <div className="form-control" style={{ padding: '12px' }}>
+                  <CardNumberElement options={CARD_ELEMENT_OPTIONS} />
+                </div>
+              </div>
+
+              <div className="col-md-6 mb-3">
+                <label className="form-label">
+                  Expiry Date <span className="text-danger">*</span>
+                </label>
+                <div className="form-control" style={{ padding: '12px' }}>
+                  <CardExpiryElement options={CARD_ELEMENT_OPTIONS} />
+                </div>
+              </div>
+
+              <div className="col-md-6 mb-3">
+                <label className="form-label">
+                  CVC <span className="text-danger">*</span>
+                </label>
+                <div className="form-control" style={{ padding: '12px' }}>
+                  <CardCvcElement options={CARD_ELEMENT_OPTIONS} />
+                </div>
               </div>
             </div>
-
-            <div className="col-md-6 mb-3">
-              <label className="form-label">
-                CVC <span className="text-danger">*</span>
-              </label>
-              <div className="form-control" style={{ padding: '12px' }}>
-                <CardCvcElement options={CARD_ELEMENT_OPTIONS} />
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       )}
 

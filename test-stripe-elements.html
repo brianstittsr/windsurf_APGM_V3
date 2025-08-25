@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stripe Elements Test</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .form-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px; }
+        .stripe-element { padding: 12px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px; }
+        .btn { background: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; }
+        .alert { padding: 12px; border-radius: 4px; margin: 10px 0; }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-danger { background: #f8d7da; color: #721c24; }
+        .alert-info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Stripe Elements Test</h1>
+        
+        <div id="status" class="alert alert-info">Initializing Stripe...</div>
+        
+        <div id="payment-form" style="display: none;">
+            <h3>Test Payment Form</h3>
+            <form id="card-form">
+                <input type="text" id="cardholder-name" class="form-control" placeholder="Test User" value="Test User">
+                <div id="card-number-element" class="stripe-element"></div>
+                <div style="display: flex; gap: 10px;">
+                    <div id="card-expiry-element" class="stripe-element" style="flex: 1;"></div>
+                    <div id="card-cvc-element" class="stripe-element" style="flex: 1;"></div>
+                </div>
+                <button type="submit" id="submit-button" class="btn">Test Elements</button>
+            </form>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        console.log('🧪 Starting Stripe Elements Test');
+        
+        // Use placeholder key for testing
+        const stripe = Stripe('pk_test_placeholder');
+        const elements = stripe.elements();
+        
+        const statusDiv = document.getElementById('status');
+        const formDiv = document.getElementById('payment-form');
+        const resultsDiv = document.getElementById('results');
+        
+        try {
+            console.log('✅ Stripe initialized successfully');
+            statusDiv.className = 'alert alert-success';
+            statusDiv.textContent = 'Stripe initialized successfully!';
+            
+            // Create card elements
+            const cardNumber = elements.create('cardNumber');
+            const cardExpiry = elements.create('cardExpiry');
+            const cardCvc = elements.create('cardCvc');
+            
+            // Mount elements
+            cardNumber.mount('#card-number-element');
+            cardExpiry.mount('#card-expiry-element');
+            cardCvc.mount('#card-cvc-element');
+            
+            console.log('✅ Stripe Elements mounted successfully');
+            formDiv.style.display = 'block';
+            
+            resultsDiv.innerHTML = '<div class="alert alert-success">✅ Stripe Elements initialization successful!</div>';
+            
+        } catch (error) {
+            console.error('❌ Stripe Elements initialization failed:', error);
+            statusDiv.className = 'alert alert-danger';
+            statusDiv.textContent = 'Stripe Elements initialization failed: ' + error.message;
+            
+            resultsDiv.innerHTML = '<div class="alert alert-danger">❌ Stripe Elements initialization failed: ' + error.message + '</div>';
+        }
+    </script>
+</body>
+</html>
