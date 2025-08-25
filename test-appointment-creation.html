@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Firebase Appointment Creation</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        button { padding: 10px 20px; margin: 10px 0; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Firebase Appointment Creation Test</h1>
+    <p>This page tests the Firebase appointment creation functionality.</p>
+    
+    <button onclick="testAppointmentCreation()">Test Appointment Creation</button>
+    <button onclick="clearResults()">Clear Results</button>
+    
+    <div id="results"></div>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testAppointmentCreation() {
+            addResult('🧪 Starting Firebase appointment creation test...', 'info');
+            
+            try {
+                // Test the appointment creation endpoint
+                const response = await fetch('/api/test-appointment-creation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    addResult('✅ Firebase appointment creation test PASSED!', 'success');
+                    addResult(`<strong>Appointment ID:</strong> ${data.appointmentId}`, 'success');
+                    addResult(`<strong>Test Results:</strong><pre>${JSON.stringify(data.testResults, null, 2)}</pre>`, 'success');
+                    
+                    // Test data integrity
+                    const integrity = data.testResults.dataIntegrity;
+                    const allChecksPass = Object.values(integrity).every(check => check === true);
+                    
+                    if (allChecksPass) {
+                        addResult('✅ Data integrity checks PASSED - all fields match expected values', 'success');
+                    } else {
+                        addResult('⚠️ Some data integrity checks failed', 'error');
+                        addResult(`<pre>${JSON.stringify(integrity, null, 2)}</pre>`, 'error');
+                    }
+                    
+                } else {
+                    addResult('❌ Firebase appointment creation test FAILED!', 'error');
+                    addResult(`<strong>Error:</strong> ${data.error}`, 'error');
+                    if (data.details) {
+                        addResult(`<strong>Details:</strong><pre>${data.details}</pre>`, 'error');
+                    }
+                }
+                
+            } catch (error) {
+                addResult('❌ Test failed with network/fetch error', 'error');
+                addResult(`<strong>Error:</strong> ${error.message}`, 'error');
+                console.error('Test error:', error);
+            }
+        }
+
+        // Auto-run test when page loads
+        window.addEventListener('load', () => {
+            addResult('📋 Firebase Appointment Creation Test Ready', 'info');
+            addResult('Click "Test Appointment Creation" to verify Firebase appointment creation works without errors.', 'info');
+        });
+    </script>
+</body>
+</html>

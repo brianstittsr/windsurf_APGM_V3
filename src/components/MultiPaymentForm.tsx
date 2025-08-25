@@ -81,24 +81,42 @@ export default function MultiPaymentForm({
     console.log('📡 Payment amount (cents):', Math.round(currentPaymentAmount * 100));
     
     try {
+      const requestBody = {
+        amount: Math.round(currentPaymentAmount * 100), // Convert to cents
+        currency: 'usd',
+        payment_method_types: paymentMethodTypes,
+      };
+      
+      console.log('📡 Request body:', JSON.stringify(requestBody));
+      
       const response = await fetch('/api/create-payment-intent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          amount: Math.round(currentPaymentAmount * 100), // Convert to cents
-          currency: 'usd',
-          payment_method_types: paymentMethodTypes,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       console.log('📡 API Response status:', response.status);
+      console.log('📡 API Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ API Error Response:', errorText);
-        throw new Error(`Payment session creation failed: ${response.status} - ${errorText}`);
+        
+        // Try to parse error as JSON for more details
+        let errorDetails = errorText;
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorDetails = errorJson.error || errorJson.message || errorText;
+          if (errorJson.details) {
+            console.error('❌ Error details:', errorJson.details);
+          }
+        } catch (parseError) {
+          console.error('❌ Could not parse error response as JSON');
+        }
+        
+        throw new Error(`Payment session creation failed: ${response.status} - ${errorDetails}`);
       }
 
       const responseData = await response.json();
@@ -106,6 +124,9 @@ export default function MultiPaymentForm({
       
       if (responseData.error) {
         console.error('❌ API returned error:', responseData.error);
+        if (responseData.details) {
+          console.error('❌ Error details:', responseData.details);
+        }
         throw new Error(responseData.error);
       }
       
@@ -124,6 +145,11 @@ export default function MultiPaymentForm({
       return { client_secret, payment_intent_id };
     } catch (error) {
       console.error('❌ Payment intent creation failed:', error);
+      console.error('❌ Error type:', typeof error);
+      console.error('❌ Error name:', error instanceof Error ? error.name : 'Unknown');
+      console.error('❌ Error message:', error instanceof Error ? error.message : String(error));
+      console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      
       // Clear any stale payment intent data
       setClientSecret('');
       setPaymentIntentId('');
@@ -138,7 +164,7 @@ export default function MultiPaymentForm({
   };
 
   const refreshPaymentIntentIfNeeded = async (method: PaymentMethod) => {
-    if (method === 'cherry') return;
+    if (method === 'cherry') return null;
     
     // Always create new payment intent if missing or expired
     if (!clientSecret || isPaymentIntentExpired()) {
@@ -153,7 +179,8 @@ export default function MultiPaymentForm({
       }
       
       try {
-        await createPaymentIntent(paymentMethodTypes);
+        const result = await createPaymentIntent(paymentMethodTypes);
+        return result.client_secret;
       } catch (error) {
         console.error('Failed to create payment intent:', error);
         console.error('Full error details:', error);
@@ -162,6 +189,8 @@ export default function MultiPaymentForm({
         throw new Error(`Failed to create or refresh payment session: ${errorMessage}`);
       }
     }
+    
+    return clientSecret;
   };
 
   const handlePaymentMethodChange = async (method: PaymentMethod) => {
@@ -181,7 +210,8 @@ export default function MultiPaymentForm({
       } else {
         paymentMethodTypes = ['card'];
       }
-      await createPaymentIntent(paymentMethodTypes);
+      const result = await createPaymentIntent(paymentMethodTypes);
+      console.log('✅ Payment method switched, client_secret ready:', result.client_secret.substring(0, 20) + '...');
     } catch (error) {
       console.error('Error switching payment method:', error);
       onError('Failed to switch payment method. Please try again.');
@@ -307,12 +337,15 @@ export default function MultiPaymentForm({
       }
 
       // Ensure we have a valid payment intent before processing
+      let currentClientSecret;
       try {
-        await refreshPaymentIntentIfNeeded(selectedPaymentMethod);
+        currentClientSecret = await refreshPaymentIntentIfNeeded(selectedPaymentMethod);
         
-        if (!clientSecret) {
+        if (!currentClientSecret) {
           throw new Error('Failed to create or refresh payment session. Please try again.');
         }
+        
+        console.log('✅ Using client_secret for payment:', currentClientSecret.substring(0, 20) + '...');
       } catch (intentError) {
         console.error('Payment intent creation failed:', intentError);
         throw new Error('Unable to initialize payment. Please check your connection and try again.');
@@ -320,11 +353,11 @@ export default function MultiPaymentForm({
 
       let result;
       if (selectedPaymentMethod === 'card') {
-        result = await handleCardPayment(clientSecret);
+        result = await handleCardPayment(currentClientSecret);
       } else if (selectedPaymentMethod === 'klarna') {
-        result = await handleKlarnaPayment(clientSecret);
+        result = await handleKlarnaPayment(currentClientSecret);
       } else if (selectedPaymentMethod === 'affirm') {
-        result = await handleAffirmPayment(clientSecret);
+        result = await handleAffirmPayment(currentClientSecret);
       } else {
         throw new Error('Invalid payment method selected');
       }

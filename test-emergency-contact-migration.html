@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Emergency Contact Migration</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        button { padding: 10px 20px; margin: 10px 0; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; max-height: 300px; }
+        .log-container { max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <h1>Emergency Contact Migration Test</h1>
+    <p>This page tests the emergency contact field migration for user profiles.</p>
+    
+    <button onclick="testMigration()">Run Emergency Contact Migration</button>
+    <button onclick="clearResults()">Clear Results</button>
+    
+    <div id="results"></div>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testMigration() {
+            addResult('🔄 Starting emergency contact migration test...', 'info');
+            
+            try {
+                // Test the migration endpoint
+                const response = await fetch('/api/migrate-emergency-contacts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    addResult('✅ Emergency contact migration COMPLETED successfully!', 'success');
+                    
+                    // Display summary
+                    const summary = data.summary;
+                    addResult(`<strong>Migration Summary:</strong>`, 'success');
+                    addResult(`• Total users checked: ${summary.totalUsers}`, 'success');
+                    addResult(`• Users needing update: ${summary.usersNeedingUpdate}`, 'success');
+                    addResult(`• Users successfully updated: ${summary.usersUpdated}`, 'success');
+                    addResult(`• Errors encountered: ${summary.errors}`, summary.errors > 0 ? 'warning' : 'success');
+                    
+                    // Display migration log
+                    if (data.log && data.log.length > 0) {
+                        addResult('<strong>Migration Log:</strong>', 'info');
+                        const logContainer = document.createElement('div');
+                        logContainer.className = 'log-container';
+                        logContainer.innerHTML = '<pre>' + data.log.join('\n') + '</pre>';
+                        document.getElementById('results').appendChild(logContainer);
+                    }
+                    
+                    if (summary.usersUpdated > 0) {
+                        addResult(`🎉 Successfully updated ${summary.usersUpdated} user profiles with emergency contact fields!`, 'success');
+                    } else if (summary.usersNeedingUpdate === 0) {
+                        addResult('✅ All user profiles already have emergency contact fields - no migration needed!', 'success');
+                    }
+                    
+                } else {
+                    addResult('❌ Emergency contact migration FAILED!', 'error');
+                    addResult(`<strong>Error:</strong> ${data.error}`, 'error');
+                    if (data.details) {
+                        addResult(`<strong>Details:</strong><pre>${data.details}</pre>`, 'error');
+                    }
+                    if (data.log && data.log.length > 0) {
+                        addResult('<strong>Migration Log:</strong>', 'error');
+                        const logContainer = document.createElement('div');
+                        logContainer.className = 'log-container';
+                        logContainer.innerHTML = '<pre>' + data.log.join('\n') + '</pre>';
+                        document.getElementById('results').appendChild(logContainer);
+                    }
+                }
+                
+            } catch (error) {
+                addResult('❌ Migration test failed with network/fetch error', 'error');
+                addResult(`<strong>Error:</strong> ${error.message}`, 'error');
+                console.error('Migration test error:', error);
+            }
+        }
+
+        // Auto-run information when page loads
+        window.addEventListener('load', () => {
+            addResult('📋 Emergency Contact Migration Test Ready', 'info');
+            addResult('This tool will check all user profiles and add missing emergency contact fields (emergencyContactName and emergencyContactPhone).', 'info');
+            addResult('Click "Run Emergency Contact Migration" to start the process.', 'info');
+        });
+    </script>
+</body>
+</html>

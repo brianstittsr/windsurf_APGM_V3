@@ -17,18 +17,27 @@ try {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🚀 Payment intent creation API called');
+    
     // Check if Stripe is properly initialized
     const secretKey = getStripeSecretKey();
+    console.log('🔑 Stripe key status:', secretKey.includes('placeholder') ? 'PLACEHOLDER' : 'CONFIGURED');
+    
     if (secretKey.includes('placeholder')) {
+      console.error('❌ Stripe not configured - using placeholder key');
       return NextResponse.json(
         { error: 'Payment system not configured. Please set up Stripe environment variables.' },
         { status: 500 }
       );
     }
 
-    const { amount, currency = 'usd', payment_method_types } = await request.json();
+    const requestBody = await request.json();
+    console.log('📨 Request body received:', requestBody);
+    
+    const { amount, currency = 'usd', payment_method_types } = requestBody;
 
     if (!amount || amount < 50) { // Minimum 50 cents
+      console.error('❌ Invalid amount:', amount);
       return NextResponse.json(
         { error: 'Invalid amount' },
         { status: 400 }
@@ -47,6 +56,8 @@ export async function POST(request: NextRequest) {
         service_type: 'permanent_makeup',
       },
     };
+    
+    console.log('⚙️ Payment intent config:', JSON.stringify(paymentIntentConfig, null, 2));
 
     // Configure payment methods
     if (payment_method_types && payment_method_types.length > 0) {
@@ -76,7 +87,18 @@ export async function POST(request: NextRequest) {
       };
     }
 
+    console.log('🔧 Final payment intent config:', JSON.stringify(paymentIntentConfig, null, 2));
+    
+    console.log('🚀 Calling Stripe API to create payment intent...');
     const paymentIntent = await stripe.paymentIntents.create(paymentIntentConfig);
+    
+    console.log('✅ Payment intent created successfully:', {
+      id: paymentIntent.id,
+      amount: paymentIntent.amount,
+      currency: paymentIntent.currency,
+      status: paymentIntent.status,
+      client_secret_exists: !!paymentIntent.client_secret
+    });
 
     return NextResponse.json({
       client_secret: paymentIntent.client_secret,
@@ -85,20 +107,45 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('❌ Error creating payment intent:', error);
     console.error('❌ Error type:', typeof error);
+    console.error('❌ Error name:', error instanceof Error ? error.name : 'Unknown');
+    console.error('❌ Error message:', error instanceof Error ? error.message : String(error));
     console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    
+    // Log more specific Stripe error details
+    if (error && typeof error === 'object' && 'type' in error) {
+      console.error('❌ Stripe error type:', (error as any).type);
+      console.error('❌ Stripe error code:', (error as any).code);
+      console.error('❌ Stripe error param:', (error as any).param);
+    }
     
     // Log Stripe configuration status
     try {
       const secretKey = getStripeSecretKey();
       console.error('❌ Stripe secret key status:', secretKey.includes('placeholder') ? 'PLACEHOLDER' : 'CONFIGURED');
+      console.error('❌ Stripe mode:', getStripeModeDescription());
     } catch (configError) {
       console.error('❌ Stripe config error:', configError);
     }
     
+    // Provide more specific error messages
+    let errorMessage = 'Internal server error';
+    if (error instanceof Error) {
+      if (error.message.includes('Invalid API Key')) {
+        errorMessage = 'Stripe API key is invalid. Please check your environment configuration.';
+      } else if (error.message.includes('No such')) {
+        errorMessage = 'Stripe resource not found. Please check your configuration.';
+      } else if (error.message.includes('network') || error.message.includes('ENOTFOUND')) {
+        errorMessage = 'Network error connecting to Stripe. Please check your internet connection.';
+      } else {
+        errorMessage = error.message;
+      }
+    }
+    
     return NextResponse.json(
       { 
-        error: error instanceof Error ? error.message : 'Internal server error',
-        details: error instanceof Error ? error.stack : 'Unknown error type'
+        error: errorMessage,
+        details: error instanceof Error ? error.stack : 'Unknown error type',
+        timestamp: new Date().toISOString()
       },
       { status: 500 }
     );
