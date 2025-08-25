@@ -375,11 +375,36 @@ export default function MultiPaymentForm({
         if (error.code === 'payment_intent_unexpected_state') {
           errorMessage = 'Payment intent is in an unexpected state. Please try again.';
         } else if (error.message?.includes('No such payment_intent') || error.code === 'payment_intent_not_found') {
-          // Try to refresh the payment intent automatically
+          // Try to refresh the payment intent and retry automatically
           try {
-            console.log('🔄 Payment intent not found, attempting to refresh...');
-            await refreshPaymentIntentIfNeeded(selectedPaymentMethod);
-            errorMessage = 'Payment session was refreshed. Please try your payment again.';
+            console.log('🔄 Payment intent not found, attempting to refresh and retry...');
+            const newClientSecret = await refreshPaymentIntentIfNeeded(selectedPaymentMethod);
+            
+            if (newClientSecret) {
+              console.log('✅ Payment intent refreshed, retrying payment automatically...');
+              
+              // Retry the payment with the new client secret
+              let retryResult;
+              if (selectedPaymentMethod === 'card') {
+                retryResult = await handleCardPayment(newClientSecret);
+              } else if (selectedPaymentMethod === 'klarna') {
+                retryResult = await handleKlarnaPayment(newClientSecret);
+              } else if (selectedPaymentMethod === 'affirm') {
+                retryResult = await handleAffirmPayment(newClientSecret);
+              }
+              
+              if (retryResult && !retryResult.error) {
+                console.log('✅ Payment succeeded after refresh');
+                onSuccess(retryResult.paymentIntent);
+                return; // Exit early on success
+              } else if (retryResult?.error) {
+                errorMessage = retryResult.error.message || 'Payment failed after refresh. Please try again.';
+              } else {
+                errorMessage = 'Payment failed after refresh. Please try again.';
+              }
+            } else {
+              errorMessage = 'Unable to refresh payment session. Please try again.';
+            }
           } catch (refreshError) {
             console.error('Failed to refresh payment intent:', refreshError);
             errorMessage = 'Payment session expired. Please refresh the page and try again.';
