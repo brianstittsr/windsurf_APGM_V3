@@ -68,20 +68,20 @@ export function useAuth() {
 
       // Check for client login in development mode
       const clientEmail = localStorage.getItem('clientEmail');
-      if (clientEmail && sessionLogin) {
+      if (clientEmail && (sessionLogin || rememberMe)) {
         // Create a mock user profile for client
         const mockProfile: User = {
           id: 'client-mock',
           profile: {
-            firstName: 'Client',
-            lastName: 'User',
+            firstName: 'Victoria',
+            lastName: 'Client',
             email: clientEmail,
             phone: '(555) 123-4567',
             dateOfBirth: '1990-01-01',
             address: '123 Main St',
-            city: 'Anytown',
+            city: 'Charlotte',
             state: 'NC',
-            zipCode: '27701',
+            zipCode: '28202',
             emergencyContactName: 'Emergency Contact',
             emergencyContactPhone: '(555) 987-6543',
             preferredContactMethod: 'email',

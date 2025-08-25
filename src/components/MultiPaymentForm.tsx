@@ -78,6 +78,7 @@ export default function MultiPaymentForm({
 
   const createPaymentIntent = async (paymentMethodTypes: string[]) => {
     console.log('📡 Creating payment intent for methods:', paymentMethodTypes);
+    console.log('📡 Payment amount (cents):', Math.round(currentPaymentAmount * 100));
     
     const response = await fetch('/api/create-payment-intent', {
       method: 'POST',
@@ -91,15 +92,21 @@ export default function MultiPaymentForm({
       }),
     });
 
+    console.log('📡 API Response status:', response.status);
+    console.log('📡 API Response headers:', response.headers);
+
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('❌ API Error Response:', errorText);
       throw new Error(`API Error: ${response.status} - ${errorText}`);
     }
 
     const responseData = await response.json();
+    console.log('📡 API Response data:', responseData);
     const { client_secret, payment_intent_id } = responseData;
 
     if (!client_secret) {
+      console.error('❌ No client_secret in response:', responseData);
       throw new Error('Failed to create payment intent - no client_secret returned');
     }
 

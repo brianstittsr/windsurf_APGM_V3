@@ -133,12 +133,19 @@ function BookNowCustomContent() {
     // Auto-populate client profile data for authenticated users
     if (isAuthenticated && userProfile) {
       const profileData = getClientProfileData();
+      console.log('🔍 Auth state:', { isAuthenticated, userProfile: !!userProfile });
+      console.log('📋 Profile data from getClientProfileData:', profileData);
       if (profileData) {
+        console.log('✅ Auto-populating client profile with:', profileData);
         setClientProfile(prev => ({
           ...prev,
           ...profileData
         }));
+      } else {
+        console.log('❌ No profile data returned from getClientProfileData');
       }
+    } else {
+      console.log('❌ User not authenticated or no profile:', { isAuthenticated, userProfile: !!userProfile });
     }
   }, [searchParams, services, isAuthenticated, userProfile, getClientProfileData]);
 
@@ -312,11 +319,74 @@ function BookNowCustomContent() {
   };
 
   const handlePrePostCareComplete = () => {
-    if (!prePostCareSignature.trim()) {
-      alert('Please sign your name to acknowledge the pre and post care instructions.');
+    setCurrentStep('checkout');
+  };
+
+  // Update user profile when moving from profile to health step
+  const updateUserProfile = async () => {
+    if (!isAuthenticated || !userProfile?.id) {
+      console.log('❌ User not authenticated, skipping profile update');
       return;
     }
-    setCurrentStep('checkout');
+
+    try {
+      const { UserService } = await import('@/services/userService');
+      
+      // Check if profile data has changed by comparing with original
+      const originalProfile = getClientProfileData();
+      const hasChanges = originalProfile && (
+        originalProfile.firstName !== clientProfile.firstName ||
+        originalProfile.lastName !== clientProfile.lastName ||
+        originalProfile.email !== clientProfile.email ||
+        originalProfile.phone !== clientProfile.phone ||
+        originalProfile.dateOfBirth !== clientProfile.dateOfBirth ||
+        originalProfile.address !== clientProfile.address ||
+        originalProfile.city !== clientProfile.city ||
+        originalProfile.state !== clientProfile.state ||
+        originalProfile.zipCode !== clientProfile.zipCode ||
+        originalProfile.emergencyContactName !== clientProfile.emergencyContactName ||
+        originalProfile.emergencyContactPhone !== clientProfile.emergencyContactPhone ||
+        originalProfile.preferredContactMethod !== clientProfile.preferredContactMethod ||
+        originalProfile.hearAboutUs !== clientProfile.hearAboutUs
+      );
+
+      if (!hasChanges) {
+        console.log('✅ No profile changes detected, skipping update');
+        return;
+      }
+
+      // Update the user's profile with the form data
+      const profileUpdates = {
+        profile: {
+          ...userProfile.profile,
+          firstName: clientProfile.firstName,
+          lastName: clientProfile.lastName,
+          email: clientProfile.email,
+          phone: clientProfile.phone,
+          dateOfBirth: clientProfile.dateOfBirth,
+          address: clientProfile.address,
+          city: clientProfile.city,
+          state: clientProfile.state,
+          zipCode: clientProfile.zipCode,
+          emergencyContactName: clientProfile.emergencyContactName,
+          emergencyContactPhone: clientProfile.emergencyContactPhone,
+          preferredContactMethod: clientProfile.preferredContactMethod,
+          hearAboutUs: clientProfile.hearAboutUs,
+          updatedAt: Timestamp.now()
+        }
+      };
+      
+      await UserService.updateUser(userProfile.id, profileUpdates);
+      console.log('✅ User profile updated successfully after profile step');
+    } catch (error) {
+      console.error('❌ Failed to update user profile:', error);
+      // Don't block navigation if profile update fails
+    }
+  };
+
+  const handleProfileToHealth = async () => {
+    await updateUserProfile();
+    setCurrentStep('health');
   };
 
   const handleBookingComplete = async () => {
@@ -1328,7 +1398,7 @@ function BookNowCustomContent() {
           showProfileConfirmation ? (
             <ProfileConfirmation
               data={clientProfile}
-              onConfirm={() => setCurrentStep('health')}
+              onConfirm={handleProfileToHealth}
               onEdit={() => setShowProfileConfirmation(false)}
               onBack={() => setCurrentStep('calendar')}
             />
@@ -1336,7 +1406,7 @@ function BookNowCustomContent() {
             <ClientProfileWizard
               data={clientProfile}
               onChange={setClientProfile}
-              onNext={() => setCurrentStep('health')}
+              onNext={handleProfileToHealth}
               onBack={() => setCurrentStep('calendar')}
             />
           )
