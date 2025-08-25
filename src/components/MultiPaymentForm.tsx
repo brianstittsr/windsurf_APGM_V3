@@ -80,42 +80,56 @@ export default function MultiPaymentForm({
     console.log('📡 Creating payment intent for methods:', paymentMethodTypes);
     console.log('📡 Payment amount (cents):', Math.round(currentPaymentAmount * 100));
     
-    const response = await fetch('/api/create-payment-intent', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        amount: Math.round(currentPaymentAmount * 100), // Convert to cents
-        currency: 'usd',
-        payment_method_types: paymentMethodTypes,
-      }),
-    });
+    try {
+      const response = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: Math.round(currentPaymentAmount * 100), // Convert to cents
+          currency: 'usd',
+          payment_method_types: paymentMethodTypes,
+        }),
+      });
 
-    console.log('📡 API Response status:', response.status);
-    console.log('📡 API Response headers:', response.headers);
+      console.log('📡 API Response status:', response.status);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ API Error Response:', errorText);
-      throw new Error(`API Error: ${response.status} - ${errorText}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API Error Response:', errorText);
+        throw new Error(`Payment session creation failed: ${response.status} - ${errorText}`);
+      }
+
+      const responseData = await response.json();
+      console.log('📡 API Response data:', responseData);
+      
+      if (responseData.error) {
+        console.error('❌ API returned error:', responseData.error);
+        throw new Error(responseData.error);
+      }
+      
+      const { client_secret, payment_intent_id } = responseData;
+
+      if (!client_secret) {
+        console.error('❌ No client_secret in response:', responseData);
+        throw new Error('Failed to create payment intent - no client_secret returned');
+      }
+
+      setClientSecret(client_secret);
+      setPaymentIntentId(payment_intent_id);
+      setPaymentIntentCreatedAt(Date.now());
+      
+      console.log('✅ Payment intent created:', payment_intent_id);
+      return { client_secret, payment_intent_id };
+    } catch (error) {
+      console.error('❌ Payment intent creation failed:', error);
+      // Clear any stale payment intent data
+      setClientSecret('');
+      setPaymentIntentId('');
+      setPaymentIntentCreatedAt(0);
+      throw error;
     }
-
-    const responseData = await response.json();
-    console.log('📡 API Response data:', responseData);
-    const { client_secret, payment_intent_id } = responseData;
-
-    if (!client_secret) {
-      console.error('❌ No client_secret in response:', responseData);
-      throw new Error('Failed to create payment intent - no client_secret returned');
-    }
-
-    setClientSecret(client_secret);
-    setPaymentIntentId(payment_intent_id);
-    setPaymentIntentCreatedAt(Date.now());
-    
-    console.log('✅ Payment intent created:', payment_intent_id);
-    return { client_secret, payment_intent_id };
   };
 
   const isPaymentIntentExpired = () => {
@@ -279,9 +293,9 @@ export default function MultiPaymentForm({
         if (!clientSecret) {
           throw new Error('Failed to create or refresh payment session. Please try again.');
         }
-      } catch (error) {
-        console.error('Payment intent creation failed:', error);
-        throw error;
+      } catch (intentError) {
+        console.error('Payment intent creation failed:', intentError);
+        throw new Error('Unable to initialize payment. Please check your connection and try again.');
       }
 
       let result;

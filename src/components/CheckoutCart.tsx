@@ -6,8 +6,9 @@ import stripePromise from '../lib/stripe';
 import MultiPaymentForm from './MultiPaymentForm';
 import StripeModeIndicator from './StripeModeIndicator';
 import CouponInput from './CouponInput';
+import GiftCardInput from './GiftCardInput';
 import { calculateTotalWithStripeFees, formatCurrency, getStripeFeeExplanation } from '../lib/stripe-fees';
-import { CouponCode } from '@/types/database';
+import { CouponCode, GiftCard } from '@/types/database';
 
 interface ServiceItem {
   id: string;
@@ -57,6 +58,8 @@ export default function CheckoutCart({
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<CouponCode | null>(null);
   const [couponDiscount, setCouponDiscount] = useState(0);
+  const [appliedGiftCard, setAppliedGiftCard] = useState<GiftCard | null>(null);
+  const [giftCardDiscount, setGiftCardDiscount] = useState(0);
 
   const handleInputChange = (field: keyof CheckoutData, value: string | boolean) => {
     onChange({
@@ -68,6 +71,11 @@ export default function CheckoutCart({
   const handleCouponApplied = (coupon: CouponCode | null, discount: number) => {
     setAppliedCoupon(coupon);
     setCouponDiscount(discount);
+  };
+
+  const handleGiftCardApplied = (giftCard: GiftCard | null, appliedAmount: number) => {
+    setAppliedGiftCard(giftCard);
+    setGiftCardDiscount(appliedAmount);
   };
 
   const handlePaymentSuccess = async (paymentIntent: any) => {
@@ -102,9 +110,11 @@ export default function CheckoutCart({
         remainingAmount: isFullPayment ? 0 : remainingAmount,
         paymentIntentId: paymentIntent.id,
         specialRequests: data.specialRequests || '',
-        giftCardCode: data.giftCard && data.giftCard.trim() ? data.giftCard.trim() : undefined,
+        giftCardCode: appliedGiftCard?.code || undefined,
+        giftCardAmount: giftCardDiscount > 0 ? giftCardDiscount * 100 : undefined, // Store in cents
         ...(appliedCoupon && { couponCode: appliedCoupon.code }),
         ...(couponDiscount > 0 && { couponDiscount }),
+        ...(giftCardDiscount > 0 && { giftCardDiscount }),
         rescheduleCount: 0,
         confirmationSent: false,
         reminderSent: false
@@ -134,6 +144,19 @@ export default function CheckoutCart({
         console.log('✅ Coupon usage applied');
       }
 
+      // 4. Process gift card usage if one was applied
+      if (appliedGiftCard && giftCardDiscount > 0) {
+        console.log('🎁 Processing gift card usage...');
+        try {
+          const { GiftCardService } = await import('@/services/giftCardService');
+          await GiftCardService.useGiftCard(appliedGiftCard.id, giftCardDiscount * 100); // Convert to cents
+          console.log('✅ Gift card usage processed');
+        } catch (giftCardError) {
+          console.warn('⚠️ Could not process gift card usage:', giftCardError);
+          // Don't fail the entire booking process for gift card issues
+        }
+      }
+
       // 4. Send invoice email
       console.log('📧 Sending invoice email...');
       
@@ -145,6 +168,8 @@ export default function CheckoutCart({
         servicePrice: service.price,
         couponCode: appliedCoupon?.code,
         couponDiscount: couponDiscount,
+        giftCardCode: appliedGiftCard?.code,
+        giftCardDiscount: giftCardDiscount,
         discountedPrice: subtotal,
         tax: tax,
         processingFee: stripeFee,
@@ -207,8 +232,9 @@ export default function CheckoutCart({
   const taxRate = 0.0775; // 7.75% tax
   const fixedDeposit = 200; // Fixed $200 deposit for all services
   
-  // Apply coupon discount to service price before calculating fees
-  const discountedServicePrice = Math.max(0, service.price - couponDiscount);
+  // Apply both coupon and gift card discounts to service price before calculating fees
+  const totalDiscounts = couponDiscount + giftCardDiscount;
+  const discountedServicePrice = Math.max(0, service.price - totalDiscounts);
   
   const feeCalculation = calculateTotalWithStripeFees(discountedServicePrice, taxRate, fixedDeposit);
   
@@ -268,30 +294,12 @@ export default function CheckoutCart({
           </div>
 
           {/* Gift Card Section */}
-          <div className="card mb-4">
-            <div className="card-body">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <h5 className="card-title mb-0">Gift Card</h5>
-                <button 
-                  className="btn btn-outline-primary btn-sm"
-                  onClick={() => setShowGiftCard(!showGiftCard)}
-                >
-                  Add Gift Card
-                </button>
-              </div>
-              {showGiftCard && (
-                <div className="form-group">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Enter gift card code"
-                    value={data.giftCard}
-                    onChange={(e) => handleInputChange('giftCard', e.target.value)}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
+          <GiftCardInput
+            orderAmount={service.price}
+            onGiftCardApplied={handleGiftCardApplied}
+            appliedGiftCard={appliedGiftCard}
+            appliedAmount={giftCardDiscount}
+          />
 
           {/* Coupon Code Section */}
           <CouponInput
@@ -392,6 +400,15 @@ export default function CheckoutCart({
                       <span>-{formatCurrency(couponDiscount)}</span>
                     </div>
                   )}
+                  {appliedGiftCard && giftCardDiscount > 0 && (
+                    <div className="d-flex justify-content-between mb-2 text-success">
+                      <span>
+                        <i className="fas fa-gift me-1"></i>
+                        Gift Card ({appliedGiftCard.code}):
+                      </span>
+                      <span>-{formatCurrency(giftCardDiscount)}</span>
+                    </div>
+                  )}
                   <div className="d-flex justify-content-between mb-2">
                     <span>Subtotal:</span>
                     <span>{formatCurrency(subtotal)}</span>
@@ -417,11 +434,17 @@ export default function CheckoutCart({
                     <span>Remaining balance (due at appointment):</span>
                     <span>{formatCurrency(remainingAmount)}</span>
                   </div>
-                  {appliedCoupon && (
+                  {(appliedCoupon || appliedGiftCard) && (
                     <div className="mt-2 p-2 bg-success bg-opacity-10 rounded">
                       <small className="text-success">
                         <i className="fas fa-check-circle me-1"></i>
-                        You saved {formatCurrency(couponDiscount)} with coupon {appliedCoupon.code}!
+                        {appliedCoupon && appliedGiftCard ? (
+                          `You saved ${formatCurrency(couponDiscount + giftCardDiscount)} total! (${formatCurrency(couponDiscount)} coupon + ${formatCurrency(giftCardDiscount)} gift card)`
+                        ) : appliedCoupon ? (
+                          `You saved ${formatCurrency(couponDiscount)} with coupon ${appliedCoupon.code}!`
+                        ) : (
+                          `You saved ${formatCurrency(giftCardDiscount)} with gift card ${appliedGiftCard?.code}!`
+                        )}
                       </small>
                     </div>
                   )}
