@@ -7,6 +7,19 @@ interface NextAvailableDate {
   timeSlots: any[];
 }
 
+// Helper function to convert 12-hour format to 24-hour format
+function convertTo24Hour(time12h: string): number {
+  const [time, modifier] = time12h.split(' ');
+  let [hours, minutes] = time.split(':');
+  if (hours === '12') {
+    hours = '00';
+  }
+  if (modifier === 'PM') {
+    hours = (parseInt(hours, 10) + 12).toString();
+  }
+  return parseInt(hours, 10);
+}
+
 export function useNextAvailableDate() {
   const [nextAvailable, setNextAvailable] = useState<NextAvailableDate | null>(null);
   const [loading, setLoading] = useState(false);
@@ -53,15 +66,28 @@ export function useNextAvailableDate() {
             
             // Generate time slots from time ranges
             const timeSlots: any[] = [];
-            timeRanges.forEach((range: any) => {
+            console.log(`    📋 Processing ${timeRanges.length} time ranges for ${dayOfWeek}`);
+            
+            timeRanges.forEach((range: any, index: number) => {
+              console.log(`      🕐 Range ${index}: ${range.startTime} - ${range.endTime}, isActive: ${range.isActive}`);
+              
               if (range.isActive) {
-                // Generate hourly slots between start and end time
-                const startHour = parseInt(range.startTime.split(':')[0]);
-                const endHour = parseInt(range.endTime.split(':')[0]);
+                // Convert 12-hour format to 24-hour format
+                const startHour = convertTo24Hour(range.startTime);
+                const endHour = convertTo24Hour(range.endTime);
                 
-                for (let hour = startHour; hour < endHour; hour++) {
+                console.log(`      ⏰ Converted times: ${startHour}:00 - ${endHour}:00`);
+                
+                // Generate non-overlapping 4-hour booking slots
+                for (let hour = startHour; hour <= endHour - 4; hour += 4) {
+                  const endTime = hour + 4;
+                  const timeSlot = `${hour.toString().padStart(2, '0')}:00`;
+                  const endTimeFormatted = `${endTime.toString().padStart(2, '0')}:00`;
+                  
                   timeSlots.push({
-                    time: `${hour.toString().padStart(2, '0')}:00`,
+                    time: timeSlot,
+                    endTime: endTimeFormatted,
+                    duration: '4 Hours',
                     available: true,
                     artistId: data.artistId,
                     artistName: 'Victoria' // Default artist name

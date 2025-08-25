@@ -144,16 +144,24 @@ function BookNowCustomContent() {
 
   // Auto-navigate to next available date when nextAvailable is found
   useEffect(() => {
-    console.log('nextAvailable useEffect triggered:', { nextAvailable, selectedDate, currentWeekStart });
+    console.log('nextAvailable useEffect triggered:', { 
+      nextAvailable: nextAvailable?.date, 
+      selectedDate, 
+      currentWeekStart: currentWeekStart?.toDateString() 
+    });
     if (nextAvailable && !selectedDate) {
-      console.log('Setting calendar to next available date:', nextAvailable.date);
+      console.log('🎯 Setting calendar to next available date:', nextAvailable.date);
       const nextAvailableDate = new Date(nextAvailable.date);
       const nextWeekStart = new Date(nextAvailableDate);
       nextWeekStart.setDate(nextAvailableDate.getDate() - nextAvailableDate.getDay());
+      
+      console.log('📅 Calculated week start:', nextWeekStart.toDateString());
+      console.log('🗓️ Setting selected date to:', nextAvailable.date);
+      
       setCurrentWeekStart(nextWeekStart);
       setSelectedDate(nextAvailable.date);
     }
-  }, [nextAvailable, selectedDate, currentWeekStart]);
+  }, [nextAvailable, selectedDate]);
 
   // Initialize currentWeekStart to current week ONLY after we've checked for next available date
   useEffect(() => {

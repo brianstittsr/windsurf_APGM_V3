@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 interface TimeSlot {
   time: string;
+  endTime?: string;
+  duration?: string;
   available: boolean;
   artistId: string;
   artistName: string;
@@ -12,6 +14,19 @@ interface TimeSlot {
 interface TimeSlotsData {
   hasAvailability: boolean;
   timeSlots: TimeSlot[];
+}
+
+// Helper function to convert 12-hour format to 24-hour format
+function convertTo24Hour(time12h: string): number {
+  const [time, modifier] = time12h.split(' ');
+  let [hours, minutes] = time.split(':');
+  if (hours === '12') {
+    hours = '00';
+  }
+  if (modifier === 'PM') {
+    hours = (parseInt(hours, 10) + 12).toString();
+  }
+  return parseInt(hours, 10);
 }
 
 export function useTimeSlots(selectedDate: string) {
@@ -29,25 +44,81 @@ export function useTimeSlots(selectedDate: string) {
       try {
         setLoading(true);
         setError(null);
+        
+        console.log('🕐 useTimeSlots: Fetching time slots for date:', selectedDate);
 
-        const availabilityRef = doc(db, 'availability', selectedDate);
-        const availabilitySnap = await getDoc(availabilityRef);
+        // Get day of week from selected date
+        const date = new Date(selectedDate);
+        const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][date.getDay()];
+        console.log('🗓️ useTimeSlots: Day of week:', dayOfWeek);
 
-        if (availabilitySnap.exists()) {
-          const data = availabilitySnap.data();
+        // Query artistAvailability collection for all documents
+        const availabilityRef = collection(db, 'artistAvailability');
+        const snapshot = await getDocs(availabilityRef);
+        console.log('📊 useTimeSlots: Total artistAvailability documents:', snapshot.docs.length);
+
+        // Find availability for this day of week
+        const dayAvailability = snapshot.docs.find(doc => {
+          const data = doc.data();
+          console.log(`    🔍 useTimeSlots: Checking doc ${doc.id}: dayOfWeek=${data.dayOfWeek}, isEnabled=${data.isEnabled}, looking for ${dayOfWeek}`);
+          return data.dayOfWeek === dayOfWeek && data.isEnabled;
+        });
+
+        if (dayAvailability) {
+          const data = dayAvailability.data();
+          const timeRanges = data.timeRanges || [];
+          console.log(`    📋 useTimeSlots: Processing ${timeRanges.length} time ranges for ${dayOfWeek}`);
+
+          // Generate time slots from time ranges
+          const timeSlots: TimeSlot[] = [];
+          timeRanges.forEach((range: any, index: number) => {
+            console.log(`      🕐 useTimeSlots: Range ${index}: ${range.startTime} - ${range.endTime}, isActive: ${range.isActive}`);
+            
+            if (range.isActive) {
+              // Convert 12-hour format to 24-hour format
+              const startHour = convertTo24Hour(range.startTime);
+              const endHour = convertTo24Hour(range.endTime);
+              
+              console.log(`      ⏰ useTimeSlots: Converted times: ${startHour}:00 - ${endHour}:00`);
+              
+              // Generate non-overlapping 4-hour booking slots
+              for (let hour = startHour; hour <= endHour - 4; hour += 4) {
+                const endTime = hour + 4;
+                const timeSlot = `${hour.toString().padStart(2, '0')}:00`;
+                const endTimeFormatted = `${endTime.toString().padStart(2, '0')}:00`;
+                
+                timeSlots.push({
+                  time: timeSlot,
+                  endTime: endTimeFormatted,
+                  duration: '4 Hours',
+                  available: true,
+                  artistId: data.artistId,
+                  artistName: 'Victoria' // Default artist name
+                });
+              }
+            }
+          });
+
+          console.log(`  ✅ useTimeSlots: Generated ${timeSlots.length} time slots for ${selectedDate}`);
+          
           setTimeSlots({
-            hasAvailability: data.hasAvailability || false,
-            timeSlots: data.timeSlots || []
+            hasAvailability: timeSlots.length > 0,
+            timeSlots
           });
         } else {
+          console.log(`  ❌ useTimeSlots: No availability for ${dayOfWeek} on ${selectedDate}`);
           setTimeSlots({
             hasAvailability: false,
             timeSlots: []
           });
         }
       } catch (err) {
-        console.error('Error fetching time slots:', err);
+        console.error('💥 useTimeSlots: Error fetching time slots:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch time slots');
+        setTimeSlots({
+          hasAvailability: false,
+          timeSlots: []
+        });
       } finally {
         setLoading(false);
       }
