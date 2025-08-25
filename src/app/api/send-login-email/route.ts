@@ -1,14 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ClientEmailService, LoginEmailData } from '@/services/clientEmailService';
+import { LoginEmailData } from '@/services/clientEmailService';
+import { EnhancedEmailService } from '@/services/enhancedEmailService';
 
 export async function POST(request: NextRequest) {
   try {
-    const loginEmailData: LoginEmailData = await request.json();
+    const { loginEmailData, clientId, appointmentId, generatePDF = true } = await request.json();
     
-    const success = await ClientEmailService.sendLoginEmail(loginEmailData);
+    const result = await EnhancedEmailService.sendLoginEmailWithPDF(
+      loginEmailData,
+      {
+        clientId,
+        appointmentId,
+        generatePDF,
+        storePDFInProfile: true
+      }
+    );
     
-    if (success) {
-      return NextResponse.json({ success: true, message: 'Login email sent successfully' });
+    if (result.emailSent) {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Login email sent successfully',
+        pdfGenerated: !!result.pdfUrl,
+        pdfUrl: result.pdfUrl,
+        pdfId: result.pdfId
+      });
     } else {
       return NextResponse.json({ success: false, message: 'Failed to send login email' }, { status: 500 });
     }

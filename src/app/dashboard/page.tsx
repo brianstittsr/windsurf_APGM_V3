@@ -11,11 +11,14 @@ import AdminAvailabilityManager from '../../components/AdminAvailabilityManager'
 import MarketingAnalytics from '../../components/MarketingAnalytics';
 import StripeManagement from '../../components/StripeManagement';
 import MarketingWorkflows from '../../components/MarketingWorkflows';
+import { ClientPDFManager } from '../../components/ClientPDFManager';
+import { UserActivityFeed } from '../../components/UserActivityFeed';
 import { auth, isFirebaseConfigured } from '@/lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { User } from 'firebase/auth';
 import { UserService } from '@/services/database';
 import { User as DatabaseUser } from '@/types/database';
+import { ActivityService } from '@/services/activityService';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -23,7 +26,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<DatabaseUser | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'availability' | 'admin' | 'analytics' | 'stripe' | 'workflows'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'availability' | 'admin' | 'analytics' | 'stripe' | 'workflows' | 'documents'>('dashboard');
   const [adminUsers, setAdminUsers] = useState<{
     admins: DatabaseUser[];
     artists: DatabaseUser[];
@@ -41,10 +44,17 @@ export default function Dashboard() {
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        fetchUserData(currentUser.uid, currentUser.email || '');
+        await fetchUserData(currentUser.uid, currentUser.email || '');
+        
+        // Log login activity
+        try {
+          await ActivityService.logLoginActivity(currentUser.uid);
+        } catch (activityError) {
+          console.error('Failed to log login activity:', activityError);
+        }
       } else {
         router.push('/login');
       }
@@ -323,14 +333,17 @@ export default function Dashboard() {
                     <div className="mb-3">
                       <div className="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px' }}>
                         <svg width="24" height="24" fill="currentColor" className="text-info" viewBox="0 0 24 24">
-                          <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.89 1 3 1.89 3 3V21C3 22.11 3.89 23 5 23H19C20.11 23 21 22.11 21 21V9M19 21H5V3H13V9H19Z"/>
+                          <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
                         </svg>
                       </div>
                     </div>
-                    <h5 className="card-title">Health Forms</h5>
-                    <p className="card-text text-muted small">Complete or update your health information</p>
-                    <button className="btn btn-info rounded-pill" disabled>
-                      Coming Soon
+                    <h5 className="card-title">My Documents</h5>
+                    <p className="card-text text-muted small">View and download your forms and documents</p>
+                    <button 
+                      className="btn btn-info rounded-pill"
+                      onClick={() => setActiveTab('documents')}
+                    >
+                      View Documents
                     </button>
                   </div>
                 </div>
@@ -360,17 +373,26 @@ export default function Dashboard() {
             <div className="card border-0 shadow-sm">
               <div className="card-header bg-white border-0 pb-0">
                 <h5 className="card-title text-primary fw-bold">Recent Activity</h5>
+                <p className="text-muted small mb-0">Your latest actions and updates</p>
               </div>
               <div className="card-body">
-                <div className="text-center py-5">
-                  <div className="text-muted">
-                    <svg width="48" height="48" fill="currentColor" viewBox="0 0 24 24" className="mb-3">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                    </svg>
-                    <h6>No recent activity</h6>
-                    <p className="small">Your appointment history and updates will appear here</p>
+                {user?.uid ? (
+                  <UserActivityFeed 
+                    userId={user.uid}
+                    maxItems={5}
+                    showFilters={false}
+                  />
+                ) : (
+                  <div className="text-center py-5">
+                    <div className="text-muted">
+                      <svg width="48" height="48" fill="currentColor" viewBox="0 0 24 24" className="mb-3">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                      </svg>
+                      <h6>Loading activity...</h6>
+                      <p className="small">Your recent activity will appear here</p>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
                 </div>
               </>
@@ -486,6 +508,36 @@ export default function Dashboard() {
             {/* Marketing Workflows Tab Content */}
             {activeTab === 'workflows' && userRole === 'admin' && (
               <MarketingWorkflows />
+            )}
+
+            {/* Documents Tab Content */}
+            {activeTab === 'documents' && (
+              <div className="card border-0 shadow-sm">
+                <div className="card-header bg-white border-0 pb-0">
+                  <h5 className="card-title text-primary fw-bold">
+                    <i className="fas fa-file-pdf me-2"></i>
+                    My Documents
+                  </h5>
+                  <p className="text-muted small mb-0">
+                    View and download your health forms, consent documents, and appointment confirmations
+                  </p>
+                </div>
+                <div className="card-body">
+                  {user?.uid ? (
+                    <ClientPDFManager 
+                      clientId={user.uid}
+                      className="mt-3"
+                    />
+                  ) : (
+                    <div className="text-center py-4">
+                      <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                      <p className="mt-3 text-muted">Loading your documents...</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         </div>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test PDF Dashboard Integration</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        button { padding: 10px 20px; margin: 10px 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        button.success { background: #28a745; }
+        button.warning { background: #ffc107; color: #212529; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; max-height: 300px; }
+        .log-container { max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #f8f9fa; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>PDF Dashboard Integration Test</h1>
+    <p>This page tests the PDF document manager integration in the client dashboard.</p>
+    
+    <div class="test-section">
+        <h3>Test 1: Check PDF API Endpoint</h3>
+        <button onclick="testPDFAPI()">Test PDF API</button>
+        <button onclick="testPDFAPIWithClient()">Test with Client ID</button>
+        <div id="pdf-api-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 2: Generate Test PDF</h3>
+        <button onclick="generateTestPDF()" class="success">Generate Test PDF</button>
+        <div id="generate-pdf-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 3: Dashboard Integration</h3>
+        <p>To test the dashboard integration:</p>
+        <ol>
+            <li>Navigate to <a href="/dashboard" target="_blank">/dashboard</a></li>
+            <li>Click on "My Documents" card</li>
+            <li>Verify the PDF manager loads and displays documents</li>
+        </ol>
+        <div id="dashboard-results"></div>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        function addResult(message, type = 'info', containerId = 'results') {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function clearResults(containerId = 'results') {
+            document.getElementById(containerId).innerHTML = '';
+        }
+
+        async function testPDFAPI() {
+            addResult('🔄 Testing PDF API endpoint...', 'info', 'pdf-api-results');
+            
+            try {
+                const response = await fetch('/api/get-client-pdfs', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.status === 400) {
+                    addResult('✅ PDF API endpoint is working (correctly requires clientId or appointmentId)', 'success', 'pdf-api-results');
+                    addResult(`Response: ${data.error}`, 'info', 'pdf-api-results');
+                } else if (response.ok) {
+                    addResult('✅ PDF API endpoint is working', 'success', 'pdf-api-results');
+                    addResult(`Found ${data.count || 0} PDFs`, 'info', 'pdf-api-results');
+                } else {
+                    addResult('❌ PDF API endpoint error', 'error', 'pdf-api-results');
+                    addResult(`Error: ${data.error || 'Unknown error'}`, 'error', 'pdf-api-results');
+                }
+                
+            } catch (error) {
+                addResult('❌ PDF API test failed with network error', 'error', 'pdf-api-results');
+                addResult(`Error: ${error.message}`, 'error', 'pdf-api-results');
+            }
+        }
+
+        async function testPDFAPIWithClient() {
+            addResult('🔄 Testing PDF API with test client ID...', 'info', 'pdf-api-results');
+            
+            try {
+                const testClientId = 'test-client-123';
+                const response = await fetch(`/api/get-client-pdfs?clientId=${testClientId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    addResult('✅ PDF API with client ID is working', 'success', 'pdf-api-results');
+                    addResult(`Found ${data.count || 0} PDFs for test client`, 'info', 'pdf-api-results');
+                    
+                    if (data.pdfs && data.pdfs.length > 0) {
+                        addResult(`<strong>Sample PDFs:</strong>`, 'info', 'pdf-api-results');
+                        data.pdfs.slice(0, 3).forEach(pdf => {
+                            addResult(`• ${pdf.formType} - ${pdf.filename}`, 'info', 'pdf-api-results');
+                        });
+                    }
+                } else {
+                    addResult('⚠️ PDF API returned no results (this is normal if no PDFs exist)', 'warning', 'pdf-api-results');
+                    addResult(`Response: ${JSON.stringify(data)}`, 'info', 'pdf-api-results');
+                }
+                
+            } catch (error) {
+                addResult('❌ PDF API with client test failed', 'error', 'pdf-api-results');
+                addResult(`Error: ${error.message}`, 'error', 'pdf-api-results');
+            }
+        }
+
+        async function generateTestPDF() {
+            addResult('🔄 Generating test PDF...', 'info', 'generate-pdf-results');
+            
+            try {
+                const response = await fetch('/api/generate-pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        clientId: 'test-client-123',
+                        appointmentId: 'test-appointment-123',
+                        formType: 'health',
+                        formData: {
+                            clientProfile: {
+                                firstName: 'Test',
+                                lastName: 'User',
+                                email: 'test@example.com'
+                            },
+                            healthForm: {
+                                allergies: 'None',
+                                medications: 'None'
+                            },
+                            signatures: {
+                                clientSignature: 'Test Signature'
+                            }
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    addResult('✅ Test PDF generated successfully!', 'success', 'generate-pdf-results');
+                    addResult(`PDF ID: ${data.pdfId}`, 'info', 'generate-pdf-results');
+                    if (data.downloadURL) {
+                        addResult(`<a href="${data.downloadURL}" target="_blank">Download Test PDF</a>`, 'success', 'generate-pdf-results');
+                    }
+                } else {
+                    addResult('❌ PDF generation failed', 'error', 'generate-pdf-results');
+                    addResult(`Error: ${data.error || 'Unknown error'}`, 'error', 'generate-pdf-results');
+                }
+                
+            } catch (error) {
+                addResult('❌ PDF generation test failed', 'error', 'generate-pdf-results');
+                addResult(`Error: ${error.message}`, 'error', 'generate-pdf-results');
+            }
+        }
+
+        // Auto-run information when page loads
+        window.addEventListener('load', () => {
+            addResult('📋 PDF Dashboard Integration Test Ready', 'info');
+            addResult('This tool tests the PDF document manager integration in the client dashboard.', 'info');
+            addResult('Run the tests above to verify PDF functionality.', 'info');
+        });
+    </script>
+</body>
+</html>

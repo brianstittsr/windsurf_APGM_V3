@@ -51,7 +51,8 @@ export const COLLECTIONS = {
   NOTIFICATIONS: 'notifications',
   BUSINESS_SETTINGS: 'businessSettings',
   ANALYTICS: 'analytics',
-  PDF_DOCUMENTS: 'pdfDocuments'
+  PDF_DOCUMENTS: 'pdfDocuments',
+  USER_ACTIVITIES: 'userActivities'
 } as const;
 
 // Generic CRUD operations

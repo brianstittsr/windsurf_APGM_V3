@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PDFDocument } from '@/services/database';
+import { ActivityService } from '@/services/activityService';
 
 interface ClientPDFManagerProps {
   clientId: string;
@@ -86,8 +87,21 @@ export const ClientPDFManager: React.FC<ClientPDFManagerProps> = ({
     return new Date(timestamp).toLocaleDateString();
   };
 
-  const handleDownload = (pdf: PDFDocument) => {
+  const handleDownload = async (pdf: PDFDocument) => {
     window.open(pdf.downloadURL, '_blank');
+    
+    // Log document download activity
+    try {
+      await ActivityService.logDocumentActivity(
+        clientId,
+        'download',
+        pdf.formType,
+        pdf.id,
+        pdf.appointmentId
+      );
+    } catch (activityError) {
+      console.error('Failed to log document download activity:', activityError);
+    }
   };
 
   if (loading) {

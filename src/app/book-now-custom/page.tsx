@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Timestamp } from 'firebase/firestore';
-import { ServiceItem } from '@/types/service';
-import { useServices } from '@/hooks/useServices';
+import { UserService } from '@/services/database';
+import { ActivityService } from '@/services/activityService';
 import { useAvailability } from '@/hooks/useAvailability';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppointments } from '@/hooks/useAppointments';
@@ -15,7 +15,6 @@ import { useNextAvailableDate } from '@/hooks/useNextAvailableDate';
 import ClientProfileWizard, { ClientProfileData } from '@/components/ClientProfileWizard';
 import HealthFormWizard, { HealthFormData } from '@/components/HealthFormWizard';
 import CheckoutCart from '@/components/CheckoutCart';
-import { UserService } from '@/services/userService';
 
 interface CheckoutData {
   selectedDate: string;
@@ -261,9 +260,32 @@ function BookNowCustomContent() {
       const loginResponse = await fetch('/api/send-login-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(loginEmailData)
+        body: JSON.stringify({
+          loginEmailData,
+          clientId: userProfile?.id || 'temp-client-id',
+          appointmentId: `appointment-${Date.now()}`,
+          generatePDF: true
+        })
       });
+      
+      const loginResult = await loginResponse.json();
       console.log('Login email sent:', loginResponse.ok);
+      
+      if (loginResult.pdfGenerated) {
+        console.log('✅ Login/Consent PDF created:', loginResult.pdfUrl);
+        
+        // Log consent PDF generation activity
+        try {
+          await ActivityService.logPDFActivity(
+            userProfile?.id || 'temp-client-id',
+            'consent',
+            loginResult.pdfId,
+            `appointment-${Date.now()}`
+          );
+        } catch (activityError) {
+          console.error('Failed to log consent PDF activity:', activityError);
+        }
+      }
       
       // Send health form confirmation email via API
       const healthFormEmailData = {
@@ -287,9 +309,39 @@ function BookNowCustomContent() {
       const healthFormResponse = await fetch('/api/send-health-form-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(healthFormEmailData)
+        body: JSON.stringify({
+          healthFormEmailData,
+          clientId: userProfile?.id || 'temp-client-id',
+          appointmentId: `appointment-${Date.now()}`,
+          generatePDF: true
+        })
       });
+      
+      const healthFormResult = await healthFormResponse.json();
       console.log('Health form email sent:', healthFormResponse.ok);
+      
+      if (healthFormResult.pdfGenerated) {
+        console.log('✅ Health form PDF created:', healthFormResult.pdfUrl);
+        
+        // Log health form submission activity
+        try {
+          await ActivityService.logFormActivity(
+            userProfile?.id || 'temp-client-id',
+            'health',
+            `appointment-${Date.now()}`
+          );
+          
+          // Log PDF generation activity
+          await ActivityService.logPDFActivity(
+            userProfile?.id || 'temp-client-id',
+            'health',
+            healthFormResult.pdfId,
+            `appointment-${Date.now()}`
+          );
+        } catch (activityError) {
+          console.error('Failed to log health form activity:', activityError);
+        }
+      }
       
       // Move to pre-post care step
       setCurrentStep('pre-post-care');
@@ -491,6 +543,65 @@ function BookNowCustomContent() {
         // Don't fail the booking if workflows fail
       }
       
+      // Generate booking confirmation PDF
+      try {
+        console.log('📄 Generating booking confirmation PDF...');
+        const bookingPDFResponse = await fetch('/api/generate-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clientId: userProfile?.id || 'temp-client-id',
+            appointmentId,
+            formType: 'booking',
+            formData: {
+              clientProfile: profile,
+              appointment: {
+                id: appointmentId,
+                serviceType: selectedService.name,
+                appointmentDate: selectedDate,
+                appointmentTime: selectedTime,
+                artistId: selectedArtistId || 'default-artist'
+              },
+              service: selectedService,
+              signatures: {
+                clientSignature: clientSignature || 'Digital confirmation'
+              }
+            }
+          })
+        });
+        
+        const bookingPDFResult = await bookingPDFResponse.json();
+        if (bookingPDFResult.success) {
+          console.log('✅ Booking confirmation PDF created:', bookingPDFResult.pdfUrl);
+          
+          // Log booking completion and PDF generation activities
+          try {
+            await ActivityService.logAppointmentActivity(
+              userProfile?.id || 'temp-client-id',
+              'appointment_created',
+              appointmentId,
+              selectedService.name,
+              {
+                appointmentDate: selectedDate,
+                appointmentTime: selectedTime,
+                artistId: selectedArtistId || 'default-artist'
+              }
+            );
+            
+            await ActivityService.logPDFActivity(
+              userProfile?.id || 'temp-client-id',
+              'booking',
+              bookingPDFResult.pdfId,
+              appointmentId
+            );
+          } catch (activityError) {
+            console.error('Failed to log booking activities:', activityError);
+          }
+        }
+      } catch (pdfError) {
+        console.error('⚠️ Failed to generate booking PDF (non-critical):', pdfError);
+      }
+
       console.log('Booking completed successfully:', appointmentId);
       // Form persistence removed - no data to clear
       setCurrentStep('confirmation');
@@ -1641,6 +1752,7 @@ function BookNowCustomContent() {
           appointmentDate={selectedDate}
           appointmentTime={selectedTime}
           clientName={userProfile?.profile ? `${userProfile.profile.firstName} ${userProfile.profile.lastName}` : 'Unknown Client'}
+          clientId={userProfile?.id}
           data={checkoutData}
           onChange={setCheckoutData}
           onNext={handleBookingComplete}

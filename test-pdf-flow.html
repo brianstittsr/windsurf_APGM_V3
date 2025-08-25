@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test PDF Generation Flow</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        button { padding: 10px 20px; margin: 10px 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        button.success { background: #28a745; }
+        button.warning { background: #ffc107; color: #212529; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; max-height: 200px; }
+    </style>
+</head>
+<body>
+    <h1>PDF Generation Flow Test</h1>
+    <p>Test that PDFs are created immediately after emails are sent in the booking flow.</p>
+    
+    <div class="test-section">
+        <h3>Test 1: Health Form Email + PDF</h3>
+        <button onclick="testHealthFormPDF()" class="success">Test Health Form PDF</button>
+        <div id="health-form-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 2: Login Email + PDF</h3>
+        <button onclick="testLoginPDF()" class="success">Test Login PDF</button>
+        <div id="login-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 3: Booking Confirmation PDF</h3>
+        <button onclick="testBookingPDF()" class="success">Test Booking PDF</button>
+        <div id="booking-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 4: Check Generated PDFs</h3>
+        <button onclick="checkAllPDFs()" class="warning">Check All PDFs</button>
+        <div id="check-results"></div>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        function addResult(message, type = 'info', containerId = 'results') {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function testHealthFormPDF() {
+            addResult('🔄 Testing health form email with PDF generation...', 'info', 'health-form-results');
+            
+            try {
+                const testData = {
+                    healthFormEmailData: {
+                        clientName: 'Test User',
+                        clientEmail: 'test@example.com',
+                        healthFormData: {
+                            allergies: 'None',
+                            medications: 'None',
+                            medicalConditions: 'None'
+                        },
+                        clientSignature: 'Test Signature',
+                        submissionDate: new Date().toLocaleString(),
+                        appointmentDate: new Date().toLocaleDateString(),
+                        businessName: 'A Pretty Girl Matter',
+                        businessPhone: '(919) 123-4567',
+                        businessEmail: 'victoria@aprettygirlmatter.com'
+                    },
+                    clientId: 'test-client-health',
+                    appointmentId: `health-test-${Date.now()}`,
+                    generatePDF: true
+                };
+
+                const response = await fetch('/api/send-health-form-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    addResult('✅ Health form email sent successfully', 'success', 'health-form-results');
+                    
+                    if (result.pdfGenerated) {
+                        addResult('✅ Health form PDF generated successfully!', 'success', 'health-form-results');
+                        addResult(`PDF URL: ${result.pdfUrl}`, 'info', 'health-form-results');
+                        addResult(`PDF ID: ${result.pdfId}`, 'info', 'health-form-results');
+                    } else {
+                        addResult('⚠️ Email sent but PDF not generated', 'warning', 'health-form-results');
+                    }
+                } else {
+                    addResult('❌ Health form email/PDF test failed', 'error', 'health-form-results');
+                    addResult(`Error: ${result.message}`, 'error', 'health-form-results');
+                }
+                
+            } catch (error) {
+                addResult('❌ Health form test failed with error', 'error', 'health-form-results');
+                addResult(`Error: ${error.message}`, 'error', 'health-form-results');
+            }
+        }
+
+        async function testLoginPDF() {
+            addResult('🔄 Testing login email with PDF generation...', 'info', 'login-results');
+            
+            try {
+                const testData = {
+                    loginEmailData: {
+                        clientName: 'Test User',
+                        clientEmail: 'test@example.com',
+                        temporaryPassword: 'TempPass123!',
+                        loginUrl: `${window.location.origin}/login`,
+                        businessName: 'A Pretty Girl Matter',
+                        businessPhone: '(919) 123-4567',
+                        businessEmail: 'victoria@aprettygirlmatter.com'
+                    },
+                    clientId: 'test-client-login',
+                    appointmentId: `login-test-${Date.now()}`,
+                    generatePDF: true
+                };
+
+                const response = await fetch('/api/send-login-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    addResult('✅ Login email sent successfully', 'success', 'login-results');
+                    
+                    if (result.pdfGenerated) {
+                        addResult('✅ Login/Consent PDF generated successfully!', 'success', 'login-results');
+                        addResult(`PDF URL: ${result.pdfUrl}`, 'info', 'login-results');
+                        addResult(`PDF ID: ${result.pdfId}`, 'info', 'login-results');
+                    } else {
+                        addResult('⚠️ Email sent but PDF not generated', 'warning', 'login-results');
+                    }
+                } else {
+                    addResult('❌ Login email/PDF test failed', 'error', 'login-results');
+                    addResult(`Error: ${result.message}`, 'error', 'login-results');
+                }
+                
+            } catch (error) {
+                addResult('❌ Login test failed with error', 'error', 'login-results');
+                addResult(`Error: ${error.message}`, 'error', 'login-results');
+            }
+        }
+
+        async function testBookingPDF() {
+            addResult('🔄 Testing booking confirmation PDF generation...', 'info', 'booking-results');
+            
+            try {
+                const testData = {
+                    clientId: 'test-client-booking',
+                    appointmentId: `booking-test-${Date.now()}`,
+                    formType: 'booking',
+                    formData: {
+                        clientProfile: {
+                            firstName: 'Test',
+                            lastName: 'User',
+                            email: 'test@example.com',
+                            phone: '(555) 123-4567'
+                        },
+                        appointment: {
+                            id: `booking-test-${Date.now()}`,
+                            serviceType: 'Eyebrow Microblading',
+                            appointmentDate: new Date().toLocaleDateString(),
+                            appointmentTime: '10:00 AM',
+                            artistId: 'default-artist'
+                        },
+                        service: {
+                            name: 'Eyebrow Microblading',
+                            price: 350,
+                            duration: 180
+                        },
+                        signatures: {
+                            clientSignature: 'Digital confirmation'
+                        }
+                    }
+                };
+
+                const response = await fetch('/api/generate-pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    addResult('✅ Booking confirmation PDF generated successfully!', 'success', 'booking-results');
+                    addResult(`PDF URL: ${result.pdfUrl}`, 'info', 'booking-results');
+                    addResult(`PDF ID: ${result.pdfId}`, 'info', 'booking-results');
+                } else {
+                    addResult('❌ Booking PDF generation failed', 'error', 'booking-results');
+                    addResult(`Error: ${result.error || result.message}`, 'error', 'booking-results');
+                }
+                
+            } catch (error) {
+                addResult('❌ Booking PDF test failed with error', 'error', 'booking-results');
+                addResult(`Error: ${error.message}`, 'error', 'booking-results');
+            }
+        }
+
+        async function checkAllPDFs() {
+            addResult('🔍 Checking all generated PDFs...', 'info', 'check-results');
+            
+            try {
+                const response = await fetch('/api/check-existing-pdfs', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    addResult(`📊 Found ${data.summary.totalPDFs} PDFs in database`, 
+                        data.summary.totalPDFs > 0 ? 'success' : 'warning', 'check-results');
+                    
+                    if (data.pdfs && data.pdfs.length > 0) {
+                        data.pdfs.forEach(pdf => {
+                            addResult(`📄 ${pdf.formType.toUpperCase()}: ${pdf.filename} (${pdf.clientId})`, 
+                                'info', 'check-results');
+                        });
+                    } else {
+                        addResult('No PDFs found. Run the tests above to generate some.', 'warning', 'check-results');
+                    }
+                } else {
+                    addResult('❌ Failed to check PDFs', 'error', 'check-results');
+                    addResult(`Error: ${data.error}`, 'error', 'check-results');
+                }
+                
+            } catch (error) {
+                addResult('❌ PDF check failed', 'error', 'check-results');
+                addResult(`Error: ${error.message}`, 'error', 'check-results');
+            }
+        }
+
+        // Auto-run information when page loads
+        window.addEventListener('load', () => {
+            addResult('📋 PDF Generation Flow Test Ready', 'info');
+            addResult('This tool tests that PDFs are created immediately after emails are sent.', 'info');
+            addResult('Run each test to verify the PDF generation flow works correctly.', 'info');
+        });
+    </script>
+</body>
+</html>

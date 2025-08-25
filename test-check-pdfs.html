@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check Existing PDFs</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        button { padding: 10px 20px; margin: 10px 0; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; max-height: 300px; }
+        .pdf-item { background: #f8f9fa; padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid #007bff; }
+        .user-item { background: #fff3cd; padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid #ffc107; }
+    </style>
+</head>
+<body>
+    <h1>Check Existing PDF Documents</h1>
+    <p>This page checks if any PDF documents have been created in the system.</p>
+    
+    <button onclick="checkExistingPDFs()">Check for Existing PDFs</button>
+    <button onclick="clearResults()">Clear Results</button>
+    
+    <div id="results"></div>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function checkExistingPDFs() {
+            addResult('🔍 Checking for existing PDF documents...', 'info');
+            
+            try {
+                const response = await fetch('/api/check-existing-pdfs', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const summary = data.summary;
+                    
+                    // Display summary
+                    addResult(`<strong>📊 Database Summary:</strong>`, 'info');
+                    addResult(`• Total PDFs: ${summary.totalPDFs}`, summary.totalPDFs > 0 ? 'success' : 'warning');
+                    addResult(`• Total Users: ${summary.totalUsers}`, summary.totalUsers > 0 ? 'success' : 'warning');
+                    addResult(`• Has PDFs: ${summary.hasPDFs ? 'Yes' : 'No'}`, summary.hasPDFs ? 'success' : 'warning');
+                    addResult(`• Has Users: ${summary.hasUsers ? 'Yes' : 'No'}`, summary.hasUsers ? 'success' : 'warning');
+                    
+                    // Display PDFs if any exist
+                    if (data.pdfs && data.pdfs.length > 0) {
+                        addResult(`<strong>📄 Found ${data.pdfs.length} PDF Documents:</strong>`, 'success');
+                        data.pdfs.forEach(pdf => {
+                            const pdfInfo = `
+                                <div class="pdf-item">
+                                    <strong>${pdf.formType.toUpperCase()} PDF</strong><br>
+                                    • Client ID: ${pdf.clientId}<br>
+                                    • Appointment ID: ${pdf.appointmentId}<br>
+                                    • Filename: ${pdf.filename}<br>
+                                    • Generated: ${new Date(pdf.generatedAt).toLocaleString()}<br>
+                                    • Size: ${pdf.fileSize ? (pdf.fileSize / 1024).toFixed(1) + ' KB' : 'Unknown'}
+                                </div>
+                            `;
+                            addResult(pdfInfo, 'success');
+                        });
+                    } else {
+                        addResult('📄 No PDF documents found in the database', 'warning');
+                        addResult('PDFs are created when users complete booking forms with health questionnaires and signatures', 'info');
+                    }
+                    
+                    // Display users if any exist
+                    if (data.users && data.users.length > 0) {
+                        addResult(`<strong>👥 Sample Users (${data.users.length} shown):</strong>`, 'info');
+                        data.users.forEach(user => {
+                            const userInfo = `
+                                <div class="user-item">
+                                    <strong>${user.firstName} ${user.lastName}</strong> (${user.role})<br>
+                                    • Email: ${user.email}<br>
+                                    • User ID: ${user.id}
+                                </div>
+                            `;
+                            addResult(userInfo, 'info');
+                        });
+                    } else {
+                        addResult('👥 No users found in the database', 'warning');
+                    }
+                    
+                    // Provide guidance
+                    if (summary.totalPDFs === 0) {
+                        addResult('<strong>💡 How to Generate PDFs:</strong>', 'info');
+                        addResult('1. Complete a booking at /book-now-custom', 'info');
+                        addResult('2. Fill out the health form with signatures', 'info');
+                        addResult('3. Complete the payment process', 'info');
+                        addResult('4. PDFs will be automatically generated and stored', 'info');
+                    }
+                    
+                } else {
+                    addResult('❌ Failed to check existing PDFs', 'error');
+                    addResult(`Error: ${data.error}`, 'error');
+                    if (data.details) {
+                        addResult(`Details: <pre>${data.details}</pre>`, 'error');
+                    }
+                }
+                
+            } catch (error) {
+                addResult('❌ Network error checking PDFs', 'error');
+                addResult(`Error: ${error.message}`, 'error');
+                console.error('PDF check error:', error);
+            }
+        }
+
+        // Auto-run when page loads
+        window.addEventListener('load', () => {
+            addResult('📋 PDF Document Checker Ready', 'info');
+            addResult('Click "Check for Existing PDFs" to see if any documents have been created.', 'info');
+        });
+    </script>
+</body>
+</html>

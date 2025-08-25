@@ -9,6 +9,7 @@ import CouponInput from './CouponInput';
 import GiftCardInput from './GiftCardInput';
 import { calculateTotalWithStripeFees, formatCurrency, getStripeFeeExplanation } from '../lib/stripe-fees';
 import { CouponCode, GiftCard } from '@/types/database';
+import { ActivityService } from '@/services/activityService';
 
 interface ServiceItem {
   id: string;
@@ -34,6 +35,7 @@ interface CheckoutCartProps {
   appointmentDate: string;
   appointmentTime: string;
   clientName: string;
+  clientId?: string;
   data: CheckoutData;
   onChange: (data: CheckoutData) => void;
   onNext: () => void;
@@ -45,6 +47,7 @@ export default function CheckoutCart({
   appointmentDate, 
   appointmentTime, 
   clientName,
+  clientId,
   data, 
   onChange, 
   onNext, 
@@ -95,7 +98,7 @@ export default function CheckoutCart({
                            paymentIntent.id === 'cherry_redirect';
       
       const appointmentData = {
-        clientId: 'temp-client-id', // This should be replaced with actual client ID from auth
+        clientId: clientId || 'temp-client-id',
         clientName: clientName,
         clientEmail: 'brianstittsr@gmail.com', // Using your email as requested
         serviceId: service.id,
@@ -125,6 +128,22 @@ export default function CheckoutCart({
       
       const appointmentId = await AppointmentService.createAppointment(appointmentData);
       console.log('✅ Appointment created:', appointmentId);
+
+      // Log payment activity
+      try {
+        const paymentMethod = paymentIntent.payment_method_types?.[0] || 'card';
+        const paidAmount = isFullPayment ? totalAmount : depositAmount + stripeFee;
+        
+        await ActivityService.logPaymentActivity(
+          clientId || 'temp-client-id',
+          paymentMethod,
+          paidAmount,
+          appointmentId
+        );
+        console.log('✅ Payment activity logged');
+      } catch (activityError) {
+        console.error('Failed to log payment activity:', activityError);
+      }
 
       // 2. Remove availability for the booked time slot
       console.log('🚫 Removing availability for booked time slot...');
