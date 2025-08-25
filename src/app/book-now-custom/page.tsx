@@ -15,6 +15,7 @@ import { useNextAvailableDate } from '@/hooks/useNextAvailableDate';
 import ClientProfileWizard, { ClientProfileData } from '@/components/ClientProfileWizard';
 import HealthFormWizard, { HealthFormData } from '@/components/HealthFormWizard';
 import CheckoutCart from '@/components/CheckoutCart';
+import { UserService } from '@/services/userService';
 
 interface CheckoutData {
   selectedDate: string;
@@ -324,63 +325,94 @@ function BookNowCustomContent() {
 
   // Update user profile when moving from profile to health step
   const updateUserProfile = async () => {
+    console.log('🔍 updateUserProfile called - Auth state:', { isAuthenticated, userProfile: !!userProfile, userProfileId: userProfile?.id });
+    
     if (!isAuthenticated || !userProfile?.id) {
-      console.log('❌ User not authenticated, skipping profile update');
+      console.log('❌ User not authenticated, skipping profile update:', { isAuthenticated, userProfile: !!userProfile });
       return;
     }
 
+    // For development mode with mock users, skip Firebase updates
+    if (userProfile?.id?.includes('mock')) {
+      console.log('🔧 Mock user detected - simulating profile update');
+      console.log('Updated profile data:', clientProfile);
+      return;
+    }
+
+    // For real Firebase users, ensure we have a valid user ID
+    const userId = userProfile?.id;
+    if (!userId) {
+      console.log('❌ No valid user ID found, skipping profile update');
+      return;
+    }
+
+    console.log('✅ Firebase user authenticated, proceeding with profile update');
+    console.log('User ID:', userId);
+    console.log('User email:', userProfile?.profile.email);
+
+    // Check if any profile data has changed
+    const currentProfile = userProfile?.profile;
+    const hasChanges = !currentProfile || (
+      currentProfile.firstName !== clientProfile.firstName ||
+      currentProfile.lastName !== clientProfile.lastName ||
+      currentProfile.phone !== clientProfile.phone ||
+      currentProfile.dateOfBirth !== clientProfile.dateOfBirth ||
+      currentProfile.address !== clientProfile.address ||
+      currentProfile.city !== clientProfile.city ||
+      currentProfile.state !== clientProfile.state ||
+      currentProfile.zipCode !== clientProfile.zipCode ||
+      currentProfile.emergencyContactName !== clientProfile.emergencyContactName ||
+      currentProfile.emergencyContactPhone !== clientProfile.emergencyContactPhone ||
+      currentProfile.preferredContactMethod !== clientProfile.preferredContactMethod
+    );
+
+    if (!hasChanges) {
+      console.log('📝 No profile changes detected, skipping update');
+      return;
+    }
+
+    console.log('📝 Profile changes detected, updating Firebase...');
+
     try {
-      const { UserService } = await import('@/services/userService');
-      
-      // Check if profile data has changed by comparing with original
-      const originalProfile = getClientProfileData();
-      const hasChanges = originalProfile && (
-        originalProfile.firstName !== clientProfile.firstName ||
-        originalProfile.lastName !== clientProfile.lastName ||
-        originalProfile.email !== clientProfile.email ||
-        originalProfile.phone !== clientProfile.phone ||
-        originalProfile.dateOfBirth !== clientProfile.dateOfBirth ||
-        originalProfile.address !== clientProfile.address ||
-        originalProfile.city !== clientProfile.city ||
-        originalProfile.state !== clientProfile.state ||
-        originalProfile.zipCode !== clientProfile.zipCode ||
-        originalProfile.emergencyContactName !== clientProfile.emergencyContactName ||
-        originalProfile.emergencyContactPhone !== clientProfile.emergencyContactPhone ||
-        originalProfile.preferredContactMethod !== clientProfile.preferredContactMethod ||
-        originalProfile.hearAboutUs !== clientProfile.hearAboutUs
-      );
-
-      if (!hasChanges) {
-        console.log('✅ No profile changes detected, skipping update');
-        return;
-      }
-
-      // Update the user's profile with the form data
-      const profileUpdates = {
-        profile: {
-          ...userProfile.profile,
-          firstName: clientProfile.firstName,
-          lastName: clientProfile.lastName,
-          email: clientProfile.email,
-          phone: clientProfile.phone,
-          dateOfBirth: clientProfile.dateOfBirth,
-          address: clientProfile.address,
-          city: clientProfile.city,
-          state: clientProfile.state,
-          zipCode: clientProfile.zipCode,
-          emergencyContactName: clientProfile.emergencyContactName,
-          emergencyContactPhone: clientProfile.emergencyContactPhone,
-          preferredContactMethod: clientProfile.preferredContactMethod,
-          hearAboutUs: clientProfile.hearAboutUs,
-          updatedAt: Timestamp.now()
-        }
+      // Prepare updated profile data
+      const updatedProfileData = {
+        firstName: clientProfile.firstName,
+        lastName: clientProfile.lastName,
+        email: userProfile?.profile.email || clientProfile.email,
+        phone: clientProfile.phone,
+        dateOfBirth: clientProfile.dateOfBirth,
+        address: clientProfile.address,
+        city: clientProfile.city,
+        state: clientProfile.state,
+        zipCode: clientProfile.zipCode,
+        emergencyContactName: clientProfile.emergencyContactName,
+        emergencyContactPhone: clientProfile.emergencyContactPhone,
+        preferredContactMethod: clientProfile.preferredContactMethod,
+        hearAboutUs: clientProfile.hearAboutUs || currentProfile?.hearAboutUs || 'Existing Client',
+        createdAt: currentProfile?.createdAt || Timestamp.now(),
+        updatedAt: Timestamp.now()
       };
+
+      // Update user profile in Firebase
+      if (currentProfile) {
+        // Update existing profile
+        await UserService.updateUser(userId, { profile: updatedProfileData });
+        console.log('✅ Profile updated successfully in Firebase');
+      } else {
+        // Create new profile if it doesn't exist
+        const newUser = {
+          id: userId,
+          profile: updatedProfileData,
+          role: 'client' as const,
+          isActive: true
+        };
+        await UserService.createUser(newUser);
+        console.log('✅ New profile created successfully in Firebase');
+      }
       
-      await UserService.updateUser(userProfile.id, profileUpdates);
-      console.log('✅ User profile updated successfully after profile step');
     } catch (error) {
-      console.error('❌ Failed to update user profile:', error);
-      // Don't block navigation if profile update fails
+      console.error('❌ Error updating profile:', error);
+      // Don't block navigation on profile update failure
     }
   };
 
