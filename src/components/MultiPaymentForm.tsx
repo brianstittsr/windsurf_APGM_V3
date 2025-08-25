@@ -126,8 +126,9 @@ export default function MultiPaymentForm({
   const refreshPaymentIntentIfNeeded = async (method: PaymentMethod) => {
     if (method === 'cherry') return;
     
+    // Always create new payment intent if missing or expired
     if (!clientSecret || isPaymentIntentExpired()) {
-      console.log('🔄 Refreshing payment intent (expired or missing)');
+      console.log('🔄 Creating new payment intent (expired or missing)');
       let paymentMethodTypes: string[];
       if (method === 'klarna') {
         paymentMethodTypes = ['klarna'];
@@ -136,7 +137,13 @@ export default function MultiPaymentForm({
       } else {
         paymentMethodTypes = ['card'];
       }
-      await createPaymentIntent(paymentMethodTypes);
+      
+      try {
+        await createPaymentIntent(paymentMethodTypes);
+      } catch (error) {
+        console.error('Failed to create payment intent:', error);
+        throw new Error('Failed to create or refresh payment session. Please try again.');
+      }
     }
   };
 
@@ -251,9 +258,11 @@ export default function MultiPaymentForm({
     }
 
     if (processing) {
+      console.log('Payment already in progress, ignoring duplicate submission');
       return;
     }
 
+    console.log('Starting payment process for method:', selectedPaymentMethod);
     setProcessing(true);
     if (setLoading) setLoading(true);
 
@@ -263,11 +272,16 @@ export default function MultiPaymentForm({
         return;
       }
 
-      // Always refresh payment intent before processing to avoid expiration
-      await refreshPaymentIntentIfNeeded(selectedPaymentMethod);
-
-      if (!clientSecret) {
-        throw new Error('Failed to create or refresh payment session. Please try again.');
+      // Ensure we have a valid payment intent before processing
+      try {
+        await refreshPaymentIntentIfNeeded(selectedPaymentMethod);
+        
+        if (!clientSecret) {
+          throw new Error('Failed to create or refresh payment session. Please try again.');
+        }
+      } catch (error) {
+        console.error('Payment intent creation failed:', error);
+        throw error;
       }
 
       let result;

@@ -102,7 +102,7 @@ export default function CheckoutCart({
         remainingAmount: isFullPayment ? 0 : remainingAmount,
         paymentIntentId: paymentIntent.id,
         specialRequests: data.specialRequests || '',
-        giftCardCode: data.giftCard || undefined,
+        giftCardCode: data.giftCard && data.giftCard.trim() ? data.giftCard.trim() : undefined,
         ...(appliedCoupon && { couponCode: appliedCoupon.code }),
         ...(couponDiscount > 0 && { couponDiscount }),
         rescheduleCount: 0,
@@ -118,8 +118,13 @@ export default function CheckoutCart({
 
       // 2. Remove availability for the booked time slot
       console.log('🚫 Removing availability for booked time slot...');
-      await AvailabilityService.bookTimeSlot(appointmentDate, appointmentTime, appointmentId, 'victoria');
-      console.log('✅ Time slot marked as unavailable');
+      try {
+        await AvailabilityService.bookTimeSlot(appointmentDate, appointmentTime, appointmentId, 'victoria');
+        console.log('✅ Time slot marked as unavailable');
+      } catch (availabilityError) {
+        console.warn('⚠️ Could not update availability (document may not exist):', availabilityError);
+        // Don't fail the entire booking process for availability update issues
+      }
 
       // 3. Apply coupon usage if one was used
       if (appliedCoupon) {

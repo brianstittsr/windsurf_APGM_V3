@@ -540,13 +540,33 @@ export class AvailabilityService {
   }
 
   static async bookTimeSlot(date: string, time: string, appointmentId: string, artistId: string): Promise<void> {
-    const availability = await this.getAvailability(date) || {};
-    availability[time] = {
-      available: false,
-      appointmentId,
-      artistId
-    };
-    await this.updateAvailability(date, availability);
+    try {
+      const availability = await this.getAvailability(date) || {};
+      availability[time] = {
+        available: false,
+        appointmentId,
+        artistId
+      };
+      await this.updateAvailability(date, availability);
+    } catch (error) {
+      console.warn('Could not update availability document:', error);
+      // Create the availability document if it doesn't exist
+      try {
+        const { doc, setDoc } = await import('firebase/firestore');
+        const availabilityDoc = {
+          [time]: {
+            available: false,
+            appointmentId,
+            artistId
+          }
+        };
+        await setDoc(doc(db, COLLECTIONS.AVAILABILITY, date), availabilityDoc);
+        console.log('Created new availability document for date:', date);
+      } catch (createError) {
+        console.error('Failed to create availability document:', createError);
+        throw createError;
+      }
+    }
   }
 }
 
