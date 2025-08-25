@@ -142,6 +142,19 @@ export class TimeSlotService {
         }
       });
 
+      // Also check the availability document for booked slots
+      const { AvailabilityService: DatabaseAvailabilityService } = await import('./database');
+      const dayAvailabilityDoc = await DatabaseAvailabilityService.getAvailability(date);
+      const bookedFromAvailability = new Set<string>();
+      
+      if (dayAvailabilityDoc) {
+        Object.entries(dayAvailabilityDoc).forEach(([time, slot]) => {
+          if (typeof slot === 'object' && slot !== null && 'available' in slot && !slot.available) {
+            bookedFromAvailability.add(time);
+          }
+        });
+      }
+
       // Process each artist's availability
       for (const artist of artists) {
         try {
@@ -191,9 +204,10 @@ export class TimeSlotService {
               const bookingKey = `${slot.artistId}_${slot.time}`;
               const bookedAppointment = bookedSlots.get(bookingKey);
               
-              if (bookedAppointment) {
+              // Check both appointment records and availability document
+              if (bookedAppointment || bookedFromAvailability.has(slot.time)) {
                 slot.available = false;
-                slot.appointmentId = bookedAppointment.id;
+                slot.appointmentId = bookedAppointment?.id;
                 slot.reason = 'Booked';
               }
             });
