@@ -83,11 +83,22 @@ export async function POST(request: NextRequest) {
       payment_intent_id: paymentIntent.id,
     });
   } catch (error) {
-    console.error('Error creating payment intent:', error);
+    console.error('❌ Error creating payment intent:', error);
+    console.error('❌ Error type:', typeof error);
+    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    
+    // Log Stripe configuration status
+    try {
+      const secretKey = getStripeSecretKey();
+      console.error('❌ Stripe secret key status:', secretKey.includes('placeholder') ? 'PLACEHOLDER' : 'CONFIGURED');
+    } catch (configError) {
+      console.error('❌ Stripe config error:', configError);
+    }
     
     return NextResponse.json(
       { 
-        error: error instanceof Error ? error.message : 'Internal server error' 
+        error: error instanceof Error ? error.message : 'Internal server error',
+        details: error instanceof Error ? error.stack : 'Unknown error type'
       },
       { status: 500 }
     );

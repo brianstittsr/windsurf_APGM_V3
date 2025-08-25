@@ -156,7 +156,10 @@ export default function MultiPaymentForm({
         await createPaymentIntent(paymentMethodTypes);
       } catch (error) {
         console.error('Failed to create payment intent:', error);
-        throw new Error('Failed to create or refresh payment session. Please try again.');
+        console.error('Full error details:', error);
+        // Show the actual error message to help debug
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        throw new Error(`Failed to create or refresh payment session: ${errorMessage}`);
       }
     }
   };
