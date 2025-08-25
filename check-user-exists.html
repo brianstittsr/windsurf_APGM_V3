@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check User Exists</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Check User Exists & Create User</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <h5>Check if User Exists</h5>
+                            <div class="input-group mb-3">
+                                <input type="email" id="checkEmail" class="form-control" value="client99@aprettygirlmatte.com" placeholder="Enter email to check">
+                                <button class="btn btn-primary" onclick="checkUserExists()">Check User</button>
+                            </div>
+                            <div id="checkResult"></div>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-4">
+                            <h5>Create New User</h5>
+                            <form id="createUserForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Email:</label>
+                                    <input type="email" id="newEmail" class="form-control" value="client99@aprettygirlmatte.com" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Password:</label>
+                                    <input type="password" id="newPassword" class="form-control" value="password123" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">First Name:</label>
+                                    <input type="text" id="firstName" class="form-control" value="Client" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Last Name:</label>
+                                    <input type="text" id="lastName" class="form-control" value="Test" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Phone:</label>
+                                    <input type="tel" id="phone" class="form-control" value="(555) 123-4567" required>
+                                </div>
+                                <button type="submit" class="btn btn-success">Create User</button>
+                            </form>
+                            <div id="createResult" class="mt-3"></div>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-4">
+                            <h5>Reset Password</h5>
+                            <div class="input-group mb-3">
+                                <input type="email" id="resetEmail" class="form-control" value="client99@aprettygirlmatte.com" placeholder="Enter email for password reset">
+                                <button class="btn btn-warning" onclick="resetPassword()">Send Reset Email</button>
+                            </div>
+                            <div id="resetResult"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function checkUserExists() {
+            const email = document.getElementById('checkEmail').value;
+            const resultDiv = document.getElementById('checkResult');
+            
+            if (!email) {
+                resultDiv.innerHTML = '<div class="alert alert-warning">Please enter an email</div>';
+                return;
+            }
+
+            try {
+                resultDiv.innerHTML = '<div class="spinner-border spinner-border-sm me-2"></div>Checking user...';
+                
+                const response = await fetch('/api/check-user-exists', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    if (result.exists) {
+                        resultDiv.innerHTML = `
+                            <div class="alert alert-success">
+                                <strong>User exists!</strong><br>
+                                Email: ${result.user.email}<br>
+                                UID: ${result.user.uid}<br>
+                                Created: ${new Date(result.user.createdAt).toLocaleString()}<br>
+                                Last Sign In: ${result.user.lastSignInTime ? new Date(result.user.lastSignInTime).toLocaleString() : 'Never'}
+                            </div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = '<div class="alert alert-info">User does not exist. You can create it using the form below.</div>';
+                    }
+                } else {
+                    resultDiv.innerHTML = `<div class="alert alert-danger">Error: ${result.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            }
+        }
+
+        document.getElementById('createUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('newEmail').value;
+            const password = document.getElementById('newPassword').value;
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const phone = document.getElementById('phone').value;
+            const resultDiv = document.getElementById('createResult');
+
+            try {
+                resultDiv.innerHTML = '<div class="spinner-border spinner-border-sm me-2"></div>Creating user...';
+                
+                const response = await fetch('/api/create-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        firstName,
+                        lastName,
+                        phone
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <strong>User created successfully!</strong><br>
+                            UID: ${result.uid}<br>
+                            Email: ${email}<br>
+                            Password: ${password}<br>
+                            <small class="text-muted">You can now login with these credentials</small>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="alert alert-danger">Error: ${result.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            }
+        });
+
+        async function resetPassword() {
+            const email = document.getElementById('resetEmail').value;
+            const resultDiv = document.getElementById('resetResult');
+            
+            if (!email) {
+                resultDiv.innerHTML = '<div class="alert alert-warning">Please enter an email</div>';
+                return;
+            }
+
+            try {
+                resultDiv.innerHTML = '<div class="spinner-border spinner-border-sm me-2"></div>Sending reset email...';
+                
+                const response = await fetch('/api/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.innerHTML = '<div class="alert alert-success">Password reset email sent! Check your inbox.</div>';
+                } else {
+                    resultDiv.innerHTML = `<div class="alert alert-danger">Error: ${result.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-check on page load
+        window.addEventListener('load', () => {
+            checkUserExists();
+        });
+    </script>
+</body>
+</html>

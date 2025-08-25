@@ -48,9 +48,9 @@ export function useTimeSlots(selectedDate: string) {
         console.log('🕐 useTimeSlots: Fetching time slots for date:', selectedDate);
 
         // Get day of week from selected date
-        const date = new Date(selectedDate);
+        const date = new Date(selectedDate + 'T12:00:00');
         const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][date.getDay()];
-        console.log('🗓️ useTimeSlots: Day of week:', dayOfWeek);
+        console.log('🗓️ useTimeSlots: Day of week:', dayOfWeek, '- getDay() returned:', date.getDay());
 
         // Query artistAvailability collection for all documents
         const availabilityRef = collection(db, 'artistAvailability');

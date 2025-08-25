@@ -28,107 +28,112 @@ export function useServices() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Check Firebase configuration immediately (synchronous)
+    if (!isFirebaseConfigured()) {
+      console.log('Firebase not configured, using mock services data');
+      // Set mock data immediately without async delay
+      setServices([
+        {
+          id: 'powder-brows',
+          name: 'Powder Eyebrows',
+          description: 'Powder brows offer a semi-permanent cosmetic tattoo solution that creates a soft, powdered makeup look.',
+          price: 600,
+          duration: '2-3 hours',
+          category: 'eyebrows',
+          isActive: true,
+          image: '/images/services/POWDER.png',
+          requirements: ['Age 18+', 'No recent Botox'],
+          contraindications: ['Pregnancy', 'Blood thinners'],
+          createdAt: new Date() as any,
+          updatedAt: new Date() as any
+        },
+        {
+          id: 'microblading',
+          name: 'Strokes Eyebrows',
+          description: 'Hair-stroke technique that creates natural-looking eyebrows with precise individual strokes.',
+          price: 550,
+          duration: '2-3 hours',
+          category: 'eyebrows',
+          isActive: true,
+          image: '/images/services/STROKES.png',
+          requirements: ['Age 18+', 'No recent Botox'],
+          contraindications: ['Pregnancy', 'Blood thinners'],
+          createdAt: new Date() as any,
+          updatedAt: new Date() as any
+        },
+        {
+          id: 'combo-eyebrows',
+          name: 'Combo Eyebrows',
+          description: 'Combination of microblading and powder technique for the most natural and full eyebrow look.',
+          price: 650,
+          duration: '2.5-3.5 hours',
+          category: 'eyebrows',
+          isActive: true,
+          image: '/images/services/COMBO.png',
+          requirements: ['Age 18+', 'No recent Botox'],
+          contraindications: ['Pregnancy', 'Blood thinners'],
+          createdAt: new Date() as any,
+          updatedAt: new Date() as any
+        },
+        {
+          id: 'ombre-eyebrows',
+          name: 'Ombre Eyebrows',
+          description: 'Gradient shading technique that creates a soft, natural ombre effect from light to dark.',
+          price: 620,
+          duration: '2.5-3 hours',
+          category: 'eyebrows',
+          isActive: true,
+          image: '/images/services/OMBRE.png',
+          requirements: ['Age 18+', 'No recent Botox'],
+          contraindications: ['Pregnancy', 'Blood thinners'],
+          createdAt: new Date() as any,
+          updatedAt: new Date() as any
+        },
+        {
+          id: 'blade-shade',
+          name: 'Blade + Shade',
+          description: 'Advanced technique combining precise blade strokes with soft shading for dimensional brows.',
+          price: 680,
+          duration: '3-3.5 hours',
+          category: 'eyebrows',
+          isActive: true,
+          image: '/images/services/BLADE+SHADE.png',
+          requirements: ['Age 18+', 'No recent Botox'],
+          contraindications: ['Pregnancy', 'Blood thinners'],
+          createdAt: new Date() as any,
+          updatedAt: new Date() as any
+        },
+        {
+          id: 'bold-combo',
+          name: 'Bold Combo',
+          description: 'Bold and defined eyebrows using advanced combo techniques for dramatic, full coverage.',
+          price: 700,
+          duration: '3-4 hours',
+          category: 'eyebrows',
+          isActive: true,
+          image: '/images/services/BOLD-COMBO.png',
+          requirements: ['Age 18+', 'No recent Botox'],
+          contraindications: ['Pregnancy', 'Blood thinners'],
+          createdAt: new Date() as any,
+          updatedAt: new Date() as any
+        }
+      ]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    // Only use async for real Firebase calls
     const fetchServices = async () => {
       try {
         setLoading(true);
-        
-        if (!isFirebaseConfigured()) {
-          // Return mock data when Firebase is not configured
-          setServices([
-            {
-              id: 'powder-brows',
-              name: 'Powder Eyebrows',
-              description: 'Powder brows offer a semi-permanent cosmetic tattoo solution that creates a soft, powdered makeup look.',
-              price: 600,
-              duration: '2-3 hours',
-              category: 'eyebrows',
-              isActive: true,
-              image: '/images/services/POWDER.png',
-              requirements: ['Age 18+', 'No recent Botox'],
-              contraindications: ['Pregnancy', 'Blood thinners'],
-              createdAt: new Date() as any,
-              updatedAt: new Date() as any
-            },
-            {
-              id: 'microblading',
-              name: 'Strokes Eyebrows',
-              description: 'Hair-stroke technique that creates natural-looking eyebrows with precise individual strokes.',
-              price: 550,
-              duration: '2-3 hours',
-              category: 'eyebrows',
-              isActive: true,
-              image: '/images/services/STROKES.png',
-              requirements: ['Age 18+', 'No recent Botox'],
-              contraindications: ['Pregnancy', 'Blood thinners'],
-              createdAt: new Date() as any,
-              updatedAt: new Date() as any
-            },
-            {
-              id: 'combo-eyebrows',
-              name: 'Combo Eyebrows',
-              description: 'Combination of microblading and powder technique for the most natural and full eyebrow look.',
-              price: 650,
-              duration: '2.5-3.5 hours',
-              category: 'eyebrows',
-              isActive: true,
-              image: '/images/services/COMBO.png',
-              requirements: ['Age 18+', 'No recent Botox'],
-              contraindications: ['Pregnancy', 'Blood thinners'],
-              createdAt: new Date() as any,
-              updatedAt: new Date() as any
-            },
-            {
-              id: 'ombre-eyebrows',
-              name: 'Ombre Eyebrows',
-              description: 'Gradient shading technique that creates a soft, natural ombre effect from light to dark.',
-              price: 620,
-              duration: '2.5-3 hours',
-              category: 'eyebrows',
-              isActive: true,
-              image: '/images/services/OMBRE.png',
-              requirements: ['Age 18+', 'No recent Botox'],
-              contraindications: ['Pregnancy', 'Blood thinners'],
-              createdAt: new Date() as any,
-              updatedAt: new Date() as any
-            },
-            {
-              id: 'blade-shade',
-              name: 'Blade + Shade',
-              description: 'Advanced technique combining precise blade strokes with soft shading for dimensional brows.',
-              price: 680,
-              duration: '3-3.5 hours',
-              category: 'eyebrows',
-              isActive: true,
-              image: '/images/services/BLADE+SHADE.png',
-              requirements: ['Age 18+', 'No recent Botox'],
-              contraindications: ['Pregnancy', 'Blood thinners'],
-              createdAt: new Date() as any,
-              updatedAt: new Date() as any
-            },
-            {
-              id: 'bold-combo',
-              name: 'Bold Combo',
-              description: 'Bold and defined eyebrows using advanced combo techniques for dramatic, full coverage.',
-              price: 700,
-              duration: '3-4 hours',
-              category: 'eyebrows',
-              isActive: true,
-              image: '/images/services/BOLD-COMBO.png',
-              requirements: ['Age 18+', 'No recent Botox'],
-              contraindications: ['Pregnancy', 'Blood thinners'],
-              createdAt: new Date() as any,
-              updatedAt: new Date() as any
-            }
-          ]);
-          setError('Firebase not configured - showing demo data');
-          return;
-        }
-        
+        setError(null);
         const servicesData = await ServiceService.getAllServices();
         setServices(servicesData);
+        setLoading(false);
       } catch (err) {
+        console.error('Error fetching services:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch services');
-      } finally {
         setLoading(false);
       }
     };

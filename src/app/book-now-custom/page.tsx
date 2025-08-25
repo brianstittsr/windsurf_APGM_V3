@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Timestamp } from 'firebase/firestore';
@@ -53,6 +53,50 @@ function BookNowCustomContent() {
   const [currentStep, setCurrentStep] = useState<'services' | 'account-suggestion' | 'calendar' | 'profile' | 'health' | 'pre-post-care' | 'checkout' | 'confirmation'>('services');
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
+
+  // Clear any localStorage data that might be persisting dates
+  useEffect(() => {
+    // Clear any potential form persistence data
+    const keysToRemove = [
+      'booking_form_main',
+      'booking_form_calendar', 
+      'booking_form_profile',
+      'booking_form_health',
+      'booking_form_checkout',
+      'selectedDate',
+      'bookingFormData'
+    ];
+    
+    keysToRemove.forEach(key => {
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {
+        // Ignore errors
+      }
+    });
+    
+    console.log('Cleared localStorage booking data');
+  }, []); // Run once on mount
+
+  // Simple validation - clear any past dates immediately
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    if (selectedDate && selectedDate < today) {
+      console.log('Clearing past date:', selectedDate);
+      setSelectedDate('');
+    }
+  }, [selectedDate]);
+
+  // Simple setter with validation
+  const setValidatedSelectedDate = useCallback((dateString: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    if (dateString === '' || dateString >= today) {
+      setSelectedDate(dateString);
+    } else {
+      console.log('Rejecting past date:', dateString);
+      setSelectedDate('');
+    }
+  }, []);
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [selectedArtistId, setSelectedArtistId] = useState<string>('');
 
@@ -83,7 +127,7 @@ function BookNowCustomContent() {
   const { submitHealthForm } = useHealthForm();
   const { availability, bookTimeSlot } = useAvailability(selectedDate);
   const { timeSlots, loading, error } = useTimeSlots(selectedDate);
-  const { nextAvailable, findNextAvailableDate } = useNextAvailableDate();
+  const { nextAvailable, findNextAvailableDate, findNextAvailableAfter, clearNextAvailable } = useNextAvailableDate();
   
   // Auth hook for user profile auto-population
   const { isAuthenticated, userProfile, getClientProfileData } = useAuth();
@@ -134,24 +178,45 @@ function BookNowCustomContent() {
 
   // Auto-navigate to next available date when nextAvailable is found
   useEffect(() => {
-    console.log('nextAvailable useEffect triggered:', { 
-      nextAvailable: nextAvailable?.date, 
-      selectedDate, 
-      currentWeekStart: currentWeekStart?.toDateString() 
-    });
-    if (nextAvailable && !selectedDate) {
-      console.log('🎯 Setting calendar to next available date:', nextAvailable.date);
-      const nextAvailableDate = new Date(nextAvailable.date);
-      const nextWeekStart = new Date(nextAvailableDate);
-      nextWeekStart.setDate(nextAvailableDate.getDate() - nextAvailableDate.getDay());
+    if (nextAvailable) {
+      const today = new Date().toISOString().split('T')[0];
       
-      console.log('📅 Calculated week start:', nextWeekStart.toDateString());
-      console.log('🗓️ Setting selected date to:', nextAvailable.date);
-      
-      setCurrentWeekStart(nextWeekStart);
-      setSelectedDate(nextAvailable.date);
+      if (nextAvailable.date >= today) {
+        console.log('Setting calendar to next available date:', nextAvailable.date);
+        const nextAvailableDate = new Date(nextAvailable.date);
+        const nextWeekStart = new Date(nextAvailableDate);
+        nextWeekStart.setDate(nextAvailableDate.getDate() - nextAvailableDate.getDay());
+        
+        setCurrentWeekStart(nextWeekStart);
+        setValidatedSelectedDate(nextAvailable.date);
+      } else {
+        console.log('Next available date is past, clearing...');
+        clearNextAvailable();
+        findNextAvailableDate();
+      }
     }
-  }, [nextAvailable, selectedDate]);
+  }, [nextAvailable, findNextAvailableDate, clearNextAvailable]);
+
+  // Function to advance to next available date
+  const advanceToNextAvailable = useCallback(async () => {
+    console.log('🚀 Advance to next available date clicked');
+    console.log('🔍 Current selectedDate:', selectedDate);
+    
+    // Clear current selection first
+    setSelectedDate('');
+    setSelectedTime('');
+    setSelectedArtistId('');
+    
+    if (selectedDate) {
+      // If we have a selected date, find the next available date after it
+      console.log('🔍 Finding next available date after:', selectedDate);
+      await findNextAvailableAfter(selectedDate);
+    } else {
+      // If no date selected, find the next available date from today
+      console.log('🔍 Finding next available date from today');
+      await findNextAvailableDate();
+    }
+  }, [selectedDate, findNextAvailableAfter, findNextAvailableDate]);
 
   // Initialize currentWeekStart to current week ONLY after we've checked for next available date
   useEffect(() => {
@@ -160,10 +225,21 @@ function BookNowCustomContent() {
     // 2. We've already tried to find next available date (nextAvailable is null, not undefined)
     // 3. We're on the calendar step
     if (!currentWeekStart && nextAvailable === null && currentStep === 'calendar') {
-      console.log('No available dates found, initializing to current week');
+      console.log('No available dates found, initializing to current week starting from today');
       const today = new Date();
       const weekStart = new Date(today);
-      weekStart.setDate(today.getDate() - today.getDay());
+      weekStart.setDate(today.getDate() - today.getDay()); // Start of current week (Sunday)
+      
+      // Ensure we don't start from a past week
+      const todayString = today.toISOString().split('T')[0];
+      const weekStartString = weekStart.toISOString().split('T')[0];
+      
+      if (weekStartString < todayString) {
+        // If week start is in the past, advance to next week
+        weekStart.setDate(weekStart.getDate() + 7);
+        console.log('Week start was in past, advancing to next week:', weekStart.toDateString());
+      }
+      
       setCurrentWeekStart(weekStart);
     }
   }, [currentWeekStart, nextAvailable, currentStep]);
@@ -181,6 +257,35 @@ function BookNowCustomContent() {
       findNextAvailableDate();
     }
   }, [selectedService, findNextAvailableDate, selectedDate, nextAvailable, currentStep]);
+
+  // Force clear selected date on component mount and whenever it becomes a past date
+  useEffect(() => {
+    const today = new Date();
+    const todayString = today.toISOString().split('T')[0];
+    const dayOfWeek = today.toLocaleDateString('en-US', { weekday: 'long' });
+    console.log('🔍 Date validation check - selectedDate:', selectedDate, 'today:', todayString, 'day:', dayOfWeek);
+    
+    // If selectedDate is in the past, force it to today
+    if (selectedDate && selectedDate < todayString) {
+      console.log('⚠️ Past date detected, forcing to today:', todayString);
+      setSelectedDate(todayString);
+    }
+  }, [selectedDate]); // Run whenever selectedDate changes
+
+  // Force refresh if we detect a past date in nextAvailable
+  useEffect(() => {
+    if (nextAvailable) {
+      const today = new Date();
+      const todayString = today.toISOString().split('T')[0];
+      
+      if (nextAvailable.date < todayString) {
+        console.log('🚨 Detected past date in nextAvailable:', nextAvailable.date, 'forcing refresh...');
+        setValidatedSelectedDate('');
+        clearNextAvailable();
+        findNextAvailableDate();
+      }
+    }
+  }, [nextAvailable, findNextAvailableDate, clearNextAvailable]);
 
   // Auto-navigate to next available date when calendar step becomes active
   useEffect(() => {
@@ -201,10 +306,12 @@ function BookNowCustomContent() {
 
   // Handle date selection from calendar
   const handleDateSelect = (date: Date) => {
-    const dateString = date.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-    setSelectedDate(dateString);
-    setSelectedTime(''); // Reset selected time when date changes
-    setSelectedArtistId(''); // Reset selected artist when date changes
+    const dateString = date.toISOString().split('T')[0];
+    console.log('Date clicked:', dateString);
+    
+    setValidatedSelectedDate(dateString);
+    setSelectedTime('');
+    setSelectedArtistId('');
   };
 
   // Handle time slot selection
@@ -224,7 +331,7 @@ function BookNowCustomContent() {
   };
 
   const handleDateTimeSelect = (date: string, time: string) => {
-    setSelectedDate(date);
+    setValidatedSelectedDate(date);
     setSelectedTime(time);
     
     // Check if user is authenticated and has complete profile data
@@ -660,10 +767,39 @@ function BookNowCustomContent() {
     
     // Generate week days based on the current week state
     const weekDays = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize to midnight for comparison
+    
+    // Always generate all 7 days of the week
     for (let i = 0; i < 7; i++) {
       const day = new Date(currentWeekStart);
       day.setDate(currentWeekStart.getDate() + i);
+      day.setHours(0, 0, 0, 0); // Normalize to midnight
       weekDays.push(day);
+    }
+    
+    // Check if we have any future dates in this week
+    const hasFutureDates = weekDays.some(day => day >= today);
+    
+    // If no valid days in current week, advance to next week
+    if (!hasFutureDates) {
+      const nextWeek = new Date(currentWeekStart);
+      nextWeek.setDate(currentWeekStart.getDate() + 7);
+      setCurrentWeekStart(nextWeek);
+      return (
+        <div className="container-fluid py-5">
+          <div className="row justify-content-center">
+            <div className="col-lg-8">
+              <div className="text-center">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Advancing calendar...</span>
+                </div>
+                <p className="mt-3 text-muted">Moving to next available week...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
     }
 
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -717,6 +853,21 @@ function BookNowCustomContent() {
                   )}
                 </div>
 
+                {/* Next Available Date Button */}
+                <div className="text-center mb-4">
+                  <button 
+                    className="btn btn-success btn-sm px-4 py-2"
+                    onClick={advanceToNextAvailable}
+                    title="Find Next Available Date"
+                  >
+                    <i className="fas fa-calendar-plus me-2"></i>
+                    Next Available Date
+                  </button>
+                  <div className="small text-muted mt-1">
+                    Click to find the next available booking day
+                  </div>
+                </div>
+
                 {/* Calendar Week View - Desktop */}
                 <div className="d-none d-md-flex align-items-center justify-content-center mb-4">
                   {/* Previous Week Arrow */}
@@ -736,15 +887,18 @@ function BookNowCustomContent() {
                       const isPast = normalizedDay < currentDate && !isToday;
                       const dateString = day.toISOString().split('T')[0];
                       const isSelectedDate = selectedDate === dateString;
+                      const isNextAvailable = nextAvailable?.date === dateString;
                       
                       return (
                         <div
                           key={index}
-                          className={`text-center p-3 rounded cursor-pointer ${
+                          className={`text-center p-3 rounded cursor-pointer position-relative ${
                             isPast
                               ? 'bg-light text-muted'
                               : isSelectedDate
                               ? 'bg-primary text-white'
+                              : isNextAvailable
+                              ? 'bg-success text-white'
                               : isToday
                               ? 'bg-warning text-dark'
                               : 'bg-light text-dark'
@@ -752,7 +906,7 @@ function BookNowCustomContent() {
                           style={{ 
                             minWidth: '100px',
                             cursor: isPast ? 'not-allowed' : 'pointer',
-                            border: isSelectedDate ? '2px solid #0d6efd' : '1px solid #e9ecef',
+                            border: isSelectedDate ? '2px solid #0d6efd' : isNextAvailable ? '2px solid #198754' : '1px solid #e9ecef',
                             opacity: isPast ? 0.5 : 1
                           }}
                           onClick={() => !isPast && handleDateSelect(day)}
@@ -766,6 +920,11 @@ function BookNowCustomContent() {
                           {isToday && (
                             <div className="small mt-1">
                               Today
+                            </div>
+                          )}
+                          {isNextAvailable && !isSelectedDate && (
+                            <div className="small mt-1">
+                              <i className="fas fa-star" style={{ fontSize: '0.7rem' }}></i>
                             </div>
                           )}
                         </div>
@@ -785,6 +944,18 @@ function BookNowCustomContent() {
 
                 {/* Calendar Week View - Mobile/Tablet */}
                 <div className="d-md-none mb-4">
+                  {/* Next Available Date Button - Mobile */}
+                  <div className="text-center mb-3">
+                    <button 
+                      className="btn btn-success btn-sm px-3 py-2"
+                      onClick={advanceToNextAvailable}
+                      title="Find Next Available Date"
+                    >
+                      <i className="fas fa-calendar-plus me-1"></i>
+                      Next Available
+                    </button>
+                  </div>
+                  
                   {/* Week Navigation */}
                   <div className="d-flex justify-content-between align-items-center mb-3">
                     <button 
@@ -814,25 +985,30 @@ function BookNowCustomContent() {
                       const isPast = normalizedDay < currentDate && !isToday;
                       const dateString = day.toISOString().split('T')[0];
                       const isSelectedDate = selectedDate === dateString;
+                      const isNextAvailable = nextAvailable?.date === dateString;
                       
                       return (
-                        <div key={index} className="col">
-                          <div
-                            className={`text-center p-2 rounded ${
+                        <div key={`${dateString}-${index}`} className="col">
+                          <button
+                            type="button"
+                            className={`btn w-100 text-center p-2 rounded position-relative border ${
                               isPast
-                                ? 'bg-light text-muted'
+                                ? 'btn-light text-muted border-light'
                                 : isSelectedDate
-                                ? 'bg-primary text-white'
+                                ? 'btn-primary text-white border-primary'
+                                : isNextAvailable
+                                ? 'btn-success text-white border-success'
                                 : isToday
-                                ? 'bg-warning text-dark'
-                                : 'bg-light text-dark'
+                                ? 'btn-warning text-dark border-warning'
+                                : 'btn-outline-secondary'
                             }`}
                             style={{ 
                               cursor: isPast ? 'not-allowed' : 'pointer',
-                              border: isSelectedDate ? '2px solid #0d6efd' : '1px solid #e9ecef',
-                              opacity: isPast ? 0.5 : 1
+                              opacity: isPast ? 0.5 : 1,
+                              minHeight: '70px'
                             }}
                             onClick={() => !isPast && handleDateSelect(day)}
+                            disabled={isPast}
                           >
                             <div className="fw-semibold small mb-1">
                               {dayNames[index].substring(0, 3)}
@@ -845,7 +1021,12 @@ function BookNowCustomContent() {
                                 Today
                               </div>
                             )}
-                          </div>
+                            {isNextAvailable && !isSelectedDate && (
+                              <div className="small mt-1">
+                                <i className="fas fa-star" style={{ fontSize: '0.6rem' }}></i>
+                              </div>
+                            )}
+                          </button>
                         </div>
                       );
                     })}
@@ -858,7 +1039,7 @@ function BookNowCustomContent() {
                     <div className="border-top pt-4">
                       <div className="text-center mb-4">
                         <h4 className="h5 fw-bold text-dark mb-2">
-                          Available Times for {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                          Available Times for {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                         </h4>
                         <p className="text-muted mb-0">
                           Select a 4-hour time slot to continue

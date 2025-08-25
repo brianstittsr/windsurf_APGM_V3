@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Test User - A Pretty Girl Matter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #AD6269;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #AD6269;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #8b4f56;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            margin-bottom: 20px;
+        }
+        .credentials {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="color: #AD6269; text-align: center;">Create Test User</h1>
+        
+        <div class="info">
+            <strong>Quick Test Users:</strong><br>
+            Use these credentials to test login functionality:<br>
+            <strong>Email:</strong> client99@aprettygirlmatter.com<br>
+            <strong>Password:</strong> TestPass123!
+        </div>
+
+        <form id="createUserForm">
+            <div class="form-group">
+                <label for="email">Email Address:</label>
+                <input type="email" id="email" required placeholder="test@example.com">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" required placeholder="Minimum 6 characters" minlength="6">
+            </div>
+
+            <div class="form-group">
+                <label for="firstName">First Name:</label>
+                <input type="text" id="firstName" required placeholder="John">
+            </div>
+
+            <div class="form-group">
+                <label for="lastName">Last Name:</label>
+                <input type="text" id="lastName" required placeholder="Doe">
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number:</label>
+                <input type="tel" id="phone" required placeholder="(555) 123-4567">
+            </div>
+
+            <button type="submit" id="submitBtn">Create Test User</button>
+        </form>
+
+        <div id="result" class="result"></div>
+
+        <div class="credentials">
+            <strong>Existing Test Account:</strong><br>
+            If you need to test immediately, use:<br>
+            <strong>Email:</strong> client99@aprettygirlmatter.com<br>
+            <strong>Password:</strong> TestPass123!<br>
+            <em>This account should already exist in your Firebase project.</em>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase configuration - using the same config as your app
+        const firebaseConfig = {
+            apiKey: "AIzaSyDF47aZnB3UlQjk_7puXUIWFUUyP9t5O4M",
+            authDomain: "aprettygirlmatterllc.firebaseapp.com",
+            projectId: "aprettygirlmatterllc",
+            storageBucket: "aprettygirlmatterllc.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:abcdef123456"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const form = document.getElementById('createUserForm');
+        const resultDiv = document.getElementById('result');
+        const submitBtn = document.getElementById('submitBtn');
+
+        function showResult(message, type) {
+            resultDiv.textContent = message;
+            resultDiv.className = `result ${type}`;
+            resultDiv.style.display = 'block';
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const phone = document.getElementById('phone').value;
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating User...';
+
+            try {
+                // Create Firebase Auth user
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Create user profile in Firestore
+                const userProfile = {
+                    profile: {
+                        email: email,
+                        firstName: firstName,
+                        lastName: lastName,
+                        phone: phone,
+                        emergencyContactName: '',
+                        emergencyContactPhone: '',
+                        hearAboutUs: 'Test Account'
+                    },
+                    role: 'client',
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                };
+
+                await setDoc(doc(db, 'users', user.uid), userProfile);
+
+                showResult(`✅ Test user created successfully!\n\nLogin Credentials:\nEmail: ${email}\nPassword: ${password}\n\nYou can now use these credentials to test the login functionality.`, 'success');
+                
+                // Reset form
+                form.reset();
+
+            } catch (error) {
+                console.error('Error creating user:', error);
+                let errorMessage = 'Failed to create user: ';
+                
+                switch (error.code) {
+                    case 'auth/email-already-in-use':
+                        errorMessage += 'This email is already registered. Try a different email address.';
+                        break;
+                    case 'auth/weak-password':
+                        errorMessage += 'Password is too weak. Use at least 6 characters.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage += 'Invalid email address format.';
+                        break;
+                    default:
+                        errorMessage += error.message;
+                }
+                
+                showResult(errorMessage, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Test User';
+            }
+        });
+
+        // Test Firebase connection on page load
+        window.addEventListener('load', () => {
+            console.log('Firebase initialized successfully');
+            console.log('Auth:', auth);
+            console.log('Firestore:', db);
+        });
+    </script>
+</body>
+</html>

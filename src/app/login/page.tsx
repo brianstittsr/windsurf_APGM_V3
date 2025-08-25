@@ -35,16 +35,28 @@ function LoginForm() {
     setIsLoading(true);
     setError('');
 
+    // Debug logging
+    console.log('🔑 Login attempt for:', email);
+    console.log('🔧 Firebase configured:', isFirebaseConfigured());
+
     try {
       if (!auth) {
         throw new Error('Firebase Auth is not initialized');
       }
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log('Login successful:', userCredential.user.email);
+      
+      // Trim whitespace from email and validate
+      const trimmedEmail = email.trim().toLowerCase();
+      if (!trimmedEmail || !password) {
+        throw new Error('Please enter both email and password');
+      }
+      
+      console.log('🚀 Attempting Firebase authentication...');
+      const userCredential = await signInWithEmailAndPassword(auth, trimmedEmail, password);
+      console.log('✅ Login successful:', userCredential.user.email);
       
       // Handle Remember Me functionality
       if (rememberMe) {
-        localStorage.setItem('rememberedEmail', email);
+        localStorage.setItem('rememberedEmail', trimmedEmail);
         localStorage.setItem('rememberMe', 'true');
       } else {
         localStorage.removeItem('rememberedEmail');
@@ -60,36 +72,41 @@ function LoginForm() {
         router.push('/dashboard');
       }
     } catch (err: any) {
-      console.error('Login error:', err);
+      console.error('❌ Login error:', err);
+      console.error('❌ Error code:', err.code);
+      console.error('❌ Error message:', err.message);
       
-      // Handle specific Firebase Auth errors
+      // Handle specific Firebase Auth errors with more helpful messages
       switch (err.code) {
         case 'auth/user-not-found':
-          setError('No account found with this email address.');
+          setError('No account found with this email address. Please check your email or create a new account.');
           break;
         case 'auth/wrong-password':
-          setError('Incorrect password. Please try again.');
+          setError('Incorrect password. Please try again or reset your password.');
           break;
         case 'auth/invalid-email':
           setError('Please enter a valid email address.');
           break;
         case 'auth/user-disabled':
-          setError('This account has been disabled.');
+          setError('This account has been disabled. Please contact support.');
           break;
         case 'auth/too-many-requests':
-          setError('Too many failed attempts. Please try again later.');
+          setError('Too many failed login attempts. Please wait a few minutes before trying again.');
           break;
         case 'auth/configuration-not-found':
-          setError('Firebase Authentication is not enabled. Please enable Authentication in your Firebase console.');
+          setError('Authentication service is not properly configured. Please contact support.');
           break;
         case 'auth/invalid-credential':
-          setError('Invalid email or password. Please check your credentials and try again.');
+          setError('Invalid email or password. Please double-check your credentials and try again. If you\'re a new user, please create an account first.');
           break;
         case 'auth/invalid-api-key':
-          setError('Firebase configuration error. Please check your API key.');
+          setError('Authentication configuration error. Please contact support.');
+          break;
+        case 'auth/network-request-failed':
+          setError('Network error. Please check your internet connection and try again.');
           break;
         default:
-          setError(err.message || 'Login failed. Please try again.');
+          setError(err.message || 'Login failed. Please try again or contact support if the problem persists.');
       }
     } finally {
       setIsLoading(false);
@@ -135,6 +152,7 @@ function LoginForm() {
                       </div>
                     </div>
                   )}
+
 
                   <form onSubmit={handleSubmit}>
                     <div className="mb-4">

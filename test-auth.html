@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Test - A Pretty Girl Matter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        button {
+            background-color: #AD6269;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #8b4f56;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .credentials {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="color: #AD6269; text-align: center;">Firebase Authentication Test</h1>
+        
+        <div class="credentials">
+            <strong>Test Credentials:</strong><br>
+            Email: client99@aprettygirlmatter.com<br>
+            Password: TestPass123!
+        </div>
+
+        <div class="test-section info">
+            <h3>Firebase Configuration Test</h3>
+            <p>Testing Firebase initialization and configuration...</p>
+            <button onclick="testFirebaseConfig()">Test Firebase Config</button>
+            <div id="configResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Authentication Test</h3>
+            <p>Test login with existing credentials:</p>
+            <button onclick="testLogin()">Test Login</button>
+            <button onclick="testLogout()">Test Logout</button>
+            <button onclick="checkAuthState()">Check Auth State</button>
+            <div id="authResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>User Profile Test</h3>
+            <p>Test fetching user profile data:</p>
+            <button onclick="testUserProfile()">Test User Profile</button>
+            <div id="profileResult"></div>
+        </div>
+
+        <div class="log" id="logOutput">
+            <strong>Test Log:</strong><br>
+            Ready to run tests...
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDF47aZnB3UlQjk_7puXUIWFUUyP9t5O4M",
+            authDomain: "aprettygirlmatterllc.firebaseapp.com",
+            projectId: "aprettygirlmatterllc",
+            storageBucket: "aprettygirlmatterllc.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:abcdef123456"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Test credentials
+        const testEmail = 'client99@aprettygirlmatter.com';
+        const testPassword = 'TestPass123!';
+
+        function log(message) {
+            const logOutput = document.getElementById('logOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            logOutput.innerHTML += `<br>[${timestamp}] ${message}`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+            console.log(message);
+        }
+
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="test-section ${type}" style="margin-top: 15px;">${message}</div>`;
+        }
+
+        // Test Firebase configuration
+        window.testFirebaseConfig = function() {
+            log('🔧 Testing Firebase configuration...');
+            
+            try {
+                log(`✅ Firebase app initialized: ${app.name}`);
+                log(`✅ Auth service: ${auth ? 'Available' : 'Not available'}`);
+                log(`✅ Firestore service: ${db ? 'Available' : 'Not available'}`);
+                log(`✅ Project ID: ${firebaseConfig.projectId}`);
+                log(`✅ Auth Domain: ${firebaseConfig.authDomain}`);
+                
+                showResult('configResult', '✅ Firebase configuration is working correctly!', 'success');
+            } catch (error) {
+                log(`❌ Firebase configuration error: ${error.message}`);
+                showResult('configResult', `❌ Firebase configuration failed: ${error.message}`, 'error');
+            }
+        };
+
+        // Test login
+        window.testLogin = async function() {
+            log('🔑 Testing login...');
+            
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, testEmail, testPassword);
+                const user = userCredential.user;
+                
+                log(`✅ Login successful!`);
+                log(`✅ User ID: ${user.uid}`);
+                log(`✅ Email: ${user.email}`);
+                log(`✅ Email verified: ${user.emailVerified}`);
+                
+                showResult('authResult', `✅ Login successful! User: ${user.email}`, 'success');
+            } catch (error) {
+                log(`❌ Login failed: ${error.code} - ${error.message}`);
+                showResult('authResult', `❌ Login failed: ${error.code} - ${error.message}`, 'error');
+            }
+        };
+
+        // Test logout
+        window.testLogout = async function() {
+            log('🚪 Testing logout...');
+            
+            try {
+                await signOut(auth);
+                log('✅ Logout successful!');
+                showResult('authResult', '✅ Logout successful!', 'success');
+            } catch (error) {
+                log(`❌ Logout failed: ${error.message}`);
+                showResult('authResult', `❌ Logout failed: ${error.message}`, 'error');
+            }
+        };
+
+        // Check auth state
+        window.checkAuthState = function() {
+            log('👤 Checking authentication state...');
+            
+            const user = auth.currentUser;
+            if (user) {
+                log(`✅ User is authenticated: ${user.email}`);
+                showResult('authResult', `✅ User is authenticated: ${user.email}`, 'success');
+            } else {
+                log('ℹ️ No user is currently authenticated');
+                showResult('authResult', 'ℹ️ No user is currently authenticated', 'info');
+            }
+        };
+
+        // Test user profile
+        window.testUserProfile = async function() {
+            log('👤 Testing user profile fetch...');
+            
+            const user = auth.currentUser;
+            if (!user) {
+                log('❌ No authenticated user. Please login first.');
+                showResult('profileResult', '❌ No authenticated user. Please login first.', 'error');
+                return;
+            }
+
+            try {
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    log('✅ User profile found!');
+                    log(`✅ Name: ${userData.profile?.firstName} ${userData.profile?.lastName}`);
+                    log(`✅ Email: ${userData.profile?.email}`);
+                    log(`✅ Role: ${userData.role}`);
+                    log(`✅ Phone: ${userData.profile?.phone}`);
+                    
+                    showResult('profileResult', `✅ User profile loaded successfully! Name: ${userData.profile?.firstName} ${userData.profile?.lastName}`, 'success');
+                } else {
+                    log('❌ No user profile found in Firestore');
+                    showResult('profileResult', '❌ No user profile found in Firestore', 'error');
+                }
+            } catch (error) {
+                log(`❌ Error fetching user profile: ${error.message}`);
+                showResult('profileResult', `❌ Error fetching user profile: ${error.message}`, 'error');
+            }
+        };
+
+        // Monitor auth state changes
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                log(`🔥 Auth state changed: User signed in (${user.email})`);
+            } else {
+                log('🔥 Auth state changed: User signed out');
+            }
+        });
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            log('🚀 Authentication test page loaded');
+            log('📋 Ready to run tests');
+        });
+    </script>
+</body>
+</html>

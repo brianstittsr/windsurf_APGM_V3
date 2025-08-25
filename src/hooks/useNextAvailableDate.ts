@@ -11,13 +11,19 @@ interface NextAvailableDate {
 function convertTo24Hour(time12h: string): number {
   const [time, modifier] = time12h.split(' ');
   let [hours, minutes] = time.split(':');
-  if (hours === '12') {
-    hours = '00';
+  let hourNum = parseInt(hours, 10);
+  
+  if (modifier === 'AM') {
+    if (hourNum === 12) {
+      hourNum = 0; // 12 AM = 0 hours
+    }
+  } else if (modifier === 'PM') {
+    if (hourNum !== 12) {
+      hourNum += 12; // Add 12 for PM times except 12 PM
+    }
   }
-  if (modifier === 'PM') {
-    hours = (parseInt(hours, 10) + 12).toString();
-  }
-  return parseInt(hours, 10);
+  
+  return hourNum;
 }
 
 export function useNextAvailableDate() {
@@ -25,7 +31,12 @@ export function useNextAvailableDate() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const findNextAvailableDate = useCallback(async () => {
+  // Clear function to reset the next available date
+  const clearNextAvailable = useCallback(() => {
+    setNextAvailable(null);
+  }, []);
+
+  const findNextAvailableDate = useCallback(async (startFromDate?: string) => {
     try {
       console.log('🔍 findNextAvailableDate called - starting search...');
       setLoading(true);
@@ -33,7 +44,12 @@ export function useNextAvailableDate() {
 
       const today = new Date();
       const todayString = today.toISOString().split('T')[0];
-      console.log('📅 Today string:', todayString);
+      
+      // Use startFromDate if provided, otherwise start from today
+      // Ensure we never search from a past date
+      const searchStartDate = startFromDate && startFromDate >= todayString ? startFromDate : todayString;
+      console.log('📅 Search start date:', searchStartDate, '(today:', todayString, ')');
+      console.log('🕐 Current time:', today.toLocaleString());
 
       // Query artistAvailability collection for all documents
       const availabilityRef = collection(db, 'artistAvailability');
@@ -43,15 +59,18 @@ export function useNextAvailableDate() {
       // Generate available dates based on artist availability patterns
       const availableDates: { date: string; timeSlots: any[] }[] = [];
       
-      // Get next 30 days to check
+      // Get next 30 days to check from the search start date
+      const startDate = new Date(searchStartDate + 'T12:00:00');
       for (let i = 0; i < 30; i++) {
-        const checkDate = new Date(today);
-        checkDate.setDate(today.getDate() + i);
+        const checkDate = new Date(startDate);
+        checkDate.setDate(startDate.getDate() + i);
         const dateString = checkDate.toISOString().split('T')[0];
         
+        // Only check dates from today onwards, but allow searching from future dates
+        console.log(`🔍 Comparing dates: ${dateString} >= ${todayString} = ${dateString >= todayString}`);
         if (dateString >= todayString) {
           const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][checkDate.getDay()];
-          console.log(`🗓️ Checking ${dateString} (${dayOfWeek})`);
+          console.log(`🗓️ Checking ${dateString} (${dayOfWeek}) - getDay() returned: ${checkDate.getDay()}`);
           
           // Find artist availability for this day of week
           const dayAvailability = snapshot.docs.find(doc => {
@@ -79,10 +98,13 @@ export function useNextAvailableDate() {
                 console.log(`      ⏰ Converted times: ${startHour}:00 - ${endHour}:00`);
                 
                 // Generate non-overlapping 4-hour booking slots
+                // Start from the earliest possible time (9 AM if available)
                 for (let hour = startHour; hour <= endHour - 4; hour += 4) {
                   const endTime = hour + 4;
                   const timeSlot = `${hour.toString().padStart(2, '0')}:00`;
                   const endTimeFormatted = `${endTime.toString().padStart(2, '0')}:00`;
+                  
+                  console.log(`        ⏰ Generated slot: ${timeSlot} - ${endTimeFormatted}`);
                   
                   timeSlots.push({
                     time: timeSlot,
@@ -130,5 +152,14 @@ export function useNextAvailableDate() {
     }
   }, []);
 
-  return { nextAvailable, loading, error, findNextAvailableDate };
+  // Function to find next available date after a specific date
+  const findNextAvailableAfter = useCallback(async (afterDate: string) => {
+    const nextDay = new Date(afterDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    const nextDayString = nextDay.toISOString().split('T')[0];
+    console.log('🔍 Finding next available date after:', afterDate, '-> searching from:', nextDayString);
+    await findNextAvailableDate(nextDayString);
+  }, [findNextAvailableDate]);
+
+  return { nextAvailable, loading, error, findNextAvailableDate, findNextAvailableAfter, clearNextAvailable };
 }
