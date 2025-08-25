@@ -3,19 +3,8 @@
 import React from 'react';
 
 interface ClientProfileData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  dateOfBirth: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
   emergencyContactName: string;
   emergencyContactPhone: string;
-  preferredContactMethod: string;
-  hearAboutUs: string;
 }
 
 interface ProfileConfirmationProps {
@@ -28,19 +17,8 @@ interface ProfileConfirmationProps {
 export default function ProfileConfirmation({ data, onConfirm, onEdit, onBack }: ProfileConfirmationProps) {
   const formatFieldName = (key: string): string => {
     const fieldNames: { [key: string]: string } = {
-      firstName: 'First Name',
-      lastName: 'Last Name',
-      email: 'Email',
-      phone: 'Phone',
-      dateOfBirth: 'Date of Birth',
-      address: 'Address',
-      city: 'City',
-      state: 'State',
-      zipCode: 'ZIP Code',
       emergencyContactName: 'Emergency Contact Name',
-      emergencyContactPhone: 'Emergency Contact Phone',
-      preferredContactMethod: 'Preferred Contact Method',
-      hearAboutUs: 'How did you hear about us?'
+      emergencyContactPhone: 'Emergency Contact Phone'
     };
     return fieldNames[key] || key;
   };

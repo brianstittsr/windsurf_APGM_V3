@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>List Client Users</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1000px; margin: 50px auto; padding: 20px; }
+        .container { background: #f5f5f5; padding: 30px; border-radius: 8px; }
+        button { background: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; margin: 10px; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 4px; background: white; border: 1px solid #ddd; }
+        .user-card { background: #e9ecef; padding: 15px; margin: 10px 0; border-radius: 4px; border-left: 4px solid #28a745; }
+        .loading { text-align: center; padding: 20px; }
+        .summary { background: #d4edda; padding: 15px; border-radius: 4px; margin-bottom: 20px; border-left: 4px solid #28a745; }
+        .no-users { background: #fff3cd; padding: 15px; border-radius: 4px; border-left: 4px solid #ffc107; }
+        .error { background: #f8d7da; padding: 15px; border-radius: 4px; border-left: 4px solid #dc3545; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; font-weight: bold; }
+        .status-active { color: #28a745; font-weight: bold; }
+        .status-inactive { color: #dc3545; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👥 Firebase Client Users</h1>
+        <p>This tool queries your Firebase database to show all users with the "client" role.</p>
+        
+        <button onclick="loadClientUsers()">🔍 Load Client Users</button>
+        <button onclick="loadAllUsers()">📋 Load All Users (by Role)</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase configuration - update with your actual config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDF47aZnB3UlQjk_7puXUIWFUUyP9t5O4M",
+            authDomain: "aprettygirlmatter-v3.firebaseapp.com",
+            projectId: "aprettygirlmatter-v3",
+            storageBucket: "aprettygirlmatter-v3.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdef123456"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.loadClientUsers = async function() {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                resultDiv.innerHTML = '<div class="loading">🔍 Loading client users...</div>';
+                
+                const usersRef = collection(db, 'users');
+                const clientQuery = query(usersRef, where('role', '==', 'client'));
+                const snapshot = await getDocs(clientQuery);
+                
+                if (snapshot.empty) {
+                    resultDiv.innerHTML = '<div class="no-users">📭 No client users found in the database.</div>';
+                    return;
+                }
+                
+                let html = `<div class="summary">
+                    <h3>✅ Found ${snapshot.size} client users</h3>
+                </div>`;
+                
+                html += `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>User ID</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                snapshot.forEach((docSnapshot) => {
+                    const userData = docSnapshot.data();
+                    const profile = userData.profile || {};
+                    const email = profile.email || userData.email || 'N/A';
+                    const name = `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || 'N/A';
+                    const phone = profile.phone || userData.phone || 'N/A';
+                    const location = profile.city && profile.state ? `${profile.city}, ${profile.state}` : 'N/A';
+                    const isActive = userData.isActive !== false;
+                    const statusClass = isActive ? 'status-active' : 'status-inactive';
+                    const statusText = isActive ? 'Active' : 'Inactive';
+                    
+                    html += `
+                        <tr>
+                            <td><strong>${name}</strong></td>
+                            <td>${email}</td>
+                            <td>${phone}</td>
+                            <td>${location}</td>
+                            <td class="${statusClass}">${statusText}</td>
+                            <td><code>${docSnapshot.id}</code></td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                        </tbody>
+                    </table>
+                `;
+                
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Error loading client users</h3>
+                        <p><strong>Message:</strong> ${error.message}</p>
+                        <p><strong>Code:</strong> ${error.code}</p>
+                    </div>
+                `;
+            }
+        };
+
+        window.loadAllUsers = async function() {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                resultDiv.innerHTML = '<div class="loading">🔍 Loading all users...</div>';
+                
+                const usersRef = collection(db, 'users');
+                const snapshot = await getDocs(usersRef);
+                
+                if (snapshot.empty) {
+                    resultDiv.innerHTML = '<div class="no-users">📭 No users found in the database.</div>';
+                    return;
+                }
+                
+                // Group users by role
+                const usersByRole = {
+                    client: [],
+                    admin: [],
+                    artist: [],
+                    unknown: []
+                };
+                
+                snapshot.forEach((docSnapshot) => {
+                    const userData = docSnapshot.data();
+                    const role = userData.role || 'unknown';
+                    const profile = userData.profile || {};
+                    
+                    const userInfo = {
+                        id: docSnapshot.id,
+                        name: `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || 'N/A',
+                        email: profile.email || userData.email || 'N/A',
+                        phone: profile.phone || userData.phone || 'N/A',
+                        location: profile.city && profile.state ? `${profile.city}, ${profile.state}` : 'N/A',
+                        isActive: userData.isActive !== false,
+                        role: role
+                    };
+                    
+                    if (usersByRole[role]) {
+                        usersByRole[role].push(userInfo);
+                    } else {
+                        usersByRole.unknown.push(userInfo);
+                    }
+                });
+                
+                let html = `<div class="summary">
+                    <h3>📊 User Summary</h3>
+                    <p><strong>Total Users:</strong> ${snapshot.size}</p>
+                    <ul>
+                        <li><strong>Clients:</strong> ${usersByRole.client.length}</li>
+                        <li><strong>Admins:</strong> ${usersByRole.admin.length}</li>
+                        <li><strong>Artists:</strong> ${usersByRole.artist.length}</li>
+                        <li><strong>Unknown Role:</strong> ${usersByRole.unknown.length}</li>
+                    </ul>
+                </div>`;
+                
+                // Display each role group
+                Object.entries(usersByRole).forEach(([role, users]) => {
+                    if (users.length > 0) {
+                        const roleColors = {
+                            client: '#28a745',
+                            admin: '#dc3545', 
+                            artist: '#ffc107',
+                            unknown: '#6c757d'
+                        };
+                        
+                        html += `
+                            <div style="margin-top: 30px;">
+                                <h4 style="color: ${roleColors[role]}; text-transform: uppercase;">
+                                    ${role} Users (${users.length})
+                                </h4>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Phone</th>
+                                            <th>Location</th>
+                                            <th>Status</th>
+                                            <th>User ID</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+                        
+                        users.forEach(user => {
+                            const statusClass = user.isActive ? 'status-active' : 'status-inactive';
+                            const statusText = user.isActive ? 'Active' : 'Inactive';
+                            
+                            html += `
+                                <tr>
+                                    <td><strong>${user.name}</strong></td>
+                                    <td>${user.email}</td>
+                                    <td>${user.phone}</td>
+                                    <td>${user.location}</td>
+                                    <td class="${statusClass}">${statusText}</td>
+                                    <td><code>${user.id}</code></td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                    }
+                });
+                
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Error loading users</h3>
+                        <p><strong>Message:</strong> ${error.message}</p>
+                        <p><strong>Code:</strong> ${error.code}</p>
+                    </div>
+                `;
+            }
+        };
+    </script>
+</body>
+</html>

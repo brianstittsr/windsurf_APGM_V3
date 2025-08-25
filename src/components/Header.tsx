@@ -17,12 +17,6 @@ export default function Header() {
 
   useEffect(() => {
     setIsClient(true);
-    
-    // For testing - simulate admin login if not in production
-    if (typeof window !== 'undefined' && !localStorage.getItem('adminEmail')) {
-      console.log('Setting admin email for testing...');
-      localStorage.setItem('adminEmail', 'admin@example.com');
-    }
   }, []);
 
   const handleAddressClick = () => {
@@ -46,24 +40,16 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      if (isFirebaseConfigured()) {
+      if (auth && auth.currentUser) {
         await signOut(auth);
-      } else {
-        // Development mode - clear admin bypass and session
-        localStorage.removeItem('adminEmail');
-        localStorage.removeItem('rememberMe');
-        localStorage.removeItem('rememberedEmail');
-        sessionStorage.removeItem('currentLogin');
       }
       // Redirect to home page after logout
       window.location.href = '/';
     } catch (error) {
       console.error('Error signing out:', error);
-      // Still clear localStorage and sessionStorage on error
-      localStorage.removeItem('adminEmail');
+      // Still clear localStorage on error
       localStorage.removeItem('rememberMe');
       localStorage.removeItem('rememberedEmail');
-      sessionStorage.removeItem('currentLogin');
       window.location.href = '/';
     }
   };

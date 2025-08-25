@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Client Users</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .container { background: #f5f5f5; padding: 30px; border-radius: 8px; }
+        button { background: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; margin: 10px; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 4px; background: white; border: 1px solid #ddd; }
+        .user-card { background: #e9ecef; padding: 15px; margin: 10px 0; border-radius: 4px; }
+        .client { border-left: 4px solid #28a745; }
+        .admin { border-left: 4px solid #dc3545; }
+        .artist { border-left: 4px solid #ffc107; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Firebase Users Database Query</h1>
+        <p>This will query your Firebase database to show all users and their roles.</p>
+        
+        <button onclick="checkUsers()">Check All Users</button>
+        <button onclick="checkClients()">Check Client Users Only</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase configuration - update with your actual config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDF47aZnB3UlQjk_7puXUIWFUUyP9t5O4M",
+            authDomain: "aprettygirlmatter-v3.firebaseapp.com",
+            projectId: "aprettygirlmatter-v3",
+            storageBucket: "aprettygirlmatter-v3.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdef123456"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.checkUsers = async function() {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                resultDiv.innerHTML = '<div class="result">Querying all users...</div>';
+                
+                const usersRef = collection(db, 'users');
+                const snapshot = await getDocs(usersRef);
+                
+                if (snapshot.empty) {
+                    resultDiv.innerHTML = '<div class="result">❌ No users found in the database.</div>';
+                    return;
+                }
+                
+                let html = `<div class="result"><h3>✅ Found ${snapshot.size} users:</h3>`;
+                let roleCount = { client: 0, admin: 0, artist: 0, unknown: 0 };
+                
+                snapshot.forEach((doc) => {
+                    const userData = doc.data();
+                    const role = userData.role || 'unknown';
+                    roleCount[role] = (roleCount[role] || 0) + 1;
+                    
+                    const profile = userData.profile || {};
+                    const email = profile.email || userData.email || 'N/A';
+                    const name = `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || 'N/A';
+                    const phone = profile.phone || userData.phone || 'N/A';
+                    
+                    html += `
+                        <div class="user-card ${role}">
+                            <strong>${name}</strong> (${role.toUpperCase()})
+                            <br>📧 ${email}
+                            <br>📱 ${phone}
+                            <br>🆔 ${doc.id}
+                        </div>
+                    `;
+                });
+                
+                html += '<h4>Summary by Role:</h4>';
+                Object.entries(roleCount).forEach(([role, count]) => {
+                    html += `<p><strong>${role}:</strong> ${count} users</p>`;
+                });
+                
+                html += '</div>';
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="result">
+                        <h3>❌ Error querying users</h3>
+                        <p>${error.message}</p>
+                        <p><strong>Code:</strong> ${error.code}</p>
+                    </div>
+                `;
+            }
+        };
+
+        window.checkClients = async function() {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                resultDiv.innerHTML = '<div class="result">Querying client users...</div>';
+                
+                const usersRef = collection(db, 'users');
+                const clientQuery = query(usersRef, where('role', '==', 'client'));
+                const snapshot = await getDocs(clientQuery);
+                
+                if (snapshot.empty) {
+                    resultDiv.innerHTML = '<div class="result">❌ No client users found in the database.</div>';
+                    return;
+                }
+                
+                let html = `<div class="result"><h3>✅ Found ${snapshot.size} client users:</h3>`;
+                
+                snapshot.forEach((doc) => {
+                    const userData = doc.data();
+                    const profile = userData.profile || {};
+                    const email = profile.email || userData.email || 'N/A';
+                    const name = `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || 'N/A';
+                    const phone = profile.phone || userData.phone || 'N/A';
+                    const address = profile.address || 'N/A';
+                    const city = profile.city || 'N/A';
+                    const state = profile.state || 'N/A';
+                    
+                    html += `
+                        <div class="user-card client">
+                            <strong>${name}</strong> (CLIENT)
+                            <br>📧 ${email}
+                            <br>📱 ${phone}
+                            <br>🏠 ${address}, ${city}, ${state}
+                            <br>🆔 ${doc.id}
+                            <br>✅ Active: ${userData.isActive !== false ? 'Yes' : 'No'}
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="result">
+                        <h3>❌ Error querying client users</h3>
+                        <p>${error.message}</p>
+                        <p><strong>Code:</strong> ${error.code}</p>
+                    </div>
+                `;
+            }
+        };
+    </script>
+</body>
+</html>

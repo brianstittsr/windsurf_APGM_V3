@@ -83,19 +83,8 @@ function BookNowCustomContent() {
   const { triggerNewClientWorkflow, triggerAppointmentBookedWorkflow } = useWorkflowTrigger();
   
   const [clientProfile, setClientProfile] = useState<ClientProfileData>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    dateOfBirth: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
     emergencyContactName: '',
-    emergencyContactPhone: '',
-    preferredContactMethod: '',
-    hearAboutUs: ''
+    emergencyContactPhone: ''
   });
   
   const [healthFormData, setHealthFormData] = useState<HealthFormData>({});
@@ -131,23 +120,7 @@ function BookNowCustomContent() {
       }
     }
     
-    // Auto-populate client profile data for authenticated users
-    if (isAuthenticated && userProfile) {
-      const profileData = getClientProfileData();
-      console.log('🔍 Auth state:', { isAuthenticated, userProfile: !!userProfile });
-      console.log('📋 Profile data from getClientProfileData:', profileData);
-      if (profileData) {
-        console.log('✅ Auto-populating client profile with:', profileData);
-        setClientProfile(prev => ({
-          ...prev,
-          ...profileData
-        }));
-      } else {
-        console.log('❌ No profile data returned from getClientProfileData');
-      }
-    } else {
-      console.log('❌ User not authenticated or no profile:', { isAuthenticated, userProfile: !!userProfile });
-    }
+    // Profile auto-population removed - users must manually enter their information
   }, [searchParams, services, isAuthenticated, userProfile, getClientProfileData]);
 
   // Auto-navigate to next available date when nextAvailable is found
@@ -247,8 +220,8 @@ function BookNowCustomContent() {
     
     // Check if user is authenticated and has complete profile data
     if (isAuthenticated && userProfile) {
-      const profileData = getClientProfileData();
-      if (profileData && profileData.firstName && profileData.lastName && profileData.email && profileData.phone) {
+      const profile = userProfile.profile;
+      if (profile && profile.firstName && profile.lastName && profile.email && profile.phone) {
         // User has complete profile, show confirmation
         setShowProfileConfirmation(true);
         setCurrentStep('profile');
@@ -266,10 +239,18 @@ function BookNowCustomContent() {
 
   const handleHealthFormSubmit = async () => {
     try {
+      // Get user profile data for emails
+      const profile = userProfile?.profile;
+      if (!profile) {
+        console.error('No user profile available for email sending');
+        setCurrentStep('pre-post-care');
+        return;
+      }
+
       // Send login information email via API
       const loginEmailData = {
-        clientName: `${clientProfile.firstName} ${clientProfile.lastName}`,
-        clientEmail: clientProfile.email,
+        clientName: `${profile.firstName} ${profile.lastName}`,
+        clientEmail: profile.email,
         temporaryPassword: 'TempPass123!', // Generate a temporary password
         loginUrl: `${window.location.origin}/login`,
         businessName: 'A Pretty Girl Matter',
@@ -286,8 +267,8 @@ function BookNowCustomContent() {
       
       // Send health form confirmation email via API
       const healthFormEmailData = {
-        clientName: `${clientProfile.firstName} ${clientProfile.lastName}`,
-        clientEmail: clientProfile.email,
+        clientName: `${profile.firstName} ${profile.lastName}`,
+        clientEmail: profile.email,
         healthFormData,
         clientSignature,
         submissionDate: new Date().toLocaleString('en-US', {
@@ -350,45 +331,26 @@ function BookNowCustomContent() {
     console.log('User ID:', userId);
     console.log('User email:', userProfile?.profile.email);
 
-    // Check if any profile data has changed
+    // Check if emergency contact data has changed
     const currentProfile = userProfile?.profile;
     const hasChanges = !currentProfile || (
-      currentProfile.firstName !== clientProfile.firstName ||
-      currentProfile.lastName !== clientProfile.lastName ||
-      currentProfile.phone !== clientProfile.phone ||
-      currentProfile.dateOfBirth !== clientProfile.dateOfBirth ||
-      currentProfile.address !== clientProfile.address ||
-      currentProfile.city !== clientProfile.city ||
-      currentProfile.state !== clientProfile.state ||
-      currentProfile.zipCode !== clientProfile.zipCode ||
       currentProfile.emergencyContactName !== clientProfile.emergencyContactName ||
-      currentProfile.emergencyContactPhone !== clientProfile.emergencyContactPhone ||
-      currentProfile.preferredContactMethod !== clientProfile.preferredContactMethod
+      currentProfile.emergencyContactPhone !== clientProfile.emergencyContactPhone
     );
 
     if (!hasChanges) {
-      console.log('📝 No profile changes detected, skipping update');
+      console.log('📝 No emergency contact changes detected, skipping update');
       return;
     }
 
-    console.log('📝 Profile changes detected, updating Firebase...');
+    console.log('📝 Emergency contact changes detected, updating Firebase...');
 
     try {
-      // Prepare updated profile data
+      // Prepare updated profile data - only update emergency contact fields
       const updatedProfileData = {
-        firstName: clientProfile.firstName,
-        lastName: clientProfile.lastName,
-        email: userProfile?.profile.email || clientProfile.email,
-        phone: clientProfile.phone,
-        dateOfBirth: clientProfile.dateOfBirth,
-        address: clientProfile.address,
-        city: clientProfile.city,
-        state: clientProfile.state,
-        zipCode: clientProfile.zipCode,
+        ...currentProfile, // Keep all existing profile data
         emergencyContactName: clientProfile.emergencyContactName,
         emergencyContactPhone: clientProfile.emergencyContactPhone,
-        preferredContactMethod: clientProfile.preferredContactMethod,
-        hearAboutUs: clientProfile.hearAboutUs || currentProfile?.hearAboutUs || 'Existing Client',
         createdAt: currentProfile?.createdAt || Timestamp.now(),
         updatedAt: Timestamp.now()
       };
@@ -431,27 +393,15 @@ function BookNowCustomContent() {
           const { UserService } = await import('@/services/userService');
           
           // Update the user's profile with the form data
-          const profileUpdates = {
-            profile: {
-              ...userProfile.profile,
-              firstName: clientProfile.firstName,
-              lastName: clientProfile.lastName,
-              email: clientProfile.email,
-              phone: clientProfile.phone,
-              dateOfBirth: clientProfile.dateOfBirth,
-              address: clientProfile.address,
-              city: clientProfile.city,
-              state: clientProfile.state,
-              zipCode: clientProfile.zipCode,
-              emergencyContactName: clientProfile.emergencyContactName,
-              emergencyContactPhone: clientProfile.emergencyContactPhone,
-              preferredContactMethod: clientProfile.preferredContactMethod,
-              hearAboutUs: clientProfile.hearAboutUs,
-              updatedAt: Timestamp.now()
-            }
+          console.log('⚠️ Creating new profile for authenticated user - this is unexpected');
+          const newProfileData = {
+            ...userProfile.profile, // Keep existing profile data
+            emergencyContactName: clientProfile.emergencyContactName,
+            emergencyContactPhone: clientProfile.emergencyContactPhone,
+            updatedAt: Timestamp.now()
           };
           
-          await UserService.updateUser(userProfile.id, profileUpdates);
+          await UserService.updateUser(userProfile.id, { profile: newProfileData });
           console.log('✅ User profile updated successfully in database');
         } catch (profileError) {
           console.error('❌ Failed to update user profile:', profileError);
@@ -460,10 +410,11 @@ function BookNowCustomContent() {
       }
       
       // Create appointment in Firebase
+      const profile = userProfile?.profile;
       const appointmentData = {
         clientId: userProfile?.id || 'temp-client-id', // Use authenticated user's ID if available
-        clientName: `${clientProfile.firstName} ${clientProfile.lastName}`,
-        clientEmail: clientProfile.email,
+        clientName: profile ? `${profile.firstName} ${profile.lastName}` : 'Unknown Client',
+        clientEmail: profile?.email || 'unknown@email.com',
         serviceId: selectedService.id,
         serviceName: selectedService.name,
         artistId: selectedArtistId || 'default-artist',
@@ -513,8 +464,8 @@ function BookNowCustomContent() {
       
       // Trigger marketing workflows
       try {
-        const clientId = 'temp-client-id'; // In production, this would be the actual user ID
-        const clientEmail = clientProfile.email;
+        const clientId = userProfile?.id || 'temp-client-id';
+        const clientEmail = profile?.email;
         
         // Check if this is a new client (in production, you'd check if user exists in database)
         const isNewClient = true; // This would be determined by checking user history
@@ -565,7 +516,8 @@ function BookNowCustomContent() {
   };
 
   const renderCalendarSelection = () => {
-    const currentDate = new Date();
+    const now = new Date();
+    const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // Normalize to midnight
     
     // Don't render calendar if currentWeekStart is not set yet
     if (!currentWeekStart) {
@@ -658,8 +610,9 @@ function BookNowCustomContent() {
                   {/* Week Days */}
                   <div className="d-flex gap-2">
                     {weekDays.map((day, index) => {
-                      const isToday = day.toDateString() === currentDate.toDateString();
-                      const isPast = day < currentDate && !isToday;
+                      const normalizedDay = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+                      const isToday = normalizedDay.toDateString() === currentDate.toDateString();
+                      const isPast = normalizedDay < currentDate && !isToday;
                       const dateString = day.toISOString().split('T')[0];
                       const isSelectedDate = selectedDate === dateString;
                       
@@ -735,8 +688,9 @@ function BookNowCustomContent() {
                   {/* Week Days Grid */}
                   <div className="row g-2">
                     {weekDays.map((day, index) => {
-                      const isToday = day.toDateString() === currentDate.toDateString();
-                      const isPast = day < currentDate && !isToday;
+                      const normalizedDay = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+                      const isToday = normalizedDay.toDateString() === currentDate.toDateString();
+                      const isPast = normalizedDay < currentDate && !isToday;
                       const dateString = day.toISOString().split('T')[0];
                       const isSelectedDate = selectedDate === dateString;
                       
@@ -1020,9 +974,10 @@ function BookNowCustomContent() {
                                   }));
                                   
                                   // For authenticated users with complete profile, skip to health form
-                                  if (isAuthenticated && userProfile && 
-                                      clientProfile.firstName && clientProfile.lastName && 
-                                      clientProfile.email && clientProfile.phone) {
+                                  const profile = userProfile?.profile;
+                                  if (isAuthenticated && userProfile && profile &&
+                                      profile.firstName && profile.lastName && 
+                                      profile.email && profile.phone) {
                                     console.log('Going to health form for authenticated user');
                                     setCurrentStep('health');
                                   } else {
@@ -1031,9 +986,9 @@ function BookNowCustomContent() {
                                   }
                                 }}
                               >
-                                {isAuthenticated && userProfile && 
-                                 clientProfile.firstName && clientProfile.lastName && 
-                                 clientProfile.email && clientProfile.phone 
+                                {isAuthenticated && userProfile && userProfile.profile &&
+                                 userProfile.profile.firstName && userProfile.profile.lastName && 
+                                 userProfile.profile.email && userProfile.profile.phone 
                                   ? 'Continue to Health Form' 
                                   : 'Continue to Profile'}
                                 <i className="fas fa-arrow-right ms-2"></i>
@@ -1387,11 +1342,11 @@ function BookNowCustomContent() {
                 <p className="mb-2"><strong>Service:</strong> {selectedService?.name}</p>
                 <p className="mb-2"><strong>Date:</strong> {new Date(selectedDate).toLocaleDateString()}</p>
                 <p className="mb-2"><strong>Time:</strong> {selectedTime}</p>
-                <p className="mb-0"><strong>Client:</strong> {clientProfile.firstName} {clientProfile.lastName}</p>
+                <p className="mb-0"><strong>Client:</strong> {userProfile?.profile ? `${userProfile.profile.firstName} ${userProfile.profile.lastName}` : 'Unknown Client'}</p>
               </div>
               
               <p className="text-muted mb-4">
-                A confirmation email has been sent to {clientProfile.email}. 
+                A confirmation email has been sent to {userProfile?.profile?.email || 'your email'}. 
                 Please arrive 15 minutes early for your appointment.
               </p>
               
@@ -1685,7 +1640,7 @@ function BookNowCustomContent() {
           service={selectedService}
           appointmentDate={selectedDate}
           appointmentTime={selectedTime}
-          clientName={`${clientProfile.firstName} ${clientProfile.lastName}`}
+          clientName={userProfile?.profile ? `${userProfile.profile.firstName} ${userProfile.profile.lastName}` : 'Unknown Client'}
           data={checkoutData}
           onChange={setCheckoutData}
           onNext={handleBookingComplete}

@@ -35,64 +35,6 @@ function LoginForm() {
     setIsLoading(true);
     setError('');
 
-    // Development bypass for admin access (works even when Firebase is configured)
-    if (email === 'admin@example.com' && password === 'admin123') {
-      console.log('Development admin bypass activated');
-      localStorage.setItem('adminEmail', email);
-      sessionStorage.setItem('currentLogin', 'true'); // Mark as current session login
-      
-      // Handle Remember Me functionality
-      if (rememberMe) {
-        localStorage.setItem('rememberedEmail', email);
-        localStorage.setItem('rememberMe', 'true');
-      } else {
-        localStorage.removeItem('rememberedEmail');
-        localStorage.removeItem('rememberMe');
-      }
-      
-      // Force a page reload to trigger useAuth hook re-evaluation
-      console.log('Forcing page reload to update auth state');
-      
-      // Redirect back to booking flow if coming from there, otherwise go to admin
-      if (redirectUrl && serviceId) {
-        window.location.href = `${redirectUrl}?step=calendar&service=${serviceId}`;
-      } else if (redirectUrl) {
-        window.location.href = redirectUrl;
-      } else {
-        window.location.href = '/dashboard';
-      }
-      setIsLoading(false);
-      return;
-    }
-
-    // Development bypass for client users (always allow for non-admin emails)
-    if (email !== 'admin@example.com') {
-      console.log('Development mode: allowing client login for', email);
-      localStorage.setItem('clientEmail', email);
-      sessionStorage.setItem('currentLogin', 'true');
-      
-      // Handle Remember Me functionality
-      if (rememberMe) {
-        localStorage.setItem('rememberedEmail', email);
-        localStorage.setItem('rememberMe', 'true');
-      } else {
-        localStorage.removeItem('rememberedEmail');
-        localStorage.removeItem('rememberMe');
-      }
-      
-      // Redirect to my-appointments for client users
-      if (redirectUrl && serviceId) {
-        window.location.href = `${redirectUrl}?step=calendar&service=${serviceId}`;
-      } else if (redirectUrl) {
-        window.location.href = redirectUrl;
-      } else {
-        window.location.href = '/my-appointments';
-      }
-      setIsLoading(false);
-      return;
-    }
-
-
     try {
       if (!auth) {
         throw new Error('Firebase Auth is not initialized');
@@ -184,12 +126,11 @@ function LoginForm() {
                   )}
 
                   {!isFirebaseConfigured() && (
-                    <div className="alert alert-info border-0 rounded-3" role="alert">
+                    <div className="alert alert-warning border-0 rounded-3" role="alert">
                       <div className="d-flex align-items-start">
-                        <i className="fas fa-info-circle me-2 mt-1"></i>
+                        <i className="fas fa-exclamation-triangle me-2 mt-1"></i>
                         <div>
-                          <strong>Development Mode:</strong> Firebase not configured.<br/>
-                          Use admin credentials: <code className="bg-light px-2 py-1 rounded">admin@example.com</code> / <code className="bg-light px-2 py-1 rounded">admin123</code>
+                          <strong>Firebase Not Configured:</strong> Please configure Firebase authentication to enable login functionality.
                         </div>
                       </div>
                     </div>

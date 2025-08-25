@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Client Profiles</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .container { background: #f5f5f5; padding: 30px; border-radius: 8px; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 4px; margin: 20px 0; }
+        .danger { background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 4px; margin: 20px 0; }
+        button { padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; margin: 10px; font-size: 16px; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #5a6268; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 4px; background: white; border: 1px solid #ddd; }
+        .user-card { background: #e9ecef; padding: 15px; margin: 10px 0; border-radius: 4px; border-left: 4px solid #dc3545; }
+        .loading { text-align: center; padding: 20px; }
+        .step { margin: 10px 0; padding: 10px; background: white; border-radius: 4px; }
+        .step.completed { background: #d4edda; border-left: 4px solid #28a745; }
+        .step.error { background: #f8d7da; border-left: 4px solid #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗑️ Delete Client Profiles</h1>
+        
+        <div class="danger">
+            <h3>⚠️ DANGER ZONE</h3>
+            <p><strong>This will permanently delete ALL user profiles with the "client" role from Firebase Firestore.</strong></p>
+            <p>This action cannot be undone. Make sure you have backups if needed.</p>
+        </div>
+        
+        <div class="warning">
+            <h4>What this does:</h4>
+            <ul>
+                <li>✅ Deletes Firestore user profile documents with role = "client"</li>
+                <li>⚠️ Firebase Auth users will still exist (requires admin SDK to delete)</li>
+                <li>⚠️ Related appointments and other data may still reference these users</li>
+            </ul>
+        </div>
+        
+        <button class="btn-secondary" onclick="checkClients()">1. Check Client Users First</button>
+        <button class="btn-danger" onclick="deleteClients()" id="deleteBtn" disabled>2. DELETE ALL CLIENT PROFILES</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, deleteDoc, doc, query, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase configuration - update with your actual config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDF47aZnB3UlQjk_7puXUIWFUUyP9t5O4M",
+            authDomain: "aprettygirlmatter-v3.firebaseapp.com",
+            projectId: "aprettygirlmatter-v3",
+            storageBucket: "aprettygirlmatter-v3.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdef123456"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let clientUsers = [];
+
+        window.checkClients = async function() {
+            const resultDiv = document.getElementById('result');
+            const deleteBtn = document.getElementById('deleteBtn');
+            
+            try {
+                resultDiv.innerHTML = '<div class="loading">🔍 Checking for client users...</div>';
+                
+                const usersRef = collection(db, 'users');
+                const clientQuery = query(usersRef, where('role', '==', 'client'));
+                const snapshot = await getDocs(clientQuery);
+                
+                if (snapshot.empty) {
+                    resultDiv.innerHTML = '<div class="result">✅ No client users found in the database.</div>';
+                    deleteBtn.disabled = true;
+                    return;
+                }
+                
+                clientUsers = [];
+                let html = `<div class="result"><h3>⚠️ Found ${snapshot.size} client users to delete:</h3>`;
+                
+                snapshot.forEach((docSnapshot) => {
+                    const userData = docSnapshot.data();
+                    const profile = userData.profile || {};
+                    const email = profile.email || userData.email || 'N/A';
+                    const name = `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || 'N/A';
+                    const phone = profile.phone || userData.phone || 'N/A';
+                    
+                    clientUsers.push({
+                        id: docSnapshot.id,
+                        email: email,
+                        name: name,
+                        data: userData
+                    });
+                    
+                    html += `
+                        <div class="user-card">
+                            <strong>${name}</strong>
+                            <br>📧 ${email}
+                            <br>📱 ${phone}
+                            <br>🆔 ${docSnapshot.id}
+                        </div>
+                    `;
+                });
+                
+                html += `
+                    <div class="danger" style="margin-top: 20px;">
+                        <p><strong>These ${clientUsers.length} profiles will be permanently deleted!</strong></p>
+                        <p>Click the DELETE button above to proceed.</p>
+                    </div>
+                </div>`;
+                
+                resultDiv.innerHTML = html;
+                deleteBtn.disabled = false;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="result">
+                        <h3>❌ Error checking client users</h3>
+                        <p>${error.message}</p>
+                        <p><strong>Code:</strong> ${error.code}</p>
+                    </div>
+                `;
+                deleteBtn.disabled = true;
+            }
+        };
+
+        window.deleteClients = async function() {
+            if (clientUsers.length === 0) {
+                alert('Please check for client users first!');
+                return;
+            }
+            
+            const confirmed = confirm(`⚠️ FINAL WARNING!\n\nThis will permanently delete ${clientUsers.length} client profiles from Firebase.\n\nThis action CANNOT be undone!\n\nAre you absolutely sure?`);
+            
+            if (!confirmed) {
+                return;
+            }
+            
+            const resultDiv = document.getElementById('result');
+            const deleteBtn = document.getElementById('deleteBtn');
+            
+            try {
+                deleteBtn.disabled = true;
+                
+                let html = `<div class="result"><h3>🗑️ Deleting ${clientUsers.length} client profiles...</h3>`;
+                resultDiv.innerHTML = html;
+                
+                let deletedCount = 0;
+                let errors = [];
+                
+                for (let i = 0; i < clientUsers.length; i++) {
+                    const user = clientUsers[i];
+                    
+                    try {
+                        // Update progress
+                        html += `<div class="step">Deleting ${user.name} (${user.email})...</div>`;
+                        resultDiv.innerHTML = html;
+                        
+                        // Delete from Firestore
+                        await deleteDoc(doc(db, 'users', user.id));
+                        
+                        // Update as completed
+                        html = html.replace(
+                            `<div class="step">Deleting ${user.name} (${user.email})...</div>`,
+                            `<div class="step completed">✅ Deleted ${user.name} (${user.email})</div>`
+                        );
+                        resultDiv.innerHTML = html;
+                        
+                        deletedCount++;
+                        
+                    } catch (error) {
+                        console.error(`Error deleting ${user.email}:`, error);
+                        errors.push({ user: user.email, error: error.message });
+                        
+                        // Update as error
+                        html = html.replace(
+                            `<div class="step">Deleting ${user.name} (${user.email})...</div>`,
+                            `<div class="step error">❌ Error deleting ${user.name}: ${error.message}</div>`
+                        );
+                        resultDiv.innerHTML = html;
+                    }
+                }
+                
+                // Final summary
+                html += `
+                    <div class="result" style="margin-top: 20px; background: ${errors.length === 0 ? '#d4edda' : '#fff3cd'};">
+                        <h3>🏁 Deletion Complete</h3>
+                        <p><strong>Successfully deleted:</strong> ${deletedCount}/${clientUsers.length} profiles</p>
+                        ${errors.length > 0 ? `<p><strong>Errors:</strong> ${errors.length}</p>` : ''}
+                        <p><strong>Note:</strong> Firebase Auth users still exist and need manual deletion from Firebase Console.</p>
+                    </div>
+                `;
+                
+                resultDiv.innerHTML = html;
+                clientUsers = []; // Clear the array
+                
+            } catch (error) {
+                console.error('Error during deletion:', error);
+                resultDiv.innerHTML = `
+                    <div class="result">
+                        <h3>❌ Deletion failed</h3>
+                        <p>${error.message}</p>
+                        <p><strong>Code:</strong> ${error.code}</p>
+                    </div>
+                `;
+            } finally {
+                deleteBtn.disabled = false;
+            }
+        };
+    </script>
+</body>
+</html>

@@ -3,19 +3,8 @@
 import { useState, useEffect } from 'react';
 
 interface ClientProfileData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  dateOfBirth: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
   emergencyContactName: string;
   emergencyContactPhone: string;
-  preferredContactMethod: string;
-  hearAboutUs: string;
 }
 
 interface ClientProfileWizardProps {
@@ -53,167 +42,6 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
 
   const steps: WizardStep[] = [
     {
-      id: 'firstName',
-      title: 'Personal Information',
-      question: 'What is your first name?',
-      type: 'text',
-      placeholder: 'Enter your first name',
-      required: true
-    },
-    {
-      id: 'lastName',
-      title: 'Personal Information',
-      question: 'What is your last name?',
-      type: 'text',
-      placeholder: 'Enter your last name',
-      required: true
-    },
-    {
-      id: 'email',
-      title: 'Contact Information',
-      question: 'What is your email address?',
-      type: 'email',
-      placeholder: 'Enter your email address',
-      required: true,
-      validation: (value: string) => {
-        if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          return 'Please enter a valid email address';
-        }
-        return null;
-      }
-    },
-    {
-      id: 'phone',
-      title: 'Contact Information',
-      question: 'What is your phone number?',
-      type: 'tel',
-      placeholder: '(555) 123-4567',
-      required: true,
-      validation: (value: string) => {
-        const digits = value.replace(/\D/g, '');
-        if (value && digits.length !== 10) {
-          return 'Please enter a valid 10-digit phone number';
-        }
-        return null;
-      }
-    },
-    {
-      id: 'dateOfBirth',
-      title: 'Personal Information',
-      question: 'What is your date of birth?',
-      type: 'date',
-      required: true,
-      validation: (value: string) => {
-        if (value) {
-          const birthDate = new Date(value);
-          const today = new Date();
-          const age = today.getFullYear() - birthDate.getFullYear();
-          const monthDiff = today.getMonth() - birthDate.getMonth();
-          
-          // Adjust age if birthday hasn't occurred this year
-          const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) 
-            ? age - 1 
-            : age;
-          
-          if (actualAge < 18) {
-            return 'You must be at least 18 years old to book permanent makeup services.';
-          }
-        }
-        return null;
-      }
-    },
-    {
-      id: 'address',
-      title: 'Address Information',
-      question: 'What is your street address?',
-      type: 'text',
-      placeholder: '123 Main Street',
-      required: true
-    },
-    {
-      id: 'city',
-      title: 'Address Information',
-      question: 'What city do you live in?',
-      type: 'text',
-      placeholder: 'Enter your city',
-      required: true
-    },
-    {
-      id: 'state',
-      title: 'Address Information',
-      question: 'What state do you live in?',
-      type: 'select',
-      required: true,
-      defaultValue: 'NC',
-      options: [
-        { value: '', label: 'Select your state' },
-        { value: 'AL', label: 'Alabama' },
-        { value: 'AK', label: 'Alaska' },
-        { value: 'AZ', label: 'Arizona' },
-        { value: 'AR', label: 'Arkansas' },
-        { value: 'CA', label: 'California' },
-        { value: 'CO', label: 'Colorado' },
-        { value: 'CT', label: 'Connecticut' },
-        { value: 'DE', label: 'Delaware' },
-        { value: 'FL', label: 'Florida' },
-        { value: 'GA', label: 'Georgia' },
-        { value: 'HI', label: 'Hawaii' },
-        { value: 'ID', label: 'Idaho' },
-        { value: 'IL', label: 'Illinois' },
-        { value: 'IN', label: 'Indiana' },
-        { value: 'IA', label: 'Iowa' },
-        { value: 'KS', label: 'Kansas' },
-        { value: 'KY', label: 'Kentucky' },
-        { value: 'LA', label: 'Louisiana' },
-        { value: 'ME', label: 'Maine' },
-        { value: 'MD', label: 'Maryland' },
-        { value: 'MA', label: 'Massachusetts' },
-        { value: 'MI', label: 'Michigan' },
-        { value: 'MN', label: 'Minnesota' },
-        { value: 'MS', label: 'Mississippi' },
-        { value: 'MO', label: 'Missouri' },
-        { value: 'MT', label: 'Montana' },
-        { value: 'NE', label: 'Nebraska' },
-        { value: 'NV', label: 'Nevada' },
-        { value: 'NH', label: 'New Hampshire' },
-        { value: 'NJ', label: 'New Jersey' },
-        { value: 'NM', label: 'New Mexico' },
-        { value: 'NY', label: 'New York' },
-        { value: 'NC', label: 'North Carolina' },
-        { value: 'ND', label: 'North Dakota' },
-        { value: 'OH', label: 'Ohio' },
-        { value: 'OK', label: 'Oklahoma' },
-        { value: 'OR', label: 'Oregon' },
-        { value: 'PA', label: 'Pennsylvania' },
-        { value: 'RI', label: 'Rhode Island' },
-        { value: 'SC', label: 'South Carolina' },
-        { value: 'SD', label: 'South Dakota' },
-        { value: 'TN', label: 'Tennessee' },
-        { value: 'TX', label: 'Texas' },
-        { value: 'UT', label: 'Utah' },
-        { value: 'VT', label: 'Vermont' },
-        { value: 'VA', label: 'Virginia' },
-        { value: 'WA', label: 'Washington' },
-        { value: 'WV', label: 'West Virginia' },
-        { value: 'WI', label: 'Wisconsin' },
-        { value: 'WY', label: 'Wyoming' }
-      ]
-    },
-    {
-      id: 'zipCode',
-      title: 'Address Information',
-      question: 'What is your ZIP code?',
-      type: 'text',
-      placeholder: '12345',
-      required: true,
-      validation: (value: string) => {
-        if (value && !/^\d{5}$/.test(value)) {
-          return 'Please enter a valid 5-digit ZIP code';
-        }
-        return null;
-      }
-    },
-    {
       id: 'emergencyContactName',
       title: 'Emergency Contact',
       question: 'Who should we contact in case of emergency?',
@@ -235,36 +63,6 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
         }
         return null;
       }
-    },
-    {
-      id: 'preferredContactMethod',
-      title: 'Communication Preferences',
-      question: 'How would you prefer us to contact you?',
-      type: 'select',
-      required: true,
-      options: [
-        { value: '', label: 'Select contact method' },
-        { value: 'email', label: 'Email' },
-        { value: 'phone', label: 'Phone Call' },
-        { value: 'text', label: 'Text Message' }
-      ]
-    },
-    {
-      id: 'hearAboutUs',
-      title: 'Marketing Information',
-      question: 'How did you hear about us?',
-      type: 'select',
-      required: false,
-      options: [
-        { value: '', label: 'Select an option (optional)' },
-        { value: 'Google Search', label: 'Google Search' },
-        { value: 'Social Media (Instagram/Facebook)', label: 'Social Media (Instagram/Facebook)' },
-        { value: 'Friend/Family Referral', label: 'Friend/Family Referral' },
-        { value: 'Yelp/Google Reviews', label: 'Yelp/Google Reviews' },
-        { value: 'Website', label: 'Website' },
-        { value: 'Advertisement', label: 'Advertisement' },
-        { value: 'Other', label: 'Other' }
-      ]
     }
   ];
 
@@ -293,17 +91,12 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
     }
   };
 
-  // ZIP code formatting function
-  const formatZipCode = (value: string) => {
-    // Remove all non-digits and limit to 5 digits
-    return value.replace(/\D/g, '').slice(0, 5);
-  };
 
   const handleInputChange = (value: string) => {
     let formattedValue = value;
     
     // Apply formatting based on field type
-    if (currentStep.id === 'phone' || currentStep.id === 'emergencyContactPhone') {
+    if (currentStep.id === 'emergencyContactPhone') {
       formattedValue = formatPhoneNumber(value);
       
       // Don't auto-advance on phone number formatting
@@ -313,8 +106,6 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
       });
       setErrors([]); // Clear errors when user types
       return; // Exit early to prevent auto-advance
-    } else if (currentStep.id === 'zipCode') {
-      formattedValue = formatZipCode(value);
     }
     
     onChange({

@@ -36,21 +36,6 @@ export default function Dashboard() {
   const [adminLoading, setAdminLoading] = useState(false);
 
   useEffect(() => {
-    // Check for development bypass first
-    const adminEmail = localStorage.getItem('adminEmail');
-    if (adminEmail === 'admin@example.com') {
-      // Development bypass - create mock user and proceed
-      const mockUser = {
-        uid: 'admin-example',
-        email: 'admin@example.com',
-        displayName: 'Admin User'
-      } as User;
-      setUser(mockUser);
-      fetchUserData(mockUser.uid, mockUser.email || '');
-      setLoading(false);
-      return;
-    }
-
     if (!isFirebaseConfigured() || !auth) {
       router.push('/login');
       return;
@@ -71,35 +56,6 @@ export default function Dashboard() {
 
   const fetchUserData = async (uid: string, email: string) => {
     try {
-      // Check for admin@example.com development bypass
-      if (email === 'admin@example.com') {
-        const mockAdminUser: DatabaseUser = {
-          id: 'admin-example',
-          profile: {
-            firstName: 'Admin',
-            lastName: 'User',
-            email: 'admin@example.com',
-            phone: '(555) 000-0000',
-            dateOfBirth: '1990-01-01',
-            address: '123 Admin Street',
-            city: 'Raleigh',
-            state: 'NC',
-            zipCode: '27601',
-            emergencyContactName: 'Emergency Contact',
-            emergencyContactPhone: '(555) 000-0001',
-            preferredContactMethod: 'email',
-            hearAboutUs: 'System Administrator',
-            createdAt: { seconds: 1640995200, nanoseconds: 0 } as any,
-            updatedAt: { seconds: 1640995200, nanoseconds: 0 } as any
-          },
-          role: 'admin',
-          isActive: true
-        };
-        setCurrentUser(mockAdminUser);
-        setUserRole('admin');
-        return;
-      }
-
       // Try to get user from database
       const dbUser = await UserService.getUserByEmail(email);
       if (dbUser) {
