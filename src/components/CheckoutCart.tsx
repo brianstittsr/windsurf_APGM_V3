@@ -129,7 +129,8 @@ export default function CheckoutCart({
       // 2. Remove availability for the booked time slot
       console.log('🚫 Removing availability for booked time slot...');
       try {
-        await AvailabilityService.bookTimeSlot(appointmentDate, appointmentTime, appointmentId, 'victoria');
+        const { AvailabilityService: NewAvailabilityService } = await import('@/services/availabilityService');
+        await NewAvailabilityService.bookTimeSlot('victoria', appointmentDate, appointmentTime, appointmentId);
         console.log('✅ Time slot marked as unavailable');
       } catch (availabilityError) {
         console.warn('⚠️ Could not update availability (document may not exist):', availabilityError);

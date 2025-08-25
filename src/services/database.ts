@@ -50,7 +50,8 @@ export const COLLECTIONS = {
   REVIEWS: 'reviews',
   NOTIFICATIONS: 'notifications',
   BUSINESS_SETTINGS: 'businessSettings',
-  ANALYTICS: 'analytics'
+  ANALYTICS: 'analytics',
+  PDF_DOCUMENTS: 'pdfDocuments'
 } as const;
 
 // Generic CRUD operations
@@ -611,5 +612,58 @@ export class BusinessSettingsService {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     }, { merge: true });
+  }
+}
+
+// PDF Document types
+export interface PDFDocument {
+  id: string;
+  clientId: string;
+  appointmentId: string;
+  formType: 'booking' | 'health' | 'consent';
+  filename: string;
+  downloadURL: string;
+  filePath: string;
+  fileSize?: number;
+  generatedAt: Timestamp;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export class PDFDocumentService {
+  static async createPDFRecord(pdfData: Omit<PDFDocument, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+    return DatabaseService.create<PDFDocument>(COLLECTIONS.PDF_DOCUMENTS, pdfData);
+  }
+
+  static async getPDFsByAppointment(appointmentId: string): Promise<PDFDocument[]> {
+    return DatabaseService.query<PDFDocument>(
+      COLLECTIONS.PDF_DOCUMENTS,
+      [{ field: 'appointmentId', operator: '==', value: appointmentId }],
+      'generatedAt'
+    );
+  }
+
+  static async getPDFsByClient(clientId: string): Promise<PDFDocument[]> {
+    return DatabaseService.query<PDFDocument>(
+      COLLECTIONS.PDF_DOCUMENTS,
+      [{ field: 'clientId', operator: '==', value: clientId }],
+      'generatedAt'
+    );
+  }
+
+  static async getPDFsByType(formType: PDFDocument['formType']): Promise<PDFDocument[]> {
+    return DatabaseService.query<PDFDocument>(
+      COLLECTIONS.PDF_DOCUMENTS,
+      [{ field: 'formType', operator: '==', value: formType }],
+      'generatedAt'
+    );
+  }
+
+  static async updatePDFRecord(id: string, data: Partial<PDFDocument>): Promise<void> {
+    return DatabaseService.update<PDFDocument>(COLLECTIONS.PDF_DOCUMENTS, id, data);
+  }
+
+  static async deletePDFRecord(id: string): Promise<void> {
+    return DatabaseService.delete(COLLECTIONS.PDF_DOCUMENTS, id);
   }
 }

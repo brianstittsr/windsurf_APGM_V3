@@ -335,4 +335,108 @@ export class AvailabilityService {
       throw error;
     }
   }
+
+  // Book a specific time slot (remove from availability)
+  static async bookTimeSlot(
+    artistId: string,
+    date: string, 
+    timeSlot: string, 
+    appointmentId: string
+  ): Promise<void> {
+    try {
+      console.log(`🚫 Booking time slot: ${date} ${timeSlot} for artist ${artistId}`);
+      
+      // Parse the date to get day of week
+      const dateObj = new Date(date);
+      const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      const dayOfWeek = dayNames[dateObj.getDay()];
+      
+      // Create a booked slots document for this specific date
+      const bookedSlotsRef = doc(db, 'bookedSlots', date);
+      
+      // Get existing booked slots for this date
+      const { getDoc } = await import('firebase/firestore');
+      const bookedSlotsDoc = await getDoc(bookedSlotsRef);
+      const existingBookedSlots = bookedSlotsDoc.exists() ? bookedSlotsDoc.data() : {};
+      
+      // Add this time slot as booked
+      const updatedBookedSlots = {
+        ...existingBookedSlots,
+        [timeSlot]: {
+          artistId,
+          appointmentId,
+          bookedAt: Timestamp.now(),
+          available: false
+        }
+      };
+      
+      // Update the booked slots document
+      await setDoc(bookedSlotsRef, updatedBookedSlots, { merge: true });
+      
+      console.log(`✅ Time slot ${timeSlot} on ${date} marked as booked`);
+      
+    } catch (error) {
+      console.error('❌ Error booking time slot:', error);
+      throw error;
+    }
+  }
+
+  // Release a booked time slot (make available again)
+  static async releaseTimeSlot(
+    artistId: string,
+    date: string, 
+    timeSlot: string
+  ): Promise<void> {
+    try {
+      console.log(`🔓 Releasing time slot: ${date} ${timeSlot} for artist ${artistId}`);
+      
+      const bookedSlotsRef = doc(db, 'bookedSlots', date);
+      
+      // Get existing booked slots for this date
+      const { getDoc, updateDoc, deleteField } = await import('firebase/firestore');
+      const bookedSlotsDoc = await getDoc(bookedSlotsRef);
+      
+      if (bookedSlotsDoc.exists()) {
+        // Remove this specific time slot from booked slots
+        await updateDoc(bookedSlotsRef, {
+          [timeSlot]: deleteField()
+        });
+        
+        console.log(`✅ Time slot ${timeSlot} on ${date} released`);
+      }
+      
+    } catch (error) {
+      console.error('❌ Error releasing time slot:', error);
+      throw error;
+    }
+  }
+
+  // Get booked slots for a specific date
+  static async getBookedSlots(date: string): Promise<Record<string, any>> {
+    try {
+      const bookedSlotsRef = doc(db, 'bookedSlots', date);
+      const { getDoc } = await import('firebase/firestore');
+      const bookedSlotsDoc = await getDoc(bookedSlotsRef);
+      
+      return bookedSlotsDoc.exists() ? bookedSlotsDoc.data() : {};
+    } catch (error) {
+      console.error('Error getting booked slots:', error);
+      return {};
+    }
+  }
+
+  // Check if a specific time slot is available
+  static async isTimeSlotAvailable(
+    artistId: string,
+    date: string, 
+    timeSlot: string
+  ): Promise<boolean> {
+    try {
+      const bookedSlots = await this.getBookedSlots(date);
+      return !bookedSlots[timeSlot] || bookedSlots[timeSlot].available !== false;
+    } catch (error) {
+      console.error('Error checking time slot availability:', error);
+      return false;
+    }
+  }
 }

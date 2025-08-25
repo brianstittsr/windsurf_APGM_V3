@@ -69,6 +69,11 @@ export function useTimeSlots(selectedDate: string) {
           const timeRanges = data.timeRanges || [];
           console.log(`    📋 useTimeSlots: Processing ${timeRanges.length} time ranges for ${dayOfWeek}`);
 
+          // Get booked slots for this date
+          const { AvailabilityService } = await import('@/services/availabilityService');
+          const bookedSlots = await AvailabilityService.getBookedSlots(selectedDate);
+          console.log(`🚫 useTimeSlots: Booked slots for ${selectedDate}:`, bookedSlots);
+
           // Generate time slots from time ranges
           const timeSlots: TimeSlot[] = [];
           timeRanges.forEach((range: any, index: number) => {
@@ -87,14 +92,21 @@ export function useTimeSlots(selectedDate: string) {
                 const timeSlot = `${hour.toString().padStart(2, '0')}:00`;
                 const endTimeFormatted = `${endTime.toString().padStart(2, '0')}:00`;
                 
+                // Check if this time slot is booked
+                const isBooked = bookedSlots[timeSlot] && bookedSlots[timeSlot].available === false;
+                
                 timeSlots.push({
                   time: timeSlot,
                   endTime: endTimeFormatted,
                   duration: '4 Hours',
-                  available: true,
+                  available: !isBooked,
                   artistId: data.artistId,
                   artistName: 'Victoria' // Default artist name
                 });
+                
+                if (isBooked) {
+                  console.log(`      🚫 useTimeSlots: Time slot ${timeSlot} is booked (appointment: ${bookedSlots[timeSlot].appointmentId})`);
+                }
               }
             }
           });

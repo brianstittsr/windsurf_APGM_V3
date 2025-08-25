@@ -1,14 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ClientEmailService, HealthFormEmailData } from '@/services/clientEmailService';
+import { HealthFormEmailData } from '@/services/clientEmailService';
+import { EnhancedEmailService } from '@/services/enhancedEmailService';
 
 export async function POST(request: NextRequest) {
   try {
-    const healthFormEmailData: HealthFormEmailData = await request.json();
+    const { healthFormEmailData, clientId, appointmentId, generatePDF = true } = await request.json();
     
-    const success = await ClientEmailService.sendHealthFormEmail(healthFormEmailData);
+    const result = await EnhancedEmailService.sendHealthFormEmailWithPDF(
+      healthFormEmailData,
+      {
+        clientId,
+        appointmentId,
+        generatePDF,
+        storePDFInProfile: true
+      }
+    );
     
-    if (success) {
-      return NextResponse.json({ success: true, message: 'Health form email sent successfully' });
+    if (result.emailSent) {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Health form email sent successfully',
+        pdfGenerated: !!result.pdfUrl,
+        pdfUrl: result.pdfUrl,
+        pdfId: result.pdfId
+      });
     } else {
       return NextResponse.json({ success: false, message: 'Failed to send health form email' }, { status: 500 });
     }
