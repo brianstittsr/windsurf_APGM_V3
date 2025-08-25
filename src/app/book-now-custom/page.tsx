@@ -12,9 +12,19 @@ import { useAppointments } from '@/hooks/useAppointments';
 import { useHealthForm } from '@/hooks/useHealthForm';
 import { useTimeSlots } from '@/hooks/useTimeSlots';
 import { useNextAvailableDate } from '@/hooks/useNextAvailableDate';
+import { useServices } from '@/hooks/useFirebase';
 import ClientProfileWizard, { ClientProfileData } from '@/components/ClientProfileWizard';
 import HealthFormWizard, { HealthFormData } from '@/components/HealthFormWizard';
 import CheckoutCart from '@/components/CheckoutCart';
+
+interface ServiceItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  duration: string;
+  image: string;
+}
 
 interface CheckoutData {
   selectedDate: string;
