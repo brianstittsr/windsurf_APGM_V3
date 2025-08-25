@@ -5,6 +5,13 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { useContactForm } from '@/hooks/useFirebase';
 
+// Bootstrap JavaScript for accordion functionality
+declare global {
+  interface Window {
+    bootstrap: any;
+  }
+}
+
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: '',
@@ -17,7 +24,7 @@ export default function ContactPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // Check for success parameter in URL
+  // Check for success parameter in URL and initialize Bootstrap
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('success') === 'true') {
@@ -30,6 +37,23 @@ export default function ContactPage() {
         message: ''
       });
     }
+
+    // Initialize Bootstrap accordion functionality
+    const initBootstrap = () => {
+      if (typeof window !== 'undefined') {
+        // Load Bootstrap JS if not already loaded
+        if (!window.bootstrap) {
+          const script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js';
+          script.onload = () => {
+            console.log('Bootstrap JS loaded');
+          };
+          document.head.appendChild(script);
+        }
+      }
+    };
+
+    initBootstrap();
   }, []);
 
   const services = [
@@ -382,7 +406,7 @@ export default function ContactPage() {
         <section className="py-5 bg-light">
           <div className="container">
             <div className="row justify-content-center">
-              <div className="col-lg-8 text-center">
+              <div className="col-lg-10 text-center">
                 <h2 className="h3 fw-bold mb-4" style={{ color: '#AD6269' }}>
                   <i className="fas fa-question-circle me-2"></i>
                   Frequently Asked Questions
@@ -390,27 +414,27 @@ export default function ContactPage() {
                 
                 <div className="accordion" id="contactFAQ">
                   <div className="accordion-item border-0 shadow-sm mb-3">
-                    <h3 className="accordion-header">
-                      <button className="accordion-button fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                        How quickly will you respond to my inquiry?
+                    <h3 className="accordion-header" id="heading1">
+                      <button className="accordion-button fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="true" aria-controls="faq1">
+                        Am I a candidate for microblading or permanent brows?
                       </button>
                     </h3>
-                    <div id="faq1" className="accordion-collapse collapse show" data-bs-parent="#contactFAQ">
-                      <div className="accordion-body paragraph-text">
-                        We typically respond to all inquiries within 24 hours during business days. For urgent matters, please call us directly at (919) 441-0932.
+                    <div id="faq1" className="accordion-collapse collapse show" data-bs-parent="#contactFAQ" aria-labelledby="heading1">
+                      <div className="accordion-body paragraph-text text-start">
+                        Permanent brows are great for anyone who has no brows, thinning brows or is simply tired of filling in their brows every day. Please refer to the list on the right for contraindications (if viewing on mobile, it will be at the bottom of the page).
                       </div>
                     </div>
                   </div>
                   
                   <div className="accordion-item border-0 shadow-sm mb-3">
-                    <h3 className="accordion-header">
-                      <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                        What should I include in my message?
+                    <h3 className="accordion-header" id="heading2">
+                      <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">
+                        How long does the procedure take?
                       </button>
                     </h3>
-                    <div id="faq2" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
-                      <div className="accordion-body paragraph-text">
-                        Please let us know which service you&apos;re interested in, any specific concerns or questions, and your preferred appointment timeframe. Photos of your current brows are also helpful for consultations.
+                    <div id="faq2" className="accordion-collapse collapse" data-bs-parent="#contactFAQ" aria-labelledby="heading2">
+                      <div className="accordion-body paragraph-text text-start">
+                        Appointments average around two and a half hours. This allows time for paperwork, consultation, brow mapping, pigment selection and the procedure itself. They may be shorter or longer depending on the current state of your brows and your desired look. However long it takes to have you leaving happy!
                       </div>
                     </div>
                   </div>
@@ -418,25 +442,103 @@ export default function ContactPage() {
                   <div className="accordion-item border-0 shadow-sm mb-3">
                     <h3 className="accordion-header">
                       <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                        Do you offer virtual consultations?
+                        Does it hurt?
                       </button>
                     </h3>
                     <div id="faq3" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
-                      <div className="accordion-body paragraph-text">
-                        Yes! We offer virtual consultations via video call to discuss your goals, answer questions, and determine if you&apos;re a good candidate for permanent makeup services.
+                      <div className="accordion-body paragraph-text text-start">
+                        Each client&apos;s pain tolerance is different, however, the majority of my clients report that the procedure is nowhere near as painful as they expected it to be. A LOT of clients are able to fall asleep and some even have told me it is relaxing! Numbing is provided during the procedure to keep pain at a minimum. This IS a form of tattooing, so discomfort is associated with the procedure, but the numbing agent does a good job minimizing it.
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="accordion-item border-0 shadow-sm mb-3">
+                    <h3 className="accordion-header">
+                      <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                        How long is the recovery time?
+                      </button>
+                    </h3>
+                    <div id="faq4" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
+                      <div className="accordion-body paragraph-text text-start">
+                        There is no immediate downtime after the procedure, though you will need to wash and put ointment on your brows for two weeks (check out the aftercare instructions here). Your brows will go through a few phases while healing. They tend to get darker and then lighter before settling into their true healed color. It is also common to have some flaking and itchiness while healing.
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="accordion-item border-0 shadow-sm mb-3">
+                    <h3 className="accordion-header">
+                      <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                        How long will my brows last?
+                      </button>
+                    </h3>
+                    <div id="faq5" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
+                      <div className="accordion-body paragraph-text text-start">
+                        This is different for everyone. The pigment may never fade out completely but will get lighter over time. Your skin type, lifestyle and many other factors can affect how quickly your brows begin to fade. It is recommended to get touchups to maintain the color and shape over time. A year is standard, but I advise my clients to wait longer if their brows still look good. Some go 2 or 3 years before needing a touchup!
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="accordion-item border-0 shadow-sm mb-3">
+                    <h3 className="accordion-header">
+                      <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                        How do you choose a shape?
+                      </button>
+                    </h3>
+                    <div id="faq6" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
+                      <div className="accordion-body paragraph-text text-start">
+                        We will map your brows out according to your face shape and proportions. We&apos;ll talk about your preferences and I&apos;ll draw a shape that I think is a good fit. We can adjust the shape until it looks just right for you.
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="accordion-item border-0 shadow-sm mb-3">
+                    <h3 className="accordion-header">
+                      <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                        How do you choose the right brow color?
+                      </button>
+                    </h3>
+                    <div id="faq7" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
+                      <div className="accordion-body paragraph-text text-start">
+                        We will select the perfect pigment for your brows based on your current brow hair color, hair color, skin tone, and desired results. You will always get to approve the color before beginning! Keep in mind, your brows will usually heal a bit lighter than they look immediately after the procedure.
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="accordion-item border-0 shadow-sm mb-3">
+                    <h3 className="accordion-header">
+                      <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq8">
+                        Can I have this procedure done while I&apos;m pregnant?
+                      </button>
+                    </h3>
+                    <div id="faq8" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
+                      <div className="accordion-body paragraph-text text-start">
+                        You may not have any permanent makeup done while you are pregnant or breastfeeding.
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="accordion-item border-0 shadow-sm mb-3">
+                    <h3 className="accordion-header">
+                      <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq9">
+                        I get botox regularly, can I still have this done?
+                      </button>
+                    </h3>
+                    <div id="faq9" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
+                      <div className="accordion-body paragraph-text text-start">
+                        Yes, you can get permanent makeup and botox! You&apos;ll just need to space out the appointments. A month before/after each is ideal.
                       </div>
                     </div>
                   </div>
                   
                   <div className="accordion-item border-0 shadow-sm">
                     <h3 className="accordion-header">
-                      <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
-                        What&apos;s the best way to schedule an appointment?
+                      <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq10">
+                        Will I still have to keep up with waxing, tweezing, threading, etc?
                       </button>
                     </h3>
-                    <div id="faq4" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
-                      <div className="accordion-body paragraph-text">
-                        You can schedule by calling us at (919) 441-0932, sending an email, or using the contact form above. We recommend starting with a consultation to discuss your goals and create a personalized treatment plan.
+                    <div id="faq10" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
+                      <div className="accordion-body paragraph-text text-start">
+                        Yes, hair will continue to grow on your brows as it did before your brow procedure. Whatever maintenance you regularly do, you can continue once your brows have healed.
                       </div>
                     </div>
                   </div>
