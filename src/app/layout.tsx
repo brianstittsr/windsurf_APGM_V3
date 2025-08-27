@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "A Pretty Girl Matter",
-  description: "Professional permanent makeup services by Victoria Escobar. Microblading, permanent eyeliner, lip blushing, and more. Transform your look with natural, beautiful results.",
+  description: "Professional semi-permanent makeup services by Victoria Escobar. Microblading, semi-permanent eyeliner, lip blushing, and more. Transform your look with natural, beautiful results.",
   icons: {
     icon: [
       { url: "/images/APGM-icon2.png", sizes: "48x48", type: "image/png" },

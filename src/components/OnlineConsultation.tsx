@@ -198,7 +198,7 @@ export default function OnlineConsultation() {
                 >
                   <option value="">Select a service</option>
                   <option value="microblading">Microblading Eyebrows</option>
-                  <option value="eyeliner">Permanent Eyeliner</option>
+                  <option value="eyeliner">Semi-permanent Eyeliner</option>
                   <option value="lips">Lip Blushing</option>
                   <option value="multiple">Multiple Services</option>
                   <option value="consultation">General Consultation</option>

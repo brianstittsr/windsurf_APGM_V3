@@ -300,7 +300,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <h5 className="card-title">Book Appointment</h5>
-                    <p className="card-text text-muted small">Schedule your next permanent makeup session</p>
+                    <p className="card-text text-muted small">Schedule your next semi-permanent makeup session</p>
                     <Link href="/book-now-custom" className="btn btn-primary rounded-pill">
                       Book Now
                     </Link>

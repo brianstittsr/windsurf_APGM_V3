@@ -25,7 +25,7 @@ export default function BookNow() {
                   Book Your <span className="text-primary">Appointment</span>
                 </h1>
                 <p className="fs-5 text-secondary mb-5">
-                  Schedule your permanent makeup consultation and treatment with Victoria. 
+                  Schedule your semi-permanent makeup consultation and treatment with Victoria. 
                   Choose from available time slots that work best for your schedule.
                 </p>
               </div>
@@ -137,7 +137,7 @@ export default function BookNow() {
                         <i className="fas fa-user-check text-white fs-4"></i>
                       </div>
                       <h4 className="h6 fw-bold text-dark mb-2">Professional Service</h4>
-                      <p className="text-secondary small">Expert permanent makeup application by Victoria</p>
+                      <p className="text-secondary small">Expert semi-permanent makeup application by Victoria</p>
                     </div>
                   </div>
                 </div>

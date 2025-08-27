@@ -89,7 +89,7 @@ export default function CandidacyAssessment() {
     
     // Step 6: Previous work question is required
     if (currentStep === 6 && !formData.previous_work) {
-      errors.push('Please answer about previous permanent makeup');
+      errors.push('Please answer about previous semi-permanent makeup');
     }
     
     return errors;
@@ -437,9 +437,9 @@ export default function CandidacyAssessment() {
             <p className="text-center text-muted mb-4">Information about any previous eyebrow work is important for planning your treatment.</p>
             
             <div className="mb-4">
-              <h5 className="mb-3">Have you had any previous permanent makeup on your eyebrows? <span className="text-danger">*</span></h5>
+              <h5 className="mb-3">Have you had any previous semi-permanent makeup on your eyebrows? <span className="text-danger">*</span></h5>
               {[
-                { value: 'yes', label: 'Yes, I have had previous permanent makeup' },
+                { value: 'yes', label: 'Yes, I have had previous semi-permanent makeup' },
                 { value: 'no', label: 'No, this would be my first time' }
               ].map((option) => (
                 <div key={option.value} className={`card p-3 mb-2 border ${formData.previous_work === option.value ? 'border-primary bg-light' : 'border-light'}`} style={{cursor: 'pointer'}}>
@@ -538,7 +538,7 @@ export default function CandidacyAssessment() {
 
             <div className="mt-4 p-3 bg-light rounded">
               <small className="text-muted">
-                <em>*While every effort is made to determine if you are a good candidate for microblading and permanent brows, results vary and no guarantee can be made about how your skin will respond to the treatment.</em>
+                <em>*While every effort is made to determine if you are a good candidate for microblading and semi-permanent brows, results vary and no guarantee can be made about how your skin will respond to the treatment.</em>
               </small>
             </div>
           </div>

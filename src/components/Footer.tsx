@@ -27,7 +27,7 @@ export default function Footer() {
                 className="mb-3"
               />
               <p className="text-light lh-base">
-                Professional permanent makeup services that enhance your natural beauty. 
+                Professional semi-permanent makeup services that enhance your natural beauty. 
                 Wake up beautiful every day with our expert artistry.
               </p>
             </div>

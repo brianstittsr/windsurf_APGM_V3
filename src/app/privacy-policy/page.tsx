@@ -62,7 +62,7 @@ export default function PrivacyPolicy() {
                       <ul className="text-black">
                         <li>Provide, maintain, and improve our services</li>
                         <li>Schedule and manage your appointments</li>
-                        <li>Assess your candidacy for permanent makeup procedures</li>
+                        <li>Assess your candidacy for semi-permanent makeup procedures</li>
                         <li>Process payments and manage billing</li>
                         <li>Communicate with you about your appointments and services</li>
                         <li>Send you marketing communications (with your consent)</li>

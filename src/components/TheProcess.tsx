@@ -5,7 +5,7 @@ export default function TheProcess() {
     {
       number: "01",
       title: "Candidacy",
-      description: "You begin by completing the 'Are You a Good Candidate' form to assess your suitability for permanent makeup procedures."
+      description: "You begin by completing the 'Are You a Good Candidate' form to assess your suitability for semi-permanent makeup procedures."
     },
     {
       number: "02",
@@ -76,7 +76,7 @@ export default function TheProcess() {
                   <div className="mb-4">
                     <img
                       src="/images/theprocess/BookNow.png"
-                      alt="Book now for permanent makeup"
+                      alt="Book now for semi-permanent makeup"
                       className="img-fluid shadow-custom"
                       style={{height: '300px', width: '100%', objectFit: 'contain', objectPosition: 'center', borderRadius: '0.5rem'}}
                     />
@@ -86,7 +86,7 @@ export default function TheProcess() {
                   <div className="mb-4">
                     <img
                       src="/images/theprocess/numbing.jpg"
-                      alt="Numbing cream application for permanent makeup"
+                      alt="Numbing cream application for semi-permanent makeup"
                       className="img-fluid shadow-custom"
                       style={{height: '300px', width: '100%', objectFit: 'contain', objectPosition: 'center', borderRadius: '0.5rem'}}
                     />
@@ -106,7 +106,7 @@ export default function TheProcess() {
                   <div className="mb-4">
                     <img
                       src="/images/theprocess/color.png"
-                      alt="Color selection for permanent makeup"
+                      alt="Color selection for semi-permanent makeup"
                       className="img-fluid shadow-custom"
                       style={{height: '300px', width: '100%', objectFit: 'contain', objectPosition: 'center', borderRadius: '0.5rem'}}
                     />
@@ -116,7 +116,7 @@ export default function TheProcess() {
                   <div className="mb-4">
                     <img
                       src="/images/theprocess/touchup.png"
-                      alt="Touch-up session for permanent makeup"
+                      alt="Touch-up session for semi-permanent makeup"
                       className="img-fluid shadow-custom"
                       style={{height: '300px', width: '100%', objectFit: 'contain', objectPosition: 'center', borderRadius: '0.5rem'}}
                     />

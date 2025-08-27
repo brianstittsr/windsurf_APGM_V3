@@ -144,7 +144,7 @@ export class ClientEmailService {
         <div class="content">
             <div class="welcome-box">
                 <h3>Hello ${data.clientName}!</h3>
-                <p>Thank you for choosing ${data.businessName} for your permanent makeup journey. We've created your personal client portal account to help you manage your appointments and stay connected with us.</p>
+                <p>Thank you for choosing ${data.businessName} for your semi-permanent makeup journey. We've created your personal client portal account to help you manage your appointments and stay connected with us.</p>
             </div>
 
             <div class="login-info">
@@ -192,7 +192,7 @@ Welcome to ${data.businessName}!
 
 Hello ${data.clientName},
 
-Thank you for choosing ${data.businessName} for your permanent makeup journey. We've created your personal client portal account to help you manage your appointments and stay connected with us.
+Thank you for choosing ${data.businessName} for your semi-permanent makeup journey. We've created your personal client portal account to help you manage your appointments and stay connected with us.
 
 YOUR LOGIN INFORMATION:
 Email: ${data.clientEmail}

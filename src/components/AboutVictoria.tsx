@@ -23,7 +23,7 @@ export default function AboutVictoria() {
             <span className="text-primary"> Victoria</span>
           </h2>
           <p className="paragraph-text text-secondary mx-auto text-wrap" style={{maxWidth: '64rem', wordWrap: 'break-word', overflowWrap: 'break-word'}}>
-            Meet the artist behind the beauty. Victoria combines technical expertise with artistic vision to create stunning, natural-looking permanent makeup results.
+            Meet the artist behind the beauty. Victoria combines technical expertise with artistic vision to create stunning, natural-looking semi-permanent makeup results.
           </p>
         </div>
 
@@ -51,14 +51,14 @@ export default function AboutVictoria() {
               <div className="text-black lh-base">
                 <p className="fs-4 mb-4">
                   As a proud veteran and the founder of <strong>A Pretty Girl Matter</strong>, I discovered my passion for 
-                  permanent makeup through its incredible power to elevate natural beauty and boost confidence. 
+                  semi-permanent makeup through its incredible power to elevate natural beauty and boost confidence. 
                   After serving in the military, I wanted to create something meaningful that combined my love for 
-                  artistry with my mission to empower others—and so my permanent makeup business was born.
+                  artistry with my mission to empower others—and so my semi-permanent makeup business was born.
                 </p>
                 <p className="fs-5 mb-4">
                   I've had the privilege of training with some of the top PMU academies in the world—<strong>The 
                   Collective, Beauty Slesh, Beauty Angels, and Plush Beauty Academy</strong>—where I mastered 
-                  advanced techniques in <strong>microblading, ombré brows, combo brows, lip blushing, permanent 
+                  advanced techniques in <strong>microblading, ombré brows, combo brows, lip blushing, semi-permanent 
                   eyeliner, and tiny tattoos</strong>. This exclusive education equips me to deliver precise, personalized 
                   results and comprehensive care from consultation to aftercare.
                 </p>
@@ -88,7 +88,7 @@ export default function AboutVictoria() {
               <h4 className="h5 fw-bold text-dark mb-3">My Mission</h4>
               <p className="text-black fst-italic mb-0 fs-5">
                 &quot;My mission is simple: to help you wake up looking and feeling your absolute best with 
-                effortless, natural-looking permanent makeup. Whether you're a busy professional, a mom, or 
+                effortless, natural-looking semi-permanent makeup. Whether you're a busy professional, a mom, or 
                 someone who values confidence and convenience, I'm here to create a look that's uniquely 
                 yours.&quot;
               </p>

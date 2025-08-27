@@ -1355,7 +1355,7 @@ function BookNowCustomContent() {
         <div className="col-lg-10">
           <div className="text-center mb-5">
             <h1 className="display-4 fw-bold text-primary mb-3">Choose Your Service</h1>
-            <p className="lead text-muted">Select the permanent makeup service you&apos;d like to book</p>
+            <p className="lead text-muted">Select the semi-permanent makeup service you&apos;d like to book</p>
           </div>
           
           {servicesLoading && (

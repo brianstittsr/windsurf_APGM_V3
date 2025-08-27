@@ -47,7 +47,7 @@ export default function TermsOfService() {
                     <div className="mb-5">
                       <h2 className="h4 fw-bold text-primary mb-3">2. Services Provided</h2>
                       <p className="text-black mb-3">
-                        A Pretty Girl Matter, LLC provides permanent makeup services including but not limited to:
+                        A Pretty Girl Matter, LLC provides semi-permanent makeup services including but not limited to:
                       </p>
                       <ul className="text-black mb-3">
                         <li>Microblading and powder eyebrows</li>
@@ -100,7 +100,7 @@ export default function TermsOfService() {
                       <h2 className="h4 fw-bold text-primary mb-3">5. Informed Consent</h2>
                       <p className="text-black">
                         Before any procedure, you will be required to sign an informed consent form acknowledging that 
-                        you understand the risks, benefits, and potential complications of permanent makeup procedures. 
+                        you understand the risks, benefits, and potential complications of semi-permanent makeup procedures. 
                         This includes understanding that results may vary and that touch-up sessions may be necessary.
                       </p>
                     </div>

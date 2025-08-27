@@ -218,8 +218,8 @@ export default function HealthFormWizard({
                     </p>
                     <ul className="small mb-0">
                       <li>I have answered all health questions honestly and completely</li>
-                      <li>I understand the risks and benefits of permanent makeup procedures</li>
-                      <li>I consent to the permanent makeup procedure</li>
+                      <li>I understand the risks and benefits of semi-permanent makeup procedures</li>
+                      <li>I consent to the semi-permanent makeup procedure</li>
                       <li>I understand that results may vary and touch-ups may be needed</li>
                     </ul>
                   </div>

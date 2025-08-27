@@ -30,7 +30,7 @@ export default function ClientReviews() {
       name: "Emily Chen",
       service: "Permanent Eyeliner",
       rating: 5,
-      text: "I was nervous about getting permanent eyeliner, but Victoria made me feel so comfortable. The results are exactly what I wanted - subtle but defined. I save so much time in the morning now!",
+      text: "I was nervous about getting semi-permanent eyeliner, but Victoria made me feel so comfortable. The results are exactly what I wanted - subtle but defined. I save so much time in the morning now!",
       image: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop",
       beforeAfter: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400&h=200&fit=crop"
     },
@@ -38,7 +38,7 @@ export default function ClientReviews() {
       name: "Maria Rodriguez",
       service: "Lip Blushing",
       rating: 5,
-      text: "My lips have never looked better! The color is perfect for my skin tone and looks so natural. Victoria is a true artist. I get compliments every day and people can't believe it's permanent makeup.",
+      text: "My lips have never looked better! The color is perfect for my skin tone and looks so natural. Victoria is a true artist. I get compliments every day and people can't believe it's semi-permanent makeup.",
       image: "https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop",
       beforeAfter: "https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=400&h=200&fit=crop"
     },
@@ -102,7 +102,7 @@ export default function ClientReviews() {
           </h2>
           <p className="paragraph-text text-secondary mx-auto" style={{maxWidth: '48rem'}}>
             Don&apos;t just take our word for it. Here&apos;s what our amazing clients have to say about their 
-            permanent makeup experience with Victoria.
+            semi-permanent makeup experience with Victoria.
           </p>
         </div>
 
@@ -234,7 +234,7 @@ export default function ClientReviews() {
               Book Now
             </h3>
             <p className="paragraph-text text-white mb-4">
-              Experience the confidence and convenience of permanent makeup. 
+              Experience the confidence and convenience of semi-permanent makeup. 
               Book your free consultation today and start your transformation journey.
             </p>
             <div className="d-flex justify-content-center">

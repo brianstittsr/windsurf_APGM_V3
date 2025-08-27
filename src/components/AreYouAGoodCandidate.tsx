@@ -129,7 +129,7 @@ export default function AreYouAGoodCandidate() {
           <div className="text-center">
             <h3 className="h3 fw-bold text-dark mb-3">Age Requirements</h3>
             <p className="text-secondary mb-0">
-              You must be at least 18 years old for permanent makeup procedures. 
+              You must be at least 18 years old for semi-permanent makeup procedures. 
               For clients under 21, parental consent may be required.
             </p>
           </div>

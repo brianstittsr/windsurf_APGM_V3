@@ -1,6 +1,6 @@
 /**
  * Invoice Email Service
- * Sends professional invoices for permanent makeup services
+ * Sends professional invoices for semi-permanent makeup services
  */
 
 import { SMTPEmailService, InvoiceEmailTemplate } from './gmailEmailService';
