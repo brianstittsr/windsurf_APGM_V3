@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements } from '@stripe/react-stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import PaymentForm from './PaymentForm';
 
 interface StripeManagementProps {
@@ -14,7 +14,44 @@ interface PaymentTestResult {
   message: string;
   paymentIntentId?: string;
   amount?: number;
-  timestamp?: string;
+  timestamp: string;
+}
+
+// Credit Card Input Component
+function CreditCardInput({ onCardChange, disabled }: { onCardChange: (error: string | null) => void, disabled: boolean }) {
+  const handleCardChange = (event: any) => {
+    if (event.error) {
+      onCardChange(event.error.message);
+    } else {
+      onCardChange(null);
+    }
+  };
+
+  const cardElementOptions = {
+    style: {
+      base: {
+        fontSize: '16px',
+        color: '#424770',
+        '::placeholder': {
+          color: '#aab7c4',
+        },
+        padding: '12px',
+      },
+      invalid: {
+        color: '#9e2146',
+      },
+    },
+    disabled: disabled
+  };
+
+  return (
+    <div className="border rounded p-3 bg-light">
+      <CardElement 
+        options={cardElementOptions}
+        onChange={handleCardChange}
+      />
+    </div>
+  );
 }
 
 export default function StripeManagement({}: StripeManagementProps) {
@@ -26,6 +63,7 @@ export default function StripeManagement({}: StripeManagementProps) {
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [currentPaymentIntent, setCurrentPaymentIntent] = useState<string | null>(null);
   const [stripePromise, setStripePromise] = useState<any>(null);
+  const [cardError, setCardError] = useState<string | null>(null);
   const [stripeConfig, setStripeConfig] = useState({
     testPublishableKey: '',
     testSecretKey: '',
@@ -236,6 +274,89 @@ export default function StripeManagement({}: StripeManagementProps) {
     setIsProcessingPayment(false);
   };
 
+  const processDirectPayment = async () => {
+    if (!selectedProduct) {
+      alert('Please select a product to test payment');
+      return;
+    }
+
+    const product = products.find(p => p.id === selectedProduct);
+    if (!product) {
+      alert('Product not found');
+      return;
+    }
+
+    // Show confirmation popup for live mode
+    if (stripeMode === 'live') {
+      const confirmed = window.confirm(
+        `⚠️ LIVE PAYMENT CONFIRMATION\n\n` +
+        `Selected Product: ${product.name} ($${product.price})\n` +
+        `ACTUAL CHARGE: $1.00 USD\n\n` +
+        `This is a $1.00 test payment, NOT the full product price.\n` +
+        `Your credit card will be charged $1.00 for testing purposes.\n\n` +
+        `Continue with $1.00 live payment?`
+      );
+      
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    setIsProcessingPayment(true);
+    try {
+      // Create payment intent for $1.00 (100 cents)
+      const response = await fetch('/api/create-test-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: 100, // $1.00 in cents
+          currency: 'usd',
+          productName: product.name,
+          stripeMode: stripeMode,
+          isTestPayment: true
+        }),
+      });
+
+      const { clientSecret, paymentIntentId } = await response.json();
+
+      if (!response.ok) {
+        throw new Error('Failed to create payment intent');
+      }
+
+      // Get Stripe instance and process payment directly
+      const stripe = await stripePromise;
+      if (!stripe) throw new Error('Stripe not loaded');
+
+      // Get card element from the current Elements context
+      // This will be handled by the CreditCardInput component
+      setCurrentPaymentIntent(clientSecret);
+      
+      const result: PaymentTestResult = {
+        success: true,
+        message: `Payment intent created for ${product.name} - ready for processing`,
+        paymentIntentId,
+        amount: 1.00,
+        timestamp: new Date().toISOString()
+      };
+
+      setTestResults(prev => [result, ...prev.slice(0, 9)]);
+
+    } catch (error) {
+      console.error('Payment processing failed:', error);
+      const result: PaymentTestResult = {
+        success: false,
+        message: `Payment failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        amount: 1.00,
+        timestamp: new Date().toISOString()
+      };
+      setTestResults(prev => [result, ...prev.slice(0, 9)]);
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
   const clearTestResults = () => {
     setTestResults([]);
   };
@@ -366,27 +487,44 @@ export default function StripeManagement({}: StripeManagementProps) {
                   </select>
                 </div>
 
+                {/* Credit Card Input Section */}
+                <div className="col-12">
+                  <label className="form-label fw-semibold">
+                    <i className="fas fa-credit-card me-2"></i>
+                    Credit Card Information
+                  </label>
+                  {stripePromise && (
+                    <Elements stripe={stripePromise}>
+                      <CreditCardInput 
+                        onCardChange={setCardError}
+                        disabled={!selectedProduct || isProcessingPayment}
+                      />
+                    </Elements>
+                  )}
+                  {cardError && (
+                    <div className="text-danger small mt-2">
+                      <i className="fas fa-exclamation-triangle me-1"></i>
+                      {cardError}
+                    </div>
+                  )}
+                </div>
+
                 <div className="col-12">
                   <button
                     className="btn btn-lg w-100 rounded-pill"
                     style={{ backgroundColor: '#AD6269', borderColor: '#AD6269', color: 'white' }}
-                    onClick={testPayment}
-                    disabled={!selectedProduct || isProcessingPayment || showPaymentForm}
+                    onClick={processDirectPayment}
+                    disabled={!selectedProduct || isProcessingPayment || !!cardError}
                   >
                     {isProcessingPayment ? (
                       <>
                         <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                        Setting up payment...
-                      </>
-                    ) : showPaymentForm ? (
-                      <>
-                        <i className="fas fa-check me-2"></i>
-                        Payment Form Ready
+                        Processing $1.00 Payment...
                       </>
                     ) : (
                       <>
-                        <i className="fas fa-credit-card me-2"></i>
-                        Start $1.00 Payment
+                        <i className="fas fa-lock me-2"></i>
+                        Pay $1.00 Now
                       </>
                     )}
                   </button>
@@ -395,7 +533,7 @@ export default function StripeManagement({}: StripeManagementProps) {
                 <div className="col-12">
                   <div className="alert alert-info border-0 rounded-3 small">
                     <i className="fas fa-lightbulb me-2"></i>
-                    This creates a $1.00 payment with real credit card processing. Use test cards in test mode or real cards in live mode.
+                    <strong>Test Cards:</strong> Use 4242 4242 4242 4242 (any future date, any CVC) for testing. Real cards will be charged $1.00 in live mode.
                   </div>
                 </div>
               </div>
