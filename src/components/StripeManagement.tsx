@@ -115,41 +115,17 @@ export default function StripeManagement({}: StripeManagementProps) {
   }, []);
 
   const loadStripeConfig = async () => {
-    try {
-      // Fetch current Stripe mode from API
-      const modeResponse = await fetch('/api/stripe/mode');
-      const modeData = await modeResponse.json();
-      const currentMode = modeData.mode || 'test';
-      
-      setStripeMode(currentMode as 'test' | 'live');
-      
-      const config = {
-        testPublishableKey: modeData.publishableKey || '',
-        testSecretKey: '',
-        livePublishableKey: modeData.publishableKey || '',
-        liveSecretKey: '',
-        currentMode: currentMode
-      };
-      
-      setStripeConfig(config);
-      
-      // Initialize Stripe with the publishable key from API
-      if (modeData.publishableKey) {
-        const stripe = loadStripe(modeData.publishableKey);
-        setStripePromise(stripe);
-        console.log('Stripe initialized with key:', modeData.publishableKey.substring(0, 12) + '...');
-      } else {
-        console.error('No Stripe publishable key available');
-      }
-    } catch (error) {
-      console.error('Error loading Stripe config:', error);
-      // Fallback to environment variables
-      const testKey = process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY;
-      if (testKey) {
-        setStripePromise(loadStripe(testKey));
-        setStripeMode('test');
-      }
-    }
+    console.log('Loading Stripe config...');
+    
+    // Force initialization with a test key to debug
+    const testKey = 'pk_test_51QGdKxP8uGGBNgUbKqJXvKLqGqJXvKLqGqJXvKLqGqJXvKLqGqJXvKLqGqJXvKLqGqJXvKLqGqJXvKLqGqJXvKLqGqJXvKL';
+    
+    console.log('Initializing Stripe with test key...');
+    const stripeInstance = loadStripe(testKey);
+    setStripePromise(stripeInstance);
+    setStripeMode('test');
+    
+    console.log('Stripe promise set:', !!stripeInstance);
   };
 
   const toggleStripeMode = async () => {
