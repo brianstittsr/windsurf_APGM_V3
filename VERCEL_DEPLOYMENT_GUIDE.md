@@ -14,31 +14,35 @@ When deploying to Vercel, you must configure environment variables in the **Verc
 
 #### Stripe Configuration
 ```bash
-# Stripe Mode (test or live)
+# **Stripe Mode Control:**
 STRIPE_MODE=test
+# Set to `test` for development/staging, `live` for production.
 
 # Test Keys (for staging/development)
-STRIPE_TEST_PUBLISHABLE_KEY=pk_test_your_stripe_test_publishable_key
-STRIPE_TEST_SECRET_KEY=sk_test_your_stripe_test_secret_key
-STRIPE_TEST_WEBHOOK_SECRET=whsec_your_test_webhook_secret
+NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY=pk_test_your_test_key
+STRIPE_TEST_SECRET_KEY=sk_test_your_test_secret
+STRIPE_TEST_WEBHOOK_SECRET=whsec_test_your_webhook_secret
 
 # Live Keys (for production only)
-STRIPE_LIVE_PUBLISHABLE_KEY=pk_live_your_stripe_live_publishable_key
-STRIPE_LIVE_SECRET_KEY=sk_live_your_stripe_live_secret_key
-STRIPE_LIVE_WEBHOOK_SECRET=whsec_your_live_webhook_secret
+NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY=pk_live_your_live_key
+STRIPE_LIVE_SECRET_KEY=sk_live_your_live_secret
+STRIPE_LIVE_WEBHOOK_SECRET=whsec_live_your_webhook_secret
 
 # Public Key (must match the mode)
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_test_publishable_key
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY= NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY
 ```
 
 #### Firebase Configuration
 ```bash
-NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key_here
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+FIREBASE_ADMIN_PROJECT_ID=your_project_id
+FIREBASE_ADMIN_CLIENT_EMAIL=your_service_account_email
+FIREBASE_ADMIN_PRIVATE_KEY=your_private_key
 ```
 
 #### Email Configuration

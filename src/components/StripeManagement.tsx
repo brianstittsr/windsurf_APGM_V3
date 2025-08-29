@@ -116,24 +116,29 @@ export default function StripeManagement({}: StripeManagementProps) {
   const loadStripeConfig = async () => {
     console.log('Loading Stripe config...');
     
-    // Use environment variables for proper Stripe keys
+    // Use Vercel environment variables (works in both local dev and production)
     const testKey = process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY;
     const liveKey = process.env.NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY;
+    const stripeMode = process.env.STRIPE_MODE || 'test';
     
     console.log('Environment keys available:', { 
       testKey: testKey ? testKey.substring(0, 12) + '...' : 'none',
-      liveKey: liveKey ? liveKey.substring(0, 12) + '...' : 'none'
+      liveKey: liveKey ? liveKey.substring(0, 12) + '...' : 'none',
+      mode: stripeMode
     });
     
-    if (testKey) {
-      console.log('Using test key from environment');
-      const stripeInstance = loadStripe(testKey);
+    // Use the appropriate key based on STRIPE_MODE environment variable
+    const publishableKey = stripeMode === 'live' ? liveKey : testKey;
+    
+    if (publishableKey) {
+      console.log(`Using ${stripeMode} key from Vercel environment variables`);
+      const stripeInstance = loadStripe(publishableKey);
       setStripePromise(stripeInstance);
-      setStripeMode('test');
-      console.log('Stripe promise set with valid test key');
+      setStripeMode(stripeMode as 'test' | 'live');
+      console.log(`Stripe promise set with valid ${stripeMode} key`);
     } else {
-      console.error('No valid Stripe publishable key found in environment variables');
-      // Don't set stripePromise to keep showing loading state
+      console.error(`No valid Stripe ${stripeMode} publishable key found in Vercel environment variables`);
+      console.log('Make sure to set NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY and NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY in Vercel dashboard');
     }
   };
 
