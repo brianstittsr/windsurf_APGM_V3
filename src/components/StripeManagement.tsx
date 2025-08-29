@@ -300,9 +300,9 @@ export default function StripeManagement({}: StripeManagementProps) {
   };
 
   const processDirectPayment = async () => {
+    // Set default product if none selected
     if (!selectedProduct) {
-      alert('Please select a product to test payment');
-      return;
+      setSelectedProduct('eyebrows');
     }
 
     if (!cardElement) {
@@ -310,10 +310,10 @@ export default function StripeManagement({}: StripeManagementProps) {
       return;
     }
 
-    const product = products.find(p => p.id === selectedProduct);
+    let product = products.find(p => p.id === selectedProduct);
     if (!product) {
-      alert('Product not found');
-      return;
+      // Use default product if none selected
+      product = { id: 'test', name: 'Test Payment', price: 1 };
     }
 
     // Show confirmation popup for live mode
@@ -537,7 +537,7 @@ export default function StripeManagement({}: StripeManagementProps) {
                     <Elements stripe={stripePromise}>
                       <CreditCardInput 
                         onCardChange={setCardError}
-                        disabled={!selectedProduct || isProcessingPayment}
+                        disabled={isProcessingPayment}
                         onCardReady={setCardElement}
                       />
                     </Elements>
@@ -545,12 +545,6 @@ export default function StripeManagement({}: StripeManagementProps) {
                     <div className="border rounded p-3 bg-light text-muted">
                       <i className="fas fa-spinner fa-spin me-2"></i>
                       Loading payment form...
-                    </div>
-                  )}
-                  {!selectedProduct && (
-                    <div className="text-muted small mt-2">
-                      <i className="fas fa-info-circle me-1"></i>
-                      Please select a product first to enable credit card input
                     </div>
                   )}
                   {cardError && (
@@ -566,7 +560,7 @@ export default function StripeManagement({}: StripeManagementProps) {
                     className="btn btn-lg w-100 rounded-pill"
                     style={{ backgroundColor: '#AD6269', borderColor: '#AD6269', color: 'white' }}
                     onClick={processDirectPayment}
-                    disabled={!selectedProduct || isProcessingPayment || !!cardError}
+                    disabled={isProcessingPayment || !!cardError}
                   >
                     {isProcessingPayment ? (
                       <>
