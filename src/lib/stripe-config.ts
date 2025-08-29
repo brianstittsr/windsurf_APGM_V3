@@ -14,7 +14,33 @@ export interface StripeConfig {
 }
 
 /**
- * Get the current Stripe mode from environment variables
+ * Get the current Stripe mode from environment variables or database
+ */
+export async function getStripeModeAsync(): Promise<StripeMode> {
+  // First check if we're in a server environment and can access database
+  if (typeof window === 'undefined') {
+    try {
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+      
+      const configDoc = await getDoc(doc(db, 'systemConfig', 'stripe'));
+      if (configDoc.exists()) {
+        const dbMode = configDoc.data().mode;
+        if (dbMode === 'live' || dbMode === 'test') {
+          return dbMode as StripeMode;
+        }
+      }
+    } catch (error) {
+      console.warn('Could not fetch Stripe mode from database, falling back to environment variable');
+    }
+  }
+  
+  // Fallback to environment variable
+  return getStripeMode();
+}
+
+/**
+ * Get the current Stripe mode from environment variables (synchronous)
  */
 export function getStripeMode(): StripeMode {
   const mode = process.env.STRIPE_MODE?.toLowerCase();

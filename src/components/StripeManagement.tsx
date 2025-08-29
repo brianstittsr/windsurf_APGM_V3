@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+import PaymentForm from './PaymentForm';
 
 interface StripeManagementProps {
   // Add any props if needed
@@ -21,6 +23,9 @@ export default function StripeManagement({}: StripeManagementProps) {
   const [testResults, setTestResults] = useState<PaymentTestResult[]>([]);
   const [selectedProduct, setSelectedProduct] = useState('');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [currentPaymentIntent, setCurrentPaymentIntent] = useState<string | null>(null);
+  const [stripePromise, setStripePromise] = useState<any>(null);
   const [stripeConfig, setStripeConfig] = useState({
     testPublishableKey: '',
     testSecretKey: '',
@@ -49,13 +54,21 @@ export default function StripeManagement({}: StripeManagementProps) {
       const savedMode = localStorage.getItem('stripeMode') || 'test';
       setStripeMode(savedMode as 'test' | 'live');
       
-      setStripeConfig({
+      const config = {
         testPublishableKey: process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY || '',
         testSecretKey: process.env.STRIPE_TEST_SECRET_KEY || '',
         livePublishableKey: process.env.NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY || '',
         liveSecretKey: process.env.STRIPE_LIVE_SECRET_KEY || '',
         currentMode: savedMode
-      });
+      };
+      
+      setStripeConfig(config);
+      
+      // Initialize Stripe with the appropriate key
+      const publishableKey = savedMode === 'test' ? config.testPublishableKey : config.livePublishableKey;
+      if (publishableKey) {
+        setStripePromise(loadStripe(publishableKey));
+      }
     } catch (error) {
       console.error('Error loading Stripe config:', error);
     }
@@ -104,10 +117,30 @@ export default function StripeManagement({}: StripeManagementProps) {
       return;
     }
 
+    const product = products.find(p => p.id === selectedProduct);
+    if (!product) {
+      alert('Product not found');
+      return;
+    }
+
+    // Show confirmation popup for live mode
+    if (stripeMode === 'live') {
+      const confirmed = window.confirm(
+        `⚠️ LIVE PAYMENT CONFIRMATION\n\n` +
+        `Selected Product: ${product.name} ($${product.price})\n` +
+        `ACTUAL CHARGE: $1.00 USD\n\n` +
+        `This is a $1.00 test payment, NOT the full product price.\n` +
+        `Your credit card will be charged $1.00 for testing purposes.\n\n` +
+        `Continue with $1.00 live payment?`
+      );
+      
+      if (!confirmed) {
+        return;
+      }
+    }
+
     setIsProcessingPayment(true);
     try {
-      const product = products.find(p => p.id === selectedProduct);
-      if (!product) throw new Error('Product not found');
 
       // Create payment intent for $1.00 (100 cents)
       const response = await fetch('/api/create-test-payment-intent', {
@@ -130,19 +163,24 @@ export default function StripeManagement({}: StripeManagementProps) {
         throw new Error('Failed to create payment intent');
       }
 
-      // Load Stripe with the appropriate key
+      // Update Stripe promise if mode changed
       const publishableKey = stripeMode === 'test' 
         ? stripeConfig.testPublishableKey 
         : stripeConfig.livePublishableKey;
       
-      const stripe = await loadStripe(publishableKey);
-      if (!stripe) throw new Error('Failed to load Stripe');
+      if (publishableKey) {
+        setStripePromise(loadStripe(publishableKey));
+      } else {
+        throw new Error('Stripe publishable key not found');
+      }
 
-      // For testing purposes, we'll simulate a successful payment
-      // In a real implementation, you'd redirect to a payment form
+      // Store payment intent for the form
+      setCurrentPaymentIntent(clientSecret);
+      setShowPaymentForm(true);
+      
       const result: PaymentTestResult = {
         success: true,
-        message: `$1.00 test payment created for ${product.name} in ${stripeMode.toUpperCase()} mode`,
+        message: `Payment form ready for ${product.name} in ${stripeMode.toUpperCase()} mode`,
         paymentIntentId,
         amount: 1.00,
         timestamp: new Date().toISOString()
@@ -154,13 +192,48 @@ export default function StripeManagement({}: StripeManagementProps) {
       console.error('Payment test failed:', error);
       const result: PaymentTestResult = {
         success: false,
-        message: `Payment test failed: ${error}`,
+        message: `Payment test failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        amount: 1.00,
         timestamp: new Date().toISOString()
       };
       setTestResults(prev => [result, ...prev.slice(0, 9)]);
-    } finally {
       setIsProcessingPayment(false);
     }
+  };
+
+  const handlePaymentSuccess = (result: any) => {
+    const successResult: PaymentTestResult = {
+      success: true,
+      message: `Payment completed successfully! Payment ID: ${result.paymentIntentId}`,
+      paymentIntentId: result.paymentIntentId,
+      amount: result.amount,
+      timestamp: new Date().toISOString()
+    };
+    
+    setTestResults(prev => [successResult, ...prev.slice(0, 9)]);
+    setShowPaymentForm(false);
+    setCurrentPaymentIntent(null);
+    setIsProcessingPayment(false);
+  };
+
+  const handlePaymentError = (error: string) => {
+    const errorResult: PaymentTestResult = {
+      success: false,
+      message: `Payment failed: ${error}`,
+      amount: 1.00,
+      timestamp: new Date().toISOString()
+    };
+    
+    setTestResults(prev => [errorResult, ...prev.slice(0, 9)]);
+    setShowPaymentForm(false);
+    setCurrentPaymentIntent(null);
+    setIsProcessingPayment(false);
+  };
+
+  const handlePaymentCancel = () => {
+    setShowPaymentForm(false);
+    setCurrentPaymentIntent(null);
+    setIsProcessingPayment(false);
   };
 
   const clearTestResults = () => {
@@ -298,17 +371,22 @@ export default function StripeManagement({}: StripeManagementProps) {
                     className="btn btn-lg w-100 rounded-pill"
                     style={{ backgroundColor: '#AD6269', borderColor: '#AD6269', color: 'white' }}
                     onClick={testPayment}
-                    disabled={!selectedProduct || isProcessingPayment}
+                    disabled={!selectedProduct || isProcessingPayment || showPaymentForm}
                   >
                     {isProcessingPayment ? (
                       <>
                         <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                        Processing Test Payment...
+                        Setting up payment...
+                      </>
+                    ) : showPaymentForm ? (
+                      <>
+                        <i className="fas fa-check me-2"></i>
+                        Payment Form Ready
                       </>
                     ) : (
                       <>
                         <i className="fas fa-credit-card me-2"></i>
-                        Create $1.00 Test Payment
+                        Start $1.00 Payment
                       </>
                     )}
                   </button>
@@ -317,7 +395,7 @@ export default function StripeManagement({}: StripeManagementProps) {
                 <div className="col-12">
                   <div className="alert alert-info border-0 rounded-3 small">
                     <i className="fas fa-lightbulb me-2"></i>
-                    This creates a $1.00 payment intent to test your Stripe configuration without processing large amounts.
+                    This creates a $1.00 payment with real credit card processing. Use test cards in test mode or real cards in live mode.
                   </div>
                 </div>
               </div>
@@ -325,6 +403,24 @@ export default function StripeManagement({}: StripeManagementProps) {
           </div>
         </div>
       </div>
+
+      {/* Payment Form Section */}
+      {showPaymentForm && currentPaymentIntent && stripePromise && (
+        <div className="row mt-4">
+          <div className="col-12">
+            <Elements stripe={stripePromise}>
+              <PaymentForm
+                clientSecret={currentPaymentIntent}
+                amount={1.00}
+                productName={products.find(p => p.id === selectedProduct)?.name || 'Test Product'}
+                onSuccess={handlePaymentSuccess}
+                onError={handlePaymentError}
+                onCancel={handlePaymentCancel}
+              />
+            </Elements>
+          </div>
+        </div>
+      )}
 
       {/* Test Results Section */}
       {testResults.length > 0 && (
