@@ -32,20 +32,26 @@ function CreditCardInput({ onCardChange, disabled }: { onCardChange: (error: str
       base: {
         fontSize: '16px',
         color: '#424770',
+        fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+        fontSmoothing: 'antialiased',
         '::placeholder': {
           color: '#aab7c4',
         },
-        padding: '12px',
       },
       invalid: {
         color: '#9e2146',
+        iconColor: '#9e2146',
+      },
+      complete: {
+        color: '#4caf50',
       },
     },
-    disabled: disabled
+    disabled: disabled,
+    hidePostalCode: true,
   };
 
   return (
-    <div className="border rounded p-3 bg-light">
+    <div className="border rounded p-3" style={{ backgroundColor: '#fff', minHeight: '44px' }}>
       <CardElement 
         options={cardElementOptions}
         onChange={handleCardChange}
@@ -493,13 +499,24 @@ export default function StripeManagement({}: StripeManagementProps) {
                     <i className="fas fa-credit-card me-2"></i>
                     Credit Card Information
                   </label>
-                  {stripePromise && (
+                  {stripePromise ? (
                     <Elements stripe={stripePromise}>
                       <CreditCardInput 
                         onCardChange={setCardError}
                         disabled={!selectedProduct || isProcessingPayment}
                       />
                     </Elements>
+                  ) : (
+                    <div className="border rounded p-3 bg-light text-muted">
+                      <i className="fas fa-spinner fa-spin me-2"></i>
+                      Loading payment form...
+                    </div>
+                  )}
+                  {!selectedProduct && (
+                    <div className="text-muted small mt-2">
+                      <i className="fas fa-info-circle me-1"></i>
+                      Please select a product first to enable credit card input
+                    </div>
                   )}
                   {cardError && (
                     <div className="text-danger small mt-2">
