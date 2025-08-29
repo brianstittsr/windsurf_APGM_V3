@@ -45,6 +45,7 @@ function CreditCardInput({ onCardChange, disabled, onCardReady }: {
         color: '#424770',
         fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
         fontSmoothing: 'antialiased',
+        padding: '12px 16px',
         '::placeholder': {
           color: '#aab7c4',
         },
@@ -62,12 +63,22 @@ function CreditCardInput({ onCardChange, disabled, onCardReady }: {
   };
 
   return (
-    <div className="border rounded p-3" style={{ backgroundColor: '#fff', minHeight: '44px' }}>
-      <CardElement 
-        options={cardElementOptions}
-        onChange={handleCardChange}
-        onReady={handleCardReady}
-      />
+    <div>
+      <div className="row g-3">
+        <div className="col-12">
+          <label className="form-label fw-semibold">
+            <i className="fas fa-credit-card me-2"></i>
+            Card Number
+          </label>
+          <div className="border rounded p-3" style={{ backgroundColor: '#fff', minHeight: '50px' }}>
+            <CardElement 
+              options={cardElementOptions}
+              onChange={handleCardChange}
+              onReady={handleCardReady}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -527,12 +538,8 @@ export default function StripeManagement({}: StripeManagementProps) {
                   </select>
                 </div>
 
-                {/* Credit Card Input Section */}
+                {/* Credit Card Form Section */}
                 <div className="col-12">
-                  <label className="form-label fw-semibold">
-                    <i className="fas fa-credit-card me-2"></i>
-                    Credit Card Information
-                  </label>
                   {stripePromise ? (
                     <Elements stripe={stripePromise}>
                       <CreditCardInput 
