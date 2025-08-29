@@ -45,7 +45,6 @@ function CreditCardInput({ onCardChange, disabled, onCardReady }: {
         color: '#424770',
         fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
         fontSmoothing: 'antialiased',
-        padding: '12px 16px',
         '::placeholder': {
           color: '#aab7c4',
         },
@@ -117,15 +116,25 @@ export default function StripeManagement({}: StripeManagementProps) {
   const loadStripeConfig = async () => {
     console.log('Loading Stripe config...');
     
-    // Force initialization with a test key to debug
-    const testKey = 'pk_test_51QGdKxP8uGGBNgUbKqJXvKLqGqJXvKLqGqJXvKLqGqJXvKLqGqJXvKLqGqJXvKLqGqJXvKLqGqJXvKLqGqJXvKLqGqJXvKL';
+    // Use environment variables for proper Stripe keys
+    const testKey = process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY;
+    const liveKey = process.env.NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY;
     
-    console.log('Initializing Stripe with test key...');
-    const stripeInstance = loadStripe(testKey);
-    setStripePromise(stripeInstance);
-    setStripeMode('test');
+    console.log('Environment keys available:', { 
+      testKey: testKey ? testKey.substring(0, 12) + '...' : 'none',
+      liveKey: liveKey ? liveKey.substring(0, 12) + '...' : 'none'
+    });
     
-    console.log('Stripe promise set:', !!stripeInstance);
+    if (testKey) {
+      console.log('Using test key from environment');
+      const stripeInstance = loadStripe(testKey);
+      setStripePromise(stripeInstance);
+      setStripeMode('test');
+      console.log('Stripe promise set with valid test key');
+    } else {
+      console.error('No valid Stripe publishable key found in environment variables');
+      // Don't set stripePromise to keep showing loading state
+    }
   };
 
   const toggleStripeMode = async () => {
