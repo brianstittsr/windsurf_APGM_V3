@@ -116,7 +116,16 @@ export default function StripeManagement({}: StripeManagementProps) {
   const loadStripeConfig = async () => {
     console.log('Loading Stripe config...');
     
-    // Use Vercel environment variables (works in both local dev and production)
+    // Check if running on localhost
+    const isLocalhost = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    
+    console.log('Environment detection:', { 
+      hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
+      isLocalhost 
+    });
+    
+    // Use environment variables (works for both local .env.local and Vercel)
     const testKey = process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY;
     const liveKey = process.env.NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY;
     const stripeMode = process.env.STRIPE_MODE || 'test';
@@ -124,21 +133,24 @@ export default function StripeManagement({}: StripeManagementProps) {
     console.log('Environment keys available:', { 
       testKey: testKey ? testKey.substring(0, 12) + '...' : 'none',
       liveKey: liveKey ? liveKey.substring(0, 12) + '...' : 'none',
-      mode: stripeMode
+      mode: stripeMode,
+      source: isLocalhost ? '.env.local' : 'Vercel environment variables'
     });
     
     // Use the appropriate key based on STRIPE_MODE environment variable
     const publishableKey = stripeMode === 'live' ? liveKey : testKey;
     
     if (publishableKey) {
-      console.log(`Using ${stripeMode} key from Vercel environment variables`);
+      const source = isLocalhost ? '.env.local' : 'Vercel environment variables';
+      console.log(`Using ${stripeMode} key from ${source}`);
       const stripeInstance = loadStripe(publishableKey);
       setStripePromise(stripeInstance);
       setStripeMode(stripeMode as 'test' | 'live');
       console.log(`Stripe promise set with valid ${stripeMode} key`);
     } else {
-      console.error(`No valid Stripe ${stripeMode} publishable key found in Vercel environment variables`);
-      console.log('Make sure to set NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY and NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY in Vercel dashboard');
+      const source = isLocalhost ? '.env.local file' : 'Vercel dashboard';
+      console.error(`No valid Stripe ${stripeMode} publishable key found`);
+      console.log(`Make sure to set NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY and NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY in ${source}`);
     }
   };
 
