@@ -84,14 +84,12 @@ export function getStripeConfig(): StripeConfig {
       throw new Error('Invalid Stripe test secret key format');
     }
     
-    // Provide fallback test keys if missing
+    // Require test keys - don't use placeholders in production
     if (!publishableKey) {
-      console.warn('⚠️ STRIPE_TEST_PUBLISHABLE_KEY not set, using placeholder');
-      publishableKey = 'pk_test_placeholder_for_development';
+      throw new Error('STRIPE_TEST_PUBLISHABLE_KEY environment variable is required. Please set it in your environment variables.');
     }
     if (!secretKey) {
-      console.warn('⚠️ STRIPE_TEST_SECRET_KEY not set, using placeholder');
-      secretKey = 'sk_test_placeholder_for_development';
+      throw new Error('STRIPE_TEST_SECRET_KEY environment variable is required. Please set it in your environment variables.');
     }
   }
   

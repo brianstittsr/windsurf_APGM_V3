@@ -8,7 +8,7 @@ export default function PermanentMakeupForYou() {
         {/* Header */}
         <div className="text-center mb-5">
           <h2 className="main-heading fw-bold text-dark mb-4">
-            <span className="text-rose-600">PERMANENT MAKEUP</span>
+            <span className="text-rose-600">SEMI-PERMANENT MAKEUP</span>
             <br />
             DESIGNED JUST FOR YOU
           </h2>
