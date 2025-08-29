@@ -116,41 +116,27 @@ export default function StripeManagement({}: StripeManagementProps) {
   const loadStripeConfig = async () => {
     console.log('Loading Stripe config...');
     
-    // Check if running on localhost
-    const isLocalhost = typeof window !== 'undefined' && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-    
-    console.log('Environment detection:', { 
-      hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
-      isLocalhost 
-    });
-    
-    // Use environment variables (works for both local .env.local and Vercel)
-    const testKey = process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY;
-    const liveKey = process.env.NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY;
-    const stripeMode = process.env.STRIPE_MODE || 'test';
-    
-    console.log('Environment keys available:', { 
-      testKey: testKey ? testKey.substring(0, 12) + '...' : 'none',
-      liveKey: liveKey ? liveKey.substring(0, 12) + '...' : 'none',
-      mode: stripeMode,
-      source: isLocalhost ? '.env.local' : 'Vercel environment variables'
-    });
-    
-    // Use the appropriate key based on STRIPE_MODE environment variable
-    const publishableKey = stripeMode === 'live' ? liveKey : testKey;
-    
-    if (publishableKey) {
-      const source = isLocalhost ? '.env.local' : 'Vercel environment variables';
-      console.log(`Using ${stripeMode} key from ${source}`);
-      const stripeInstance = loadStripe(publishableKey);
-      setStripePromise(stripeInstance);
-      setStripeMode(stripeMode as 'test' | 'live');
-      console.log(`Stripe promise set with valid ${stripeMode} key`);
-    } else {
-      const source = isLocalhost ? '.env.local file' : 'Vercel dashboard';
-      console.error(`No valid Stripe ${stripeMode} publishable key found`);
-      console.log(`Make sure to set NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY and NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY in ${source}`);
+    try {
+      const { getStripeConfig } = await import('@/lib/config');
+      const stripeConfig = getStripeConfig();
+      
+      console.log('Stripe config loaded:', {
+        mode: stripeConfig.mode,
+        hasKey: stripeConfig.publishableKey.startsWith('pk_'),
+        keyPrefix: stripeConfig.publishableKey.substring(0, 12) + '...'
+      });
+      
+      if (stripeConfig.publishableKey.startsWith('pk_')) {
+        const stripeInstance = loadStripe(stripeConfig.publishableKey);
+        setStripePromise(stripeInstance);
+        setStripeMode(stripeConfig.mode);
+        console.log(`✅ Stripe initialized in ${stripeConfig.mode} mode`);
+      } else {
+        console.error('❌ Invalid Stripe key - please update src/lib/config.ts with your actual keys');
+        console.log('Get your keys from: https://dashboard.stripe.com/test/apikeys');
+      }
+    } catch (error) {
+      console.error('Failed to load Stripe config:', error);
     }
   };
 
