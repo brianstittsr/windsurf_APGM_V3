@@ -62,10 +62,10 @@ async function runSimpleDepositTest() {
       payment_method_types: ['card'],
       capture_method: 'automatic',
       confirmation_method: 'manual',
-      description: `$${totalAmount.toFixed(2)} ($${depositAmount} deposit + $${stripeFee.toFixed(2)} processing fee) - A Pretty Girl Matter Permanent Makeup`,
+      description: `$${totalAmount.toFixed(2)} ($${depositAmount} deposit + $${stripeFee.toFixed(2)} processing fee) - A Pretty Girl Matter Semi-Permanent Makeup`,
       metadata: {
         business: 'A Pretty Girl Matter',
-        service: 'Permanent Makeup Deposit',
+        service: 'Semi-Permanent Makeup Deposit',
         deposit_amount: `$${depositAmount.toFixed(2)}`,
         processing_fee: `$${stripeFee.toFixed(2)}`,
         total_amount: `$${totalAmount.toFixed(2)}`,

@@ -28,7 +28,7 @@ export default function ClientReviews() {
     },
     {
       name: "Emily Chen",
-      service: "Permanent Eyeliner",
+      service: "Semi-Permanent Eyeliner",
       rating: 5,
       text: "I was nervous about getting semi-permanent eyeliner, but Victoria made me feel so comfortable. The results are exactly what I wanted - subtle but defined. I save so much time in the morning now!",
       image: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop",

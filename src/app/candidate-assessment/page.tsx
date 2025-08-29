@@ -433,7 +433,7 @@ export default function CandidacyAssessment() {
       case 6:
         return (
           <div className="step">
-            <h2 className="text-center mb-4 text-primary">Previous Permanent Makeup</h2>
+            <h2 className="text-center mb-4 text-primary">Previous Semi-Permanent Makeup</h2>
             <p className="text-center text-muted mb-4">Information about any previous eyebrow work is important for planning your treatment.</p>
             
             <div className="mb-4">

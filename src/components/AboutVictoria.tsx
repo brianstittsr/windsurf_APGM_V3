@@ -1,6 +1,6 @@
 export default function AboutVictoria() {
   const certifications = [
-    "Certified Permanent Makeup Artist",
+    "Certified Semi-permanent makeup Artist",
     "Microblading Specialist Certification",
     "Advanced Color Theory Training",
     "Bloodborne Pathogen Certified",
@@ -33,7 +33,7 @@ export default function AboutVictoria() {
             <div className="position-relative">
               <img
                 src="/images/VictoriaEscobar.jpeg"
-                alt="Victoria - Permanent Makeup Artist"
+                alt="Victoria - Semi-permanent makeup Artist"
                 className="rounded-3 shadow w-100 h-auto"
               />
               

@@ -47,7 +47,7 @@ async function createTestPaymentIntent(): Promise<PaymentTestResult> {
       confirmation_method: 'manual', // We'll confirm manually
       metadata: {
         business: 'A Pretty Girl Matter',
-        service_type: 'permanent_makeup_deposit',
+        service_type: 'semi_permanent_makeup_deposit',
         service_name: 'Test Service - Strokes Eyebrows',
         customer_name: 'Test Customer',
         customer_email: 'test@example.com',
@@ -55,7 +55,7 @@ async function createTestPaymentIntent(): Promise<PaymentTestResult> {
         booking_date: new Date().toISOString(),
         deposit_amount: '200.00'
       },
-      description: '$200 deposit for permanent makeup service - Test Payment',
+      description: '$200 deposit for semi-permanent makeup service - Test Payment',
       receipt_email: 'test@example.com'
     });
     

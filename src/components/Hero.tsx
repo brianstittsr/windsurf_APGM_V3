@@ -25,7 +25,7 @@ export default function Hero() {
           <div className="col-lg-8 text-center">
             <div className="mb-4">
               <p className="paragraph-text text-white lh-base mb-4 fade-in-1">
-                <span className="text-rose-600">SOFT NATURAL</span> PERMANENT MAKEUP
+                <span className="text-rose-600">SOFT NATURAL</span> SEMI-PERMANENT MAKEUP
               </p>
               <h1 className="main-heading fw-bold text-white lh-1">
                 <span className="animated-word word-fade-1">WAKE</span>

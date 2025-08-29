@@ -339,7 +339,7 @@ export class InventoryService {
       const sampleItems: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>[] = [
         {
           name: 'Premium Pigment Bottles',
-          description: 'High-quality permanent makeup pigments (Available: 12 per box)',
+          description: 'High-quality semi-permanent makeup pigments (Available: 12 per box)',
           currentStock: 144, // 12 boxes * 12 bottles
           minStockLevel: 24,
           maxStockLevel: 200,

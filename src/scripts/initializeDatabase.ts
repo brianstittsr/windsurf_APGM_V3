@@ -234,17 +234,17 @@ export function calculateAssessmentScore(responses: any): {
   // Basic health checks
   if (responses.basic_health.includes('under_18')) {
     score -= 100;
-    warnings.push('Must be 18 years or older for permanent makeup procedures');
+    warnings.push('Must be 18 years or older for semi-permanent makeup procedures');
   }
 
   if (responses.basic_health.includes('pregnant')) {
     score -= 100;
-    warnings.push('Permanent makeup is not recommended during pregnancy');
+    warnings.push('Semi-permanent makeup is not recommended during pregnancy');
   }
 
   if (responses.basic_health.includes('breastfeeding')) {
     score -= 100;
-    warnings.push('Permanent makeup is not recommended while breastfeeding');
+    warnings.push('Semi-permanent makeup is not recommended while breastfeeding');
   }
 
   // Medical treatments
@@ -297,7 +297,7 @@ export function calculateAssessmentScore(responses: any): {
 
   // Generate final recommendations
   if (score >= 80) {
-    recommendations.push('You appear to be an excellent candidate for permanent makeup');
+    recommendations.push('You appear to be an excellent candidate for semi-permanent makeup');
   } else if (score >= 60) {
     recommendations.push('You may be a good candidate with some considerations');
     requiresConsultation = true;

@@ -166,7 +166,7 @@ export class InvoiceEmailService {
         <div class="header">
             <img src="cid:logo" alt="${data.businessName}" class="logo" />
             <h1>${data.businessName}</h1>
-            <p style="margin: 10px 0 0 0; font-size: 1.1em; opacity: 0.9;">Professional Permanent Makeup Services</p>
+            <p style="margin: 10px 0 0 0; font-size: 1.1em; opacity: 0.9;">Professional Semi-Permanent Makeup Services</p>
         </div>
 
         <!-- Invoice Info -->

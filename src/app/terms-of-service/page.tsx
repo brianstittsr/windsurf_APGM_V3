@@ -51,7 +51,7 @@ export default function TermsOfService() {
                       </p>
                       <ul className="text-black mb-3">
                         <li>Microblading and powder eyebrows</li>
-                        <li>Permanent eyeliner</li>
+                        <li>Semi-permanent eyeliner</li>
                         <li>Lip blushing and lip liner</li>
                         <li>Color correction services</li>
                         <li>Touch-up and maintenance services</li>
@@ -139,7 +139,7 @@ export default function TermsOfService() {
                     <div className="mb-5">
                       <h2 className="h4 fw-bold text-primary mb-3">8. Results and Expectations</h2>
                       <p className="text-black">
-                        Permanent makeup results vary from person to person based on skin type, lifestyle, and individual 
+                        Semi-permanent makeup results vary from person to person based on skin type, lifestyle, and individual 
                         healing processes. We cannot guarantee specific results or longevity of procedures. Touch-up 
                         sessions are typically recommended 4-8 weeks after the initial procedure and may be required 
                         for optimal results.

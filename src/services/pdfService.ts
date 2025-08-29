@@ -217,7 +217,7 @@ export class PDFService {
     // Footer
     pdf.setFontSize(10);
     pdf.setFont('helvetica', 'italic');
-    pdf.text('A Pretty Girl Matter LLC - Professional Permanent Makeup Services', 20, 280);
+    pdf.text('A Pretty Girl Matter LLC - Professional Semi-Permanent Makeup Services', 20, 280);
     pdf.text('Generated electronically - no physical signature required', 20, 285);
 
     return pdf.output('blob');
