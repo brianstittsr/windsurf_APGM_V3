@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import PaymentForm from './PaymentForm';
@@ -18,13 +18,24 @@ interface PaymentTestResult {
 }
 
 // Credit Card Input Component
-function CreditCardInput({ onCardChange, disabled }: { onCardChange: (error: string | null) => void, disabled: boolean }) {
+function CreditCardInput({ onCardChange, disabled, onCardReady }: { 
+  onCardChange: (error: string | null) => void, 
+  disabled: boolean,
+  onCardReady: (cardElement: any) => void 
+}) {
+  const cardElementRef = useRef<any>(null);
+
   const handleCardChange = (event: any) => {
     if (event.error) {
       onCardChange(event.error.message);
     } else {
       onCardChange(null);
     }
+  };
+
+  const handleCardReady = (cardElement: any) => {
+    cardElementRef.current = cardElement;
+    onCardReady(cardElement);
   };
 
   const cardElementOptions = {
@@ -55,6 +66,7 @@ function CreditCardInput({ onCardChange, disabled }: { onCardChange: (error: str
       <CardElement 
         options={cardElementOptions}
         onChange={handleCardChange}
+        onReady={handleCardReady}
       />
     </div>
   );
@@ -65,11 +77,11 @@ export default function StripeManagement({}: StripeManagementProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [testResults, setTestResults] = useState<PaymentTestResult[]>([]);
   const [selectedProduct, setSelectedProduct] = useState('');
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [showPaymentForm, setShowPaymentForm] = useState(false);
-  const [currentPaymentIntent, setCurrentPaymentIntent] = useState<string | null>(null);
-  const [stripePromise, setStripePromise] = useState<any>(null);
+  const [stripePromise, setStripePromise] = useState<Promise<any> | null>(null);
   const [cardError, setCardError] = useState<string | null>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [currentPaymentIntent, setCurrentPaymentIntent] = useState<string | null>(null);
+  const [cardElement, setCardElement] = useState<any>(null);
   const [stripeConfig, setStripeConfig] = useState({
     testPublishableKey: '',
     testSecretKey: '',
@@ -93,28 +105,39 @@ export default function StripeManagement({}: StripeManagementProps) {
 
   const loadStripeConfig = async () => {
     try {
-      // In a real implementation, this would fetch from your backend/database
-      // For now, we'll use environment variables and localStorage for persistence
-      const savedMode = localStorage.getItem('stripeMode') || 'test';
-      setStripeMode(savedMode as 'test' | 'live');
+      // Fetch current Stripe mode from API
+      const modeResponse = await fetch('/api/stripe/mode');
+      const modeData = await modeResponse.json();
+      const currentMode = modeData.mode || 'test';
+      
+      setStripeMode(currentMode as 'test' | 'live');
       
       const config = {
-        testPublishableKey: process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY || '',
-        testSecretKey: process.env.STRIPE_TEST_SECRET_KEY || '',
-        livePublishableKey: process.env.NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY || '',
-        liveSecretKey: process.env.STRIPE_LIVE_SECRET_KEY || '',
-        currentMode: savedMode
+        testPublishableKey: modeData.publishableKey || '',
+        testSecretKey: '',
+        livePublishableKey: modeData.publishableKey || '',
+        liveSecretKey: '',
+        currentMode: currentMode
       };
       
       setStripeConfig(config);
       
-      // Initialize Stripe with the appropriate key
-      const publishableKey = savedMode === 'test' ? config.testPublishableKey : config.livePublishableKey;
-      if (publishableKey) {
-        setStripePromise(loadStripe(publishableKey));
+      // Initialize Stripe with the publishable key from API
+      if (modeData.publishableKey) {
+        const stripe = loadStripe(modeData.publishableKey);
+        setStripePromise(stripe);
+        console.log('Stripe initialized with key:', modeData.publishableKey.substring(0, 12) + '...');
+      } else {
+        console.error('No Stripe publishable key available');
       }
     } catch (error) {
       console.error('Error loading Stripe config:', error);
+      // Fallback to environment variables
+      const testKey = process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY;
+      if (testKey) {
+        setStripePromise(loadStripe(testKey));
+        setStripeMode('test');
+      }
     }
   };
 
@@ -220,7 +243,6 @@ export default function StripeManagement({}: StripeManagementProps) {
 
       // Store payment intent for the form
       setCurrentPaymentIntent(clientSecret);
-      setShowPaymentForm(true);
       
       const result: PaymentTestResult = {
         success: true,
@@ -255,7 +277,6 @@ export default function StripeManagement({}: StripeManagementProps) {
     };
     
     setTestResults(prev => [successResult, ...prev.slice(0, 9)]);
-    setShowPaymentForm(false);
     setCurrentPaymentIntent(null);
     setIsProcessingPayment(false);
   };
@@ -269,13 +290,11 @@ export default function StripeManagement({}: StripeManagementProps) {
     };
     
     setTestResults(prev => [errorResult, ...prev.slice(0, 9)]);
-    setShowPaymentForm(false);
     setCurrentPaymentIntent(null);
     setIsProcessingPayment(false);
   };
 
   const handlePaymentCancel = () => {
-    setShowPaymentForm(false);
     setCurrentPaymentIntent(null);
     setIsProcessingPayment(false);
   };
@@ -283,6 +302,11 @@ export default function StripeManagement({}: StripeManagementProps) {
   const processDirectPayment = async () => {
     if (!selectedProduct) {
       alert('Please select a product to test payment');
+      return;
+    }
+
+    if (!cardElement) {
+      alert('Credit card form not ready. Please wait for the form to load.');
       return;
     }
 
@@ -325,24 +349,33 @@ export default function StripeManagement({}: StripeManagementProps) {
         }),
       });
 
-      const { clientSecret, paymentIntentId } = await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error('Failed to create payment intent');
+        throw new Error(data.error || 'Failed to create payment intent');
       }
 
-      // Get Stripe instance and process payment directly
+      const { clientSecret, paymentIntentId } = data;
+
+      // Get Stripe instance and process payment with card element
       const stripe = await stripePromise;
       if (!stripe) throw new Error('Stripe not loaded');
 
-      // Get card element from the current Elements context
-      // This will be handled by the CreditCardInput component
-      setCurrentPaymentIntent(clientSecret);
-      
+      // Confirm payment with card element
+      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: cardElement,
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
       const result: PaymentTestResult = {
         success: true,
-        message: `Payment intent created for ${product.name} - ready for processing`,
-        paymentIntentId,
+        message: `✅ Payment successful! Charged $1.00 for ${product.name}`,
+        paymentIntentId: paymentIntent.id,
         amount: 1.00,
         timestamp: new Date().toISOString()
       };
@@ -353,10 +386,11 @@ export default function StripeManagement({}: StripeManagementProps) {
       console.error('Payment processing failed:', error);
       const result: PaymentTestResult = {
         success: false,
-        message: `Payment failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        message: `❌ Payment failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         amount: 1.00,
         timestamp: new Date().toISOString()
       };
+
       setTestResults(prev => [result, ...prev.slice(0, 9)]);
     } finally {
       setIsProcessingPayment(false);
@@ -504,6 +538,7 @@ export default function StripeManagement({}: StripeManagementProps) {
                       <CreditCardInput 
                         onCardChange={setCardError}
                         disabled={!selectedProduct || isProcessingPayment}
+                        onCardReady={setCardElement}
                       />
                     </Elements>
                   ) : (
@@ -560,7 +595,7 @@ export default function StripeManagement({}: StripeManagementProps) {
       </div>
 
       {/* Payment Form Section */}
-      {showPaymentForm && currentPaymentIntent && stripePromise && (
+      {currentPaymentIntent && stripePromise && (
         <div className="row mt-4">
           <div className="col-12">
             <Elements stripe={stripePromise}>
