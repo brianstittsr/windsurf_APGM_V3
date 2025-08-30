@@ -1,39 +1,21 @@
 import { loadStripe } from '@stripe/stripe-js';
-import { getStripePublishableKey, logStripeConfig } from './stripe-config';
+import { getAppConfig } from './config';
 
-// Log current Stripe configuration for debugging
-if (typeof window === 'undefined') {
-  // Only log on server-side to avoid exposing config in browser
-  logStripeConfig();
-}
-
-// Get publishable key for client-side use
-// In Next.js, client-side code needs to use public environment variables
+// Get publishable key using the same centralized config as backend
 function getClientSidePublishableKey(): string {
-  // Try public environment variables first (for client-side)
-  const publicKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-  console.log('🔍 Frontend Stripe key check:', {
-    hasPublicKey: !!publicKey,
-    keyPrefix: publicKey?.substring(0, 20) + '...',
-    isClient: typeof window !== 'undefined'
-  });
-  
-  if (publicKey) {
-    return publicKey;
+  try {
+    const config = getAppConfig();
+    console.log('🔍 Frontend Stripe key check:', {
+      mode: config.stripe.mode,
+      keyPrefix: config.stripe.publishableKey?.substring(0, 20) + '...',
+      isClient: typeof window !== 'undefined'
+    });
+    
+    return config.stripe.publishableKey;
+  } catch (error) {
+    console.error('Failed to get Stripe publishable key from centralized config:', error);
+    throw error;
   }
-  
-  // Fallback to server-side function (for server-side rendering)
-  if (typeof window === 'undefined') {
-    try {
-      return getStripePublishableKey();
-    } catch (error) {
-      console.error('Failed to get Stripe publishable key:', error);
-      throw error;
-    }
-  }
-  
-  // If we're on client-side and no public key is available, throw error
-  throw new Error('Stripe publishable key not available on client-side. Please set NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY in your environment variables.');
 }
 
 // Make sure to call `loadStripe` outside of a component's render to avoid
