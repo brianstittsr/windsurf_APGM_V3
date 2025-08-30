@@ -54,6 +54,10 @@ export default function MultiPaymentForm({
   const [paymentIntentCreatedAt, setPaymentIntentCreatedAt] = useState<number>(0);
   const [paymentIntentId, setPaymentIntentId] = useState<string>('');
   
+  // Pre-approval states for Klarna and Affirm
+  const [klarnaApproved, setKlarnaApproved] = useState<boolean | null>(null);
+  const [affirmApproved, setAffirmApproved] = useState<boolean | null>(null);
+  
   // Determine payment amount based on method
   const getPaymentAmount = (method: PaymentMethod) => {
     // Cherry, Klarna, and Affirm require full payment
@@ -195,26 +199,38 @@ export default function MultiPaymentForm({
 
   const handlePaymentMethodChange = async (method: PaymentMethod) => {
     setSelectedPaymentMethod(method);
-    
-    // Cherry doesn't need a payment intent since it's external
-    if (method === 'cherry') {
+
+    // Clear previous payment intent when switching methods
+    setClientSecret('');
+    setPaymentIntentId('');
+    setPaymentIntentCreatedAt(0);
+
+    // Reset approval states when switching methods
+    if (method !== 'klarna') setKlarnaApproved(null);
+    if (method !== 'affirm') setAffirmApproved(null);
+
+    let paymentMethodTypes: string[] = [];
+
+    if (method === 'card') {
+      paymentMethodTypes = ['card'];
+    } else if (method === 'klarna') {
+      paymentMethodTypes = ['klarna'];
+    } else if (method === 'affirm') {
+      paymentMethodTypes = ['affirm'];
+    } else if (method === 'cherry') {
+      // Cherry doesn't use Stripe payment intents
       return;
     }
-    
+
+    // Create payment intent for the selected method
     try {
-      let paymentMethodTypes: string[];
-      if (method === 'klarna') {
-        paymentMethodTypes = ['klarna'];
-      } else if (method === 'affirm') {
-        paymentMethodTypes = ['affirm'];
-      } else {
-        paymentMethodTypes = ['card'];
-      }
       const result = await createPaymentIntent(paymentMethodTypes);
-      console.log('✅ Payment method switched, client_secret ready:', result.client_secret.substring(0, 20) + '...');
+      if (result) {
+        console.log(`✅ Payment intent created for ${method}:`, result.payment_intent_id);
+      }
     } catch (error) {
-      console.error('Error switching payment method:', error);
-      onError('Failed to switch payment method. Please try again.');
+      console.error(`❌ Failed to create payment intent for ${method}:`, error);
+      onError(`Failed to initialize ${method} payment. Please try again.`);
     }
   };
 
@@ -464,7 +480,11 @@ export default function MultiPaymentForm({
 
   const isCherryFormValid = selectedPaymentMethod !== 'cherry' || true; // Cherry doesn't require form validation
 
-  const isFormValid = isCardFormValid && isKlarnaFormValid && isAffirmFormValid && isCherryFormValid;
+  // Check if approval is required and granted for Klarna/Affirm
+  const isKlarnaApprovalValid = selectedPaymentMethod !== 'klarna' || klarnaApproved === true;
+  const isAffirmApprovalValid = selectedPaymentMethod !== 'affirm' || affirmApproved === true;
+
+  const isFormValid = isCardFormValid && isKlarnaFormValid && isAffirmFormValid && isCherryFormValid && isKlarnaApprovalValid && isAffirmApprovalValid;
 
   // Show loading state if Stripe hasn't loaded yet
   if (!stripe) {
@@ -673,7 +693,7 @@ export default function MultiPaymentForm({
         <div className="klarna-payment-section">
           <div className="alert alert-warning">
             <h6 className="alert-heading">
-              <i className="fas fa-shopping-bag me-2" style={{ color: '#FFB3C7' }}></i>
+              <i className="fas fa-calendar-check me-2" style={{ color: '#FFB800' }}></i>
               Klarna Full Payment Required
             </h6>
             <p className="mb-2">
@@ -682,6 +702,68 @@ export default function MultiPaymentForm({
             <p className="mb-0">
               Klarna will allow you to pay in 4 interest-free installments, but the full service amount is processed upfront.
             </p>
+          </div>
+          
+          {/* Klarna Pre-approval Check */}
+          <div className="card border-warning mb-3">
+            <div className="card-body">
+              <h6 className="card-title text-warning">
+                <i className="fas fa-exclamation-triangle me-2"></i>
+                Klarna Pre-approval Required
+              </h6>
+              <p className="card-text mb-3">
+                Have you been approved by Klarna for the full amount of <strong>${currentPaymentAmount.toFixed(2)}</strong>?
+              </p>
+              
+              <div className="mb-3">
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="klarnaApproval"
+                    id="klarnaApprovedYes"
+                    checked={klarnaApproved === true}
+                    onChange={() => setKlarnaApproved(true)}
+                  />
+                  <label className="form-check-label" htmlFor="klarnaApprovedYes">
+                    Yes, I have been approved by Klarna for this amount
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="klarnaApproval"
+                    id="klarnaApprovedNo"
+                    checked={klarnaApproved === false}
+                    onChange={() => setKlarnaApproved(false)}
+                  />
+                  <label className="form-check-label" htmlFor="klarnaApprovedNo">
+                    No, I need to get approved first
+                  </label>
+                </div>
+              </div>
+              
+              {klarnaApproved === false && (
+                <div className="alert alert-warning">
+                  <p className="mb-2">
+                    <strong>You need Klarna approval before proceeding.</strong>
+                  </p>
+                  <p className="mb-2">
+                    Please visit Klarna to create an account and get approved for the full amount:
+                  </p>
+                  <a 
+                    href="https://www.klarna.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="btn btn-warning btn-sm"
+                  >
+                    <i className="fas fa-external-link-alt me-2"></i>
+                    Get Approved at Klarna.com
+                  </a>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -700,6 +782,68 @@ export default function MultiPaymentForm({
             <p className="mb-0">
               Affirm offers monthly payment plans with rates as low as 0% APR, but the full service amount is processed upfront.
             </p>
+          </div>
+          
+          {/* Affirm Pre-approval Check */}
+          <div className="card border-info mb-3">
+            <div className="card-body">
+              <h6 className="card-title text-info">
+                <i className="fas fa-exclamation-triangle me-2"></i>
+                Affirm Pre-approval Required
+              </h6>
+              <p className="card-text mb-3">
+                Have you been approved by Affirm for the full amount of <strong>${currentPaymentAmount.toFixed(2)}</strong>?
+              </p>
+              
+              <div className="mb-3">
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="affirmApproval"
+                    id="affirmApprovedYes"
+                    checked={affirmApproved === true}
+                    onChange={() => setAffirmApproved(true)}
+                  />
+                  <label className="form-check-label" htmlFor="affirmApprovedYes">
+                    Yes, I have been approved by Affirm for this amount
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="affirmApproval"
+                    id="affirmApprovedNo"
+                    checked={affirmApproved === false}
+                    onChange={() => setAffirmApproved(false)}
+                  />
+                  <label className="form-check-label" htmlFor="affirmApprovedNo">
+                    No, I need to get approved first
+                  </label>
+                </div>
+              </div>
+              
+              {affirmApproved === false && (
+                <div className="alert alert-info">
+                  <p className="mb-2">
+                    <strong>You need Affirm approval before proceeding.</strong>
+                  </p>
+                  <p className="mb-2">
+                    Please visit Affirm to create an account and get approved for the full amount:
+                  </p>
+                  <a 
+                    href="https://www.affirm.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="btn btn-info btn-sm"
+                  >
+                    <i className="fas fa-external-link-alt me-2"></i>
+                    Get Approved at Affirm.com
+                  </a>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

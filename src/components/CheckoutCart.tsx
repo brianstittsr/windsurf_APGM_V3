@@ -225,6 +225,44 @@ export default function CheckoutCart({
         console.log('⚠️ Invoice email failed to send, but payment was successful');
       }
 
+      // 5. Generate payment confirmation PDF
+      console.log('📄 Generating payment confirmation PDF...');
+      
+      const paymentPDFData = {
+        clientName: clientName,
+        clientEmail: 'brianstittsr@gmail.com',
+        amount: depositAmount,
+        paymentMethod: 'Credit/Debit Card',
+        transactionId: paymentIntent.id,
+        appointmentDate: new Date(appointmentDate).toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }),
+        serviceName: service.name
+      };
+
+      const pdfResponse = await fetch('/api/generate-payment-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          paymentData: paymentPDFData,
+          clientId: 'brianstittsr@gmail.com', // Using email as clientId for now
+          appointmentId: appointmentId
+        }),
+      });
+      
+      if (pdfResponse.ok) {
+        const pdfResult = await pdfResponse.json();
+        console.log('✅ Payment confirmation PDF generated successfully!');
+        console.log('📄 PDF URL:', pdfResult.pdfUrl);
+      } else {
+        console.log('⚠️ Payment PDF generation failed, but payment was successful');
+      }
+
     } catch (error) {
       console.error('Error in post-payment processing:', error);
       // Don't fail the payment flow, but log the error

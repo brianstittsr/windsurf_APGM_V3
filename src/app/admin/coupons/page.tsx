@@ -17,7 +17,7 @@ export default function CouponsPage() {
   const [formData, setFormData] = useState({
     code: '',
     description: '',
-    discountType: 'percentage' as 'percentage' | 'fixed_amount',
+    discountType: 'percentage' as 'percentage' | 'fixed_amount' | 'free_service',
     discountValue: 0,
     minimumOrderAmount: '',
     maxUses: '',
@@ -231,22 +231,26 @@ export default function CouponsPage() {
                       <select
                         className="form-select"
                         value={formData.discountType}
-                        onChange={(e) => setFormData(prev => ({ ...prev, discountType: e.target.value as 'percentage' | 'fixed_amount' }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, discountType: e.target.value as 'percentage' | 'fixed_amount' | 'free_service' }))}
                       >
                         <option value="percentage">Percentage</option>
                         <option value="fixed_amount">Fixed Amount</option>
+                        <option value="free_service">Free Service</option>
                       </select>
                     </div>
                     <div className="col-md-4 mb-3">
                       <label className="form-label">
-                        Discount Value * {formData.discountType === 'percentage' ? '(%)' : '($)'}
+                        {formData.discountType === 'free_service' ? 'Free Service (100% off)' : 
+                         `Discount Value * ${formData.discountType === 'percentage' ? '(%)' : '($)'}`}
                       </label>
                       <input
                         type="number"
                         className="form-control"
-                        value={formData.discountValue}
+                        value={formData.discountType === 'free_service' ? 100 : formData.discountValue}
                         onChange={(e) => setFormData(prev => ({ ...prev, discountValue: parseFloat(e.target.value) || 0 }))}
                         min="0"
+                        disabled={formData.discountType === 'free_service'}
+                        placeholder={formData.discountType === 'free_service' ? '100% (Free Service)' : ''}
                         max={formData.discountType === 'percentage' ? "100" : undefined}
                         step={formData.discountType === 'percentage' ? "1" : "0.01"}
                         required

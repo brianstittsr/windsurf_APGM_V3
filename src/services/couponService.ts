@@ -19,10 +19,30 @@ export class CouponService {
   private static collectionName = 'coupons';
 
   // Create a new coupon code
-  static async createCoupon(couponData: Omit<CouponCode, 'id' | 'createdAt' | 'updatedAt' | 'usedCount'>): Promise<string> {
+  static async createCoupon(couponData: {
+    code: string;
+    description: string;
+    discountType: 'percentage' | 'fixed_amount' | 'free_service';
+    discountValue: number;
+    minimumOrderAmount?: number;
+    maxUses?: number;
+    validFrom: Date;
+    validUntil: Date;
+    applicableServices?: string[];
+    isActive: boolean;
+    createdBy: string;
+  }): Promise<string> {
     const docRef = await addDoc(collection(db, this.collectionName), {
-      ...couponData,
+      code: couponData.code,
+      type: couponData.discountType,
+      value: couponData.discountType === 'free_service' ? 100 : couponData.discountValue,
+      description: couponData.description,
+      minOrderAmount: couponData.minimumOrderAmount,
+      usageLimit: couponData.maxUses,
       usedCount: 0,
+      isActive: couponData.isActive,
+      expirationDate: Timestamp.fromDate(couponData.validUntil),
+      applicableServices: couponData.applicableServices || [],
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
     });
@@ -62,7 +82,7 @@ export class CouponService {
       applicableServices: data.applicableServices || [],
       createdAt: data.createdAt,
       updatedAt: data.updatedAt
-    };
+    } as CouponCode;
   }
 
   // Validate coupon code
@@ -80,24 +100,20 @@ export class CouponService {
     const now = new Date();
     
     // Check if coupon is expired
-    if (now < coupon.validFrom) {
-      return { isValid: false, error: 'Coupon is not yet valid' };
-    }
-    
-    if (now > coupon.validUntil) {
+    if (coupon.expirationDate && now > coupon.expirationDate.toDate()) {
       return { isValid: false, error: 'Coupon has expired' };
     }
 
     // Check usage limits
-    if (coupon.maxUses && coupon.currentUses >= coupon.maxUses) {
+    if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
       return { isValid: false, error: 'Coupon usage limit exceeded' };
     }
 
     // Check minimum order amount
-    if (coupon.minimumOrderAmount && orderAmount && orderAmount < coupon.minimumOrderAmount) {
+    if (coupon.minOrderAmount && orderAmount && orderAmount < coupon.minOrderAmount) {
       return { 
         isValid: false, 
-        error: `Minimum order amount of $${coupon.minimumOrderAmount} required` 
+        error: `Minimum order amount of $${coupon.minOrderAmount} required` 
       };
     }
 
@@ -113,10 +129,10 @@ export class CouponService {
 
   // Calculate discount amount
   static calculateDiscount(coupon: CouponCode, orderAmount: number): number {
-    if (coupon.discountType === 'percentage') {
-      return Math.round((orderAmount * coupon.discountValue / 100) * 100) / 100;
+    if (coupon.type === 'percentage' || coupon.type === 'free_service') {
+      return Math.round((orderAmount * coupon.value / 100) * 100) / 100;
     } else {
-      return Math.min(coupon.discountValue, orderAmount);
+      return Math.min(coupon.value, orderAmount);
     }
   }
 
@@ -148,20 +164,19 @@ export class CouponService {
       return {
         id: doc.id,
         code: data.code,
+        type: data.type,
+        value: data.value,
         description: data.description,
-        discountType: data.discountType,
-        discountValue: data.discountValue,
-        minimumOrderAmount: data.minimumOrderAmount,
-        maxUses: data.maxUses,
-        currentUses: data.currentUses,
+        minOrderAmount: data.minOrderAmount,
+        maxDiscountAmount: data.maxDiscountAmount,
+        usageLimit: data.usageLimit,
+        usedCount: data.usedCount || 0,
         isActive: data.isActive,
-        validFrom: data.validFrom.toDate(),
-        validUntil: data.validUntil.toDate(),
+        expirationDate: data.expirationDate,
         applicableServices: data.applicableServices || [],
-        createdAt: data.createdAt.toDate(),
-        updatedAt: data.updatedAt.toDate(),
-        createdBy: data.createdBy
-      };
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt
+      } as CouponCode;
     });
   }
 
@@ -175,11 +190,8 @@ export class CouponService {
     };
 
     // Convert dates to Timestamps if provided
-    if (updates.validFrom) {
-      updateData.validFrom = Timestamp.fromDate(updates.validFrom);
-    }
-    if (updates.validUntil) {
-      updateData.validUntil = Timestamp.fromDate(updates.validUntil);
+    if (updates.expirationDate && updates.expirationDate instanceof Date) {
+      updateData.expirationDate = Timestamp.fromDate(updates.expirationDate);
     }
 
     await updateDoc(couponRef, updateData);

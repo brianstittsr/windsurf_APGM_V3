@@ -65,7 +65,7 @@ export interface GiftCard {
 export interface CouponCode {
   id: string;
   code: string;
-  type: 'percentage' | 'fixed';
+  type: 'percentage' | 'fixed' | 'free_service';
   value: number; // percentage (0-100) or fixed amount in cents
   description: string;
   minOrderAmount?: number;
