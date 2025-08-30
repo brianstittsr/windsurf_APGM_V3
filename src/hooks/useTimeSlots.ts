@@ -95,11 +95,30 @@ export function useTimeSlots(selectedDate: string) {
                 // Check if this time slot is booked
                 const isBooked = bookedSlots[timeSlot] && bookedSlots[timeSlot].available === false;
                 
+                // Check if this time slot is in the past (only for today's date)
+                const now = new Date();
+                const selectedDateObj = new Date(selectedDate + 'T12:00:00');
+                const isToday = selectedDateObj.toDateString() === now.toDateString();
+                
+                let isPastTime = false;
+                if (isToday) {
+                  const currentHour = now.getHours();
+                  const currentMinutes = now.getMinutes();
+                  const slotStartTime = hour;
+                  
+                  // If the slot start time has already passed today, mark it as unavailable
+                  isPastTime = slotStartTime < currentHour || (slotStartTime === currentHour && currentMinutes > 0);
+                  
+                  if (isPastTime) {
+                    console.log(`      ⏰ useTimeSlots: Time slot ${timeSlot} is in the past (current time: ${currentHour}:${currentMinutes.toString().padStart(2, '0')})`);
+                  }
+                }
+                
                 timeSlots.push({
                   time: timeSlot,
                   endTime: endTimeFormatted,
                   duration: '4 Hours',
-                  available: !isBooked,
+                  available: !isBooked && !isPastTime,
                   artistId: data.artistId,
                   artistName: 'Victoria' // Default artist name
                 });
