@@ -9,7 +9,7 @@ cat > .env.local << 'EOF'
 # Replace the values below with your actual Firebase config values
 # Get these from: https://console.firebase.google.com/u/0/project/aprettygirlmatterllc/settings/general
 
-NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key_here
+NEXT_PUBLIC_FIREBASE_API_KEY=XXXXXXXXXXXXXXXXXXXXXXXX
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=aprettygirlmatterllc.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=aprettygirlmatterllc
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=aprettygirlmatterllc.appspot.com
@@ -17,8 +17,8 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id_here
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id_here
 
 # Stripe Configuration (optional for now)
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_key
-STRIPE_SECRET_KEY=sk_test_your_stripe_secret
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+STRIPE_SECRET_KEY=your_stripe_secret_key
 
 # Email Configuration (optional for now)
 SMTP_HOST=smtp.gmail.com

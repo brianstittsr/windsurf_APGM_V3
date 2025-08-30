@@ -44,6 +44,6 @@ next-env.d.ts
 *-service*.js
 *-update*.js
 *-firebase*.js
-test-*.js
 debug-*.js
 firebase-service-account.json
+fix-stripe-mode.js

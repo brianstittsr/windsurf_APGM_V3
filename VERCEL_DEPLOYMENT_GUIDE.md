@@ -19,14 +19,14 @@ STRIPE_MODE=test
 # Set to `test` for development/staging, `live` for production.
 
 # Test Keys (for staging/development)
-NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY=pk_test_your_test_key
-STRIPE_TEST_SECRET_KEY=sk_test_your_test_secret
-STRIPE_TEST_WEBHOOK_SECRET=whsec_test_your_webhook_secret
+NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY=your_test_publishable_key
+STRIPE_TEST_SECRET_KEY=your_test_secret_key
+STRIPE_TEST_WEBHOOK_SECRET=your_test_webhook_secret
 
 # Live Keys (for production only)
-NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY=pk_live_your_live_key
-STRIPE_LIVE_SECRET_KEY=sk_live_your_live_secret
-STRIPE_LIVE_WEBHOOK_SECRET=whsec_live_your_webhook_secret
+NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY=your_live_publishable_key
+STRIPE_LIVE_SECRET_KEY=your_live_secret_key
+STRIPE_LIVE_WEBHOOK_SECRET=your_live_webhook_secret
 
 # Public Key (must match the mode)
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY= NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY
@@ -34,7 +34,7 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY= NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY
 
 #### Firebase Configuration
 ```bash
-NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+NEXT_PUBLIC_FIREBASE_API_KEY=XXXXXXXXXXXXXXXXXXXXXXXX
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com

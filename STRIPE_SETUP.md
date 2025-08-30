@@ -22,14 +22,14 @@ Add these to your `.env.local` file:
 STRIPE_MODE=test
 
 # Test/Sandbox Keys
-STRIPE_TEST_PUBLISHABLE_KEY=pk_test_your_stripe_test_publishable_key
-STRIPE_TEST_SECRET_KEY=sk_test_your_stripe_test_secret_key
-STRIPE_TEST_WEBHOOK_SECRET=whsec_your_test_webhook_secret
+STRIPE_TEST_PUBLISHABLE_KEY=your_test_publishable_key
+STRIPE_TEST_SECRET_KEY=your_test_secret_key
+STRIPE_TEST_WEBHOOK_SECRET=your_test_webhook_secret
 
 # Live/Production Keys
-STRIPE_LIVE_PUBLISHABLE_KEY=pk_live_your_stripe_live_publishable_key
-STRIPE_LIVE_SECRET_KEY=sk_live_your_stripe_live_secret_key
-STRIPE_LIVE_WEBHOOK_SECRET=whsec_your_live_webhook_secret
+STRIPE_LIVE_PUBLISHABLE_KEY=your_live_publishable_key
+STRIPE_LIVE_SECRET_KEY=your_live_secret_key
+STRIPE_LIVE_WEBHOOK_SECRET=your_live_webhook_secret
 ```
 
 ## Mode Switching
