@@ -95,7 +95,7 @@ export function useTimeSlots(selectedDate: string) {
                 // Check if this time slot is booked
                 const isBooked = bookedSlots[timeSlot] && bookedSlots[timeSlot].available === false;
                 
-                // Check if this time slot is in the past (only for today's date)
+                // Enhanced past-time filtering for current day
                 const now = new Date();
                 const selectedDateObj = new Date(selectedDate + 'T12:00:00');
                 const isToday = selectedDateObj.toDateString() === now.toDateString();
@@ -105,12 +105,17 @@ export function useTimeSlots(selectedDate: string) {
                   const currentHour = now.getHours();
                   const currentMinutes = now.getMinutes();
                   const slotStartTime = hour;
+                  const slotEndTime = hour + 4;
                   
-                  // If the slot start time has already passed today, mark it as unavailable
-                  isPastTime = slotStartTime < currentHour || (slotStartTime === currentHour && currentMinutes > 0);
+                  // Enhanced logic: Hide slot if ANY part of the 4-hour window has passed
+                  // This ensures we don't show slots that are partially in the past
+                  isPastTime = slotStartTime < currentHour || 
+                              (slotStartTime === currentHour && currentMinutes > 0) ||
+                              // Also check if we're too close to the start time (less than 1 hour buffer)
+                              (slotStartTime - currentHour < 1 && slotStartTime > currentHour);
                   
                   if (isPastTime) {
-                    console.log(`      ⏰ useTimeSlots: Time slot ${timeSlot} is in the past (current time: ${currentHour}:${currentMinutes.toString().padStart(2, '0')})`);
+                    console.log(`      ⏰ useTimeSlots: Time slot ${timeSlot}-${endTimeFormatted} is unavailable (current time: ${currentHour}:${currentMinutes.toString().padStart(2, '0')}, slot starts at ${slotStartTime}:00)`);
                   }
                 }
                 
@@ -130,11 +135,36 @@ export function useTimeSlots(selectedDate: string) {
             }
           });
 
-          console.log(`  ✅ useTimeSlots: Generated ${timeSlots.length} time slots for ${selectedDate}`);
+          // Filter out all past time slots for today to completely hide them
+          const now = new Date();
+          const selectedDateObj = new Date(selectedDate + 'T12:00:00');
+          const isToday = selectedDateObj.toDateString() === now.toDateString();
+          
+          let filteredTimeSlots = timeSlots;
+          if (isToday) {
+            const currentHour = now.getHours();
+            const currentMinutes = now.getMinutes();
+            
+            // Remove (hide) all time slots that are in the past or too close to current time
+            filteredTimeSlots = timeSlots.filter(slot => {
+              const slotHour = parseInt(slot.time.split(':')[0]);
+              const isPastOrTooClose = slotHour < currentHour || 
+                                     (slotHour === currentHour && currentMinutes > 0) ||
+                                     (slotHour - currentHour < 1 && slotHour > currentHour);
+              
+              if (isPastOrTooClose) {
+                console.log(`      🚫 useTimeSlots: Hiding past/too-close time slot ${slot.time} (current: ${currentHour}:${currentMinutes.toString().padStart(2, '0')})`);
+              }
+              
+              return !isPastOrTooClose;
+            });
+          }
+          
+          console.log(`  ✅ useTimeSlots: Generated ${timeSlots.length} total slots, showing ${filteredTimeSlots.length} available slots for ${selectedDate}`);
           
           setTimeSlots({
-            hasAvailability: timeSlots.length > 0,
-            timeSlots
+            hasAvailability: filteredTimeSlots.length > 0,
+            timeSlots: filteredTimeSlots
           });
         } else {
           console.log(`  ❌ useTimeSlots: No availability for ${dayOfWeek} on ${selectedDate}`);

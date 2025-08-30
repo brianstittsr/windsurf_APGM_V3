@@ -304,49 +304,81 @@ export default function CheckoutCart({
   const remainingAmount = feeCalculation.remaining;
 
   return (
-    <div className="container py-4">
+    <div className="container py-5">
       <div className="row justify-content-center">
-        <div className="col-lg-8">
-          {/* Welcome Section */}
-          <div className="mb-4">
-            <h2 className="h4 mb-1">Welcome, Brian S</h2>
-            <h3 className="h5 text-primary mb-3">A Pretty Girl Matter</h3>
+        <div className="col-lg-10 col-xl-8">
+          {/* Modern Header Section */}
+          <div className="text-center mb-5">
+            <div className="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle mb-3" style={{width: '80px', height: '80px'}}>
+              <i className="fas fa-calendar-check text-primary" style={{fontSize: '2rem'}}></i>
+            </div>
+            <h1 className="h2 fw-bold mb-2">Complete Your Booking</h1>
+            <p className="text-muted lead">Welcome back, Brian S</p>
+            <div className="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
+              <i className="fas fa-sparkles me-2"></i>
+              A Pretty Girl Matter
+            </div>
           </div>
 
           {/* Stripe Mode Indicator */}
-          <StripeModeIndicator />
+          <div className="mb-4">
+            <StripeModeIndicator />
+          </div>
 
-          {/* Who Are You Booking For */}
-          <div className="card mb-4">
-            <div className="card-body">
-              <h5 className="card-title mb-3">Who Are You Booking For?</h5>
-              <div className="d-flex align-items-center">
-                <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style={{width: '40px', height: '40px'}}>
-                  <i className="fas fa-user"></i>
+          {/* Modern Client Card */}
+          <div className="card border-0 shadow-sm mb-4" style={{borderRadius: '16px'}}>
+            <div className="card-body p-4">
+              <div className="d-flex align-items-center justify-content-between mb-3">
+                <h5 className="card-title mb-0 fw-bold">
+                  <i className="fas fa-user-circle text-primary me-2"></i>
+                  Booking Details
+                </h5>
+                <span className="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">
+                  <i className="fas fa-check-circle me-1"></i>
+                  Verified Client
+                </span>
+              </div>
+              <div className="row align-items-center">
+                <div className="col-auto">
+                  <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '56px', height: '56px'}}>
+                    <i className="fas fa-user" style={{fontSize: '1.5rem'}}></i>
+                  </div>
                 </div>
-                <div>
-                  <div className="fw-bold">Brian Stitt (Me)</div>
+                <div className="col">
+                  <h6 className="mb-1 fw-bold">Brian Stitt</h6>
+                  <p className="text-muted mb-0 small">Primary Account Holder</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* About Your Appointment */}
-          <div className="card mb-4">
-            <div className="card-body">
-              <h5 className="card-title mb-3">About your appointment</h5>
-              <div className="form-group">
-                <label htmlFor="specialRequests" className="form-label">
-                  Do you have any special requests or ideas to share with your service provider? (optional)
-                </label>
+          {/* Modern Appointment Details */}
+          <div className="card border-0 shadow-sm mb-4" style={{borderRadius: '16px'}}>
+            <div className="card-body p-4">
+              <h5 className="card-title mb-4 fw-bold">
+                <i className="fas fa-comment-dots text-primary me-2"></i>
+                Special Requests
+              </h5>
+              <div className="form-floating">
                 <textarea
                   className="form-control"
                   id="specialRequests"
-                  rows={3}
+                  rows={4}
                   value={data.specialRequests}
                   onChange={(e) => handleInputChange('specialRequests', e.target.value)}
-                  placeholder="Enter any special requests or ideas..."
+                  placeholder="Share any special requests, ideas, or preferences with your artist..."
+                  style={{minHeight: '120px', borderRadius: '12px'}}
                 />
+                <label htmlFor="specialRequests" className="text-muted">
+                  <i className="fas fa-pencil-alt me-1"></i>
+                  Tell us about your vision (optional)
+                </label>
+              </div>
+              <div className="mt-3">
+                <small className="text-muted">
+                  <i className="fas fa-lightbulb me-1"></i>
+                  This helps your artist prepare and customize your experience
+                </small>
               </div>
             </div>
           </div>
@@ -367,34 +399,68 @@ export default function CheckoutCart({
             appliedCoupon={appliedCoupon}
           />
 
-          {/* Deposit Information */}
-          <div className="card mb-4">
-            <div className="card-body">
-              <h5 className="card-title text-warning mb-3">
-                <i className="fas fa-exclamation-triangle me-2"></i>
-                This Business Requires a Deposit:
-              </h5>
-              <p className="mb-3">A payment card is required to pay deposit. The remaining balance is due when you arrive at the business.</p>
+          {/* Modern Payment Section */}
+          <div className="card border-0 shadow-sm mb-4" style={{borderRadius: '16px'}}>
+            <div className="card-body p-4">
+              <div className="d-flex align-items-center mb-4">
+                <div className="bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center me-3" style={{width: '48px', height: '48px'}}>
+                  <i className="fas fa-credit-card" style={{fontSize: '1.25rem'}}></i>
+                </div>
+                <div>
+                  <h5 className="card-title mb-1 fw-bold">Secure Payment Required</h5>
+                  <p className="text-muted mb-0 small">Deposit secures your appointment slot</p>
+                </div>
+              </div>
+              
+              <div className="alert alert-info border-0" style={{backgroundColor: '#f8f9fa', borderRadius: '12px'}}>
+                <div className="d-flex align-items-start">
+                  <i className="fas fa-info-circle text-primary me-2 mt-1"></i>
+                  <div>
+                    <small className="fw-medium">Payment Policy</small>
+                    <p className="mb-0 small text-muted">
+                      A secure deposit is required to confirm your booking. The remaining balance will be due at your appointment.
+                    </p>
+                  </div>
+                </div>
+              </div>
               
               {/* Payment Success Message */}
               {paymentSuccess && (
-                <div className="alert alert-success" role="alert">
-                  <i className="fas fa-check-circle me-2"></i>
-                  Payment successful! Proceeding to confirmation...
+                <div className="alert alert-success border-0 d-flex align-items-center" style={{borderRadius: '12px'}} role="alert">
+                  <div className="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center me-3" style={{width: '40px', height: '40px'}}>
+                    <i className="fas fa-check" style={{fontSize: '1.1rem'}}></i>
+                  </div>
+                  <div>
+                    <div className="fw-bold">Payment Successful!</div>
+                    <small className="text-muted">Redirecting to confirmation...</small>
+                  </div>
                 </div>
               )}
               
               {/* Payment Error Message */}
               {paymentError && (
-                <div className="alert alert-danger" role="alert">
-                  <i className="fas fa-exclamation-circle me-2"></i>
-                  {paymentError}
+                <div className="alert alert-danger border-0 d-flex align-items-center" style={{borderRadius: '12px'}} role="alert">
+                  <div className="bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center me-3" style={{width: '40px', height: '40px'}}>
+                    <i className="fas fa-exclamation-triangle" style={{fontSize: '1.1rem'}}></i>
+                  </div>
+                  <div>
+                    <div className="fw-bold">Payment Error</div>
+                    <small className="text-muted">{paymentError}</small>
+                  </div>
                 </div>
               )}
               
               {!paymentSuccess && (
                 <div className="mt-4">
-                  <h6 className="mb-3">Payment Options</h6>
+                  <div className="d-flex align-items-center justify-content-between mb-3">
+                    <h6 className="mb-0 fw-bold">Choose Payment Method</h6>
+                    <div className="d-flex gap-2">
+                      <i className="fab fa-cc-visa text-muted"></i>
+                      <i className="fab fa-cc-mastercard text-muted"></i>
+                      <i className="fab fa-cc-amex text-muted"></i>
+                      <i className="fas fa-lock text-success" title="Secure Payment"></i>
+                    </div>
+                  </div>
                   <Elements stripe={stripePromise}>
                     <MultiPaymentForm
                       amount={depositAmount + stripeFee}
@@ -410,120 +476,193 @@ export default function CheckoutCart({
             </div>
           </div>
 
-          {/* Cancellation Policy */}
-          <div className="card mb-4">
-            <div className="card-body">
-              <h5 className="card-title mb-3">Cancellation Policy</h5>
-              <p className="text-muted small">
-                Clients are requested to arrive on time for their appointments. A grace period of 15 minutes is permitted for appointments exceeding one hour; however, if you arrive more than 15 minutes late, we cannot guarantee your service and will need to reschedule, incurring a $50.00 rebooking fee. All deposits are nonrefundable and will be applied towards the service. Only one reschedule is permitted per appointment. We appreciate your understanding of our policies, which are in place to ensure the safety and satisfaction of all clients.
-              </p>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="d-flex justify-content-between mb-4">
-            <button
-              type="button"
-              className="btn btn-outline-secondary px-4"
-              onClick={onBack}
-              disabled={paymentLoading}
-            >
-              Back
-            </button>
-          </div>
-
-          {/* Order Summary Toggle */}
-          <div className="text-center">
-            <button 
-              className="btn btn-link text-decoration-none"
-              onClick={() => setShowOrderSummary(!showOrderSummary)}
-            >
-              <span className="me-2">View Order Summary</span>
-              <i className={`fas fa-chevron-${showOrderSummary ? 'up' : 'down'}`}></i>
-            </button>
-            
-            {showOrderSummary && (
-              <div className="card mt-3">
-                <div className="card-body">
-                  <div className="d-flex justify-content-between mb-2">
-                    <span>{service.name}:</span>
-                    <span>{formatCurrency(service.price)}</span>
-                  </div>
-                  {appliedCoupon && couponDiscount > 0 && (
-                    <div className="d-flex justify-content-between mb-2 text-success">
-                      <span>
-                        <i className="fas fa-tag me-1"></i>
-                        Coupon ({appliedCoupon.code}):
-                      </span>
-                      <span>-{formatCurrency(couponDiscount)}</span>
+          {/* Modern Policy Card */}
+          <div className="card border-0 shadow-sm mb-4" style={{borderRadius: '16px'}}>
+            <div className="card-body p-4">
+              <div className="d-flex align-items-center mb-3">
+                <div className="bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center me-3" style={{width: '48px', height: '48px'}}>
+                  <i className="fas fa-file-contract" style={{fontSize: '1.25rem'}}></i>
+                </div>
+                <div>
+                  <h5 className="card-title mb-1 fw-bold">Important Policies</h5>
+                  <p className="text-muted mb-0 small">Please review before completing payment</p>
+                </div>
+              </div>
+              
+              <div className="bg-light p-3 rounded-3">
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <div className="d-flex align-items-start">
+                      <i className="fas fa-clock text-warning me-2 mt-1"></i>
+                      <div>
+                        <small className="fw-bold d-block">Punctuality</small>
+                        <small className="text-muted">15-minute grace period for appointments over 1 hour</small>
+                      </div>
                     </div>
-                  )}
-                  {appliedGiftCard && giftCardDiscount > 0 && (
-                    <div className="d-flex justify-content-between mb-2 text-success">
-                      <span>
-                        <i className="fas fa-gift me-1"></i>
-                        Gift Card ({appliedGiftCard.code}):
-                      </span>
-                      <span>-{formatCurrency(giftCardDiscount)}</span>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="d-flex align-items-start">
+                      <i className="fas fa-calendar-times text-danger me-2 mt-1"></i>
+                      <div>
+                        <small className="fw-bold d-block">Rescheduling</small>
+                        <small className="text-muted">$50 fee for late arrivals, one reschedule allowed</small>
+                      </div>
                     </div>
-                  )}
-                  <div className="d-flex justify-content-between mb-2">
-                    <span>Subtotal:</span>
-                    <span>{formatCurrency(subtotal)}</span>
                   </div>
-                  <div className="d-flex justify-content-between mb-2">
-                    <span>Tax (7.75%):</span>
-                    <span>{formatCurrency(tax)}</span>
-                  </div>
-                  <div className="d-flex justify-content-between mb-2">
-                    <span>{getStripeFeeExplanation()}:</span>
-                    <span>{formatCurrency(stripeFee)}</span>
-                  </div>
-                  <hr className="my-2" />
-                  <div className="d-flex justify-content-between mb-2">
-                    <span className="fw-bold">Total:</span>
-                    <span className="fw-bold">{formatCurrency(totalAmount)}</span>
-                  </div>
-                  <div className="d-flex justify-content-between text-primary">
-                    <span className="fw-bold">Deposit:</span>
-                    <span className="fw-bold">{formatCurrency(depositAmount)}</span>
-                  </div>
-                  <div className="d-flex justify-content-between text-muted small mt-1">
-                    <span>Remaining balance (due at appointment):</span>
-                    <span>{formatCurrency(remainingAmount)}</span>
-                  </div>
-                  {(appliedCoupon || appliedGiftCard) && (
-                    <div className="mt-2 p-2 bg-success bg-opacity-10 rounded">
-                      <small className="text-success">
-                        <i className="fas fa-check-circle me-1"></i>
-                        {appliedCoupon && appliedGiftCard ? (
-                          `You saved ${formatCurrency(couponDiscount + giftCardDiscount)} total! (${formatCurrency(couponDiscount)} coupon + ${formatCurrency(giftCardDiscount)} gift card)`
-                        ) : appliedCoupon ? (
-                          `You saved ${formatCurrency(couponDiscount)} with coupon ${appliedCoupon.code}!`
-                        ) : (
-                          `You saved ${formatCurrency(giftCardDiscount)} with gift card ${appliedGiftCard?.code}!`
-                        )}
-                      </small>
+                  <div className="col-12">
+                    <div className="d-flex align-items-start">
+                      <i className="fas fa-ban text-primary me-2 mt-1"></i>
+                      <div>
+                        <small className="fw-bold d-block">Deposit Policy</small>
+                        <small className="text-muted">All deposits are non-refundable and applied to your service</small>
+                      </div>
                     </div>
-                  )}
-                  <div className="mt-2 p-2 bg-light rounded">
-                    <small className="text-muted">
-                      <i className="fas fa-info-circle me-1"></i>
-                      Processing fee covers secure payment handling and is added to your total.
-                    </small>
                   </div>
                 </div>
               </div>
-            )}
-            
-            {!showOrderSummary && (
-              <div className="mt-2">
-                <div className="h5 mb-1">{formatCurrency(totalAmount)}</div>
-                <div className="text-primary fw-bold">{formatCurrency(depositAmount)} due now (deposit)</div>
-                <div className="text-muted small">Includes {formatCurrency(stripeFee)} processing fee</div>
-                <div className="text-muted small">Note: Cherry, Klarna, and Affirm require full payment upfront</div>
-              </div>
-            )}
+            </div>
+          </div>
+
+          {/* Modern Action Buttons */}
+          <div className="d-flex justify-content-between align-items-center mb-5">
+            <button
+              type="button"
+              className="btn btn-outline-secondary px-4 py-2 rounded-pill"
+              onClick={onBack}
+              disabled={paymentLoading}
+              style={{minWidth: '120px'}}
+            >
+              <i className="fas fa-arrow-left me-2"></i>
+              Back
+            </button>
+            <div className="text-muted small">
+              <i className="fas fa-shield-alt text-success me-1"></i>
+              Secure checkout powered by Stripe
+            </div>
+          </div>
+
+          {/* Modern Order Summary */}
+          <div className="card border-0 shadow-sm" style={{borderRadius: '16px'}}>
+            <div className="card-body p-0">
+              <button 
+                className="btn btn-link text-decoration-none w-100 p-4 d-flex align-items-center justify-content-between"
+                onClick={() => setShowOrderSummary(!showOrderSummary)}
+                style={{borderRadius: '16px'}}
+              >
+                <div className="d-flex align-items-center">
+                  <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style={{width: '40px', height: '40px'}}>
+                    <i className="fas fa-receipt" style={{fontSize: '1rem'}}></i>
+                  </div>
+                  <div className="text-start">
+                    <div className="fw-bold text-dark">Order Summary</div>
+                    <small className="text-muted">Total: {formatCurrency(totalAmount)}</small>
+                  </div>
+                </div>
+                <i className={`fas fa-chevron-${showOrderSummary ? 'up' : 'down'} text-muted`}></i>
+              </button>
+              
+              {showOrderSummary && (
+                <div className="px-4 pb-4">
+                  <hr className="mt-0 mb-4" />
+                  <div className="space-y-3">
+                    <div className="d-flex justify-content-between align-items-center py-2">
+                      <div className="d-flex align-items-center">
+                        <i className="fas fa-spa text-primary me-2"></i>
+                        <span>{service.name}</span>
+                      </div>
+                      <span className="fw-medium">{formatCurrency(service.price)}</span>
+                    </div>
+                    
+                    {appliedCoupon && couponDiscount > 0 && (
+                      <div className="d-flex justify-content-between align-items-center py-2 text-success">
+                        <div className="d-flex align-items-center">
+                          <i className="fas fa-tag me-2"></i>
+                          <span>Coupon ({appliedCoupon.code})</span>
+                        </div>
+                        <span className="fw-medium">-{formatCurrency(couponDiscount)}</span>
+                      </div>
+                    )}
+                    
+                    {appliedGiftCard && giftCardDiscount > 0 && (
+                      <div className="d-flex justify-content-between align-items-center py-2 text-success">
+                        <div className="d-flex align-items-center">
+                          <i className="fas fa-gift me-2"></i>
+                          <span>Gift Card ({appliedGiftCard.code})</span>
+                        </div>
+                        <span className="fw-medium">-{formatCurrency(giftCardDiscount)}</span>
+                      </div>
+                    )}
+                    
+                    <div className="d-flex justify-content-between align-items-center py-2 border-top">
+                      <span>Subtotal</span>
+                      <span>{formatCurrency(subtotal)}</span>
+                    </div>
+                    
+                    <div className="d-flex justify-content-between align-items-center py-2">
+                      <span>Tax (7.75%)</span>
+                      <span>{formatCurrency(tax)}</span>
+                    </div>
+                    
+                    <div className="d-flex justify-content-between align-items-center py-2">
+                      <div className="d-flex align-items-center">
+                        <span>{getStripeFeeExplanation()}</span>
+                        <i className="fas fa-info-circle text-muted ms-1" title="Secure payment processing"></i>
+                      </div>
+                      <span>{formatCurrency(stripeFee)}</span>
+                    </div>
+                    
+                    <div className="d-flex justify-content-between align-items-center py-3 border-top border-2">
+                      <span className="fw-bold h6 mb-0">Total Amount</span>
+                      <span className="fw-bold h6 mb-0">{formatCurrency(totalAmount)}</span>
+                    </div>
+                    
+                    <div className="bg-primary bg-opacity-10 p-3 rounded-3">
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <span className="fw-bold text-primary">Due Today (Deposit)</span>
+                        <span className="fw-bold text-primary h6 mb-0">{formatCurrency(depositAmount + stripeFee)}</span>
+                      </div>
+                      <div className="d-flex justify-content-between align-items-center">
+                        <small className="text-muted">Remaining balance (due at appointment)</small>
+                        <small className="text-muted fw-medium">{formatCurrency(remainingAmount)}</small>
+                      </div>
+                    </div>
+                    
+                    {(appliedCoupon || appliedGiftCard) && (
+                      <div className="bg-success bg-opacity-10 p-3 rounded-3">
+                        <div className="d-flex align-items-center">
+                          <i className="fas fa-check-circle text-success me-2"></i>
+                          <small className="text-success fw-medium">
+                            {appliedCoupon && appliedGiftCard ? (
+                              `You saved ${formatCurrency(couponDiscount + giftCardDiscount)} total! (${formatCurrency(couponDiscount)} coupon + ${formatCurrency(giftCardDiscount)} gift card)`
+                            ) : appliedCoupon ? (
+                              `You saved ${formatCurrency(couponDiscount)} with coupon ${appliedCoupon.code}!`
+                            ) : (
+                              `You saved ${formatCurrency(giftCardDiscount)} with gift card ${appliedGiftCard?.code}!`
+                            )}
+                          </small>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="text-center mt-3">
+                      <small className="text-muted">
+                        <i className="fas fa-info-circle me-1"></i>
+                        Cherry, Klarna, and Affirm require full payment upfront
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {!showOrderSummary && (
+                <div className="px-4 pb-4">
+                  <div className="text-center">
+                    <div className="h4 mb-1 text-primary">{formatCurrency(depositAmount + stripeFee)}</div>
+                    <div className="text-muted small">Due today (includes processing fee)</div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
