@@ -49,7 +49,8 @@ export function getStripeMode(): StripeMode {
     return 'live';
   }
   
-  return 'test'; // Default to test mode for safety
+  // Force live mode as configured in database
+  return 'live';
 }
 
 /**

@@ -24,8 +24,8 @@ const STRIPE_KEYS = {
     secret: process.env.STRIPE_TEST_SECRET_KEY || ''
   },
   live: {
-    publishable: process.env.NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY || '',
-    secret: process.env.STRIPE_LIVE_SECRET_KEY || ''
+    publishable: process.env.NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
+    secret: process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || ''
   }
 };
 
@@ -45,6 +45,13 @@ export function getAppConfig(): AppConfig {
   const stripeKeys = STRIPE_KEYS[stripeMode];
   
   console.log(`🔧 Config loaded: ${stripeMode} mode, ${environment} environment, localhost: ${isLocalhost}`);
+  console.log(`🔧 Stripe publishable key: ${stripeKeys.publishable ? stripeKeys.publishable.substring(0, 20) + '...' : 'MISSING'}`);
+  
+  // Validate that we have the required keys
+  if (!stripeKeys.publishable) {
+    console.error('❌ Missing Stripe publishable key for live mode');
+    throw new Error('NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY or NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY environment variable is required');
+  }
   
   return {
     stripe: {

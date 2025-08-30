@@ -490,10 +490,14 @@ export default function MultiPaymentForm({
   if (!stripe) {
     return (
       <div className="text-center py-4">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
+        <div className="alert alert-danger" role="alert">
+          <i className="fas fa-exclamation-triangle me-2"></i>
+          <strong>Payment System Error</strong>
+          <p className="mb-0 mt-2">Unable to load payment system. Please check that Stripe keys are configured properly.</p>
+          <small className="text-muted d-block mt-1">
+            Check browser console for detailed error information.
+          </small>
         </div>
-        <p className="mt-2 text-muted">Loading payment system...</p>
       </div>
     );
   }
