@@ -40,16 +40,9 @@ export async function getStripeModeAsync(): Promise<StripeMode> {
 }
 
 /**
- * Get the current Stripe mode from environment variables (synchronous)
+ * Get the current Stripe mode - live mode only
  */
 export function getStripeMode(): StripeMode {
-  const mode = process.env.STRIPE_MODE?.toLowerCase();
-  
-  if (mode === 'live' || mode === 'production') {
-    return 'live';
-  }
-  
-  // Force live mode as configured in database
   return 'live';
 }
 
@@ -84,40 +77,33 @@ export function getStripeConfig(): StripeConfig {
     };
   }
   
-  if (isLive) {
-    // Production/Live keys
-    publishableKey = process.env.STRIPE_LIVE_PUBLISHABLE_KEY || '';
-    secretKey = process.env.STRIPE_LIVE_SECRET_KEY || '';
-    webhookSecret = process.env.STRIPE_LIVE_WEBHOOK_SECRET || '';
-    
-    // Validate live keys (only at runtime)
-    if (!publishableKey.startsWith('pk_live_')) {
-      throw new Error('Invalid or missing Stripe live publishable key');
-    }
-    if (!secretKey.startsWith('sk_live_')) {
-      throw new Error('Invalid or missing Stripe live secret key');
-    }
-  } else {
-    // Test/Sandbox keys
-    publishableKey = process.env.STRIPE_TEST_PUBLISHABLE_KEY || '';
-    secretKey = process.env.STRIPE_TEST_SECRET_KEY || '';
-    webhookSecret = process.env.STRIPE_TEST_WEBHOOK_SECRET || '';
-    
-    // Validate test keys (only at runtime) - allow empty for development
-    if (publishableKey && !publishableKey.startsWith('pk_test_')) {
-      throw new Error('Invalid Stripe test publishable key format');
-    }
-    if (secretKey && !secretKey.startsWith('sk_test_')) {
-      throw new Error('Invalid Stripe test secret key format');
-    }
-    
-    // Require test keys - don't use placeholders in production
-    if (!publishableKey) {
-      throw new Error('STRIPE_TEST_PUBLISHABLE_KEY environment variable is required. Please set it in your environment variables.');
-    }
-    if (!secretKey) {
-      throw new Error('STRIPE_TEST_SECRET_KEY environment variable is required. Please set it in your environment variables.');
-    }
+  // Get Stripe keys - live mode only
+  const stripeKeys = {
+    publishable: process.env.NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+    secret: process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY
+  };
+  
+  // Validate keys
+  if (!stripeKeys.publishable) {
+    console.error('❌ Missing Stripe publishable key');
+    throw new Error('Missing NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY environment variable');
+  }
+
+  if (!stripeKeys.secret) {
+    console.error('❌ Missing Stripe secret key');
+    throw new Error('Missing STRIPE_LIVE_SECRET_KEY environment variable');
+  }
+  
+  publishableKey = stripeKeys.publishable;
+  secretKey = stripeKeys.secret;
+  webhookSecret = process.env.STRIPE_LIVE_WEBHOOK_SECRET || '';
+  
+  // Validate live keys (only at runtime)
+  if (!publishableKey.startsWith('pk_live_')) {
+    throw new Error('Invalid or missing Stripe live publishable key');
+  }
+  if (!secretKey.startsWith('sk_live_')) {
+    throw new Error('Invalid or missing Stripe live secret key');
   }
   
   // Ensure all keys are present (only at runtime)

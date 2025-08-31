@@ -15,18 +15,12 @@ export interface AppConfig {
 }
 
 /**
- * Stripe keys loaded from environment variables
- * Set these in your .env.local file or deployment environment
+ * Stripe configuration - live mode only
  */
-const STRIPE_KEYS = {
-  test: {
-    publishable: process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY || '',
-    secret: process.env.STRIPE_TEST_SECRET_KEY || ''
-  },
-  live: {
-    publishable: process.env.NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
-    secret: process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || ''
-  }
+const stripeConfig = {
+  mode: 'live' as const,
+  publishableKey: process.env.NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+  secretKey: process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY,
 };
 
 /**
@@ -39,26 +33,24 @@ export function getAppConfig(): AppConfig {
   
   const environment = process.env.NODE_ENV === 'production' ? 'production' : 'development';
   
-  // SWITCHED TO LIVE MODE - Use live keys for all environments
-  const stripeMode: 'test' | 'live' = 'live';
+  console.log(`🔧 Config loaded: ${stripeConfig.mode} mode, ${environment} environment, localhost: ${isLocalhost}`);
+  console.log(`🔧 Stripe publishable key: ${stripeConfig.publishableKey ? stripeConfig.publishableKey.substring(0, 20) + '...' : 'MISSING'}`);
   
-  const stripeKeys = STRIPE_KEYS[stripeMode];
-  
-  console.log(`🔧 Config loaded: ${stripeMode} mode, ${environment} environment, localhost: ${isLocalhost}`);
-  console.log(`🔧 Stripe publishable key: ${stripeKeys.publishable ? stripeKeys.publishable.substring(0, 20) + '...' : 'MISSING'}`);
-  
-  // Validate that we have the required keys
-  if (!stripeKeys.publishable) {
-    console.error('❌ Missing Stripe publishable key for live mode');
-    throw new Error('NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY or NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY environment variable is required');
+  // Validate Stripe configuration
+  if (!stripeConfig.publishableKey) {
+    throw new Error('Missing Stripe publishable key. Please check your environment variables.');
+  }
+
+  if (!stripeConfig.secretKey) {
+    throw new Error('Missing Stripe secret key. Please check your environment variables.');
   }
   
   return {
     stripe: {
-      publishableKey: stripeKeys.publishable,
-      secretKey: stripeKeys.secret,
-      mode: stripeMode,
-      isLive: stripeMode === 'live'
+      publishableKey: stripeConfig.publishableKey,
+      secretKey: stripeConfig.secretKey,
+      mode: stripeConfig.mode,
+      isLive: stripeConfig.mode === 'live'
     },
     environment,
     isLocalhost

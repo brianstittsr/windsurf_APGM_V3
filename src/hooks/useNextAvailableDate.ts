@@ -104,16 +104,42 @@ export function useNextAvailableDate() {
                   const timeSlot = `${hour.toString().padStart(2, '0')}:00`;
                   const endTimeFormatted = `${endTime.toString().padStart(2, '0')}:00`;
                   
-                  console.log(`        ⏰ Generated slot: ${timeSlot} - ${endTimeFormatted}`);
+                  // Apply current-time filtering for today's slots
+                  const now = new Date();
+                  const checkDateObj = new Date(dateString + 'T12:00:00');
+                  const isToday = checkDateObj.toDateString() === now.toDateString();
                   
-                  timeSlots.push({
-                    time: timeSlot,
-                    endTime: endTimeFormatted,
-                    duration: '4 Hours',
-                    available: true,
-                    artistId: data.artistId,
-                    artistName: 'Victoria' // Default artist name
-                  });
+                  let isPastTime = false;
+                  if (isToday) {
+                    const currentHour = now.getHours();
+                    const currentMinutes = now.getMinutes();
+                    const slotStartTime = hour;
+                    
+                    // Enhanced logic: Hide slot if ANY part of the 4-hour window has passed
+                    // Also add 1-hour buffer to prevent last-minute bookings
+                    isPastTime = slotStartTime < currentHour || 
+                                (slotStartTime === currentHour && currentMinutes > 0) ||
+                                // Add 1-hour buffer to prevent last-minute bookings
+                                (slotStartTime - currentHour < 1 && slotStartTime > currentHour);
+                    
+                    if (isPastTime) {
+                      console.log(`        ⏰ Slot ${timeSlot}-${endTimeFormatted} filtered out (current time: ${currentHour}:${currentMinutes.toString().padStart(2, '0')}, slot starts at ${slotStartTime}:00)`);
+                    }
+                  }
+                  
+                  // Only add slots that are not in the past
+                  if (!isPastTime) {
+                    console.log(`        ⏰ Generated available slot: ${timeSlot} - ${endTimeFormatted}`);
+                    
+                    timeSlots.push({
+                      time: timeSlot,
+                      endTime: endTimeFormatted,
+                      duration: '4 Hours',
+                      available: true,
+                      artistId: data.artistId,
+                      artistName: 'Victoria' // Default artist name
+                    });
+                  }
                 }
               }
             });

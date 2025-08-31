@@ -19,7 +19,7 @@ function getClientSidePublishableKey(): string {
   } catch (error) {
     console.error('Failed to get Stripe publishable key from centralized config:', error);
     
-    // Fallback to direct environment variable access
+    // Fallback to direct environment variable access - live mode only
     const fallbackKey = process.env.NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY || 
                        process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
     
