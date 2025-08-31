@@ -1,35 +1,28 @@
 import { loadStripe } from '@stripe/stripe-js';
-import { getAppConfig } from './config';
 
-// Get publishable key using the same centralized config as backend
+// Client-side Stripe key retrieval - only uses public environment variables
 function getClientSidePublishableKey(): string {
-  try {
-    const config = getAppConfig();
-    console.log('🔍 Frontend Stripe key check:', {
-      mode: config.stripe.mode,
-      keyPrefix: config.stripe.publishableKey?.substring(0, 20) + '...',
-      isClient: typeof window !== 'undefined'
-    });
-    
-    if (!config.stripe.publishableKey) {
-      throw new Error('Stripe publishable key is missing from configuration');
-    }
-    
-    return config.stripe.publishableKey;
-  } catch (error) {
-    console.error('Failed to get Stripe publishable key from centralized config:', error);
-    
-    // Fallback to direct environment variable access - live mode only
-    const fallbackKey = process.env.NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY || 
-                       process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-    
-    if (fallbackKey) {
-      console.log('🔄 Using fallback Stripe key:', fallbackKey.substring(0, 20) + '...');
-      return fallbackKey;
-    }
-    
-    throw new Error('No Stripe publishable key available. Please check your environment variables.');
+  // Live mode keys first (production)
+  const liveKey = process.env.NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY || 
+                  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+  
+  // Test mode keys (development)
+  const testKey = process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY;
+  
+  // Prefer live keys, fallback to test keys
+  const publishableKey = liveKey || testKey;
+  
+  if (!publishableKey) {
+    throw new Error('No Stripe publishable key found. Please check your environment variables.');
   }
+  
+  console.log('🔧 Client Stripe key loaded:', {
+    keyPrefix: publishableKey.substring(0, 20) + '...',
+    isLive: publishableKey.startsWith('pk_live_'),
+    isTest: publishableKey.startsWith('pk_test_')
+  });
+  
+  return publishableKey;
 }
 
 // Make sure to call `loadStripe` outside of a component's render to avoid

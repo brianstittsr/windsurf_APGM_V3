@@ -328,6 +328,18 @@ export class UserService {
 
 export class ServiceService {
   static async getAllServices(): Promise<Service[]> {
+    const services = await DatabaseService.getAll<Service>(COLLECTIONS.SERVICES);
+    
+    // Sort by order field if it exists, otherwise by createdAt
+    return services.sort((a, b) => {
+      if ('order' in a && 'order' in b) {
+        return (a as any).order - (b as any).order;
+      }
+      return a.createdAt.toMillis() - b.createdAt.toMillis();
+    });
+  }
+
+  static async getActiveServices(): Promise<Service[]> {
     const services = await DatabaseService.query<Service>(
       COLLECTIONS.SERVICES,
       [{ field: 'isActive', operator: '==', value: true }]
@@ -348,6 +360,14 @@ export class ServiceService {
 
   static async createService(serviceData: Omit<Service, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     return DatabaseService.create<Service>(COLLECTIONS.SERVICES, serviceData);
+  }
+
+  static async updateService(id: string, serviceData: Partial<Service>): Promise<void> {
+    return DatabaseService.update<Service>(COLLECTIONS.SERVICES, id, serviceData);
+  }
+
+  static async deleteService(id: string): Promise<void> {
+    return DatabaseService.delete(COLLECTIONS.SERVICES, id);
   }
 
   static async deleteAllServices(): Promise<void> {

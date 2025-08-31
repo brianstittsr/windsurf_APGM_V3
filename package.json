@@ -11,7 +11,8 @@
     "lint": "next lint",
     "test-email": "tsx src/scripts/testEmailSending.ts",
     "test-firebase": "tsx src/scripts/testFirebaseEnv.ts",
-    "test-contact": "tsx src/scripts/testContactForm.ts"
+    "test-contact": "tsx src/scripts/testContactForm.ts",
+    "init-db": "tsx src/scripts/run-init-db.ts"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^3.9.0",

@@ -13,6 +13,8 @@ import StripeManagement from '../../components/StripeManagement';
 import MarketingWorkflows from '../../components/MarketingWorkflows';
 import { ClientPDFManager } from '../../components/ClientPDFManager';
 import { UserActivityFeed } from '../../components/UserActivityFeed';
+import ServicesManager from '../../components/admin/ServicesManager';
+import CouponsGiftCardsManager from '../../components/admin/CouponsGiftCardsManager';
 import { auth, isFirebaseConfigured } from '@/lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { User } from 'firebase/auth';
@@ -26,7 +28,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<DatabaseUser | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'availability' | 'admin' | 'analytics' | 'stripe' | 'workflows' | 'documents'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'availability' | 'admin' | 'services' | 'coupons' | 'analytics' | 'stripe' | 'workflows' | 'documents'>('dashboard');
   const [adminUsers, setAdminUsers] = useState<{
     admins: DatabaseUser[];
     artists: DatabaseUser[];
@@ -242,6 +244,28 @@ export default function Dashboard() {
                           >
                             <i className="fas fa-users-cog me-2"></i>
                             User Management
+                          </button>
+                        </li>
+                        <li className="nav-item" role="presentation">
+                          <button
+                            className={`nav-link px-4 py-3 ${activeTab === 'services' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('services')}
+                            type="button"
+                            role="tab"
+                          >
+                            <i className="fas fa-cogs me-2"></i>
+                            Services Management
+                          </button>
+                        </li>
+                        <li className="nav-item" role="presentation">
+                          <button
+                            className={`nav-link px-4 py-3 ${activeTab === 'coupons' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('coupons')}
+                            type="button"
+                            role="tab"
+                          >
+                            <i className="fas fa-gift me-2"></i>
+                            Coupons & Gift Cards
                           </button>
                         </li>
                         <li className="nav-item" role="presentation">
@@ -495,9 +519,40 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* Marketing Analytics Tab Content */}
-            {activeTab === 'analytics' && userRole === 'admin' && (
-              <MarketingAnalytics />
+            {/* Services Management Tab Content */}
+            {activeTab === 'services' && userRole === 'admin' && (
+              <div className="card border-0 shadow-sm">
+                <div className="card-header bg-white border-0 pb-0">
+                  <h5 className="card-title text-primary fw-bold">
+                    <i className="fas fa-cogs me-2"></i>
+                    Services Management
+                  </h5>
+                  <p className="text-muted small mb-0">
+                    Manage your permanent makeup services, pricing, and availability
+                  </p>
+                </div>
+                <div className="card-body">
+                  <ServicesManager />
+                </div>
+              </div>
+            )}
+
+            {/* Coupons and Gift Cards Tab Content */}
+            {activeTab === 'coupons' && userRole === 'admin' && (
+              <div className="card border-0 shadow-sm">
+                <div className="card-header bg-white border-0 pb-0">
+                  <h5 className="card-title text-primary fw-bold">
+                    <i className="fas fa-gift me-2"></i>
+                    Coupons and Gift Cards
+                  </h5>
+                  <p className="text-muted small mb-0">
+                    Manage your coupons and gift cards
+                  </p>
+                </div>
+                <div className="card-body">
+                  <CouponsGiftCardsManager />
+                </div>
+              </div>
             )}
 
             {/* Stripe Management Tab Content */}
