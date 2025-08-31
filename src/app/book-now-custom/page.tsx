@@ -176,6 +176,17 @@ function BookNowCustomContent() {
     // Profile auto-population removed - users must manually enter their information
   }, [searchParams, services, isAuthenticated, userProfile, getClientProfileData]);
 
+  // Initialize currentWeekStart on mount
+  useEffect(() => {
+    if (!currentWeekStart) {
+      const today = new Date();
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay()); // Start from Sunday
+      setCurrentWeekStart(startOfWeek);
+      console.log('Initialized currentWeekStart:', startOfWeek.toDateString());
+    }
+  }, [currentWeekStart]);
+
   // Auto-navigate to next available date when nextAvailable is found
   useEffect(() => {
     if (nextAvailable) {
@@ -185,8 +196,7 @@ function BookNowCustomContent() {
         console.log('Setting calendar to next available date:', nextAvailable.date);
         const nextAvailableDate = new Date(nextAvailable.date);
         const nextWeekStart = new Date(nextAvailableDate);
-        nextWeekStart.setDate(nextAvailableDate.getDate() - nextAvailableDate.getDay());
-        
+        nextWeekStart.setDate(nextAvailableDate.getDate() - nextAvailableDate.getDay()); // Start from Sunday
         setCurrentWeekStart(nextWeekStart);
         setValidatedSelectedDate(nextAvailable.date);
       } else {
@@ -909,7 +919,12 @@ function BookNowCustomContent() {
                             border: isSelectedDate ? '2px solid #0d6efd' : isNextAvailable ? '2px solid #198754' : '1px solid #e9ecef',
                             opacity: isPast ? 0.5 : 1
                           }}
-                          onClick={() => !isPast && handleDateSelect(day)}
+                          onClick={() => {
+                            if (!isPast) {
+                              console.log('Desktop date clicked:', day.toISOString().split('T')[0]);
+                              handleDateSelect(day);
+                            }
+                          }}
                         >
                           <div className="fw-semibold small mb-1">
                             {dayNames[index]}
@@ -1007,7 +1022,12 @@ function BookNowCustomContent() {
                               opacity: isPast ? 0.5 : 1,
                               minHeight: '70px'
                             }}
-                            onClick={() => !isPast && handleDateSelect(day)}
+                            onClick={() => {
+                              if (!isPast) {
+                                console.log('Mobile date clicked:', day.toISOString().split('T')[0]);
+                                handleDateSelect(day);
+                              }
+                            }}
                             disabled={isPast}
                           >
                             <div className="fw-semibold small mb-1">
