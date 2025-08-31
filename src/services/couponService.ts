@@ -129,9 +129,15 @@ export class CouponService {
 
   // Calculate discount amount
   static calculateDiscount(coupon: CouponCode, orderAmount: number): number {
-    if (coupon.type === 'percentage' || coupon.type === 'free_service') {
-      return Math.round((orderAmount * coupon.value / 100) * 100) / 100;
+    if (coupon.type === 'percentage') {
+      // For percentage discounts, calculate percentage of order amount
+      const discount = (orderAmount * coupon.value) / 100;
+      return Math.round(discount * 100) / 100; // Round to 2 decimal places
+    } else if (coupon.type === 'free_service') {
+      // For free service, discount is 100% of order amount
+      return orderAmount;
     } else {
+      // For fixed amount discounts, use the coupon value but don't exceed order amount
       return Math.min(coupon.value, orderAmount);
     }
   }

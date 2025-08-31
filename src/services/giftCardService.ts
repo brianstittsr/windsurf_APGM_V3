@@ -97,7 +97,9 @@ export class GiftCardService {
       return { isValid: false, error: 'Gift card has no remaining balance' };
     }
     
-    if (giftCard.remainingAmount < requiredAmount) {
+    // Convert requiredAmount (dollars) to cents for comparison
+    const requiredAmountInCents = requiredAmount * 100;
+    if (giftCard.remainingAmount < requiredAmountInCents) {
       return { 
         isValid: false, 
         error: `Insufficient balance. Available: $${(giftCard.remainingAmount / 100).toFixed(2)}` 

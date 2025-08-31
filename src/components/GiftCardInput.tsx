@@ -45,7 +45,9 @@ export default function GiftCardInput({
       }
 
       if (validation.giftCard) {
-        const appliedAmount = Math.min(validation.giftCard.remainingAmount, orderAmount * 100) / 100;
+        // remainingAmount is in cents, orderAmount is in dollars
+        const availableAmountInDollars = validation.giftCard.remainingAmount / 100;
+        const appliedAmount = Math.min(availableAmountInDollars, orderAmount);
         onGiftCardApplied(validation.giftCard, appliedAmount);
         setSuccess(`Gift card applied! $${appliedAmount.toFixed(2)} credit applied.`);
         setGiftCardCode('');

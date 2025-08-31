@@ -18,9 +18,10 @@ interface MultiPaymentFormProps {
   onError: (error: string) => void;
   loading?: boolean;
   setLoading?: (loading: boolean) => void;
+  onPaymentMethodChange?: (method: PaymentMethod) => void;
 }
 
-type PaymentMethod = 'card' | 'klarna' | 'affirm' | 'cherry';
+export type PaymentMethod = 'card' | 'klarna' | 'affirm' | 'cherry';
 
 const CARD_ELEMENT_OPTIONS = {
   style: {
@@ -44,7 +45,8 @@ export default function MultiPaymentForm({
   onSuccess,
   onError,
   loading = false,
-  setLoading
+  setLoading,
+  onPaymentMethodChange
 }: MultiPaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
@@ -53,6 +55,13 @@ export default function MultiPaymentForm({
   const [clientSecret, setClientSecret] = useState<string>('');
   const [paymentIntentCreatedAt, setPaymentIntentCreatedAt] = useState<number>(0);
   const [paymentIntentId, setPaymentIntentId] = useState<string>('');
+
+  // Notify parent of initial payment method on mount
+  React.useEffect(() => {
+    if (onPaymentMethodChange) {
+      onPaymentMethodChange('card');
+    }
+  }, [onPaymentMethodChange]);
   
   // Pre-approval states for Klarna and Affirm
   const [klarnaApproved, setKlarnaApproved] = useState<boolean | null>(null);
@@ -199,6 +208,11 @@ export default function MultiPaymentForm({
 
   const handlePaymentMethodChange = async (method: PaymentMethod) => {
     setSelectedPaymentMethod(method);
+
+    // Notify parent component of payment method change
+    if (onPaymentMethodChange) {
+      onPaymentMethodChange(method);
+    }
 
     // Clear previous payment intent when switching methods
     setClientSecret('');

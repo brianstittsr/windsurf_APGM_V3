@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
 import stripePromise from '../lib/stripe';
-import MultiPaymentForm from './MultiPaymentForm';
+import MultiPaymentForm, { PaymentMethod } from './MultiPaymentForm';
 import StripeModeIndicator from './StripeModeIndicator';
 import CouponInput from './CouponInput';
 import GiftCardInput from './GiftCardInput';
@@ -63,6 +63,7 @@ export default function CheckoutCart({
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [appliedGiftCard, setAppliedGiftCard] = useState<GiftCard | null>(null);
   const [giftCardDiscount, setGiftCardDiscount] = useState(0);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('card');
 
   const handleInputChange = (field: keyof CheckoutData, value: string | boolean) => {
     onChange({
@@ -79,6 +80,10 @@ export default function CheckoutCart({
   const handleGiftCardApplied = (giftCard: GiftCard | null, appliedAmount: number) => {
     setAppliedGiftCard(giftCard);
     setGiftCardDiscount(appliedAmount);
+  };
+
+  const handlePaymentMethodChange = (method: PaymentMethod) => {
+    setSelectedPaymentMethod(method);
   };
 
   const handlePaymentSuccess = async (paymentIntent: any) => {
@@ -294,7 +299,7 @@ export default function CheckoutCart({
   const totalDiscounts = couponDiscount + giftCardDiscount;
   const discountedServicePrice = Math.max(0, service.price - totalDiscounts);
   
-  const feeCalculation = calculateTotalWithStripeFees(discountedServicePrice, taxRate, fixedDeposit);
+  const feeCalculation = calculateTotalWithStripeFees(discountedServicePrice, taxRate, fixedDeposit, selectedPaymentMethod);
   
   const subtotal = feeCalculation.subtotal;
   const tax = feeCalculation.tax;
@@ -469,6 +474,7 @@ export default function CheckoutCart({
                       onError={handlePaymentError}
                       loading={paymentLoading}
                       setLoading={setPaymentLoading}
+                      onPaymentMethodChange={handlePaymentMethodChange}
                     />
                   </Elements>
                 </div>

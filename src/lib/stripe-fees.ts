@@ -28,37 +28,53 @@ export function calculateStripeFee(amount: number): number {
 
 /**
  * Calculate total with Stripe fees included
- * @param servicePrice Service price in dollars
+ * @param servicePrice Service price in dollars (after discounts applied)
  * @param taxRate Tax rate (e.g., 0.0775 for 7.75%)
  * @param depositAmount Fixed deposit amount in dollars
+ * @param paymentMethod Payment method type ('card' | 'affirm' | 'klarna' | 'cherry')
  * @returns Complete fee calculation breakdown
  */
 export function calculateTotalWithStripeFees(
   servicePrice: number,
   taxRate: number = 0.0775,
-  depositAmount: number = 200
+  depositAmount: number = 200,
+  paymentMethod: string = 'card'
 ): StripeFeeCalculation {
-  // Base calculations
+  // Base calculations - servicePrice should already have discounts applied
   const subtotal = servicePrice;
   const tax = Math.round(subtotal * taxRate * 100) / 100;
   const deposit = depositAmount;
   
-  // Calculate Stripe fee on the deposit amount
-  const stripeFee = calculateStripeFee(deposit);
+  // Determine if this is a pay-later method that requires full payment upfront
+  const isPayLater = ['affirm', 'klarna', 'cherry'].includes(paymentMethod.toLowerCase());
   
-  // Total includes service price, tax, and Stripe fee
+  let stripeFee: number;
+  
+  if (isPayLater) {
+    // For pay-later methods, calculate fee on full service amount + tax
+    const fullAmount = subtotal + tax;
+    const chargedAmount = (fullAmount + STRIPE_FIXED_FEE) / (1 - STRIPE_PERCENTAGE_FEE);
+    stripeFee = Math.round((chargedAmount - fullAmount) * 100) / 100;
+  } else {
+    // For credit cards, calculate fee on deposit amount only
+    const chargedAmount = (deposit + STRIPE_FIXED_FEE) / (1 - STRIPE_PERCENTAGE_FEE);
+    stripeFee = Math.round((chargedAmount - deposit) * 100) / 100;
+  }
+  
+  // Total includes discounted service price, tax, and Stripe fee
   const total = subtotal + tax + stripeFee;
   
-  // Remaining balance (service + tax - deposit)
-  const remaining = subtotal + tax - deposit;
+  // Remaining balance (discounted service + tax - deposit)
+  // For pay-later methods, remaining is 0 since full amount is paid upfront
+  const remaining = isPayLater ? 0 : Math.max(0, subtotal + tax - deposit);
   
   return {
     subtotal,
     tax,
-    deposit,
+    deposit: isPayLater ? subtotal + tax : deposit, // Pay-later methods charge full amount
     stripeFee,
     total,
-    remaining: Math.max(0, remaining) // Ensure remaining is never negative
+    remaining
   };
 }
 
