@@ -171,6 +171,22 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Artist Availability Collection - Public read access for booking calendar
+    match /artistAvailability/{docId} {
+      allow read: if true; // Public read access for booking calendar
+      allow write: if request.auth != null && 
+        (resource == null || resource.data.artistId == request.auth.uid) &&
+        request.auth.token.role in ['admin', 'artist'];
+      allow create: if request.auth != null && 
+        request.auth.token.role in ['admin', 'artist'] &&
+        request.resource.data.artistId is string;
+      allow update: if request.auth != null && 
+        request.auth.token.role in ['admin', 'artist'] &&
+        resource.data.artistId == request.resource.data.artistId;
+      allow delete: if request.auth != null && 
+        request.auth.token.role in ['admin', 'artist'];
+    }
+
     // Deny all other access
     match /{document=**} {
       allow read, write: if false;
