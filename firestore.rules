@@ -211,6 +211,14 @@ service cloud.firestore {
       allow delete: if isAdmin(); // Only admin can delete
     }
 
+    // Reviews Collection - Public read for approved/visible reviews, admin management
+    match /reviews/{reviewId} {
+      allow read: if true; // Public read access for displaying reviews on website
+      allow create: if isAdmin(); // Only admin can create reviews
+      allow update: if isAdmin(); // Only admin can update reviews
+      allow delete: if isAdmin(); // Only admin can delete reviews
+    }
+
     // Deny all other access
     match /{document=**} {
       allow read, write: if false;

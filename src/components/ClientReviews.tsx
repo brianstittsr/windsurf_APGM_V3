@@ -2,9 +2,25 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+interface Review {
+  id: string;
+  name: string;
+  service: string;
+  rating: number;
+  text: string;
+  image: string;
+  beforeAfter?: string;
+  isApproved: boolean;
+  isVisible: boolean;
+}
 
 export default function ClientReviews() {
   const [currentReview, setCurrentReview] = useState(0);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Helper function to mask last name
   const maskLastName = (fullName: string) => {
@@ -17,48 +33,79 @@ export default function ClientReviews() {
     return `${firstName} ${lastNameInitial}.`;
   };
 
-  const reviews = [
+  // Fallback reviews if database is empty or unavailable
+  const fallbackReviews: Review[] = [
     {
+      id: 'fallback-1',
       name: "Sarah Johnson",
       service: "Microblading Eyebrows",
       rating: 5,
       text: "Victoria is absolutely amazing! My eyebrows look so natural and perfect. I wake up every morning feeling confident and beautiful. The whole process was comfortable and professional. I couldn't be happier with the results!",
       image: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop",
-      beforeAfter: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=200&fit=crop"
+      beforeAfter: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=200&fit=crop",
+      isApproved: true,
+      isVisible: true
     },
     {
+      id: 'fallback-2',
       name: "Emily Chen",
       service: "Semi-Permanent Eyeliner",
       rating: 5,
       text: "I was nervous about getting semi-permanent eyeliner, but Victoria made me feel so comfortable. The results are exactly what I wanted - subtle but defined. I save so much time in the morning now!",
       image: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop",
-      beforeAfter: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400&h=200&fit=crop"
+      beforeAfter: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400&h=200&fit=crop",
+      isApproved: true,
+      isVisible: true
     },
     {
+      id: 'fallback-3',
       name: "Maria Rodriguez",
       service: "Lip Blushing",
       rating: 5,
       text: "My lips have never looked better! The color is perfect for my skin tone and looks so natural. Victoria is a true artist. I get compliments every day and people can't believe it's semi-permanent makeup.",
       image: "https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop",
-      beforeAfter: "https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=400&h=200&fit=crop"
-    },
-    {
-      name: "Jessica Williams",
-      service: "Full Package",
-      rating: 5,
-      text: "I got eyebrows, eyeliner, and lips done by Victoria. The transformation is incredible! I feel like the best version of myself. Victoria's attention to detail and artistry is unmatched.",
-      image: "https://images.pexels.com/photos/1065084/pexels-photo-1065084.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop",
-      beforeAfter: "https://images.pexels.com/photos/1065084/pexels-photo-1065084.jpeg?auto=compress&cs=tinysrgb&w=400&h=200&fit=crop"
-    },
-    {
-      name: "Amanda Davis",
-      service: "Microblading Touch-up",
-      rating: 5,
-      text: "Victoria did my touch-up perfectly. She's so professional and really cares about getting the best results. My eyebrows still look amazing after 2 years. Highly recommend!",
-      image: "https://images.pexels.com/photos/1542085/pexels-photo-1542085.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop",
-      beforeAfter: "https://images.pexels.com/photos/1542085/pexels-photo-1542085.jpeg?auto=compress&cs=tinysrgb&w=400&h=200&fit=crop"
+      beforeAfter: "https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=400&h=200&fit=crop",
+      isApproved: true,
+      isVisible: true
     }
   ];
+
+  // Load reviews from database
+  useEffect(() => {
+    const loadReviews = async () => {
+      try {
+        if (!db) {
+          setReviews(fallbackReviews);
+          setLoading(false);
+          return;
+        }
+
+        const q = query(
+          collection(db, 'reviews'),
+          where('isApproved', '==', true),
+          where('isVisible', '==', true),
+          orderBy('createdAt', 'desc'),
+          limit(6)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        const reviewsData = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Review[];
+
+        // Use database reviews if available, otherwise fallback
+        setReviews(reviewsData.length > 0 ? reviewsData : fallbackReviews);
+      } catch (error) {
+        console.error('Error loading reviews:', error);
+        setReviews(fallbackReviews);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadReviews();
+  }, []);
 
   // Auto-rotate reviews every 6 seconds
   useEffect(() => {
@@ -90,6 +137,20 @@ export default function ClientReviews() {
       </svg>
     ));
   };
+
+  if (loading) {
+    return (
+      <section id="reviews" className="py-section bg-white">
+        <div className="container">
+          <div className="text-center">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading reviews...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="reviews" className="py-section bg-white">

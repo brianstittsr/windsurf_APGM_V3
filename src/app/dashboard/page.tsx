@@ -15,6 +15,7 @@ import { ClientPDFManager } from '../../components/ClientPDFManager';
 import { UserActivityFeed } from '../../components/UserActivityFeed';
 import ServicesManager from '../../components/admin/ServicesManager';
 import CouponsGiftCardsManager from '../../components/admin/CouponsGiftCardsManager';
+import ReviewsManager from '../../components/admin/ReviewsManager';
 import { auth, isFirebaseConfigured } from '@/lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { User } from 'firebase/auth';
@@ -28,7 +29,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<DatabaseUser | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'availability' | 'admin' | 'services' | 'coupons' | 'analytics' | 'stripe' | 'workflows' | 'documents'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'availability' | 'admin' | 'services' | 'coupons' | 'reviews' | 'analytics' | 'stripe' | 'workflows' | 'documents'>('dashboard');
   const [adminUsers, setAdminUsers] = useState<{
     admins: DatabaseUser[];
     artists: DatabaseUser[];
@@ -266,6 +267,17 @@ export default function Dashboard() {
                           >
                             <i className="fas fa-gift me-2"></i>
                             Coupons & Gift Cards
+                          </button>
+                        </li>
+                        <li className="nav-item" role="presentation">
+                          <button
+                            className={`nav-link px-4 py-3 ${activeTab === 'reviews' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('reviews')}
+                            type="button"
+                            role="tab"
+                          >
+                            <i className="fas fa-star me-2"></i>
+                            Customer Reviews
                           </button>
                         </li>
                         <li className="nav-item" role="presentation">
@@ -551,6 +563,24 @@ export default function Dashboard() {
                 </div>
                 <div className="card-body">
                   <CouponsGiftCardsManager />
+                </div>
+              </div>
+            )}
+
+            {/* Customer Reviews Tab Content */}
+            {activeTab === 'reviews' && userRole === 'admin' && (
+              <div className="card border-0 shadow-sm">
+                <div className="card-header bg-white border-0 pb-0">
+                  <h5 className="card-title text-primary fw-bold">
+                    <i className="fas fa-star me-2"></i>
+                    Customer Reviews
+                  </h5>
+                  <p className="text-muted small mb-0">
+                    Manage customer reviews and testimonials
+                  </p>
+                </div>
+                <div className="card-body">
+                  <ReviewsManager />
                 </div>
               </div>
             )}
