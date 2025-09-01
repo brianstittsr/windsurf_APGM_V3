@@ -50,17 +50,13 @@ export default function AboutVictoria() {
               </h3>
               <div className="text-black lh-base">
                 <p className="fs-4 mb-4">
-                  As a proud veteran and the founder of <strong>A Pretty Girl Matter</strong>, I discovered my passion for 
-                  semi-permanent makeup through its incredible power to elevate natural beauty and boost confidence. 
-                  After serving in the military, I wanted to create something meaningful that combined my love for 
-                  artistry with my mission to empower others—and so my semi-permanent makeup business was born.
+                  As a proud veteran and a dedicated member of Alpha Kappa Alpha Sorority, Inc., I've always believed in service, strength, and sisterhood. After completing my military service, I felt called to create something meaningful that combined my love for artistry with my mission to empower others. That vision led me to found A Pretty Girl Matter, where I specialize in semi-permanent makeup that elevates natural beauty and restores confidence.
                 </p>
                 <p className="fs-5 mb-4">
-                  I've had the privilege of training with some of the top PMU academies in the world—<strong>The 
-                  Collective, Beauty Slesh, Beauty Angels, and Plush Beauty Academy</strong>—where I mastered 
-                  advanced techniques in <strong>microblading, ombré brows, combo brows, lip blushing, semi-permanent 
-                  eyeliner, and tiny tattoos</strong>. This exclusive education equips me to deliver precise, personalized 
-                  results and comprehensive care from consultation to aftercare.
+                  My passion for this craft was born from witnessing how transformational it can be—not only enhancing outer appearance, but also uplifting inner confidence. I've trained with some of the top PMU academies in the world—including The Collective, Beauty Slesh, Beauty Angels, and Plush Beauty Academy—mastering advanced techniques in microblading, ombré brows, combo brows, lip blushing, semi-permanent eyeliner, and tiny tattoos.
+                </p>
+                <p className="fs-5 mb-4">
+                  With this exclusive education and hands-on artistry, I am able to deliver precise, personalized results and provide comprehensive care from consultation to aftercare. For me, every client's appointment is more than a service—it's an experience rooted in empowerment, excellence, and care.
                 </p>
 
               </div>
