@@ -611,7 +611,7 @@ export default function CheckoutCart({
                     
                     <div className="d-flex justify-content-between align-items-center py-2">
                       <div className="d-flex align-items-center">
-                        <span>{getStripeFeeExplanation()}</span>
+                        <span>{getStripeFeeExplanation(selectedPaymentMethod)}</span>
                         <i className="fas fa-info-circle text-muted ms-1" title="Secure payment processing"></i>
                       </div>
                       <span>{formatCurrency(stripeFee)}</span>

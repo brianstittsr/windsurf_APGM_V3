@@ -3,9 +3,11 @@
  * Calculates Stripe processing fees for transactions
  */
 
-// Stripe standard rates (as of 2024)
+// Processing fees by payment method
 const STRIPE_PERCENTAGE_FEE = 0.029; // 2.9%
 const STRIPE_FIXED_FEE = 0.30; // $0.30
+const CHERRY_PERCENTAGE_FEE = 0.019; // 1.90%
+const CHERRY_FIXED_FEE = 0; // No fixed fee for Cherry
 
 export interface StripeFeeCalculation {
   subtotal: number;
@@ -27,7 +29,7 @@ export function calculateStripeFee(amount: number): number {
 }
 
 /**
- * Calculate total with Stripe fees included
+ * Calculate total with processing fees included
  * @param servicePrice Service price in dollars (after discounts applied)
  * @param taxRate Tax rate (e.g., 0.0775 for 7.75%)
  * @param depositAmount Fixed deposit amount in dollars
@@ -47,21 +49,29 @@ export function calculateTotalWithStripeFees(
   
   // Determine if this is a pay-later method that requires full payment upfront
   const isPayLater = ['affirm', 'klarna', 'cherry'].includes(paymentMethod.toLowerCase());
+  const isCherry = paymentMethod.toLowerCase() === 'cherry';
   
   let stripeFee: number;
   
   if (isPayLater) {
     // For pay-later methods, calculate fee on full service amount + tax
     const fullAmount = subtotal + tax;
-    const chargedAmount = (fullAmount + STRIPE_FIXED_FEE) / (1 - STRIPE_PERCENTAGE_FEE);
-    stripeFee = Math.round((chargedAmount - fullAmount) * 100) / 100;
+    
+    if (isCherry) {
+      // Cherry uses 1.90% with no fixed fee
+      stripeFee = Math.round(fullAmount * CHERRY_PERCENTAGE_FEE * 100) / 100;
+    } else {
+      // Affirm and Klarna use Stripe fees
+      const chargedAmount = (fullAmount + STRIPE_FIXED_FEE) / (1 - STRIPE_PERCENTAGE_FEE);
+      stripeFee = Math.round((chargedAmount - fullAmount) * 100) / 100;
+    }
   } else {
     // For credit cards, calculate fee on deposit amount only
     const chargedAmount = (deposit + STRIPE_FIXED_FEE) / (1 - STRIPE_PERCENTAGE_FEE);
     stripeFee = Math.round((chargedAmount - deposit) * 100) / 100;
   }
   
-  // Total includes discounted service price, tax, and Stripe fee
+  // Total includes discounted service price, tax, and processing fee
   const total = subtotal + tax + stripeFee;
   
   // Remaining balance (discounted service + tax - deposit)
@@ -91,9 +101,16 @@ export function formatCurrency(amount: number): string {
 }
 
 /**
- * Get Stripe fee explanation text
- * @returns Explanation of Stripe fees
+ * Get processing fee explanation text based on payment method
+ * @param paymentMethod Payment method type
+ * @returns Explanation of processing fees
  */
-export function getStripeFeeExplanation(): string {
-  return `Processing fee (${(STRIPE_PERCENTAGE_FEE * 100).toFixed(1)}% + $${STRIPE_FIXED_FEE.toFixed(2)})`;
+export function getStripeFeeExplanation(paymentMethod: string = 'card'): string {
+  const isCherry = paymentMethod.toLowerCase() === 'cherry';
+  
+  if (isCherry) {
+    return `Cherry processing fee (${(CHERRY_PERCENTAGE_FEE * 100).toFixed(1)}%)`;
+  } else {
+    return `Processing fee (${(STRIPE_PERCENTAGE_FEE * 100).toFixed(1)}% + $${STRIPE_FIXED_FEE.toFixed(2)})`;
+  }
 }
