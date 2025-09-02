@@ -64,14 +64,17 @@ export default function BusinessSettingsManager() {
       };
 
       if (settings.id) {
+        // Only update existing documents - no new file creation
         await DatabaseService.update('businessSettings', settings.id, settingsData);
+        setMessage({ type: 'success', text: 'Settings updated successfully!' });
       } else {
-        settingsData.createdAt = Timestamp.now();
-        const id = await DatabaseService.create('businessSettings', settingsData);
-        setSettings(prev => ({ ...prev, id }));
+        // Prevent creation of new documents to avoid repository violations
+        setMessage({ 
+          type: 'error', 
+          text: 'Cannot create new business settings. Please initialize settings first using the admin scripts.' 
+        });
+        return;
       }
-
-      setMessage({ type: 'success', text: 'Settings saved successfully!' });
     } catch (error) {
       console.error('Error saving settings:', error);
       setMessage({ type: 'error', text: 'Failed to save settings' });
