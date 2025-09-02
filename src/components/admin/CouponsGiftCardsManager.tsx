@@ -8,14 +8,16 @@ import { Timestamp } from 'firebase/firestore';
 interface CouponCode {
   id: string;
   code: string;
-  discountType: 'percentage' | 'fixed';
-  discountValue: number;
+  type: 'percentage' | 'fixed';
+  value: number;
   minOrderAmount?: number;
-  maxUses?: number;
-  usedCount: number;
-  expiresAt?: Date;
+  usageLimit?: number;
+  usageCount: number;
+  expirationDate?: any;
   isActive: boolean;
-  createdAt: Date;
+  createdAt: any;
+  updatedAt: any;
+  description: string;
 }
 
 export default function CouponsGiftCardsManager() {
@@ -55,7 +57,7 @@ export default function CouponsGiftCardsManager() {
       setLoading(true);
       // Load coupons and gift cards from database
       const [couponData, giftCardData] = await Promise.all([
-        DatabaseService.getAll<CouponCode>('couponCodes'),
+        DatabaseService.getAll<CouponCode>('coupons'),
         DatabaseService.getAll<GiftCard>('giftCards')
       ]);
       setCoupons(couponData);
@@ -70,10 +72,18 @@ export default function CouponsGiftCardsManager() {
   const handleCreateCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await DatabaseService.create('couponCodes', {
+      await DatabaseService.create('coupons', {
         ...couponForm,
-        usedCount: 0,
-        expiresAt: couponForm.expiresAt ? Timestamp.fromDate(new Date(couponForm.expiresAt)) : undefined
+        expirationDate: couponForm.expiresAt ? Timestamp.fromDate(new Date(couponForm.expiresAt)) : null,
+        type: couponForm.discountType,
+        value: couponForm.discountValue,
+        description: `${couponForm.code} - ${couponForm.discountType === 'percentage' ? couponForm.discountValue + '%' : '$' + couponForm.discountValue} off`,
+        isActive: couponForm.isActive,
+        usageLimit: couponForm.maxUses || null,
+        usageCount: 0,
+        minOrderAmount: couponForm.minOrderAmount || 0,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
       });
       setShowCouponForm(false);
       setCouponForm({
@@ -218,18 +228,18 @@ export default function CouponsGiftCardsManager() {
                             <span className="badge bg-dark fs-6">{coupon.code}</span>
                           </td>
                           <td>
-                            {coupon.discountType === 'percentage' 
-                              ? `${coupon.discountValue}%` 
-                              : `$${coupon.discountValue}`}
+                            {coupon.type === 'percentage' 
+                              ? `${coupon.value}%` 
+                              : `$${coupon.value}`}
                           </td>
                           <td>
                             <span className="text-muted">
-                              {coupon.usedCount}/{coupon.maxUses || '∞'}
+                              {coupon.usageCount}/{coupon.usageLimit || '∞'}
                             </span>
                           </td>
                           <td>
-                            {coupon.expiresAt 
-                              ? new Date(coupon.expiresAt).toLocaleDateString()
+                            {coupon.expirationDate 
+                              ? coupon.expirationDate.toDate().toLocaleDateString()
                               : 'No expiry'}
                           </td>
                           <td>

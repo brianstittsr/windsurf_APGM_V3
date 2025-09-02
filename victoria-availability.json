@@ -1,0 +1,72 @@
+{
+  "victoria_monday": {
+    "id": "victoria_monday",
+    "artistId": "victoria",
+    "dayOfWeek": "monday",
+    "isEnabled": false,
+    "timeRanges": [],
+    "servicesOffered": ["Blade & Shade Eyebrows", "Powder Brows", "Lip Blush", "Eyeliner"]
+  },
+  "victoria_tuesday": {
+    "id": "victoria_tuesday",
+    "artistId": "victoria",
+    "dayOfWeek": "tuesday",
+    "isEnabled": false,
+    "timeRanges": [],
+    "servicesOffered": ["Blade & Shade Eyebrows", "Powder Brows", "Lip Blush", "Eyeliner"]
+  },
+  "victoria_wednesday": {
+    "id": "victoria_wednesday",
+    "artistId": "victoria",
+    "dayOfWeek": "wednesday",
+    "isEnabled": false,
+    "timeRanges": [],
+    "servicesOffered": ["Blade & Shade Eyebrows", "Powder Brows", "Lip Blush", "Eyeliner"]
+  },
+  "victoria_thursday": {
+    "id": "victoria_thursday",
+    "artistId": "victoria",
+    "dayOfWeek": "thursday",
+    "isEnabled": false,
+    "timeRanges": [],
+    "servicesOffered": ["Blade & Shade Eyebrows", "Powder Brows", "Lip Blush", "Eyeliner"]
+  },
+  "victoria_friday": {
+    "id": "victoria_friday",
+    "artistId": "victoria",
+    "dayOfWeek": "friday",
+    "isEnabled": false,
+    "timeRanges": [],
+    "servicesOffered": ["Blade & Shade Eyebrows", "Powder Brows", "Lip Blush", "Eyeliner"]
+  },
+  "victoria_saturday": {
+    "id": "victoria_saturday",
+    "artistId": "victoria",
+    "dayOfWeek": "saturday",
+    "isEnabled": true,
+    "timeRanges": [
+      {
+        "id": "sat-morning",
+        "startTime": "9:00 AM",
+        "endTime": "1:00 PM",
+        "isActive": true
+      }
+    ],
+    "servicesOffered": ["Blade & Shade Eyebrows", "Powder Brows", "Lip Blush", "Eyeliner"]
+  },
+  "victoria_sunday": {
+    "id": "victoria_sunday",
+    "artistId": "victoria",
+    "dayOfWeek": "sunday",
+    "isEnabled": true,
+    "timeRanges": [
+      {
+        "id": "sun-morning",
+        "startTime": "9:00 AM",
+        "endTime": "1:00 PM",
+        "isActive": true
+      }
+    ],
+    "servicesOffered": ["Blade & Shade Eyebrows", "Powder Brows", "Lip Blush", "Eyeliner"]
+  }
+}

@@ -16,6 +16,7 @@ import { UserActivityFeed } from '../../components/UserActivityFeed';
 import ServicesManager from '../../components/admin/ServicesManager';
 import CouponsGiftCardsManager from '../../components/admin/CouponsGiftCardsManager';
 import ReviewsManager from '../../components/admin/ReviewsManager';
+import BusinessSettingsManager from '../../components/admin/BusinessSettingsManager';
 import { auth, isFirebaseConfigured } from '@/lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { User } from 'firebase/auth';
@@ -29,7 +30,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<DatabaseUser | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'availability' | 'admin' | 'services' | 'coupons' | 'reviews' | 'analytics' | 'stripe' | 'workflows' | 'documents'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'profile' | 'availability' | 'admin' | 'services' | 'coupons' | 'reviews' | 'settings' | 'analytics' | 'stripe' | 'workflows' | 'documents'>('dashboard');
   const [adminUsers, setAdminUsers] = useState<{
     admins: DatabaseUser[];
     artists: DatabaseUser[];
@@ -300,6 +301,17 @@ export default function Dashboard() {
                           >
                             <i className="fas fa-credit-card me-2"></i>
                             Stripe Management
+                          </button>
+                        </li>
+                        <li className="nav-item" role="presentation">
+                          <button
+                            className={`nav-link px-4 py-3 ${activeTab === 'settings' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('settings')}
+                            type="button"
+                            role="tab"
+                          >
+                            <i className="fas fa-cogs me-2"></i>
+                            Business Settings
                           </button>
                         </li>
                         <li className="nav-item" role="presentation">
@@ -583,6 +595,11 @@ export default function Dashboard() {
                   <ReviewsManager />
                 </div>
               </div>
+            )}
+
+            {/* Business Settings Tab Content */}
+            {activeTab === 'settings' && userRole === 'admin' && (
+              <BusinessSettingsManager />
             )}
 
             {/* Stripe Management Tab Content */}

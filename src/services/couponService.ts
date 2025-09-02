@@ -22,26 +22,24 @@ export class CouponService {
   static async createCoupon(couponData: {
     code: string;
     description: string;
-    discountType: 'percentage' | 'fixed_amount' | 'free_service';
-    discountValue: number;
-    minimumOrderAmount?: number;
-    maxUses?: number;
-    validFrom: Date;
-    validUntil: Date;
+    type: 'percentage' | 'fixed' | 'free_service';
+    value: number;
+    minOrderAmount?: number;
+    usageLimit?: number;
+    expirationDate: Date;
     applicableServices?: string[];
     isActive: boolean;
-    createdBy: string;
   }): Promise<string> {
     const docRef = await addDoc(collection(db, this.collectionName), {
       code: couponData.code,
-      type: couponData.discountType,
-      value: couponData.discountType === 'free_service' ? 100 : couponData.discountValue,
+      type: couponData.type,
+      value: couponData.type === 'free_service' ? 100 : couponData.value,
       description: couponData.description,
-      minOrderAmount: couponData.minimumOrderAmount,
-      usageLimit: couponData.maxUses,
-      usedCount: 0,
+      minOrderAmount: couponData.minOrderAmount,
+      usageLimit: couponData.usageLimit,
+      usageCount: 0,
       isActive: couponData.isActive,
-      expirationDate: Timestamp.fromDate(couponData.validUntil),
+      expirationDate: Timestamp.fromDate(couponData.expirationDate),
       applicableServices: couponData.applicableServices || [],
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
@@ -76,7 +74,7 @@ export class CouponService {
       minOrderAmount: data.minOrderAmount,
       maxDiscountAmount: data.maxDiscountAmount,
       usageLimit: data.usageLimit,
-      usedCount: data.usedCount || 0,
+      usageCount: data.usageCount || 0,
       isActive: data.isActive,
       expirationDate: data.expirationDate,
       applicableServices: data.applicableServices || [],
@@ -105,7 +103,7 @@ export class CouponService {
     }
 
     // Check usage limits
-    if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+    if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) {
       return { isValid: false, error: 'Coupon usage limit exceeded' };
     }
 
@@ -148,9 +146,9 @@ export class CouponService {
     const couponDoc = await getDoc(couponRef);
     
     if (couponDoc.exists()) {
-      const currentUses = couponDoc.data().currentUses || 0;
+      const currentUses = couponDoc.data().usageCount || 0;
       await updateDoc(couponRef, {
-        currentUses: currentUses + 1,
+        usageCount: currentUses + 1,
         updatedAt: Timestamp.now()
       });
     }
@@ -176,7 +174,7 @@ export class CouponService {
         minOrderAmount: data.minOrderAmount,
         maxDiscountAmount: data.maxDiscountAmount,
         usageLimit: data.usageLimit,
-        usedCount: data.usedCount || 0,
+        usageCount: data.usageCount || 0,
         isActive: data.isActive,
         expirationDate: data.expirationDate,
         applicableServices: data.applicableServices || [],

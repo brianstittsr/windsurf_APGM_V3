@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
 import stripePromise from '../lib/stripe';
 import MultiPaymentForm, { PaymentMethod } from './MultiPaymentForm';
@@ -8,6 +8,8 @@ import StripeModeIndicator from './StripeModeIndicator';
 import CouponInput from './CouponInput';
 import GiftCardInput from './GiftCardInput';
 import { calculateTotalWithStripeFees, formatCurrency, getStripeFeeExplanation } from '../lib/stripe-fees';
+import { calculateTotalWithStripeFeesSync } from '../lib/stripe-fees-sync';
+import { BusinessSettingsService } from '@/services/businessSettingsService';
 import { CouponCode, GiftCard } from '@/types/database';
 import { ActivityService } from '@/services/activityService';
 
@@ -63,7 +65,9 @@ export default function CheckoutCart({
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [appliedGiftCard, setAppliedGiftCard] = useState<GiftCard | null>(null);
   const [giftCardDiscount, setGiftCardDiscount] = useState(0);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('card');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('card');
+  const [feeCalculation, setFeeCalculation] = useState<any>(null);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   const handleInputChange = (field: keyof CheckoutData, value: string | boolean) => {
     onChange({
@@ -291,22 +295,66 @@ export default function CheckoutCart({
     setShowPaymentForm(true);
   };
 
-  // Calculate amounts with Stripe fees included
-  const taxRate = 0.0775; // 7.75% tax
-  const fixedDeposit = 200; // Fixed $200 deposit for all services
+  // Load business settings and calculate fees
+  useEffect(() => {
+    const loadFeeCalculation = async () => {
+      try {
+        const totalDiscounts = couponDiscount + giftCardDiscount;
+        const discountedServicePrice = Math.max(0, service.price - totalDiscounts);
+        
+        const calculation = await calculateTotalWithStripeFees(
+          discountedServicePrice,
+          undefined, // Use settings tax rate
+          undefined, // Use settings deposit percentage
+          selectedPaymentMethod
+        );
+        
+        setFeeCalculation(calculation);
+        setSettingsLoaded(true);
+      } catch (error) {
+        console.error('Error calculating fees:', error);
+        // Fallback to sync calculation with defaults
+        const totalDiscounts = couponDiscount + giftCardDiscount;
+        const discountedServicePrice = Math.max(0, service.price - totalDiscounts);
+        const fallbackCalculation = calculateTotalWithStripeFeesSync(
+          discountedServicePrice,
+          0.0775, // Default tax rate
+          undefined, // Will use 33.33% default
+          selectedPaymentMethod
+        );
+        setFeeCalculation(fallbackCalculation);
+        setSettingsLoaded(true);
+      }
+    };
+    
+    loadFeeCalculation();
+  }, [service.price, couponDiscount, giftCardDiscount, selectedPaymentMethod]);
   
-  // Apply both coupon and gift card discounts to service price before calculating fees
-  const totalDiscounts = couponDiscount + giftCardDiscount;
-  const discountedServicePrice = Math.max(0, service.price - totalDiscounts);
+  // Use calculated values or defaults while loading
+  const subtotal = feeCalculation?.subtotal || 0;
+  const tax = feeCalculation?.tax || 0;
+  const stripeFee = feeCalculation?.stripeFee || 0;
+  const totalAmount = feeCalculation?.total || 0;
+  const depositAmount = feeCalculation?.deposit || 0;
+  const remainingAmount = feeCalculation?.remaining || 0;
   
-  const feeCalculation = calculateTotalWithStripeFees(discountedServicePrice, taxRate, fixedDeposit, selectedPaymentMethod);
-  
-  const subtotal = feeCalculation.subtotal;
-  const tax = feeCalculation.tax;
-  const stripeFee = feeCalculation.stripeFee;
-  const totalAmount = feeCalculation.total;
-  const depositAmount = feeCalculation.deposit;
-  const remainingAmount = feeCalculation.remaining;
+  // Show loading state if settings not loaded
+  if (!settingsLoaded || !feeCalculation) {
+    return (
+      <div className="container py-5">
+        <div className="row justify-content-center">
+          <div className="col-lg-10 col-xl-8">
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p className="mt-3 text-muted">Calculating pricing...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container py-5">
@@ -325,10 +373,10 @@ export default function CheckoutCart({
             </div>
           </div>
 
-          {/* Stripe Mode Indicator */}
-          <div className="mb-4">
+          {/* Stripe Mode Indicator - Hidden in production */}
+          {/* <div className="mb-4">
             <StripeModeIndicator />
-          </div>
+          </div> */}
 
           {/* Modern Client Card */}
           <div className="card border-0 shadow-sm mb-4" style={{borderRadius: '16px'}}>

@@ -1,6 +1,6 @@
 /**
- * Stripe Fee Calculator
- * Calculates Stripe processing fees for transactions
+ * Synchronous Stripe Fee Calculator
+ * For components that need immediate calculations without async/await
  */
 
 import { BusinessSettingsService } from '@/services/businessSettingsService';
@@ -31,27 +31,25 @@ export function calculateStripeFee(amount: number): number {
 }
 
 /**
- * Calculate total with processing fees included
+ * Calculate total with processing fees included (synchronous version with fallback values)
  * @param servicePrice Service price in dollars (after discounts applied)
  * @param taxRate Tax rate (e.g., 0.0775 for 7.75%)
- * @param depositAmount Deposit amount in dollars (will be calculated from settings if not provided)
+ * @param depositAmount Deposit amount in dollars (defaults to 33.33% of service price)
  * @param paymentMethod Payment method type ('card' | 'affirm' | 'klarna' | 'cherry')
  * @returns Complete fee calculation breakdown
  */
-export async function calculateTotalWithStripeFees(
+export function calculateTotalWithStripeFeesSync(
   servicePrice: number,
-  taxRate?: number,
+  taxRate: number = 0.0775,
   depositAmount?: number,
   paymentMethod: string = 'card'
-): Promise<StripeFeeCalculation> {
-  // Get business settings if not provided
-  const settings = await BusinessSettingsService.getSettings();
-  const finalTaxRate = taxRate ?? (settings.taxRate / 100);
-  const finalDepositAmount = depositAmount ?? await BusinessSettingsService.calculateDepositAmount(servicePrice);
+): StripeFeeCalculation {
+  // Use provided deposit amount or calculate 33.33% default
+  const finalDepositAmount = depositAmount ?? Math.round((servicePrice * 33.33 / 100) * 100) / 100;
   
   // Base calculations - servicePrice should already have discounts applied
   const subtotal = servicePrice;
-  const tax = Math.round(subtotal * finalTaxRate * 100) / 100;
+  const tax = Math.round(subtotal * taxRate * 100) / 100;
   const deposit = finalDepositAmount;
   
   // Determine if this is a pay-later method that requires full payment upfront

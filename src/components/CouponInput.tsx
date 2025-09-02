@@ -85,9 +85,9 @@ export default function CouponInput({ serviceId, orderAmount, onCouponApplied, a
               <small className="text-muted">{appliedCoupon.description}</small>
               <div className="mt-1">
                 <small className="text-success">
-                  Discount: {appliedCoupon.discountType === 'percentage' 
-                    ? `${appliedCoupon.discountValue}%` 
-                    : `$${appliedCoupon.discountValue}`
+                  Discount: {appliedCoupon.type === 'percentage' 
+                    ? `${appliedCoupon.value}%` 
+                    : `$${appliedCoupon.value}`
                   }
                 </small>
               </div>

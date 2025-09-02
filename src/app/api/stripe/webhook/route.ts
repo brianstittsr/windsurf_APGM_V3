@@ -44,13 +44,11 @@ export async function POST(request: NextRequest) {
       
       // Send invoice email as backup (in case client-side failed)
       try {
-        // Check if this is a deposit payment (amount matches our deposit + fee structure)
-        const depositAmount = 200; // Fixed $200 deposit
-        const stripeFee = calculateStripeFee(depositAmount);
-        const expectedAmount = Math.round((depositAmount + stripeFee) * 100); // Convert to cents
+        // Note: Deposit amount is now configurable via business settings
+        // This webhook would need service context to calculate exact deposit amount
+        // For now, we'll process all successful payments as potential deposits
         
-        if (paymentIntent.amount === expectedAmount) {
-          console.log('🧾 Detected deposit payment, preparing invoice...');
+        console.log('🧾 Processing payment, preparing invoice...');
           
           // Note: In a real implementation, you would retrieve customer and service details
           // from your database using the payment intent metadata or customer ID

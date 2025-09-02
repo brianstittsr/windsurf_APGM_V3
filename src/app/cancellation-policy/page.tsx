@@ -68,7 +68,7 @@ export default function CancellationPolicy() {
                     <div className="mb-5">
                       <h2 className="h4 fw-bold mb-4" style={{color: '#AD6269'}}>Deposit Requirements</h2>
                       <ul className="paragraph-text text-black mb-4">
-                        <li>A deposit of $200 is required to secure your appointment</li>
+                        <li>A deposit is required to secure your appointment (percentage varies by service)</li>
                         <li>Deposits are applied toward the total cost of your service</li>
                       </ul>
                     </div>

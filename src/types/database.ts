@@ -47,18 +47,17 @@ export interface Service {
 export interface GiftCard {
   id: string;
   code: string;
-  originalAmount: number;
-  remainingAmount: number;
-  purchaserName: string;
-  purchaserEmail: string;
+  amount: number;
+  remainingBalance: number;
+  purchasedBy?: string;
+  purchasedFor?: string;
   recipientName?: string;
   recipientEmail?: string;
   message?: string;
   isActive: boolean;
-  isRedeemed: boolean;
-  expirationDate?: Timestamp;
+  expiresAt?: Timestamp;
   createdAt: Timestamp;
-  updatedAt: Timestamp;
+  usageHistory: GiftCardUsage[];
 }
 
 // Coupon Code Types
@@ -337,17 +336,16 @@ export interface DayAnalytics {
 export interface CouponCode {
   id: string;
   code: string;
+  type: 'percentage' | 'fixed' | 'free_service';
+  value: number; // percentage (0-100) or fixed amount in cents
   description: string;
-  discountType: 'percentage' | 'fixed_amount';
-  discountValue: number; // Percentage (0-100) or fixed dollar amount
-  minimumOrderAmount?: number;
-  maxUses?: number;
-  currentUses: number;
+  minOrderAmount?: number;
+  maxDiscountAmount?: number;
+  usageLimit?: number;
+  usageCount: number;
   isActive: boolean;
-  validFrom: Timestamp;
-  validUntil: Timestamp;
-  applicableServices?: string[]; // Service IDs, empty array means all services
+  expirationDate?: Timestamp;
+  applicableServices?: string[]; // service IDs, empty means all services
   createdAt: Timestamp;
   updatedAt: Timestamp;
-  createdBy: string; // User ID of admin who created it
 }
