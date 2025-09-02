@@ -64,16 +64,15 @@ export default function BusinessSettingsManager() {
       };
 
       if (settings.id) {
-        // Only update existing documents - no new file creation
+        // Update existing Firebase document
         await DatabaseService.update('businessSettings', settings.id, settingsData);
         setMessage({ type: 'success', text: 'Settings updated successfully!' });
       } else {
-        // Prevent creation of new documents to avoid repository violations
-        setMessage({ 
-          type: 'error', 
-          text: 'Cannot create new business settings. Please initialize settings first using the admin scripts.' 
-        });
-        return;
+        // Create new Firebase document
+        settingsData.createdAt = Timestamp.now();
+        const id = await DatabaseService.create('businessSettings', settingsData);
+        setSettings(prev => ({ ...prev, id }));
+        setMessage({ type: 'success', text: 'Settings created successfully!' });
       }
     } catch (error) {
       console.error('Error saving settings:', error);

@@ -113,8 +113,10 @@ export class BusinessSettingsService {
       if (existingSettings.length > 0) {
         await DatabaseService.update(this.COLLECTION, existingSettings[0].id!, settingsData);
       } else {
+        // Create new business settings document in Firebase
         settingsData.createdAt = Timestamp.now();
-        await DatabaseService.create(this.COLLECTION, settingsData);
+        const id = await DatabaseService.create(this.COLLECTION, settingsData);
+        console.log('New business settings created in Firebase with ID:', id);
       }
 
       // Clear cache to force refresh
@@ -154,8 +156,9 @@ export class BusinessSettingsService {
           updatedAt: Timestamp.now()
         };
 
+        // Create default business settings in Firebase
         await DatabaseService.create(this.COLLECTION, defaultSettings);
-        console.log('Default business settings initialized');
+        console.log('Default business settings initialized in Firebase');
       }
     } catch (error) {
       console.error('Error initializing default settings:', error);
