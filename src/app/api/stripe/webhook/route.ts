@@ -50,38 +50,37 @@ export async function POST(request: NextRequest) {
         
         console.log('🧾 Processing payment, preparing invoice...');
           
-          // Note: In a real implementation, you would retrieve customer and service details
-          // from your database using the payment intent metadata or customer ID
-          // For now, we'll log that invoice processing should happen here
-          
-          console.log('📧 Invoice processing available for both test and live modes');
-          console.log('💡 To enable: Add customer/service data retrieval from database');
-          
-          // Example of what the invoice data structure would look like:
-          /*
-          const invoiceData = {
-            invoiceNumber: `INV-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
-            clientName: 'Retrieved from database',
-            clientEmail: 'Retrieved from database', 
-            serviceName: 'Retrieved from database',
-            servicePrice: 600, // Retrieved from database
-            tax: 46.50, // Calculated
-            processingFee: stripeFee,
-            total: 652.60, // Calculated
-            depositPaid: depositAmount + stripeFee,
-            remainingBalance: 446.50, // Calculated
-            appointmentDate: 'Retrieved from database',
-            appointmentTime: 'Retrieved from database',
-            businessName: process.env.NEXT_PUBLIC_BUSINESS_NAME || 'A Pretty Girl Matter',
-            businessPhone: process.env.NEXT_PUBLIC_BUSINESS_PHONE || '(919) 441-0932',
-            businessEmail: process.env.NEXT_PUBLIC_BUSINESS_EMAIL || 'victoria@aprettygirlmatter.com',
-            businessAddress: '123 Beauty Lane, Raleigh, NC 27601',
-            paymentIntentId: paymentIntent.id
-          };
-          
-          // Send via API: await fetch('/api/send-invoice', { method: 'POST', body: JSON.stringify(invoiceData) });
-          */
-        }
+        // Note: In a real implementation, you would retrieve customer and service details
+        // from your database using the payment intent metadata or customer ID
+        // For now, we'll log that invoice processing should happen here
+        
+        console.log('📧 Invoice processing available for both test and live modes');
+        console.log('💡 To enable: Add customer/service data retrieval from database');
+        
+        // Example of what the invoice data structure would look like:
+        /*
+        const invoiceData = {
+          invoiceNumber: `INV-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+          clientName: 'Retrieved from database',
+          clientEmail: 'Retrieved from database', 
+          serviceName: 'Retrieved from database',
+          servicePrice: 600, // Retrieved from database
+          tax: 46.50, // Calculated
+          processingFee: stripeFee,
+          total: 652.60, // Calculated
+          depositPaid: depositAmount + stripeFee,
+          remainingBalance: 446.50, // Calculated
+          appointmentDate: 'Retrieved from database',
+          appointmentTime: 'Retrieved from database',
+          businessName: process.env.NEXT_PUBLIC_BUSINESS_NAME || 'A Pretty Girl Matter',
+          businessPhone: process.env.NEXT_PUBLIC_BUSINESS_PHONE || '(919) 441-0932',
+          businessEmail: process.env.NEXT_PUBLIC_BUSINESS_EMAIL || 'victoria@aprettygirlmatter.com',
+          businessAddress: '123 Beauty Lane, Raleigh, NC 27601',
+          paymentIntentId: paymentIntent.id
+        };
+        
+        // Send via API: await fetch('/api/send-invoice', { method: 'POST', body: JSON.stringify(invoiceData) });
+        */
       } catch (error) {
         console.error('Error processing invoice in webhook:', error);
         // Don't fail the webhook if invoice processing fails
