@@ -40,10 +40,31 @@ export async function getStripeModeAsync(): Promise<StripeMode> {
 }
 
 /**
- * Get the current Stripe mode - live mode only
+ * Get the current Stripe mode based on environment and available keys
  */
 export function getStripeMode(): StripeMode {
-  return 'live';
+  // Check if we have live keys available
+  const hasLiveKeys = !!(
+    (process.env.NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) &&
+    (process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY)
+  );
+  
+  // Check if we have test keys available
+  const hasTestKeys = !!(
+    process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY &&
+    process.env.STRIPE_TEST_SECRET_KEY
+  );
+  
+  // Prefer live mode if live keys are available, otherwise use test mode
+  if (hasLiveKeys) {
+    return 'live';
+  } else if (hasTestKeys) {
+    return 'test';
+  } else {
+    // Default to test mode if no keys are properly configured
+    console.warn('⚠️ No valid Stripe keys found, defaulting to test mode');
+    return 'test';
+  }
 }
 
 /**
@@ -77,33 +98,51 @@ export function getStripeConfig(): StripeConfig {
     };
   }
   
-  // Get Stripe keys - live mode only
-  const stripeKeys = {
-    publishable: process.env.NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
-    secret: process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY
-  };
+  // Get Stripe keys based on current mode
+  let stripeKeys: { publishable: string | undefined; secret: string | undefined };
+  
+  if (isLive) {
+    // Live mode keys
+    stripeKeys = {
+      publishable: process.env.NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+      secret: process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY
+    };
+  } else {
+    // Test mode keys
+    stripeKeys = {
+      publishable: process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY,
+      secret: process.env.STRIPE_TEST_SECRET_KEY
+    };
+  }
   
   // Validate keys
   if (!stripeKeys.publishable) {
-    console.error('❌ Missing Stripe publishable key');
-    throw new Error('Missing NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY environment variable');
+    console.error(`❌ Missing Stripe ${mode} publishable key`);
+    const keyName = isLive ? 'NEXT_PUBLIC_STRIPE_LIVE_PUBLISHABLE_KEY' : 'NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY';
+    throw new Error(`Missing ${keyName} environment variable`);
   }
 
   if (!stripeKeys.secret) {
-    console.error('❌ Missing Stripe secret key');
-    throw new Error('Missing STRIPE_LIVE_SECRET_KEY environment variable');
+    console.error(`❌ Missing Stripe ${mode} secret key`);
+    const keyName = isLive ? 'STRIPE_LIVE_SECRET_KEY' : 'STRIPE_TEST_SECRET_KEY';
+    throw new Error(`Missing ${keyName} environment variable`);
   }
   
   publishableKey = stripeKeys.publishable;
   secretKey = stripeKeys.secret;
-  webhookSecret = process.env.STRIPE_LIVE_WEBHOOK_SECRET || '';
+  webhookSecret = isLive ? 
+    (process.env.STRIPE_LIVE_WEBHOOK_SECRET || '') : 
+    (process.env.STRIPE_TEST_WEBHOOK_SECRET || '');
   
-  // Validate live keys (only at runtime)
-  if (!publishableKey.startsWith('pk_live_')) {
-    throw new Error('Invalid or missing Stripe live publishable key');
+  // Validate key formats (only at runtime)
+  const expectedPkPrefix = isLive ? 'pk_live_' : 'pk_test_';
+  const expectedSkPrefix = isLive ? 'sk_live_' : 'sk_test_';
+  
+  if (!publishableKey.startsWith(expectedPkPrefix)) {
+    throw new Error(`Invalid Stripe ${mode} publishable key format. Expected ${expectedPkPrefix}...`);
   }
-  if (!secretKey.startsWith('sk_live_')) {
-    throw new Error('Invalid or missing Stripe live secret key');
+  if (!secretKey.startsWith(expectedSkPrefix)) {
+    throw new Error(`Invalid Stripe ${mode} secret key format. Expected ${expectedSkPrefix}...`);
   }
   
   // Ensure all keys are present (only at runtime)
