@@ -5,6 +5,7 @@ import { UserService } from '@/services/database';
 import { User } from '@/types/database';
 import WorkflowBuilder from './WorkflowBuilder';
 import WorkflowAnalytics from './WorkflowAnalytics';
+import GoHighLevelIntegration from './GoHighLevelIntegration';
 
 interface WorkflowStep {
   id: string;
@@ -55,7 +56,7 @@ export default function MarketingWorkflows() {
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'create' | 'templates' | 'analytics'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'create' | 'templates' | 'analytics' | 'crm'>('overview');
 
   // Pre-built workflow templates
   const workflowTemplates: WorkflowTemplate[] = [
@@ -494,7 +495,8 @@ export default function MarketingWorkflows() {
                   { id: 'overview', label: 'Overview', icon: 'fa-list' },
                   { id: 'create', label: 'Create/Edit', icon: 'fa-edit' },
                   { id: 'templates', label: 'Templates', icon: 'fa-layer-group' },
-                  { id: 'analytics', label: 'Analytics', icon: 'fa-chart-line' }
+                  { id: 'analytics', label: 'Analytics', icon: 'fa-chart-line' },
+                  { id: 'crm', label: 'CRM Integration', icon: 'fa-link' }
                 ].map(tab => (
                   <li key={tab.id} className="nav-item" role="presentation">
                     <button
@@ -762,6 +764,10 @@ export default function MarketingWorkflows() {
 
       {activeTab === 'analytics' && (
         <WorkflowAnalytics workflows={workflows} />
+      )}
+
+      {activeTab === 'crm' && (
+        <GoHighLevelIntegration />
       )}
     </div>
   );
