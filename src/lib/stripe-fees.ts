@@ -47,12 +47,16 @@ export async function calculateTotalWithStripeFees(
   // Get business settings if not provided
   const settings = await BusinessSettingsService.getSettings();
   const finalTaxRate = taxRate ?? (settings.taxRate / 100);
-  const finalDepositAmount = depositAmount ?? await BusinessSettingsService.calculateDepositAmount(servicePrice);
+  const finalDepositAmount = depositAmount ?? await BusinessSettingsService.calculateDepositAmount(servicePrice, finalTaxRate);
   
   // Base calculations - servicePrice should already have discounts applied
   const subtotal = servicePrice;
   const tax = Math.round(subtotal * finalTaxRate * 100) / 100;
-  const deposit = finalDepositAmount;
+  const totalWithTax = subtotal + tax;
+  
+  // Check if total is under $200 - if so, require full payment
+  const requiresFullPayment = totalWithTax < 200;
+  const deposit = requiresFullPayment ? totalWithTax : finalDepositAmount;
   
   // Determine if this is a pay-later method that requires full payment upfront
   const isPayLater = ['affirm', 'klarna', 'cherry'].includes(paymentMethod.toLowerCase());
@@ -60,8 +64,8 @@ export async function calculateTotalWithStripeFees(
   
   let stripeFee: number;
   
-  if (isPayLater) {
-    // For pay-later methods, calculate fee on full service amount + tax
+  if (isPayLater || requiresFullPayment) {
+    // For pay-later methods or when total < $200, calculate fee on full service amount + tax
     const fullAmount = subtotal + tax;
     
     if (isCherry) {
@@ -73,7 +77,7 @@ export async function calculateTotalWithStripeFees(
       stripeFee = Math.round((chargedAmount - fullAmount) * 100) / 100;
     }
   } else {
-    // For credit cards, calculate fee on deposit amount only
+    // For credit cards with deposit, calculate fee on deposit amount only
     const chargedAmount = (deposit + STRIPE_FIXED_FEE) / (1 - STRIPE_PERCENTAGE_FEE);
     stripeFee = Math.round((chargedAmount - deposit) * 100) / 100;
   }
@@ -82,13 +86,13 @@ export async function calculateTotalWithStripeFees(
   const total = subtotal + tax + stripeFee;
   
   // Remaining balance (discounted service + tax - deposit)
-  // For pay-later methods, remaining is 0 since full amount is paid upfront
-  const remaining = isPayLater ? 0 : Math.max(0, subtotal + tax - deposit);
+  // For pay-later methods or when total < $200, remaining is 0 since full amount is paid upfront
+  const remaining = (isPayLater || requiresFullPayment) ? 0 : Math.max(0, subtotal + tax - deposit);
   
   return {
     subtotal,
     tax,
-    deposit: isPayLater ? subtotal + tax : deposit, // Pay-later methods charge full amount
+    deposit: (isPayLater || requiresFullPayment) ? subtotal + tax : deposit, // Pay-later methods or totals < $200 charge full amount
     stripeFee,
     total,
     remaining

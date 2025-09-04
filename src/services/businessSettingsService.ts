@@ -92,9 +92,19 @@ export class BusinessSettingsService {
 
   /**
    * Calculate deposit amount based on service price and settings
+   * If total (service + tax) is under $200, no deposit is required (full payment)
    */
-  static async calculateDepositAmount(servicePrice: number): Promise<number> {
-    const depositPercentage = await this.getDepositPercentage();
+  static async calculateDepositAmount(servicePrice: number, taxRate?: number): Promise<number> {
+    const settings = await this.getSettings();
+    const finalTaxRate = taxRate ?? (settings.taxRate / 100);
+    const totalWithTax = servicePrice + (servicePrice * finalTaxRate);
+    
+    // If total is under $200, require full payment (no deposit)
+    if (totalWithTax < 200) {
+      return totalWithTax;
+    }
+    
+    const depositPercentage = settings.depositPercentage;
     return Math.round((servicePrice * depositPercentage / 100) * 100) / 100; // Round to 2 decimal places
   }
 

@@ -100,11 +100,17 @@ export default function CheckoutCart({
       // 1. Create appointment in Firebase
       console.log('📅 Creating appointment in Firebase...');
       
-      // Determine if this is a full payment or deposit based on payment method
-      const isFullPayment = paymentIntent.payment_method_types?.includes('klarna') || 
-                           paymentIntent.payment_method_types?.includes('affirm') || 
-                           paymentIntent.payment_method_types?.includes('cherry') ||
-                           paymentIntent.id === 'cherry_redirect';
+      // Determine if this is a full payment or deposit based on payment method and total amount
+      const isPayLaterMethod = paymentIntent.payment_method_types?.includes('klarna') || 
+                              paymentIntent.payment_method_types?.includes('affirm') || 
+                              paymentIntent.payment_method_types?.includes('cherry') ||
+                              paymentIntent.id === 'cherry_redirect';
+      
+      // Check if total is under $200 threshold for full payment requirement
+      const totalWithTax = subtotal + tax;
+      const requiresFullPaymentDueToAmount = totalWithTax < 200;
+      
+      const isFullPayment = isPayLaterMethod || requiresFullPaymentDueToAmount;
       
       const appointmentData = {
         clientId: clientId || 'temp-client-id',
