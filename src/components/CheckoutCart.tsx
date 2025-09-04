@@ -124,7 +124,7 @@ export default function CheckoutCart({
         status: 'confirmed' as const,
         paymentStatus: isFullPayment ? 'paid_in_full' as const : 'deposit_paid' as const,
         totalAmount: totalAmount,
-        depositAmount: isFullPayment ? totalAmount : depositAmount + stripeFee,
+        depositAmount: isFullPayment ? totalAmount : depositAmount,
         remainingAmount: isFullPayment ? 0 : remainingAmount,
         paymentIntentId: paymentIntent.id,
         specialRequests: data.specialRequests || '',
@@ -147,7 +147,7 @@ export default function CheckoutCart({
       // Log payment activity
       try {
         const paymentMethod = paymentIntent.payment_method_types?.[0] || 'card';
-        const paidAmount = isFullPayment ? totalAmount : depositAmount + stripeFee;
+        const paidAmount = isFullPayment ? totalAmount : depositAmount;
         
         await ActivityService.logPaymentActivity(
           clientId || 'temp-client-id',
@@ -344,6 +344,13 @@ export default function CheckoutCart({
   const depositAmount = feeCalculation?.deposit || 0;
   const remainingAmount = feeCalculation?.remaining || 0;
   
+  // Determine if current payment method is pay-later
+  const isPayLaterMethod = ['affirm', 'klarna', 'cherry'].includes(selectedPaymentMethod.toLowerCase());
+  
+  // For pay-later methods, the amount to charge is the total (which includes fees)
+  // For credit cards, the amount to charge is deposit + stripe fee
+  const chargeAmount = isPayLaterMethod ? totalAmount : depositAmount + stripeFee;
+  
   // Show loading state if settings not loaded
   if (!settingsLoaded || !feeCalculation) {
     return (
@@ -522,7 +529,7 @@ export default function CheckoutCart({
                   </div>
                   <Elements stripe={stripePromise}>
                     <MultiPaymentForm
-                      amount={depositAmount + stripeFee}
+                      amount={chargeAmount}
                       totalAmount={totalAmount}
                       onSuccess={handlePaymentSuccess}
                       onError={handlePaymentError}
@@ -717,7 +724,7 @@ export default function CheckoutCart({
               {!showOrderSummary && (
                 <div className="px-4 pb-4">
                   <div className="text-center">
-                    <div className="h4 mb-1 text-primary">{formatCurrency(depositAmount + stripeFee)}</div>
+                    <div className="h4 mb-1 text-primary">{formatCurrency(chargeAmount)}</div>
                   </div>
                 </div>
               )}
