@@ -94,7 +94,8 @@ export class BusinessSettingsService {
    * Calculate deposit amount based on service price and settings
    */
   static async calculateDepositAmount(servicePrice: number): Promise<number> {
-    const depositPercentage = await this.getDepositPercentage();
+    const settings = await this.getSettings();
+    const depositPercentage = settings.depositPercentage;
     return Math.round((servicePrice * depositPercentage / 100) * 100) / 100; // Round to 2 decimal places
   }
 

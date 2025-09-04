@@ -9,7 +9,7 @@ export default function Hero() {
       <div 
         className="position-absolute top-0 start-0 w-100 h-100" 
         style={{
-          backgroundImage: 'url(/images/hero/hero-main.jpg)',
+          backgroundImage: 'url(/images/hero/victoria-escobar-hero-main.jpg)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',

@@ -8,8 +8,9 @@ import { Timestamp } from 'firebase/firestore';
 interface CouponCode {
   id: string;
   code: string;
-  type: 'percentage' | 'fixed';
+  type: 'percentage' | 'fixed' | 'exact_amount';
   value: number;
+  exactAmount?: number;
   minOrderAmount?: number;
   usageLimit?: number;
   usageCount: number;
@@ -30,8 +31,9 @@ export default function CouponsGiftCardsManager() {
 
   const [couponForm, setCouponForm] = useState({
     code: '',
-    discountType: 'percentage' as 'percentage' | 'fixed',
+    discountType: 'percentage' as 'percentage' | 'fixed' | 'exact_amount',
     discountValue: 0,
+    exactAmount: 0,
     minOrderAmount: 0,
     maxUses: 0,
     expiresAt: '',
@@ -72,12 +74,23 @@ export default function CouponsGiftCardsManager() {
   const handleCreateCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const getDescription = () => {
+        if (couponForm.discountType === 'percentage') {
+          return `${couponForm.code} - ${couponForm.discountValue}% off`;
+        } else if (couponForm.discountType === 'fixed') {
+          return `${couponForm.code} - $${couponForm.discountValue} off`;
+        } else {
+          return `${couponForm.code} - Service price set to $${couponForm.exactAmount}`;
+        }
+      };
+
       await DatabaseService.create('coupons', {
         ...couponForm,
         expirationDate: couponForm.expiresAt ? Timestamp.fromDate(new Date(couponForm.expiresAt)) : null,
         type: couponForm.discountType,
         value: couponForm.discountValue,
-        description: `${couponForm.code} - ${couponForm.discountType === 'percentage' ? couponForm.discountValue + '%' : '$' + couponForm.discountValue} off`,
+        exactAmount: couponForm.discountType === 'exact_amount' ? couponForm.exactAmount : undefined,
+        description: getDescription(),
         isActive: couponForm.isActive,
         usageLimit: couponForm.maxUses || null,
         usageCount: 0,
@@ -90,6 +103,7 @@ export default function CouponsGiftCardsManager() {
         code: '',
         discountType: 'percentage',
         discountValue: 0,
+        exactAmount: 0,
         minOrderAmount: 0,
         maxUses: 0,
         expiresAt: '',
@@ -230,7 +244,9 @@ export default function CouponsGiftCardsManager() {
                           <td>
                             {coupon.type === 'percentage' 
                               ? `${coupon.value}%` 
-                              : `$${coupon.value}`}
+                              : coupon.type === 'fixed'
+                              ? `$${coupon.value} off`
+                              : `Set to $${coupon.exactAmount}`}
                           </td>
                           <td>
                             <span className="text-muted">
@@ -385,27 +401,54 @@ export default function CouponsGiftCardsManager() {
                       <select
                         className="form-select form-select-lg border-2"
                         value={couponForm.discountType}
-                        onChange={(e) => setCouponForm(prev => ({ ...prev, discountType: e.target.value as 'percentage' | 'fixed' }))}
+                        onChange={(e) => setCouponForm(prev => ({ ...prev, discountType: e.target.value as 'percentage' | 'fixed' | 'exact_amount' }))}
                       >
                         <option value="percentage">Percentage (%)</option>
                         <option value="fixed">Fixed Amount ($)</option>
+                        <option value="exact_amount">Exact Price Override</option>
                       </select>
                     </div>
-                    <div className="col-md-3">
-                      <label className="form-label fw-semibold">
-                        <i className="fas fa-dollar-sign me-1 text-success"></i>
-                        Value *
-                      </label>
-                      <input
-                        type="number"
-                        className="form-control form-control-lg border-2"
-                        value={couponForm.discountValue}
-                        onChange={(e) => setCouponForm(prev => ({ ...prev, discountValue: Number(e.target.value) }))}
-                        min="0"
-                        step="0.01"
-                        required
-                      />
-                    </div>
+                    {couponForm.discountType !== 'exact_amount' && (
+                      <div className="col-md-3">
+                        <label className="form-label fw-semibold">
+                          <i className="fas fa-dollar-sign me-1 text-success"></i>
+                          {couponForm.discountType === 'percentage' ? 'Percentage *' : 'Discount Amount *'}
+                        </label>
+                        <input
+                          type="number"
+                          className="form-control form-control-lg border-2"
+                          value={couponForm.discountValue}
+                          onChange={(e) => setCouponForm(prev => ({ ...prev, discountValue: Number(e.target.value) }))}
+                          min="0"
+                          step={couponForm.discountType === 'percentage' ? '1' : '0.01'}
+                          max={couponForm.discountType === 'percentage' ? '100' : undefined}
+                          placeholder={couponForm.discountType === 'percentage' ? '20' : '50.00'}
+                          required
+                        />
+                        {couponForm.discountType === 'percentage' && (
+                          <div className="form-text">Enter percentage (0-100)</div>
+                        )}
+                      </div>
+                    )}
+                    {couponForm.discountType === 'exact_amount' && (
+                      <div className="col-md-3">
+                        <label className="form-label fw-semibold">
+                          <i className="fas fa-tag me-1 text-warning"></i>
+                          Exact Price *
+                        </label>
+                        <input
+                          type="number"
+                          className="form-control form-control-lg border-2"
+                          value={couponForm.exactAmount}
+                          onChange={(e) => setCouponForm(prev => ({ ...prev, exactAmount: Number(e.target.value) }))}
+                          min="0"
+                          step="0.01"
+                          placeholder="299.00"
+                          required
+                        />
+                        <div className="form-text">Service will be priced at this exact amount</div>
+                      </div>
+                    )}
                   </div>
                   <div className="row g-3 mt-2">
                     <div className="col-md-4">

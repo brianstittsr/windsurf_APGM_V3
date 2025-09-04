@@ -32,7 +32,7 @@ export default function AboutVictoria() {
           <div className="col-lg-6">
             <div className="position-relative">
               <img
-                src="/images/VictoriaEscobar.jpeg"
+                src="/images/about/about-victoria.jpg"
                 alt="Victoria - Semi-permanent makeup Artist"
                 className="rounded-3 shadow w-100 h-auto"
               />
