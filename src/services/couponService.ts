@@ -22,8 +22,9 @@ export class CouponService {
   static async createCoupon(couponData: {
     code: string;
     description: string;
-    type: 'percentage' | 'fixed' | 'free_service';
+    type: 'percentage' | 'fixed' | 'free_service' | 'exact_amount';
     value: number;
+    exactAmount?: number;
     minOrderAmount?: number;
     usageLimit?: number;
     expirationDate: Date;
@@ -34,6 +35,7 @@ export class CouponService {
       code: couponData.code,
       type: couponData.type,
       value: couponData.type === 'free_service' ? 100 : couponData.value,
+      exactAmount: couponData.exactAmount,
       description: couponData.description,
       minOrderAmount: couponData.minOrderAmount,
       usageLimit: couponData.usageLimit,
@@ -70,11 +72,12 @@ export class CouponService {
       code: data.code,
       type: data.type,
       value: data.value,
+      exactAmount: data.exactAmount,
       description: data.description,
       minOrderAmount: data.minOrderAmount,
       maxDiscountAmount: data.maxDiscountAmount,
       usageLimit: data.usageLimit,
-      usageCount: data.usageCount || 0,
+      usedCount: data.usageCount || 0,
       isActive: data.isActive,
       expirationDate: data.expirationDate,
       applicableServices: data.applicableServices || [],
@@ -103,7 +106,7 @@ export class CouponService {
     }
 
     // Check usage limits
-    if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) {
+    if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
       return { isValid: false, error: 'Coupon usage limit exceeded' };
     }
 
@@ -134,6 +137,9 @@ export class CouponService {
     } else if (coupon.type === 'free_service') {
       // For free service, discount is 100% of order amount
       return orderAmount;
+    } else if (coupon.type === 'exact_amount' && coupon.exactAmount) {
+      // For exact amount override, discount is the difference between original and exact amount
+      return Math.max(0, orderAmount - coupon.exactAmount);
     } else {
       // For fixed amount discounts, use the coupon value but don't exceed order amount
       return Math.min(coupon.value, orderAmount);
@@ -170,11 +176,12 @@ export class CouponService {
         code: data.code,
         type: data.type,
         value: data.value,
+        exactAmount: data.exactAmount,
         description: data.description,
         minOrderAmount: data.minOrderAmount,
         maxDiscountAmount: data.maxDiscountAmount,
         usageLimit: data.usageLimit,
-        usageCount: data.usageCount || 0,
+        usedCount: data.usageCount || 0,
         isActive: data.isActive,
         expirationDate: data.expirationDate,
         applicableServices: data.applicableServices || [],

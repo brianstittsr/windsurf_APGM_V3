@@ -100,17 +100,17 @@ export default function CheckoutCart({
       // 1. Create appointment in Firebase
       console.log('📅 Creating appointment in Firebase...');
       
-      // Determine if this is a full payment or deposit based on payment method and total amount
-      const isPayLaterMethod = paymentIntent.payment_method_types?.includes('klarna') || 
-                              paymentIntent.payment_method_types?.includes('affirm') || 
-                              paymentIntent.payment_method_types?.includes('cherry') ||
-                              paymentIntent.id === 'cherry_redirect';
-      
-      // Check if total is under $200 threshold for full payment requirement
-      const totalWithTax = subtotal + tax;
-      const requiresFullPaymentDueToAmount = totalWithTax < 200;
-      
-      const isFullPayment = isPayLaterMethod || requiresFullPaymentDueToAmount;
+      // Determine if this is a full payment or deposit based on payment method
+    const isPayLaterMethod = paymentIntent.payment_method_types?.includes('klarna') || 
+                            paymentIntent.payment_method_types?.includes('affirm') || 
+                            paymentIntent.payment_method_types?.includes('cherry') ||
+                            paymentIntent.id === 'cherry_redirect';
+    
+    // Only credit cards can use deposits, all other methods require full payment
+    const isCreditCard = paymentIntent.payment_method_types?.includes('card');
+    const requiresFullPaymentDueToMethod = !isCreditCard;
+    
+    const isFullPayment = isPayLaterMethod || requiresFullPaymentDueToMethod;
       
       const appointmentData = {
         clientId: clientId || 'temp-client-id',
@@ -718,7 +718,6 @@ export default function CheckoutCart({
                 <div className="px-4 pb-4">
                   <div className="text-center">
                     <div className="h4 mb-1 text-primary">{formatCurrency(depositAmount + stripeFee)}</div>
-                    <div className="text-muted small">Due today (includes processing fee)</div>
                   </div>
                 </div>
               )}

@@ -47,25 +47,25 @@ export async function calculateTotalWithStripeFees(
   // Get business settings if not provided
   const settings = await BusinessSettingsService.getSettings();
   const finalTaxRate = taxRate ?? (settings.taxRate / 100);
-  const finalDepositAmount = depositAmount ?? await BusinessSettingsService.calculateDepositAmount(servicePrice, finalTaxRate);
+  const finalDepositAmount = depositAmount ?? await BusinessSettingsService.calculateDepositAmount(servicePrice);
   
   // Base calculations - servicePrice should already have discounts applied
   const subtotal = servicePrice;
   const tax = Math.round(subtotal * finalTaxRate * 100) / 100;
-  const totalWithTax = subtotal + tax;
-  
-  // Check if total is under $200 - if so, require full payment
-  const requiresFullPayment = totalWithTax < 200;
-  const deposit = requiresFullPayment ? totalWithTax : finalDepositAmount;
   
   // Determine if this is a pay-later method that requires full payment upfront
   const isPayLater = ['affirm', 'klarna', 'cherry'].includes(paymentMethod.toLowerCase());
   const isCherry = paymentMethod.toLowerCase() === 'cherry';
+  const isCreditCard = paymentMethod.toLowerCase() === 'card';
+  
+  // Only credit cards can use deposits, all other methods require full payment
+  const requiresFullPayment = !isCreditCard;
+  const deposit = requiresFullPayment ? subtotal + tax : finalDepositAmount;
   
   let stripeFee: number;
   
   if (isPayLater || requiresFullPayment) {
-    // For pay-later methods or when total < $200, calculate fee on full service amount + tax
+    // For pay-later methods or non-credit card payments, calculate fee on full service amount + tax
     const fullAmount = subtotal + tax;
     
     if (isCherry) {
@@ -86,13 +86,13 @@ export async function calculateTotalWithStripeFees(
   const total = subtotal + tax + stripeFee;
   
   // Remaining balance (discounted service + tax - deposit)
-  // For pay-later methods or when total < $200, remaining is 0 since full amount is paid upfront
+  // For pay-later methods or non-credit cards, remaining is 0 since full amount is paid upfront
   const remaining = (isPayLater || requiresFullPayment) ? 0 : Math.max(0, subtotal + tax - deposit);
   
   return {
     subtotal,
     tax,
-    deposit: (isPayLater || requiresFullPayment) ? subtotal + tax : deposit, // Pay-later methods or totals < $200 charge full amount
+    deposit: (isPayLater || requiresFullPayment) ? subtotal + tax : deposit, // Pay-later methods or non-credit cards charge full amount
     stripeFee,
     total,
     remaining
