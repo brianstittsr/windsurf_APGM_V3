@@ -1,19 +1,18 @@
-import { 
-  collection, 
-  doc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  getDoc, 
-  getDocs, 
-  query, 
-  where, 
-  orderBy, 
-  limit,
-  Timestamp 
+import {
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { CouponCode } from '@/types/database';
+import { CouponCode } from '@/types/coupons';
 
 export class CouponService {
   private static collectionName = 'coupons';
@@ -52,73 +51,83 @@ export class CouponService {
   // Get coupon by code
   static async getCouponByCode(code: string): Promise<CouponCode | null> {
     const q = query(
-      collection(db, this.collectionName), 
-      where('code', '==', code.toUpperCase()),
-      where('isActive', '==', true),
-      limit(1)
+      collection(db, this.collectionName),
+      where('code', '==', code.toUpperCase())
     );
-    
     const querySnapshot = await getDocs(q);
-    
+
     if (querySnapshot.empty) {
       return null;
     }
 
     const doc = querySnapshot.docs[0];
-    const data = doc.data();
-    
     return {
       id: doc.id,
-      code: data.code,
-      type: data.type,
-      value: data.value,
-      exactAmount: data.exactAmount,
-      description: data.description,
-      minOrderAmount: data.minOrderAmount,
-      maxDiscountAmount: data.maxDiscountAmount,
-      usageLimit: data.usageLimit,
-      usedCount: data.usageCount || 0,
-      isActive: data.isActive,
-      expirationDate: data.expirationDate,
-      applicableServices: data.applicableServices || [],
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt
+      ...doc.data(),
+      expirationDate: doc.data().expirationDate?.toDate(),
+      createdAt: doc.data().createdAt?.toDate(),
+      updatedAt: doc.data().updatedAt?.toDate()
     } as CouponCode;
   }
 
-  // Validate coupon code
-  static async validateCoupon(code: string, serviceId?: string, orderAmount?: number): Promise<{
+  // Get coupon by ID
+  static async getCouponById(id: string): Promise<CouponCode | null> {
+    const docRef = doc(db, this.collectionName, id);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      return null;
+    }
+
+    return {
+      id: docSnap.id,
+      ...docSnap.data(),
+      expirationDate: docSnap.data().expirationDate?.toDate(),
+      createdAt: docSnap.data().createdAt?.toDate(),
+      updatedAt: docSnap.data().updatedAt?.toDate()
+    } as CouponCode;
+  }
+
+  // Update coupon
+  static async updateCoupon(couponId: string, updates: Partial<CouponCode>): Promise<void> {
+    const updateData: any = { ...updates, updatedAt: Timestamp.now() };
+
+    // Convert Date objects to Timestamps
+    if (updates.expirationDate) {
+      updateData.expirationDate = Timestamp.fromDate(updates.expirationDate);
+    }
+
+    await updateDoc(doc(db, this.collectionName, couponId), updateData);
+  }
+
+  // Validate coupon for use
+  static async validateCoupon(code: string, orderAmount: number, serviceId?: string): Promise<{
     isValid: boolean;
     coupon?: CouponCode;
     error?: string;
   }> {
     const coupon = await this.getCouponByCode(code);
-    
+
     if (!coupon) {
-      return { isValid: false, error: 'Coupon code not found' };
+      return { isValid: false, error: 'Coupon not found' };
     }
 
-    const now = new Date();
-    
-    // Check if coupon is expired
-    if (coupon.expirationDate && now > coupon.expirationDate.toDate()) {
+    if (!coupon.isActive) {
+      return { isValid: false, error: 'Coupon is not active' };
+    }
+
+    if (coupon.expirationDate && coupon.expirationDate < new Date()) {
       return { isValid: false, error: 'Coupon has expired' };
     }
 
-    // Check usage limits
-    if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+    if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) {
       return { isValid: false, error: 'Coupon usage limit exceeded' };
     }
 
-    // Check minimum order amount
-    if (coupon.minOrderAmount && orderAmount && orderAmount < coupon.minOrderAmount) {
-      return { 
-        isValid: false, 
-        error: `Minimum order amount of $${coupon.minOrderAmount} required` 
-      };
+    if (coupon.minOrderAmount && orderAmount < coupon.minOrderAmount) {
+      return { isValid: false, error: 'Order amount does not meet minimum requirement' };
     }
 
-    // Check service applicability
     if (coupon.applicableServices && coupon.applicableServices.length > 0 && serviceId) {
       if (!coupon.applicableServices.includes(serviceId)) {
         return { isValid: false, error: 'Coupon not applicable to selected service' };
@@ -128,84 +137,28 @@ export class CouponService {
     return { isValid: true, coupon };
   }
 
-  // Calculate discount amount
+  // Calculate discount
   static calculateDiscount(coupon: CouponCode, orderAmount: number): number {
     if (coupon.type === 'percentage') {
-      // For percentage discounts, calculate percentage of order amount
-      const discount = (orderAmount * coupon.value) / 100;
-      return Math.round(discount * 100) / 100; // Round to 2 decimal places
-    } else if (coupon.type === 'free_service') {
-      // For free service, discount is 100% of order amount
-      return orderAmount;
-    } else if (coupon.type === 'exact_amount' && coupon.exactAmount) {
-      // For exact amount override, discount is the difference between original and exact amount
-      return Math.max(0, orderAmount - coupon.exactAmount);
-    } else {
-      // For fixed amount discounts, use the coupon value but don't exceed order amount
+      return (orderAmount * coupon.value) / 100;
+    } else if (coupon.type === 'fixed') {
       return Math.min(coupon.value, orderAmount);
+    } else if (coupon.type === 'free_service') {
+      return orderAmount; // 100% discount
+    } else if (coupon.type === 'exact_amount' && coupon.exactAmount) {
+      return Math.min(coupon.exactAmount, orderAmount);
     }
+    return 0;
   }
 
-  // Apply coupon (increment usage count)
-  static async applyCoupon(couponId: string): Promise<void> {
-    const couponRef = doc(db, this.collectionName, couponId);
-    const couponDoc = await getDoc(couponRef);
-    
-    if (couponDoc.exists()) {
-      const currentUses = couponDoc.data().usageCount || 0;
-      await updateDoc(couponRef, {
-        usageCount: currentUses + 1,
-        updatedAt: Timestamp.now()
+  // Use coupon (increment usage count)
+  static async useCoupon(couponId: string): Promise<void> {
+    const coupon = await this.getCouponById(couponId);
+    if (coupon) {
+      await this.updateCoupon(couponId, {
+        usageCount: coupon.usageCount + 1
       });
     }
-  }
-
-  // Get all coupons (admin function)
-  static async getAllCoupons(): Promise<CouponCode[]> {
-    const q = query(
-      collection(db, this.collectionName),
-      orderBy('createdAt', 'desc')
-    );
-    
-    const querySnapshot = await getDocs(q);
-    
-    return querySnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        code: data.code,
-        type: data.type,
-        value: data.value,
-        exactAmount: data.exactAmount,
-        description: data.description,
-        minOrderAmount: data.minOrderAmount,
-        maxDiscountAmount: data.maxDiscountAmount,
-        usageLimit: data.usageLimit,
-        usedCount: data.usageCount || 0,
-        isActive: data.isActive,
-        expirationDate: data.expirationDate,
-        applicableServices: data.applicableServices || [],
-        createdAt: data.createdAt,
-        updatedAt: data.updatedAt
-      } as CouponCode;
-    });
-  }
-
-  // Update coupon
-  static async updateCoupon(couponId: string, updates: Partial<Omit<CouponCode, 'id' | 'createdAt' | 'updatedAt'>>): Promise<void> {
-    const couponRef = doc(db, this.collectionName, couponId);
-    
-    const updateData: any = {
-      ...updates,
-      updatedAt: Timestamp.now()
-    };
-
-    // Convert dates to Timestamps if provided
-    if (updates.expirationDate && updates.expirationDate instanceof Date) {
-      updateData.expirationDate = Timestamp.fromDate(updates.expirationDate);
-    }
-
-    await updateDoc(couponRef, updateData);
   }
 
   // Delete coupon
@@ -216,8 +169,24 @@ export class CouponService {
 
   // Deactivate coupon (soft delete)
   static async deactivateCoupon(couponId: string): Promise<void> {
-    await this.updateCoupon(couponId, { 
-      isActive: false 
+    await this.updateCoupon(couponId, {
+      isActive: false
     });
+  }
+
+  // Get all coupons
+  static async getAllCoupons(): Promise<CouponCode[]> {
+    const q = query(
+      collection(db, this.collectionName),
+      orderBy('createdAt', 'desc')
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      expirationDate: doc.data().expirationDate?.toDate(),
+      createdAt: doc.data().createdAt?.toDate(),
+      updatedAt: doc.data().updatedAt?.toDate()
+    } as CouponCode));
   }
 }

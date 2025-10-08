@@ -1,146 +1,347 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { GiftCardService, DatabaseService } from '@/services/database';
-import { GiftCard } from '@/types/database';
-import { Timestamp } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc, updateDoc, Timestamp } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
+import { CouponService } from '../../services/couponService';
+import { GiftCardService } from '../../services/giftCardService';
+import { GiftCard, CouponCode } from '../../types/coupons';
 
-interface CouponCode {
-  id: string;
+interface CouponFormData {
   code: string;
-  type: 'percentage' | 'fixed' | 'exact_amount';
+  description: string;
+  type: 'percentage' | 'fixed' | 'free_service' | 'exact_amount';
   value: number;
   exactAmount?: number;
   minOrderAmount?: number;
   usageLimit?: number;
-  usageCount: number;
-  expirationDate?: any;
+  expirationDate: string;
+  applicableServices: string;
   isActive: boolean;
-  createdAt: any;
-  updatedAt: any;
-  description: string;
+}
+
+interface GiftCardFormData {
+  initialAmount: number;
+  recipientEmail: string;
+  recipientName: string;
+  purchaserEmail: string;
+  purchaserName: string;
+  message: string;
+  expiresAt: string;
 }
 
 export default function CouponsGiftCardsManager() {
-  const [activeSection, setActiveSection] = useState<'coupons' | 'giftcards'>('coupons');
   const [coupons, setCoupons] = useState<CouponCode[]>([]);
   const [giftCards, setGiftCards] = useState<GiftCard[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCouponForm, setShowCouponForm] = useState(false);
-  const [showGiftCardForm, setShowGiftCardForm] = useState(false);
+  const [activeTab, setActiveTab] = useState<'coupons' | 'giftcards'>('coupons');
 
-  const [couponForm, setCouponForm] = useState({
+  // Coupon form states
+  const [showCouponModal, setShowCouponModal] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState<CouponCode | null>(null);
+  const [couponFormData, setCouponFormData] = useState<CouponFormData>({
     code: '',
-    discountType: 'percentage' as 'percentage' | 'fixed' | 'exact_amount',
-    discountValue: 0,
+    description: '',
+    type: 'percentage',
+    value: 0,
     exactAmount: 0,
     minOrderAmount: 0,
-    maxUses: 0,
-    expiresAt: '',
+    usageLimit: 0,
+    expirationDate: '',
+    applicableServices: '',
     isActive: true
   });
 
-  const [giftCardForm, setGiftCardForm] = useState({
-    code: '',
+  // Gift card form states
+  const [showGiftCardModal, setShowGiftCardModal] = useState(false);
+  const [editingGiftCard, setEditingGiftCard] = useState<GiftCard | null>(null);
+  const [giftCardFormData, setGiftCardFormData] = useState<GiftCardFormData>({
     initialAmount: 0,
-    purchaserEmail: '',
     recipientEmail: '',
     recipientName: '',
+    purchaserEmail: '',
+    purchaserName: '',
     message: '',
     expiresAt: ''
   });
 
+  const [submitting, setSubmitting] = useState(false);
+
   useEffect(() => {
-    loadData();
+    fetchData();
   }, []);
 
-  const loadData = async () => {
+  const fetchData = async () => {
     try {
-      setLoading(true);
-      // Load coupons and gift cards from database
-      const [couponData, giftCardData] = await Promise.all([
-        DatabaseService.getAll<CouponCode>('coupons'),
-        DatabaseService.getAll<GiftCard>('giftCards')
-      ]);
-      setCoupons(couponData);
-      setGiftCards(giftCardData);
+      await Promise.all([fetchCoupons(), fetchGiftCards()]);
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateCoupon = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const fetchCoupons = async () => {
     try {
-      const getDescription = () => {
-        if (couponForm.discountType === 'percentage') {
-          return `${couponForm.code} - ${couponForm.discountValue}% off`;
-        } else if (couponForm.discountType === 'fixed') {
-          return `${couponForm.code} - $${couponForm.discountValue} off`;
-        } else {
-          return `${couponForm.code} - Service price set to $${couponForm.exactAmount}`;
-        }
-      };
-
-      await DatabaseService.create('coupons', {
-        ...couponForm,
-        expirationDate: couponForm.expiresAt ? Timestamp.fromDate(new Date(couponForm.expiresAt)) : null,
-        type: couponForm.discountType,
-        value: couponForm.discountValue,
-        exactAmount: couponForm.discountType === 'exact_amount' ? couponForm.exactAmount : undefined,
-        description: getDescription(),
-        isActive: couponForm.isActive,
-        usageLimit: couponForm.maxUses || null,
-        usageCount: 0,
-        minOrderAmount: couponForm.minOrderAmount || 0,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-      });
-      setShowCouponForm(false);
-      setCouponForm({
-        code: '',
-        discountType: 'percentage',
-        discountValue: 0,
-        exactAmount: 0,
-        minOrderAmount: 0,
-        maxUses: 0,
-        expiresAt: '',
-        isActive: true
-      });
-      loadData();
+      const couponsList = await CouponService.getAllCoupons();
+      setCoupons(couponsList);
     } catch (error) {
-      console.error('Error creating coupon:', error);
+      console.error('Error fetching coupons:', error);
     }
   };
 
+  const fetchGiftCards = async () => {
+    try {
+      const giftCardsList = await GiftCardService.getAllGiftCards();
+      setGiftCards(giftCardsList);
+    } catch (error) {
+      console.error('Error fetching gift cards:', error);
+    }
+  };
+
+  // Coupon CRUD operations
+  const handleCreateCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!couponFormData.code || !couponFormData.description) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const couponData = {
+        code: couponFormData.code.toUpperCase(),
+        description: couponFormData.description,
+        type: couponFormData.type,
+        value: couponFormData.type === 'free_service' ? 100 : couponFormData.value,
+        exactAmount: couponFormData.exactAmount || 0,
+        minOrderAmount: couponFormData.minOrderAmount || 0,
+        usageLimit: couponFormData.usageLimit || 0,
+        expirationDate: new Date(couponFormData.expirationDate),
+        applicableServices: couponFormData.applicableServices ? couponFormData.applicableServices.split(',').map(s => s.trim()) : [],
+        isActive: couponFormData.isActive
+      };
+
+      await CouponService.createCoupon(couponData);
+      alert('Coupon created successfully!');
+      closeCouponModal();
+      fetchCoupons();
+    } catch (error) {
+      console.error('Error creating coupon:', error);
+      alert('Error creating coupon. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEditCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCoupon) return;
+
+    setSubmitting(true);
+    try {
+      const updateData = {
+        description: couponFormData.description,
+        type: couponFormData.type,
+        value: couponFormData.type === 'free_service' ? 100 : couponFormData.value,
+        exactAmount: couponFormData.exactAmount || 0,
+        minOrderAmount: couponFormData.minOrderAmount || 0,
+        usageLimit: couponFormData.usageLimit || 0,
+        expirationDate: new Date(couponFormData.expirationDate),
+        applicableServices: couponFormData.applicableServices ? couponFormData.applicableServices.split(',').map(s => s.trim()) : [],
+        isActive: couponFormData.isActive
+      };
+
+      await CouponService.updateCoupon(editingCoupon.id, updateData);
+      alert('Coupon updated successfully!');
+      closeCouponModal();
+      fetchCoupons();
+    } catch (error) {
+      console.error('Error updating coupon:', error);
+      alert('Error updating coupon. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteCoupon = async (couponId: string, couponCode: string) => {
+    if (!confirm(`Are you sure you want to delete the coupon "${couponCode}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await CouponService.deleteCoupon(couponId);
+      alert('Coupon deleted successfully!');
+      fetchCoupons();
+    } catch (error) {
+      console.error('Error deleting coupon:', error);
+      alert('Error deleting coupon. Please try again.');
+    }
+  };
+
+  // Gift Card CRUD operations
   const handleCreateGiftCard = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!giftCardFormData.recipientEmail || !giftCardFormData.recipientName) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+
+    setSubmitting(true);
     try {
-      await DatabaseService.create('giftCards', {
-        code: giftCardForm.code,
-        amount: giftCardForm.initialAmount,
-        remainingBalance: giftCardForm.initialAmount,
-        purchasedBy: giftCardForm.purchaserEmail,
-        purchasedFor: giftCardForm.recipientEmail,
-        expiresAt: giftCardForm.expiresAt ? Timestamp.fromDate(new Date(giftCardForm.expiresAt)) : undefined,
-        isActive: true,
-        usageHistory: []
-      });
-      setShowGiftCardForm(false);
-      setGiftCardForm({
-        code: '',
-        initialAmount: 0,
-        purchaserEmail: '',
-        recipientEmail: '',
-        recipientName: '',
-        message: '',
-        expiresAt: ''
-      });
-      loadData();
+      const giftCardData = {
+        initialAmount: giftCardFormData.initialAmount,
+        remainingAmount: giftCardFormData.initialAmount,
+        recipientEmail: giftCardFormData.recipientEmail,
+        recipientName: giftCardFormData.recipientName,
+        purchaserEmail: giftCardFormData.purchaserEmail,
+        purchaserName: giftCardFormData.purchaserName,
+        message: giftCardFormData.message,
+        expiresAt: new Date(giftCardFormData.expiresAt),
+        isRedeemed: false
+      };
+
+      await GiftCardService.createGiftCard(giftCardData);
+      alert('Gift card created successfully!');
+      closeGiftCardModal();
+      fetchGiftCards();
     } catch (error) {
       console.error('Error creating gift card:', error);
+      alert('Error creating gift card. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEditGiftCard = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingGiftCard) return;
+
+    setSubmitting(true);
+    try {
+      const updateData = {
+        recipientEmail: giftCardFormData.recipientEmail,
+        recipientName: giftCardFormData.recipientName,
+        purchaserEmail: giftCardFormData.purchaserEmail,
+        purchaserName: giftCardFormData.purchaserName,
+        message: giftCardFormData.message,
+        expiresAt: new Date(giftCardFormData.expiresAt)
+      };
+
+      await GiftCardService.updateGiftCard(editingGiftCard.id, updateData);
+      alert('Gift card updated successfully!');
+      closeGiftCardModal();
+      fetchGiftCards();
+    } catch (error) {
+      console.error('Error updating gift card:', error);
+      alert('Error updating gift card. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteGiftCard = async (giftCardId: string, giftCardCode: string) => {
+    if (!confirm(`Are you sure you want to delete the gift card "${giftCardCode}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await GiftCardService.deleteGiftCard(giftCardId);
+      alert('Gift card deleted successfully!');
+      fetchGiftCards();
+    } catch (error) {
+      console.error('Error deleting gift card:', error);
+      alert('Error deleting gift card. Please try again.');
+    }
+  };
+
+  // Modal handlers
+  const openCreateCouponModal = () => {
+    setEditingCoupon(null);
+    setCouponFormData({
+      code: '',
+      description: '',
+      type: 'percentage',
+      value: 0,
+      exactAmount: 0,
+      minOrderAmount: 0,
+      usageLimit: 0,
+      expirationDate: '',
+      applicableServices: '',
+      isActive: true
+    });
+    setShowCouponModal(true);
+  };
+
+  const openEditCouponModal = (coupon: CouponCode) => {
+    setEditingCoupon(coupon);
+    setCouponFormData({
+      code: coupon.code,
+      description: coupon.description,
+      type: coupon.type,
+      value: coupon.value,
+      exactAmount: coupon.exactAmount || 0,
+      minOrderAmount: coupon.minOrderAmount || 0,
+      usageLimit: coupon.usageLimit || 0,
+      expirationDate: coupon.expirationDate?.toISOString().split('T')[0] || '',
+      applicableServices: coupon.applicableServices?.join(', ') || '',
+      isActive: coupon.isActive
+    });
+    setShowCouponModal(true);
+  };
+
+  const openCreateGiftCardModal = () => {
+    setEditingGiftCard(null);
+    setGiftCardFormData({
+      initialAmount: 0,
+      recipientEmail: '',
+      recipientName: '',
+      purchaserEmail: '',
+      purchaserName: '',
+      message: '',
+      expiresAt: ''
+    });
+    setShowGiftCardModal(true);
+  };
+
+  const openEditGiftCardModal = (giftCard: GiftCard) => {
+    setEditingGiftCard(giftCard);
+    setGiftCardFormData({
+      initialAmount: giftCard.initialAmount,
+      recipientEmail: giftCard.recipientEmail,
+      recipientName: giftCard.recipientName,
+      purchaserEmail: giftCard.purchaserEmail,
+      purchaserName: giftCard.purchaserName,
+      message: giftCard.message || '',
+      expiresAt: giftCard.expiresAt?.toISOString().split('T')[0] || ''
+    });
+    setShowGiftCardModal(true);
+  };
+
+  const closeCouponModal = () => {
+    setShowCouponModal(false);
+    setEditingCoupon(null);
+  };
+
+  const closeGiftCardModal = () => {
+    setShowGiftCardModal(false);
+    setEditingGiftCard(null);
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  };
+
+  const getCouponTypeBadge = (type: string) => {
+    switch (type) {
+      case 'percentage': return 'badge bg-primary';
+      case 'fixed': return 'badge bg-success';
+      case 'free_service': return 'badge bg-warning';
+      case 'exact_amount': return 'badge bg-info';
+      default: return 'badge bg-secondary';
     }
   };
 
@@ -157,374 +358,394 @@ export default function CouponsGiftCardsManager() {
 
   return (
     <div className="container-fluid">
-      {/* Header */}
       <div className="row mb-4">
         <div className="col-12">
-          <div className="card border-0 shadow-sm bg-gradient" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-            <div className="card-body text-white p-4">
-              <h2 className="card-title mb-2 fw-bold">
-                <i className="fas fa-gift me-3"></i>
-                Coupons & Gift Cards Management
-              </h2>
-              <p className="card-text mb-0 opacity-75">
-                Create and manage discount coupons and gift cards for your customers
-              </p>
-            </div>
+          <div className="d-flex justify-content-between align-items-center">
+            <h4>Coupons & Gift Cards Management</h4>
           </div>
         </div>
       </div>
 
-      {/* Section Toggle */}
+      {/* Tab Navigation */}
       <div className="row mb-4">
         <div className="col-12">
-          <div className="card border-0 shadow-sm">
-            <div className="card-body p-0">
-              <div className="btn-group w-100" role="group">
-                <button
-                  type="button"
-                  className={`btn btn-lg py-3 ${activeSection === 'coupons' ? 'btn-primary' : 'btn-outline-primary'}`}
-                  onClick={() => setActiveSection('coupons')}
-                >
-                  <i className="fas fa-percentage me-2"></i>
-                  Discount Coupons ({coupons.length})
-                </button>
-                <button
-                  type="button"
-                  className={`btn btn-lg py-3 ${activeSection === 'giftcards' ? 'btn-primary' : 'btn-outline-primary'}`}
-                  onClick={() => setActiveSection('giftcards')}
-                >
-                  <i className="fas fa-credit-card me-2"></i>
-                  Gift Cards ({giftCards.length})
-                </button>
-              </div>
-            </div>
-          </div>
+          <ul className="nav nav-tabs" role="tablist">
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'coupons' ? 'active' : ''}`}
+                onClick={() => setActiveTab('coupons')}
+              >
+                <i className="fas fa-tags me-2"></i>Coupons ({coupons.length})
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'giftcards' ? 'active' : ''}`}
+                onClick={() => setActiveTab('giftcards')}
+              >
+                <i className="fas fa-gift me-2"></i>Gift Cards ({giftCards.length})
+              </button>
+            </li>
+          </ul>
         </div>
       </div>
 
-      {/* Coupons Section */}
-      {activeSection === 'coupons' && (
+      {/* Coupons Tab */}
+      {activeTab === 'coupons' && (
         <div className="row">
           <div className="col-12">
-            <div className="card border-0 shadow-sm">
-              <div className="card-header bg-primary text-white border-0">
-                <div className="d-flex justify-content-between align-items-center">
-                  <h5 className="mb-0 fw-bold">
-                    <i className="fas fa-percentage me-2"></i>
-                    Discount Coupons
-                  </h5>
-                  <button
-                    className="btn btn-light btn-sm rounded-pill"
-                    onClick={() => setShowCouponForm(true)}
-                  >
-                    <i className="fas fa-plus me-1"></i>
-                    Add Coupon
-                  </button>
-                </div>
-              </div>
-              <div className="card-body p-0">
-                <div className="table-responsive">
-                  <table className="table table-hover mb-0">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Code</th>
-                        <th>Discount</th>
-                        <th>Usage</th>
-                        <th>Expires</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {coupons.map((coupon) => (
-                        <tr key={coupon.id}>
-                          <td>
-                            <span className="badge bg-dark fs-6">{coupon.code}</span>
-                          </td>
-                          <td>
-                            {coupon.type === 'percentage' 
-                              ? `${coupon.value}%` 
-                              : coupon.type === 'fixed'
-                              ? `$${coupon.value} off`
-                              : `Set to $${coupon.exactAmount}`}
-                          </td>
-                          <td>
-                            <span className="text-muted">
-                              {coupon.usageCount}/{coupon.usageLimit || '∞'}
-                            </span>
-                          </td>
-                          <td>
-                            {coupon.expirationDate 
-                              ? coupon.expirationDate.toDate().toLocaleDateString()
-                              : 'No expiry'}
-                          </td>
-                          <td>
-                            <span className={`badge ${coupon.isActive ? 'bg-success' : 'bg-secondary'}`}>
-                              {coupon.isActive ? 'Active' : 'Inactive'}
-                            </span>
-                          </td>
-                          <td>
-                            <button className="btn btn-sm btn-outline-primary me-1">
-                              <i className="fas fa-edit"></i>
-                            </button>
-                            <button className="btn btn-sm btn-outline-danger">
-                              <i className="fas fa-trash"></i>
-                            </button>
-                          </td>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h5>Coupon Codes</h5>
+              <button
+                className="btn btn-primary"
+                onClick={openCreateCouponModal}
+              >
+                <i className="fas fa-plus me-2"></i>Add Coupon
+              </button>
+            </div>
+
+            <div className="card">
+              <div className="card-body">
+                {coupons.length === 0 ? (
+                  <div className="text-center py-5">
+                    <i className="fas fa-tags fa-3x text-muted mb-3"></i>
+                    <p className="text-muted">No coupons found.</p>
+                    <button
+                      className="btn btn-primary"
+                      onClick={openCreateCouponModal}
+                    >
+                      Add First Coupon
+                    </button>
+                  </div>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Code</th>
+                          <th>Description</th>
+                          <th>Type</th>
+                          <th>Value</th>
+                          <th>Usage</th>
+                          <th>Expires</th>
+                          <th>Status</th>
+                          <th>Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {coupons.map((coupon) => (
+                          <tr key={coupon.id}>
+                            <td><code>{coupon.code}</code></td>
+                            <td>{coupon.description}</td>
+                            <td>
+                              <span className={getCouponTypeBadge(coupon.type)}>
+                                {coupon.type.replace('_', ' ').toUpperCase()}
+                              </span>
+                            </td>
+                            <td>
+                              {coupon.type === 'percentage' ? `${coupon.value}%` :
+                               coupon.type === 'fixed' ? formatCurrency(coupon.value) :
+                               coupon.type === 'free_service' ? 'FREE SERVICE' :
+                               formatCurrency(coupon.exactAmount || 0)}
+                            </td>
+                            <td>{coupon.usageCount}/{coupon.usageLimit || '∞'}</td>
+                            <td>{coupon.expirationDate?.toLocaleDateString()}</td>
+                            <td>
+                              <span className={`badge ${coupon.isActive ? 'bg-success' : 'bg-warning'}`}>
+                                {coupon.isActive ? 'Active' : 'Inactive'}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="btn-group" role="group">
+                                <button
+                                  className="btn btn-sm btn-outline-primary"
+                                  onClick={() => openEditCouponModal(coupon)}
+                                  title="Edit Coupon"
+                                >
+                                  <i className="fas fa-edit"></i>
+                                </button>
+                                <button
+                                  className="btn btn-sm btn-outline-danger"
+                                  onClick={() => handleDeleteCoupon(coupon.id, coupon.code)}
+                                  title="Delete Coupon"
+                                >
+                                  <i className="fas fa-trash"></i>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Gift Cards Section */}
-      {activeSection === 'giftcards' && (
+      {/* Gift Cards Tab */}
+      {activeTab === 'giftcards' && (
         <div className="row">
           <div className="col-12">
-            <div className="card border-0 shadow-sm">
-              <div className="card-header bg-success text-white border-0">
-                <div className="d-flex justify-content-between align-items-center">
-                  <h5 className="mb-0 fw-bold">
-                    <i className="fas fa-credit-card me-2"></i>
-                    Gift Cards
-                  </h5>
-                  <button
-                    className="btn btn-light btn-sm rounded-pill"
-                    onClick={() => setShowGiftCardForm(true)}
-                  >
-                    <i className="fas fa-plus me-1"></i>
-                    Add Gift Card
-                  </button>
-                </div>
-              </div>
-              <div className="card-body p-0">
-                <div className="table-responsive">
-                  <table className="table table-hover mb-0">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Code</th>
-                        <th>Balance</th>
-                        <th>Recipient</th>
-                        <th>Expires</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {giftCards.map((card) => (
-                        <tr key={card.id}>
-                          <td>
-                            <span className="badge bg-success fs-6">{card.code}</span>
-                          </td>
-                          <td>
-                            <strong>${card.remainingBalance}</strong>
-                            <small className="text-muted">/${card.amount}</small>
-                          </td>
-                          <td>
-                            <div>
-                              <div className="fw-semibold">{card.recipientName}</div>
-                              <small className="text-muted">{card.recipientEmail}</small>
-                            </div>
-                          </td>
-                          <td>
-                            {card.expiresAt 
-                              ? card.expiresAt.toDate().toLocaleDateString()
-                              : 'No expiry'}
-                          </td>
-                          <td>
-                            <span className={`badge ${card.isActive ? 'bg-success' : 'bg-secondary'}`}>
-                              {card.isActive ? 'Active' : 'Inactive'}
-                            </span>
-                          </td>
-                          <td>
-                            <button className="btn btn-sm btn-outline-primary me-1">
-                              <i className="fas fa-edit"></i>
-                            </button>
-                            <button className="btn btn-sm btn-outline-danger">
-                              <i className="fas fa-trash"></i>
-                            </button>
-                          </td>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h5>Gift Cards</h5>
+              <button
+                className="btn btn-success"
+                onClick={openCreateGiftCardModal}
+              >
+                <i className="fas fa-plus me-2"></i>Add Gift Card
+              </button>
+            </div>
+
+            <div className="card">
+              <div className="card-body">
+                {giftCards.length === 0 ? (
+                  <div className="text-center py-5">
+                    <i className="fas fa-gift fa-3x text-muted mb-3"></i>
+                    <p className="text-muted">No gift cards found.</p>
+                    <button
+                      className="btn btn-success"
+                      onClick={openCreateGiftCardModal}
+                    >
+                      Add First Gift Card
+                    </button>
+                  </div>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Code</th>
+                          <th>Recipient</th>
+                          <th>Initial Amount</th>
+                          <th>Remaining</th>
+                          <th>Expires</th>
+                          <th>Status</th>
+                          <th>Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {giftCards.map((giftCard) => (
+                          <tr key={giftCard.id}>
+                            <td><code>{giftCard.code}</code></td>
+                            <td>
+                              <div>
+                                <strong>{giftCard.recipientName}</strong><br />
+                                <small className="text-muted">{giftCard.recipientEmail}</small>
+                              </div>
+                            </td>
+                            <td>{formatCurrency(giftCard.initialAmount)}</td>
+                            <td>{formatCurrency(giftCard.remainingAmount)}</td>
+                            <td>{giftCard.expiresAt?.toLocaleDateString()}</td>
+                            <td>
+                              <span className={`badge ${giftCard.isRedeemed ? 'bg-warning' : 'bg-success'}`}>
+                                {giftCard.isRedeemed ? 'Redeemed' : 'Active'}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="btn-group" role="group">
+                                <button
+                                  className="btn btn-sm btn-outline-primary"
+                                  onClick={() => openEditGiftCardModal(giftCard)}
+                                  title="Edit Gift Card"
+                                >
+                                  <i className="fas fa-edit"></i>
+                                </button>
+                                <button
+                                  className="btn btn-sm btn-outline-danger"
+                                  onClick={() => handleDeleteGiftCard(giftCard.id, giftCard.code)}
+                                  title="Delete Gift Card"
+                                >
+                                  <i className="fas fa-trash"></i>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Coupon Form Modal */}
-      {showCouponForm && (
-        <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
+      {/* Coupon Modal */}
+      {showCouponModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-lg">
-            <div className="modal-content border-0 shadow-lg">
-              <div className="modal-header bg-primary text-white border-0">
-                <h5 className="modal-title fw-bold">
-                  <i className="fas fa-percentage me-2"></i>
-                  Create New Coupon
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  {editingCoupon ? 'Edit Coupon' : 'Create New Coupon'}
                 </h5>
-                <button
-                  type="button"
-                  className="btn-close btn-close-white"
-                  onClick={() => setShowCouponForm(false)}
-                ></button>
+                <button type="button" className="btn-close" onClick={closeCouponModal}></button>
               </div>
-              <form onSubmit={handleCreateCoupon}>
-                <div className="modal-body bg-light">
-                  <div className="row g-3">
+              <form onSubmit={editingCoupon ? handleEditCoupon : handleCreateCoupon}>
+                <div className="modal-body">
+                  <div className="row">
                     <div className="col-md-6">
-                      <label className="form-label fw-semibold">
-                        <i className="fas fa-tag me-1 text-primary"></i>
-                        Coupon Code *
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control form-control-lg border-2"
-                        value={couponForm.code}
-                        onChange={(e) => setCouponForm(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
-                        placeholder="SAVE20"
-                        required
-                      />
+                      <div className="mb-3">
+                        <label htmlFor="couponCode" className="form-label">
+                          Code <span className="text-danger">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="couponCode"
+                          value={couponFormData.code}
+                          onChange={(e) => setCouponFormData({ ...couponFormData, code: e.target.value.toUpperCase() })}
+                          required
+                          disabled={!!editingCoupon}
+                          placeholder="SUMMER2024"
+                        />
+                      </div>
                     </div>
-                    <div className="col-md-3">
-                      <label className="form-label fw-semibold">
-                        <i className="fas fa-calculator me-1 text-info"></i>
-                        Discount Type
-                      </label>
-                      <select
-                        className="form-select form-select-lg border-2"
-                        value={couponForm.discountType}
-                        onChange={(e) => setCouponForm(prev => ({ ...prev, discountType: e.target.value as 'percentage' | 'fixed' | 'exact_amount' }))}
-                      >
-                        <option value="percentage">Percentage (%)</option>
-                        <option value="fixed">Fixed Amount ($)</option>
-                        <option value="exact_amount">Exact Price Override</option>
-                      </select>
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label htmlFor="couponType" className="form-label">Type</label>
+                        <select
+                          className="form-select"
+                          id="couponType"
+                          value={couponFormData.type}
+                          onChange={(e) => setCouponFormData({ ...couponFormData, type: e.target.value as any })}
+                        >
+                          <option value="percentage">Percentage Discount</option>
+                          <option value="fixed">Fixed Amount</option>
+                          <option value="free_service">Free Service</option>
+                          <option value="exact_amount">Exact Amount</option>
+                        </select>
+                      </div>
                     </div>
-                    {couponForm.discountType !== 'exact_amount' && (
-                      <div className="col-md-3">
-                        <label className="form-label fw-semibold">
-                          <i className="fas fa-dollar-sign me-1 text-success"></i>
-                          {couponForm.discountType === 'percentage' ? 'Percentage *' : 'Discount Amount *'}
+                  </div>
+
+                  <div className="mb-3">
+                    <label htmlFor="couponDescription" className="form-label">
+                      Description <span className="text-danger">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="couponDescription"
+                      value={couponFormData.description}
+                      onChange={(e) => setCouponFormData({ ...couponFormData, description: e.target.value })}
+                      required
+                      placeholder="Summer sale discount"
+                    />
+                  </div>
+
+                  <div className="row">
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label htmlFor="couponValue" className="form-label">
+                          {couponFormData.type === 'percentage' ? 'Percentage (%)' : 'Amount ($)'}
                         </label>
                         <input
                           type="number"
-                          className="form-control form-control-lg border-2"
-                          value={couponForm.discountValue}
-                          onChange={(e) => setCouponForm(prev => ({ ...prev, discountValue: Number(e.target.value) }))}
+                          className="form-control"
+                          id="couponValue"
+                          value={couponFormData.value}
+                          onChange={(e) => setCouponFormData({ ...couponFormData, value: parseFloat(e.target.value) || 0 })}
+                          disabled={couponFormData.type === 'free_service'}
                           min="0"
-                          step={couponForm.discountType === 'percentage' ? '1' : '0.01'}
-                          max={couponForm.discountType === 'percentage' ? '100' : undefined}
-                          placeholder={couponForm.discountType === 'percentage' ? '20' : '50.00'}
+                          step={couponFormData.type === 'percentage' ? '1' : '0.01'}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label htmlFor="expirationDate" className="form-label">
+                          Expiration Date <span className="text-danger">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          className="form-control"
+                          id="expirationDate"
+                          value={couponFormData.expirationDate}
+                          onChange={(e) => setCouponFormData({ ...couponFormData, expirationDate: e.target.value })}
                           required
                         />
-                        {couponForm.discountType === 'percentage' && (
-                          <div className="form-text">Enter percentage (0-100)</div>
-                        )}
                       </div>
-                    )}
-                    {couponForm.discountType === 'exact_amount' && (
-                      <div className="col-md-3">
-                        <label className="form-label fw-semibold">
-                          <i className="fas fa-tag me-1 text-warning"></i>
-                          Exact Price *
-                        </label>
+                    </div>
+                  </div>
+
+                  <div className="row">
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label htmlFor="usageLimit" className="form-label">Usage Limit</label>
                         <input
                           type="number"
-                          className="form-control form-control-lg border-2"
-                          value={couponForm.exactAmount}
-                          onChange={(e) => setCouponForm(prev => ({ ...prev, exactAmount: Number(e.target.value) }))}
+                          className="form-control"
+                          id="usageLimit"
+                          value={couponFormData.usageLimit}
+                          onChange={(e) => setCouponFormData({ ...couponFormData, usageLimit: parseInt(e.target.value) || 0 })}
+                          min="0"
+                          placeholder="Leave empty for unlimited"
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label htmlFor="minOrderAmount" className="form-label">Minimum Order Amount ($)</label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          id="minOrderAmount"
+                          value={couponFormData.minOrderAmount}
+                          onChange={(e) => setCouponFormData({ ...couponFormData, minOrderAmount: parseFloat(e.target.value) || 0 })}
                           min="0"
                           step="0.01"
-                          placeholder="299.00"
-                          required
                         />
-                        <div className="form-text">Service will be priced at this exact amount</div>
                       </div>
-                    )}
-                  </div>
-                  <div className="row g-3 mt-2">
-                    <div className="col-md-4">
-                      <label className="form-label fw-semibold">
-                        <i className="fas fa-shopping-cart me-1 text-warning"></i>
-                        Min Order Amount
-                      </label>
-                      <input
-                        type="number"
-                        className="form-control form-control-lg border-2"
-                        value={couponForm.minOrderAmount}
-                        onChange={(e) => setCouponForm(prev => ({ ...prev, minOrderAmount: Number(e.target.value) }))}
-                        min="0"
-                        step="0.01"
-                      />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label fw-semibold">
-                        <i className="fas fa-users me-1 text-secondary"></i>
-                        Max Uses
-                      </label>
-                      <input
-                        type="number"
-                        className="form-control form-control-lg border-2"
-                        value={couponForm.maxUses}
-                        onChange={(e) => setCouponForm(prev => ({ ...prev, maxUses: Number(e.target.value) }))}
-                        min="0"
-                      />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label fw-semibold">
-                        <i className="fas fa-calendar me-1 text-danger"></i>
-                        Expires At
-                      </label>
-                      <input
-                        type="date"
-                        className="form-control form-control-lg border-2"
-                        value={couponForm.expiresAt}
-                        onChange={(e) => setCouponForm(prev => ({ ...prev, expiresAt: e.target.value }))}
-                      />
                     </div>
                   </div>
-                  <div className="mt-4">
-                    <div className="card border-primary border-2">
-                      <div className="card-body bg-primary bg-opacity-10">
-                        <div className="form-check form-switch">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            role="switch"
-                            checked={couponForm.isActive}
-                            onChange={(e) => setCouponForm(prev => ({ ...prev, isActive: e.target.checked }))}
-                            style={{ transform: 'scale(1.5)' }}
-                          />
-                          <label className="form-check-label fw-semibold text-dark ms-2">
-                            <i className="fas fa-toggle-on me-1 text-primary"></i>
-                            Active (available for use)
-                          </label>
-                        </div>
-                      </div>
+
+                  <div className="mb-3">
+                    <label htmlFor="applicableServices" className="form-label">
+                      Applicable Services (comma-separated)
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="applicableServices"
+                      value={couponFormData.applicableServices}
+                      onChange={(e) => setCouponFormData({ ...couponFormData, applicableServices: e.target.value })}
+                      placeholder="eyeliner, microblading, lips"
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="isActive"
+                        checked={couponFormData.isActive}
+                        onChange={(e) => setCouponFormData({ ...couponFormData, isActive: e.target.checked })}
+                      />
+                      <label className="form-check-label" htmlFor="isActive">
+                        Active
+                      </label>
                     </div>
                   </div>
                 </div>
-                <div className="modal-footer bg-light border-0 p-4">
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary btn-lg rounded-pill px-4 me-3"
-                    onClick={() => setShowCouponForm(false)}
-                  >
-                    <i className="fas fa-times me-2"></i>Cancel
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={closeCouponModal}>
+                    Cancel
                   </button>
-                  <button
-                    type="submit"
-                    className="btn btn-primary btn-lg rounded-pill px-4 shadow"
-                  >
-                    <i className="fas fa-plus me-2"></i>Create Coupon
+                  <button type="submit" className="btn btn-primary" disabled={submitting}>
+                    {submitting ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                        {editingCoupon ? 'Updating...' : 'Creating...'}
+                      </>
+                    ) : (
+                      editingCoupon ? 'Update Coupon' : 'Create Coupon'
+                    )}
                   </button>
                 </div>
               </form>
@@ -533,137 +754,140 @@ export default function CouponsGiftCardsManager() {
         </div>
       )}
 
-      {/* Gift Card Form Modal */}
-      {showGiftCardForm && (
-        <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
+      {/* Gift Card Modal */}
+      {showGiftCardModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-lg">
-            <div className="modal-content border-0 shadow-lg">
-              <div className="modal-header bg-success text-white border-0">
-                <h5 className="modal-title fw-bold">
-                  <i className="fas fa-credit-card me-2"></i>
-                  Create New Gift Card
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  {editingGiftCard ? 'Edit Gift Card' : 'Create New Gift Card'}
                 </h5>
-                <button
-                  type="button"
-                  className="btn-close btn-close-white"
-                  onClick={() => setShowGiftCardForm(false)}
-                ></button>
+                <button type="button" className="btn-close" onClick={closeGiftCardModal}></button>
               </div>
-              <form onSubmit={handleCreateGiftCard}>
-                <div className="modal-body bg-light">
-                  <div className="row g-3">
+              <form onSubmit={editingGiftCard ? handleEditGiftCard : handleCreateGiftCard}>
+                <div className="modal-body">
+                  <div className="row">
                     <div className="col-md-6">
-                      <label className="form-label fw-semibold">
-                        <i className="fas fa-barcode me-1 text-success"></i>
-                        Gift Card Code *
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control form-control-lg border-2"
-                        value={giftCardForm.code}
-                        onChange={(e) => setGiftCardForm(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
-                        placeholder="GC-XXXX-XXXX"
-                        required
-                      />
+                      <div className="mb-3">
+                        <label htmlFor="initialAmount" className="form-label">
+                          Initial Amount ($) <span className="text-danger">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          id="initialAmount"
+                          value={giftCardFormData.initialAmount}
+                          onChange={(e) => setGiftCardFormData({ ...giftCardFormData, initialAmount: parseFloat(e.target.value) || 0 })}
+                          required
+                          min="0"
+                          step="0.01"
+                          disabled={!!editingGiftCard}
+                        />
+                      </div>
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label fw-semibold">
-                        <i className="fas fa-dollar-sign me-1 text-success"></i>
-                        Amount *
-                      </label>
-                      <input
-                        type="number"
-                        className="form-control form-control-lg border-2"
-                        value={giftCardForm.initialAmount}
-                        onChange={(e) => setGiftCardForm(prev => ({ ...prev, initialAmount: Number(e.target.value) }))}
-                        min="0"
-                        step="0.01"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="row g-3 mt-2">
-                    <div className="col-md-6">
-                      <label className="form-label fw-semibold">
-                        <i className="fas fa-user me-1 text-primary"></i>
-                        Purchaser Email *
-                      </label>
-                      <input
-                        type="email"
-                        className="form-control form-control-lg border-2"
-                        value={giftCardForm.purchaserEmail}
-                        onChange={(e) => setGiftCardForm(prev => ({ ...prev, purchaserEmail: e.target.value }))}
-                        required
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label fw-semibold">
-                        <i className="fas fa-gift me-1 text-info"></i>
-                        Recipient Email *
-                      </label>
-                      <input
-                        type="email"
-                        className="form-control form-control-lg border-2"
-                        value={giftCardForm.recipientEmail}
-                        onChange={(e) => setGiftCardForm(prev => ({ ...prev, recipientEmail: e.target.value }))}
-                        required
-                      />
+                      <div className="mb-3">
+                        <label htmlFor="expiresAt" className="form-label">
+                          Expiration Date <span className="text-danger">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          className="form-control"
+                          id="expiresAt"
+                          value={giftCardFormData.expiresAt}
+                          onChange={(e) => setGiftCardFormData({ ...giftCardFormData, expiresAt: e.target.value })}
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div className="row g-3 mt-2">
+
+                  <div className="row">
                     <div className="col-md-6">
-                      <label className="form-label fw-semibold">
-                        <i className="fas fa-user-tag me-1 text-secondary"></i>
-                        Recipient Name *
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control form-control-lg border-2"
-                        value={giftCardForm.recipientName}
-                        onChange={(e) => setGiftCardForm(prev => ({ ...prev, recipientName: e.target.value }))}
-                        required
-                      />
+                      <div className="mb-3">
+                        <label htmlFor="recipientName" className="form-label">
+                          Recipient Name <span className="text-danger">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="recipientName"
+                          value={giftCardFormData.recipientName}
+                          onChange={(e) => setGiftCardFormData({ ...giftCardFormData, recipientName: e.target.value })}
+                          required
+                        />
+                      </div>
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label fw-semibold">
-                        <i className="fas fa-calendar me-1 text-danger"></i>
-                        Expires At
-                      </label>
-                      <input
-                        type="date"
-                        className="form-control form-control-lg border-2"
-                        value={giftCardForm.expiresAt}
-                        onChange={(e) => setGiftCardForm(prev => ({ ...prev, expiresAt: e.target.value }))}
-                      />
+                      <div className="mb-3">
+                        <label htmlFor="recipientEmail" className="form-label">
+                          Recipient Email <span className="text-danger">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          className="form-control"
+                          id="recipientEmail"
+                          value={giftCardFormData.recipientEmail}
+                          onChange={(e) => setGiftCardFormData({ ...giftCardFormData, recipientEmail: e.target.value })}
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div className="mt-3">
-                    <label className="form-label fw-semibold">
-                      <i className="fas fa-comment me-1 text-warning"></i>
-                      Personal Message
-                    </label>
+
+                  <div className="row">
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label htmlFor="purchaserName" className="form-label">Purchaser Name</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="purchaserName"
+                          value={giftCardFormData.purchaserName}
+                          onChange={(e) => setGiftCardFormData({ ...giftCardFormData, purchaserName: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="mb-3">
+                        <label htmlFor="purchaserEmail" className="form-label">Purchaser Email</label>
+                        <input
+                          type="email"
+                          className="form-control"
+                          id="purchaserEmail"
+                          value={giftCardFormData.purchaserEmail}
+                          onChange={(e) => setGiftCardFormData({ ...giftCardFormData, purchaserEmail: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label htmlFor="message" className="form-label">Personal Message</label>
                     <textarea
-                      className="form-control form-control-lg border-2"
+                      className="form-control"
+                      id="message"
+                      value={giftCardFormData.message}
+                      onChange={(e) => setGiftCardFormData({ ...giftCardFormData, message: e.target.value })}
                       rows={3}
-                      value={giftCardForm.message}
-                      onChange={(e) => setGiftCardForm(prev => ({ ...prev, message: e.target.value }))}
                       placeholder="Add a personal message for the recipient..."
                     />
                   </div>
                 </div>
-                <div className="modal-footer bg-light border-0 p-4">
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary btn-lg rounded-pill px-4 me-3"
-                    onClick={() => setShowGiftCardForm(false)}
-                  >
-                    <i className="fas fa-times me-2"></i>Cancel
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={closeGiftCardModal}>
+                    Cancel
                   </button>
-                  <button
-                    type="submit"
-                    className="btn btn-success btn-lg rounded-pill px-4 shadow"
-                  >
-                    <i className="fas fa-credit-card me-2"></i>Create Gift Card
+                  <button type="submit" className="btn btn-success" disabled={submitting}>
+                    {submitting ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                        {editingGiftCard ? 'Updating...' : 'Creating...'}
+                      </>
+                    ) : (
+                      editingGiftCard ? 'Update Gift Card' : 'Create Gift Card'
+                    )}
                   </button>
                 </div>
               </form>
