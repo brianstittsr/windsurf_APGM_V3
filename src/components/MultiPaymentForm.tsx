@@ -21,7 +21,7 @@ interface MultiPaymentFormProps {
   onPaymentMethodChange?: (method: PaymentMethod) => void;
 }
 
-export type PaymentMethod = 'card' | 'klarna' | 'affirm' | 'cherry';
+export type PaymentMethod = 'card' | 'klarna' | 'affirm' | 'cherry' | 'afterpay';
 
 const CARD_ELEMENT_OPTIONS = {
   style: {
@@ -69,8 +69,8 @@ export default function MultiPaymentForm({
   
   // Determine payment amount based on method
   const getPaymentAmount = (method: PaymentMethod) => {
-    // Cherry, Klarna, and Affirm require full payment
-    if (method === 'cherry' || method === 'klarna' || method === 'affirm') {
+    // These payment methods require full payment
+    if (['cherry', 'klarna', 'affirm', 'afterpay'].includes(method)) {
       return totalAmount || amount;
     }
     // Card payments use deposit amount
@@ -86,7 +86,8 @@ export default function MultiPaymentForm({
     city: '',
     state: '',
     postal_code: '',
-    country: 'US'
+    country: 'US',
+    email: ''
   });
 
   const createPaymentIntent = async (paymentMethodTypes: string[]) => {
@@ -231,6 +232,8 @@ export default function MultiPaymentForm({
       paymentMethodTypes = ['klarna'];
     } else if (method === 'affirm') {
       paymentMethodTypes = ['affirm'];
+    } else if (method === 'afterpay') {
+      paymentMethodTypes = ['afterpay_clearpay'];
     } else if (method === 'cherry') {
       // Cherry doesn't use Stripe payment intents
       return;
@@ -317,6 +320,39 @@ export default function MultiPaymentForm({
     return { error, paymentIntent };
   };
 
+  const handleAfterpayPayment = async (client_secret: string) => {
+    console.log('💳 Confirming AfterPay payment...');
+    
+    const { error, paymentIntent } = await stripe!.confirmAfterpayClearpayPayment(client_secret, {
+      payment_method: {
+        billing_details: {
+          name: cardholderName || 'Customer Name',
+          email: billingAddress.email || '',
+          address: {
+            line1: billingAddress.line1,
+            city: billingAddress.city,
+            state: billingAddress.state,
+            postal_code: billingAddress.postal_code,
+            country: billingAddress.country || 'US',
+          },
+        },
+      },
+      return_url: `${window.location.origin}/payment-success`,
+      shipping: {
+        name: cardholderName || 'Customer Name',
+        address: {
+          line1: billingAddress.line1,
+          city: billingAddress.city,
+          state: billingAddress.state,
+          postal_code: billingAddress.postal_code,
+          country: billingAddress.country || 'US',
+        },
+      },
+    });
+
+    return { error, paymentIntent };
+  };
+
   const handleCherryPayment = async () => {
     console.log('🍒 Redirecting to Cherry payment...');
     
@@ -388,6 +424,8 @@ export default function MultiPaymentForm({
         result = await handleKlarnaPayment(currentClientSecret);
       } else if (selectedPaymentMethod === 'affirm') {
         result = await handleAffirmPayment(currentClientSecret);
+      } else if (selectedPaymentMethod === 'afterpay') {
+        result = await handleAfterpayPayment(currentClientSecret);
       } else {
         throw new Error('Invalid payment method selected');
       }
@@ -532,6 +570,25 @@ export default function MultiPaymentForm({
                 <i className="fas fa-credit-card fa-2x mb-2 text-primary"></i>
                 <h6 className="mb-0">Credit/Debit Card</h6>
                 <small className="text-muted">Pay with Visa, Mastercard, etc.</small>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-3 mb-2">
+            <div 
+              className={`card payment-method-card ${selectedPaymentMethod === 'afterpay' ? 'border-primary' : ''}`}
+              style={{ cursor: 'pointer' }}
+              onClick={() => handlePaymentMethodChange('afterpay')}
+            >
+              <div className="card-body text-center py-3">
+                <div className="d-flex justify-content-center mb-2" style={{ height: '48px' }}>
+                  <img 
+                    src="https://upload.wikimedia.org/wikipedia/commons/0/04/Afterpay_logo.jpg" 
+                    alt="AfterPay Logo" 
+                    style={{ width: '48px', height: '48px', objectFit: 'contain' }}
+                  />
+                </div>
+                <h6 className="mb-0">AfterPay</h6>
+                <small className="text-muted">Pay in 4 interest-free installments</small>
               </div>
             </div>
           </div>
