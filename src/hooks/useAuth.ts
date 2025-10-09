@@ -11,6 +11,7 @@ interface AuthState {
   userProfile: User | null;
   loading: boolean;
   error: string | null;
+  userRole?: 'client' | 'admin' | 'artist';
 }
 
 export function useAuth() {
@@ -52,18 +53,21 @@ export function useAuth() {
               const userProfile = await UserService.getUserById(firebaseUser.uid);
               
               if (userProfile) {
-                console.log('✅ User profile loaded:', userProfile.profile.email);
+                console.log('✅ User profile loaded:', userProfile.profile.email, 'Role:', userProfile.role);
                 setAuthState({
                   user: firebaseUser,
                   userProfile: userProfile,
+                  userRole: userProfile.role,
                   loading: false,
                   error: null
                 });
               } else {
                 console.log('⚠️ No user profile found for:', firebaseUser.uid);
+                // Default to client role if no profile found
                 setAuthState({
                   user: firebaseUser,
                   userProfile: null,
+                  userRole: 'client',
                   loading: false,
                   error: null
                 });
@@ -73,6 +77,7 @@ export function useAuth() {
               setAuthState({
                 user: firebaseUser,
                 userProfile: null,
+                userRole: 'client', // Default to client role on error
                 loading: false,
                 error: 'Failed to load user profile'
               });
@@ -121,9 +126,13 @@ export function useAuth() {
     };
   }, [authState.userProfile]);
 
+  // Get the user's role from the userProfile if it exists
+  const userRole = authState.userProfile?.role || 'client';
+
   return {
     ...authState,
     isAuthenticated,
+    userRole,
     getClientProfileData
   };
 }
