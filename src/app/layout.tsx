@@ -26,6 +26,27 @@ export const metadata: Metadata = {
     shortcut: "/images/APGM-icon2.png",
     apple: "/images/APGM-icon2.png",
   },
+  openGraph: {
+    type: "website",
+    url: "https://aprettygirlmatter.com",
+    title: "A Pretty Girl Matter",
+    description: "Professional semi-permanent makeup services by Victoria Escobar. Microblading, semi-permanent eyeliner, lip blushing, and more.",
+    siteName: "A Pretty Girl Matter",
+    images: [
+      {
+        url: "https://aprettygirlmatter.com/images/APGM-icon2.png",
+        width: 500,
+        height: 500,
+        alt: "A Pretty Girl Matter Logo"
+      }
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "A Pretty Girl Matter",
+    description: "Professional semi-permanent makeup services by Victoria Escobar.",
+    images: ["https://aprettygirlmatter.com/images/APGM-icon2.png"],
+  },
 };
 
 export default function RootLayout({
