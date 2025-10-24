@@ -4,9 +4,20 @@
   "description": "Root package for APGM V3 project",
   "private": true,
   "scripts": {
-    "build": "cd permanent-makeup-website && npm install && npm run build",
-    "start": "cd permanent-makeup-website && npm start",
-    "dev": "cd permanent-makeup-website && npm run dev",
-    "vercel-build": "cd permanent-makeup-website && npm install && npm run build"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "^15.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.0.0"
   }
 }
