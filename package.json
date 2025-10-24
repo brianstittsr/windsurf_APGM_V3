@@ -1,0 +1,12 @@
+{
+  "name": "apgm-v3-root",
+  "version": "1.0.0",
+  "description": "Root package for APGM V3 project",
+  "private": true,
+  "scripts": {
+    "build": "cd permanent-makeup-website && npm install && npm run build",
+    "start": "cd permanent-makeup-website && npm start",
+    "dev": "cd permanent-makeup-website && npm run dev",
+    "vercel-build": "cd permanent-makeup-website && npm install && npm run build"
+  }
+}
