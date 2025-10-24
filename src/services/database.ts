@@ -57,6 +57,16 @@ export const COLLECTIONS = {
 
 // Generic CRUD operations
 export class DatabaseService {
+  // Get a Firestore collection reference
+  static getCollection(collectionName: string) {
+    return collection(db, collectionName);
+  }
+  
+  // Get a Firestore batch
+  static getBatch() {
+    const { writeBatch } = require('firebase/firestore');
+    return writeBatch(db);
+  }
   // Create
   static async create<T>(collectionName: string, data: Omit<T, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     const docRef = await addDoc(collection(db, collectionName), {

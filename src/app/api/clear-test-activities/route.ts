@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DatabaseService } from '@/services/database';
-import { USER_ACTIVITIES } from '@/services/database';
+import { DatabaseService, COLLECTIONS } from '@/services/database';
+import { query, where, getDocs } from 'firebase/firestore';
 
 export async function POST(request: NextRequest) {
   try {
     // Delete all activities for test users (users with IDs starting with 'test-')
-    const activitiesRef = DatabaseService.getCollection(USER_ACTIVITIES);
-    const testActivitiesQuery = activitiesRef.where('userId', '>=', 'test-').where('userId', '<', 'test-\uf8ff');
+    const activitiesRef = DatabaseService.getCollection(COLLECTIONS.USER_ACTIVITIES);
+    const testActivitiesQuery = query(
+      activitiesRef,
+      where('userId', '>=', 'test-'),
+      where('userId', '<', 'test-\uf8ff')
+    );
     
-    const snapshot = await testActivitiesQuery.get();
+    const snapshot = await getDocs(testActivitiesQuery);
     const batch = DatabaseService.getBatch();
     
     let deleteCount = 0;
