@@ -1,0 +1,4 @@
+[submodule "permanent-makeup-website"]
+	path = permanent-makeup-website
+	url = https://github.com/brianstittsr/windsurf_APGM_V3.git
+	branch = main
