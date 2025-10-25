@@ -213,6 +213,72 @@ export default function GoHighLevelManager() {
         </div>
       </div>
 
+      {/* BMAD Orchestrator Integration Diagram */}
+      <div className="card mb-4 border-primary">
+        <div className="card-header bg-primary text-white">
+          <h5 className="mb-0"><i className="fas fa-sitemap me-2"></i>BMAD Orchestrator Integration Flow</h5>
+        </div>
+        <div className="card-body">
+          <div className="row text-center">
+            <div className="col-md-3">
+              <div className="p-3 border rounded bg-light">
+                <i className="fas fa-globe fa-2x text-primary mb-2"></i>
+                <h6>Your Website</h6>
+                <small>Booking, Forms, Payments</small>
+              </div>
+            </div>
+            <div className="col-md-1 d-flex align-items-center justify-content-center">
+              <i className="fas fa-arrow-right fa-2x text-muted"></i>
+            </div>
+            <div className="col-md-3">
+              <div className="p-3 border rounded bg-info text-white">
+                <i className="fas fa-robot fa-2x mb-2"></i>
+                <h6>BMAD Orchestrator</h6>
+                <small>Intelligent Automation</small>
+              </div>
+            </div>
+            <div className="col-md-1 d-flex align-items-center justify-content-center">
+              <i className="fas fa-exchange-alt fa-2x text-muted"></i>
+            </div>
+            <div className="col-md-3">
+              <div className="p-3 border rounded bg-success text-white">
+                <i className="fas fa-cloud fa-2x mb-2"></i>
+                <h6>GoHighLevel</h6>
+                <small>CRM, Workflows, Automation</small>
+              </div>
+            </div>
+          </div>
+          <div className="mt-3">
+            <h6 className="text-primary">What BMAD Orchestrator Does:</h6>
+            <ul className="small">
+              <li><strong>Syncs Contacts:</strong> Automatically creates/updates contacts in GHL when bookings are made</li>
+              <li><strong>Triggers Workflows:</strong> Initiates GHL workflows for follow-ups, reminders, and campaigns</li>
+              <li><strong>Manages Appointments:</strong> Syncs calendar appointments between your site and GHL</li>
+              <li><strong>Handles Invoices:</strong> Creates and sends invoices through GHL</li>
+              <li><strong>Tracks Opportunities:</strong> Updates pipeline stages based on customer actions</li>
+              <li><strong>Sends Messages:</strong> Automated SMS/email through GHL conversations</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Troubleshooting Section */}
+      {testResult?.type === 'error' && (
+        <div className="alert alert-danger alert-dismissible fade show" role="alert">
+          <h6 className="alert-heading"><i className="fas fa-exclamation-triangle me-2"></i>Connection Issue Detected</h6>
+          <p className="mb-2">{testResult.message}</p>
+          <hr />
+          <h6>Common Issues & Solutions:</h6>
+          <ol className="small mb-0">
+            <li><strong>Missing Scopes:</strong> Ensure all required scopes are enabled in GHL Private Integration settings</li>
+            <li><strong>Invalid API Key:</strong> Regenerate your API key after enabling scopes</li>
+            <li><strong>Wrong Integration Type:</strong> Use Private Integration, not Agency API</li>
+            <li><strong>Expired Token:</strong> API keys may expire - generate a new one</li>
+          </ol>
+          <button type="button" className="btn-close" onClick={() => setTestResult(null)}></button>
+        </div>
+      )}
+
       {/* Status Cards */}
       <div className="row mb-4">
         <div className="col-md-3">
