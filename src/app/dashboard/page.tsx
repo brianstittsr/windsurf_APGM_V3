@@ -11,11 +11,10 @@ import CouponsGiftCardsManager from '../../components/admin/CouponsGiftCardsMana
 import BusinessSettingsManager from '../../components/admin/BusinessSettingsManager';
 import ArtistManager from '../../components/admin/ArtistManager';
 import BookingCalendarManager from '../../components/admin/BookingCalendarManager';
-import ClientManager from '../../components/admin/ClientManager';
 import RegistrationFormsManager from '../../components/admin/RegistrationFormsManager';
 import Footer from '../../components/Footer';
 
-type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'clients' | 'forms';
+type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms';
 
 export default function DashboardPage() {
   const { user, userRole, loading } = useAuth();
@@ -160,20 +159,6 @@ export default function DashboardPage() {
                   </div>
                   <div className="row">
                     <div className="col-md-3 mb-4">
-                      <div className="card bg-teal text-white" style={{backgroundColor: '#20c997'}}>
-                        <div className="card-body">
-                          <h5 className="card-title">Clients</h5>
-                          <p className="card-text">Manage registered clients</p>
-                          <button
-                            className="btn btn-light btn-sm"
-                            onClick={() => setActiveTab('clients')}
-                          >
-                            View Clients
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-3 mb-4">
                       <div className="card bg-purple text-white" style={{backgroundColor: '#6f42c1'}}>
                         <div className="card-body">
                           <h5 className="card-title">Registration Forms</h5>
@@ -207,8 +192,6 @@ export default function DashboardPage() {
         return <ArtistManager />;
       case 'bookings':
         return <BookingCalendarManager />;
-      case 'clients':
-        return <ClientManager />;
       case 'forms':
         return <RegistrationFormsManager />;
       default:
@@ -317,16 +300,6 @@ export default function DashboardPage() {
                   style={{padding: '12px 16px', cursor: 'pointer'}}
                 >
                   <i className="fas fa-calendar-alt me-2"></i>Bookings
-                </button>
-              </li>
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link fw-bold ${activeTab === 'clients' ? 'active border-bottom border-primary' : ''}`}
-                  type="button"
-                  onClick={() => setActiveTab('clients')}
-                  style={{padding: '12px 16px', cursor: 'pointer'}}
-                >
-                  <i className="fas fa-user-friends me-2"></i>Clients
                 </button>
               </li>
               <li className="nav-item" role="presentation">

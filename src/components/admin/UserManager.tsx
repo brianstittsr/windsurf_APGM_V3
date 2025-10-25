@@ -19,6 +19,8 @@ export default function UserManager() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [filterRole, setFilterRole] = useState<'all' | 'client' | 'artist' | 'admin'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState<UserFormData>({
     email: '',
     displayName: '',
@@ -168,6 +170,13 @@ export default function UserManager() {
     }
   };
 
+  const filteredUsers = users.filter(user => {
+    const roleMatch = filterRole === 'all' || user.role === filterRole;
+    const searchMatch = user.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                       user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    return roleMatch && searchMatch;
+  });
+
   if (loading) {
     return (
       <div className="text-center py-5">
@@ -195,11 +204,38 @@ export default function UserManager() {
         </div>
       </div>
 
+      {/* Search and Filter */}
+      <div className="row mb-4">
+        <div className="col-md-6">
+          <input
+            type="text"
+            className="form-control form-control-lg"
+            placeholder="Search by name or email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="col-md-6">
+          <div className="btn-group w-100" role="group">
+            {(['all', 'client', 'artist', 'admin'] as const).map(role => (
+              <button
+                key={role}
+                type="button"
+                className={`btn ${filterRole === role ? 'btn-primary' : 'btn-outline-primary'}`}
+                onClick={() => setFilterRole(role)}
+              >
+                {role.charAt(0).toUpperCase() + role.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="row">
         <div className="col-12">
           <div className="card">
             <div className="card-header">
-              <h5 className="card-title mb-0">All Users ({users.length})</h5>
+              <h5 className="card-title mb-0">All Users ({filteredUsers.length})</h5>
             </div>
             <div className="card-body">
               {users.length === 0 ? (
@@ -227,7 +263,7 @@ export default function UserManager() {
                       </tr>
                     </thead>
                     <tbody>
-                      {users.map((user) => (
+                      {filteredUsers.map((user) => (
                         <tr key={user.id}>
                           <td>{user.displayName}</td>
                           <td>{user.email}</td>
