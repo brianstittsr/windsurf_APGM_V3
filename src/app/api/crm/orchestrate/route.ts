@@ -77,6 +77,86 @@ export async function POST(request: NextRequest) {
         result = await orchestrator.getSurveys();
         break;
 
+      case 'get-tags':
+        result = await orchestrator.getTags();
+        break;
+
+      case 'create-tag':
+        result = await orchestrator.createTag(data);
+        break;
+
+      case 'add-tag-to-contact':
+        result = await orchestrator.addTagToContact(data.contactId, data.tagId);
+        break;
+
+      case 'get-tasks':
+        result = await orchestrator.getTasks();
+        break;
+
+      case 'create-task':
+        result = await orchestrator.createTask(data);
+        break;
+
+      case 'update-task':
+        result = await orchestrator.updateTask(data.taskId, data.taskData);
+        break;
+
+      case 'get-notes':
+        result = await orchestrator.getNotes(data.contactId);
+        break;
+
+      case 'create-note':
+        result = await orchestrator.createNote(data.contactId, data.noteData);
+        break;
+
+      case 'get-custom-fields':
+        result = await orchestrator.getCustomFields();
+        break;
+
+      case 'create-custom-field':
+        result = await orchestrator.createCustomField(data);
+        break;
+
+      case 'get-payment-transactions':
+        result = await orchestrator.getPaymentTransactions();
+        break;
+
+      case 'create-payment':
+        result = await orchestrator.createPaymentTransaction(data);
+        break;
+
+      case 'get-users':
+        result = await orchestrator.getUsers();
+        break;
+
+      case 'get-companies':
+        result = await orchestrator.getCompanies();
+        break;
+
+      case 'get-triggers':
+        result = await orchestrator.getTriggers();
+        break;
+
+      case 'create-trigger':
+        result = await orchestrator.createTrigger(data);
+        break;
+
+      case 'create-short-link':
+        result = await orchestrator.createShortLink(data);
+        break;
+
+      case 'get-social-posts':
+        result = await orchestrator.getSocialPosts();
+        break;
+
+      case 'create-social-post':
+        result = await orchestrator.createSocialPost(data);
+        break;
+
+      case 'get-media':
+        result = await orchestrator.getMediaFiles();
+        break;
+
       default:
         return NextResponse.json(
           { error: `Unknown action: ${action}` },
