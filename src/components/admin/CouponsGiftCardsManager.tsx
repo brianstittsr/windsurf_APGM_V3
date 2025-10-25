@@ -18,6 +18,7 @@ interface CouponFormData {
   expirationDate: string;
   applicableServices: string;
   isActive: boolean;
+  removeDepositOption?: boolean;
 }
 
 interface GiftCardFormData {
@@ -49,7 +50,8 @@ export default function CouponsGiftCardsManager() {
     usageLimit: 0,
     expirationDate: '',
     applicableServices: '',
-    isActive: true
+    isActive: true,
+    removeDepositOption: false
   });
 
   // Gift card form states
@@ -119,7 +121,8 @@ export default function CouponsGiftCardsManager() {
         usageLimit: couponFormData.usageLimit || 0,
         expirationDate: new Date(couponFormData.expirationDate),
         applicableServices: couponFormData.applicableServices ? couponFormData.applicableServices.split(',').map(s => s.trim()) : [],
-        isActive: couponFormData.isActive
+        isActive: couponFormData.isActive,
+        removeDepositOption: couponFormData.removeDepositOption || false
       };
 
       await CouponService.createCoupon(couponData);
@@ -149,7 +152,8 @@ export default function CouponsGiftCardsManager() {
         usageLimit: couponFormData.usageLimit || 0,
         expirationDate: new Date(couponFormData.expirationDate),
         applicableServices: couponFormData.applicableServices ? couponFormData.applicableServices.split(',').map(s => s.trim()) : [],
-        isActive: couponFormData.isActive
+        isActive: couponFormData.isActive,
+        removeDepositOption: couponFormData.removeDepositOption || false
       };
 
       await CouponService.updateCoupon(editingCoupon.id, updateData);
@@ -285,7 +289,8 @@ export default function CouponsGiftCardsManager() {
       usageLimit: coupon.usageLimit || 0,
       expirationDate: coupon.expirationDate?.toISOString().split('T')[0] || '',
       applicableServices: coupon.applicableServices?.join(', ') || '',
-      isActive: coupon.isActive
+      isActive: coupon.isActive,
+      removeDepositOption: coupon.removeDepositOption || false
     });
     setShowCouponModal(true);
   };
@@ -729,6 +734,21 @@ export default function CouponsGiftCardsManager() {
                       />
                       <label className="form-check-label" htmlFor="isActive">
                         Active
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="removeDepositOption"
+                        checked={couponFormData.removeDepositOption || false}
+                        onChange={(e) => setCouponFormData({ ...couponFormData, removeDepositOption: e.target.checked })}
+                      />
+                      <label className="form-check-label" htmlFor="removeDepositOption">
+                        Remove $50 Deposit Option
                       </label>
                     </div>
                   </div>

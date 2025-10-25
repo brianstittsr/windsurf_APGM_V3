@@ -30,6 +30,7 @@ export interface CouponCode {
   expirationDate: Date;
   applicableServices?: string[];
   isActive: boolean;
+  removeDepositOption?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
