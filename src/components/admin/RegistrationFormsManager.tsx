@@ -330,32 +330,57 @@ export default function RegistrationFormsManager() {
                 </div>
                 <div className="row mb-3">
                   <div className="col-12">
-                    <label className="form-label fw-bold">Skin Type</label>
-                    <p>{selectedForm.skinType || '-'}</p>
+                    <label className="form-label fw-bold">Signature</label>
+                    <p>{(selectedForm as any).signature || '-'}</p>
                   </div>
                 </div>
                 <div className="row mb-3">
                   <div className="col-12">
-                    <label className="form-label fw-bold">Allergies</label>
-                    <p>{selectedForm.allergies || '-'}</p>
+                    <label className="form-label fw-bold">Health Form Responses</label>
+                    {(selectedForm as any).responses ? (
+                      <div className="table-responsive">
+                        <table className="table table-sm table-bordered">
+                          <thead>
+                            <tr>
+                              <th>Question #</th>
+                              <th>Response</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {Object.entries((selectedForm as any).responses).map(([key, value]) => (
+                              <tr key={key}>
+                                <td>Question {key}</td>
+                                <td>
+                                  <span className={`badge ${value === 'yes' ? 'bg-warning' : 'bg-success'}`}>
+                                    {String(value).toUpperCase()}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p>No responses available</p>
+                    )}
                   </div>
                 </div>
                 <div className="row mb-3">
-                  <div className="col-12">
-                    <label className="form-label fw-bold">Current Medications</label>
-                    <p>{selectedForm.medications || '-'}</p>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold">Clearance Required</label>
+                    <p>
+                      <span className={`badge ${(selectedForm as any).clearanceRequired ? 'bg-danger' : 'bg-success'}`}>
+                        {(selectedForm as any).clearanceRequired ? 'YES' : 'NO'}
+                      </span>
+                    </p>
                   </div>
-                </div>
-                <div className="row mb-3">
-                  <div className="col-12">
-                    <label className="form-label fw-bold">Previous Procedures</label>
-                    <p>{selectedForm.previousProcedures || '-'}</p>
-                  </div>
-                </div>
-                <div className="row mb-3">
-                  <div className="col-12">
-                    <label className="form-label fw-bold">Expectations</label>
-                    <p>{selectedForm.expectations || '-'}</p>
+                  <div className="col-md-6">
+                    <label className="form-label fw-bold">Form Valid</label>
+                    <p>
+                      <span className={`badge ${(selectedForm as any).isValid ? 'bg-success' : 'bg-danger'}`}>
+                        {(selectedForm as any).isValid ? 'VALID' : 'INVALID'}
+                      </span>
+                    </p>
                   </div>
                 </div>
                 <div className="row mb-3">
