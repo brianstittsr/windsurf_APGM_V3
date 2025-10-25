@@ -167,62 +167,70 @@ export default function DashboardPage() {
         {/* Navigation Tabs */}
         <div className="row mb-4">
           <div className="col-12">
-            <ul className="nav nav-tabs" role="tablist">
+            <div className="card border-0 shadow-sm" style={{borderRadius: '12px', overflow: 'hidden'}}>
+              <ul className="nav nav-tabs" role="tablist" style={{borderBottom: '2px solid #dee2e6'}}>
               <li className="nav-item" role="presentation">
                 <button
-                  className={`nav-link ${activeTab === 'overview' ? 'active' : ''}`}
+                  className={`nav-link fw-bold ${activeTab === 'overview' ? 'active border-bottom border-primary' : ''}`}
                   type="button"
                   onClick={() => setActiveTab('overview')}
+                  style={{padding: '12px 16px', cursor: 'pointer'}}
                 >
                   <i className="fas fa-tachometer-alt me-2"></i>Overview
                 </button>
               </li>
               <li className="nav-item" role="presentation">
                 <button
-                  className={`nav-link ${activeTab === 'users' ? 'active' : ''}`}
+                  className={`nav-link fw-bold ${activeTab === 'users' ? 'active border-bottom border-primary' : ''}`}
                   type="button"
                   onClick={() => setActiveTab('users')}
+                  style={{padding: '12px 16px', cursor: 'pointer'}}
                 >
                   <i className="fas fa-users me-2"></i>Users
                 </button>
               </li>
               <li className="nav-item" role="presentation">
                 <button
-                  className={`nav-link ${activeTab === 'reviews' ? 'active' : ''}`}
+                  className={`nav-link fw-bold ${activeTab === 'reviews' ? 'active border-bottom border-primary' : ''}`}
                   type="button"
                   onClick={() => setActiveTab('reviews')}
+                  style={{padding: '12px 16px', cursor: 'pointer'}}
                 >
                   <i className="fas fa-star me-2"></i>Reviews
                 </button>
               </li>
               <li className="nav-item" role="presentation">
                 <button
-                  className={`nav-link ${activeTab === 'services' ? 'active' : ''}`}
+                  className={`nav-link fw-bold ${activeTab === 'services' ? 'active border-bottom border-primary' : ''}`}
                   type="button"
                   onClick={() => setActiveTab('services')}
+                  style={{padding: '12px 16px', cursor: 'pointer'}}
                 >
                   <i className="fas fa-list me-2"></i>Services
                 </button>
               </li>
               <li className="nav-item" role="presentation">
                 <button
-                  className={`nav-link ${activeTab === 'coupons' ? 'active' : ''}`}
+                  className={`nav-link fw-bold ${activeTab === 'coupons' ? 'active border-bottom border-primary' : ''}`}
                   type="button"
                   onClick={() => setActiveTab('coupons')}
+                  style={{padding: '12px 16px', cursor: 'pointer'}}
                 >
                   <i className="fas fa-tags me-2"></i>Coupons & Gifts
                 </button>
               </li>
               <li className="nav-item" role="presentation">
                 <button
-                  className={`nav-link ${activeTab === 'business' ? 'active' : ''}`}
+                  className={`nav-link fw-bold ${activeTab === 'business' ? 'active border-bottom border-primary' : ''}`}
                   type="button"
                   onClick={() => setActiveTab('business')}
+                  style={{padding: '12px 16px', cursor: 'pointer'}}
                 >
                   <i className="fas fa-cog me-2"></i>Business Settings
                 </button>
               </li>
             </ul>
+            </div>
           </div>
         </div>
 
