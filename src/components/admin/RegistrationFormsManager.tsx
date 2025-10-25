@@ -53,12 +53,12 @@ export default function RegistrationFormsManager() {
         const phone = data.phone || data.profile?.phone || '';
         
         return {
+          ...data,
           id: doc.id,
           clientName,
           clientEmail,
           phone,
-          status: data.status || 'submitted',
-          ...data
+          status: data.status || 'submitted'
         } as RegistrationForm;
       });
       
