@@ -12,9 +12,10 @@ import BusinessSettingsManager from '../../components/admin/BusinessSettingsMana
 import ArtistManager from '../../components/admin/ArtistManager';
 import BookingCalendarManager from '../../components/admin/BookingCalendarManager';
 import RegistrationFormsManager from '../../components/admin/RegistrationFormsManager';
+import GoHighLevelManager from '../../components/admin/GoHighLevelManager';
 import Footer from '../../components/Footer';
 
-type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms';
+type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel';
 
 export default function DashboardPage() {
   const { user, userRole, loading } = useAuth();
@@ -172,6 +173,20 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </div>
+                    <div className="col-md-3 mb-4">
+                      <div className="card bg-indigo text-white" style={{backgroundColor: '#667eea'}}>
+                        <div className="card-body">
+                          <h5 className="card-title">GoHighLevel</h5>
+                          <p className="card-text">Manage CRM integration</p>
+                          <button
+                            className="btn btn-light btn-sm"
+                            onClick={() => setActiveTab('gohighlevel')}
+                          >
+                            Configure
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -194,6 +209,8 @@ export default function DashboardPage() {
         return <BookingCalendarManager />;
       case 'forms':
         return <RegistrationFormsManager />;
+      case 'gohighlevel':
+        return <GoHighLevelManager />;
       default:
         return null;
     }
@@ -310,6 +327,16 @@ export default function DashboardPage() {
                   style={{padding: '12px 16px', cursor: 'pointer'}}
                 >
                   <i className="fas fa-file-alt me-2"></i>Forms
+                </button>
+              </li>
+              <li className="nav-item" role="presentation">
+                <button
+                  className={`nav-link fw-bold ${activeTab === 'gohighlevel' ? 'active border-bottom border-primary' : ''}`}
+                  type="button"
+                  onClick={() => setActiveTab('gohighlevel')}
+                  style={{padding: '12px 16px', cursor: 'pointer'}}
+                >
+                  <i className="fas fa-cloud-upload-alt me-2"></i>GoHighLevel
                 </button>
               </li>
             </ul>
