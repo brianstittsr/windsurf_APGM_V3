@@ -44,22 +44,30 @@ export default function RegistrationFormsManager() {
       const formsList = formsSnapshot.docs.map(doc => {
         const data = doc.data();
         
+        console.log('Raw form data for doc', doc.id, ':', JSON.stringify(data, null, 2));
+        
         // Handle nested profile object structure
-        const clientName = data.clientName || 
+        const clientName = data.clientName || data.name || data.fullName ||
                           (data.profile?.firstName && data.profile?.lastName ? 
                            `${data.profile.firstName} ${data.profile.lastName}` : '') ||
-                          data.profile?.firstName || data.profile?.lastName || '';
+                          data.profile?.firstName || data.profile?.lastName ||
+                          (data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : '') ||
+                          data.firstName || data.lastName || '';
         const clientEmail = data.clientEmail || data.email || data.profile?.email || '';
-        const phone = data.phone || data.profile?.phone || '';
+        const phone = data.phone || data.profile?.phone || data.phoneNumber || '';
         
-        return {
+        const mappedForm = {
           ...data,
           id: doc.id,
           clientName,
           clientEmail,
           phone,
           status: data.status || 'submitted'
-        } as RegistrationForm;
+        };
+        
+        console.log('Mapped form:', JSON.stringify(mappedForm, null, 2));
+        
+        return mappedForm as RegistrationForm;
       });
       
       setForms(formsList.sort((a, b) => {
