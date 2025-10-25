@@ -90,16 +90,25 @@ export default function GoHighLevelManager() {
 
     try {
       setTestResult(null);
-      const response = await fetch('/api/crm/sync-status', {
+      
+      const response = await fetch('/api/crm/test-connection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ apiKey: settings.apiKey })
       });
 
-      if (response.ok) {
-        setTestResult({ type: 'success', message: '✅ Connection successful! API Key is valid.' });
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setTestResult({ 
+          type: 'success', 
+          message: `✅ Connection successful! Found ${data.locations?.length || 0} location(s).` 
+        });
       } else {
-        setTestResult({ type: 'error', message: '❌ Connection failed. Please check your API Key.' });
+        setTestResult({ 
+          type: 'error', 
+          message: `❌ Connection failed: ${data.error || 'Please check your API Key.'}` 
+        });
       }
     } catch (error) {
       console.error('Error testing connection:', error);
