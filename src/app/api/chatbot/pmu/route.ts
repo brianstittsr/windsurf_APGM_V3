@@ -11,16 +11,17 @@ interface ChatRequest {
   message: string;
   conversationHistory: any[];
   customerData?: any;
+  action?: any;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, conversationHistory, customerData }: ChatRequest = await request.json();
+    const { message, conversationHistory, customerData, action }: ChatRequest = await request.json();
 
-    console.log('💬 PMU Chatbot received:', message);
+    console.log('💬 PMU Chatbot received:', message, 'Action:', action);
 
     // Analyze intent
-    const intent = analyzeIntent(message, customerData);
+    const intent = analyzeIntent(message, customerData, action);
     console.log('🎯 Intent:', intent);
 
     // Generate response based on intent
@@ -40,16 +41,16 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function analyzeIntent(message: string, customerData: any) {
+function analyzeIntent(message: string, customerData: any, action?: any) {
   const lowerMessage = message.toLowerCase();
 
   // Booking intent
-  if (lowerMessage.includes('book') || lowerMessage.includes('appointment') || 
+  if (action?.type === 'select_time' || lowerMessage.includes('book') || lowerMessage.includes('appointment') || 
       lowerMessage.includes('schedule') || lowerMessage.includes('reserve')) {
     return {
       type: 'booking',
       stage: customerData?.bookingStage || 'initial',
-      data: extractBookingData(message, customerData)
+      data: extractBookingData(message, customerData, action)
     };
   }
 
@@ -157,29 +158,47 @@ async function handleBooking(intent: any, message: string, customerData: any) {
 
   // Stage 1: Initial booking request
   if (stage === 'initial') {
-    return {
-      response: `Wonderful! I'd love to help you book your appointment! 🎉
+    try {
+      const ghl = new GHLOrchestrator({ apiKey: process.env.GHL_API_KEY! });
+      const calendarId = process.env.GHL_CALENDAR_ID!;
+      const startDate = new Date().toISOString();
+      const endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days from now
 
-To get started, I'll need a few details:
+      const slots = await ghl.getAvailableSlots(calendarId, startDate, endDate);
+      
+      const nextThreeSlots = slots.flatMap((day: any) => day.slots).slice(0, 3);
 
-1️⃣ **Your Name**
-2️⃣ **Email Address**
-3️⃣ **Phone Number**
-4️⃣ **Which service?** (Microblading, Powder Brows, Lip Blush, or Eyeliner)
-5️⃣ **Preferred Date & Time**
+      if (nextThreeSlots.length > 0) {
+        const formattedSlots = nextThreeSlots.map((slot: any) => {
+          const date = new Date(slot.start);
+          return {
+            label: `${date.toLocaleDateString()} at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+            value: slot.start
+          };
+        });
 
-**Our Booking Process:**
-💰 $50 deposit to secure your spot
-📧 Instant confirmation email with payment link
-🎁 Before your appointment: Registration link with **GRANOPEN250** coupon ($250 value!)
-💳 Final payment: Only $200 (after $50 deposit credit)
-
-You can share all details now, or we can go step by step!`,
-      customerData: { bookingStage: 'collecting_info' },
-      actions: [
-        { type: 'view_services', label: '📋 View Services First' }
-      ]
-    };
+        return {
+          response: `Wonderful! I'd love to help you book your appointment! 🎉\n\nHere are the next available times. Please choose one, or let me know if another day works better for you!\n\nI'll also need:\n1️⃣ **Your Name**\n2️⃣ **Email Address**\n3️⃣ **Phone Number**\n4️⃣ **Which service?**`,
+          customerData: { bookingStage: 'collecting_info' },
+          actions: formattedSlots.map((slot: any) => ({
+            type: 'select_time',
+            label: slot.label,
+            data: { time: slot.value }
+          }))
+        };
+      } else {
+        return {
+          response: `I'm sorry, but I couldn't find any available appointments in the next 30 days. Please call us to schedule.`,
+          customerData: { bookingStage: 'initial' }
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching GHL slots:', error);
+      return {
+        response: 'I had trouble fetching available times. Would you like to tell me a preferred date and time instead?',
+        customerData: { bookingStage: 'collecting_info' }
+      };
+    }
   }
 
   // Stage 2: Collecting information
@@ -377,65 +396,19 @@ Ready to book with this amazing deal?`,
 function handleCareInstructions(intent: any) {
   if (intent.timing === 'pre') {
     return {
-      response: `📋 **Pre-Care Instructions** (Before Your Appointment)
-
-**24-48 Hours Before:**
-❌ No alcohol or caffeine
-❌ No blood thinners (aspirin, ibuprofen)
-❌ No retinol or vitamin A products
-❌ No waxing or tinting
-
-**Day Of:**
-✅ Come with clean, makeup-free face
-✅ Avoid sun exposure
-✅ Stay hydrated
-✅ Eat a good meal
-✅ Bring reference photos
-
-**Avoid if:**
-• Pregnant or nursing
-• On Accutane (wait 1 year)
-• Recent Botox (wait 2 weeks)
-• Active skin conditions
-
-Following these ensures the best results! 💕`,
+      response: `📋 **Pre-Care Instructions** (Before Your Appointment)\n\n**24-48 Hours Before:**\n❌ No alcohol or caffeine\n❌ No blood thinners (aspirin, ibuprofen)\n❌ No retinol or vitamin A products\n❌ No waxing or tinting\n\n**Day Of:**\n✅ Come with clean, makeup-free face\n✅ Avoid sun exposure\n✅ Stay hydrated\n✅ Eat a good meal\n✅ Bring reference photos\n\n**Avoid if:**\n• Pregnant or nursing\n• On Accutane (wait 1 year)\n• Recent Botox (wait 2 weeks)\n• Active skin conditions\n\nFollowing these ensures the best results! 💕`,
       actions: [
         { type: 'book_appointment', label: '📅 Ready to Book' }
       ]
     };
   }
 
+  // Default to post-care instructions
   return {
-    response: `🌟 **Aftercare Instructions** (Post-Procedure)
-
-**First 7 Days (Critical!):**
-✅ Keep area clean & dry
-✅ Apply provided ointment 2-3x daily
-✅ Sleep on your back
-❌ No water on treated area
-❌ No makeup
-❌ No sweating/exercise
-❌ No picking or scratching
-
-**Days 7-14:**
-✅ Gentle cleansing
-✅ Light moisturizer
-❌ Still no makeup
-❌ No swimming/sauna
-
-**Healing Timeline:**
-• Days 1-3: Darker & bolder
-• Days 4-7: Flaking begins
-• Days 8-14: Color lightens (normal!)
-• Week 6-8: Touch-up appointment
-
-**Final Results:** 4-6 weeks after touch-up
-
-We'll send detailed instructions after your appointment!`,
-      actions: [
-        { type: 'book_appointment', label: '📅 Book Appointment' }
-      ]
-    };
+    response: `🌟 **Aftercare Instructions** (Post-Procedure)\n\n**First 7 Days (Critical!):**\n✅ Keep area clean & dry\n✅ Apply provided ointment 2-3x daily\n✅ Sleep on your back\n❌ No water on treated area\n❌ No makeup\n❌ No sweating/exercise\n❌ No picking or scratching\n\n**Days 7-14:**\n✅ Gentle cleansing\n✅ Light moisturizer\n❌ Still no makeup\n❌ No swimming/sauna\n\n**Healing Timeline:**\n• Days 1-3: Darker & bolder\n• Days 4-7: Flaking begins\n• Days 8-14: Color lightens (normal!)\n• Week 6-8: Touch-up appointment\n\n**Final Results:** 4-6 weeks after touch-up\n\nWe'll send detailed instructions after your appointment!`,
+    actions: [
+      { type: 'book_appointment', label: '📅 Book Appointment' }
+    ]
   };
 }
 
@@ -592,12 +565,17 @@ Could you tell me more about what you're interested in? Or would you like to:`,
 }
 
 // Helper functions
-function extractBookingData(message: string, existingData: any = {}) {
+function extractBookingData(message: string, existingData: any = {}, action?: any) {
   const data = { ...existingData };
 
   // Extract email
   const emailMatch = message.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/);
   if (emailMatch) data.email = emailMatch[1];
+
+  // Extract time from action
+  if (action?.type === 'select_time' && action.data?.time) {
+    data.preferredDate = action.data.time;
+  }
 
   // Extract phone
   const phoneMatch = message.match(/(\+?1?\s*\(?[0-9]{3}\)?[\s.-]?[0-9]{3}[\s.-]?[0-9]{4})/);

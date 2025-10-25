@@ -81,6 +81,14 @@ export class GHLOrchestrator {
     return this.makeRequest('/calendars/events');
   }
 
+  async getAvailableSlots(calendarId: string, startDate: string, endDate: string) {
+    const queryParams = new URLSearchParams({
+      startDate,
+      endDate
+    });
+    return this.makeRequest(`/calendars/${calendarId}/slots?${queryParams.toString()}`);
+  }
+
   // ==================== CAMPAIGNS ====================
   async getCampaigns() {
     return this.makeRequest('/campaigns');

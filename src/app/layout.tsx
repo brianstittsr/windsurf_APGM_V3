@@ -61,6 +61,7 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="32x32" href="/images/APGM-icon2.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/images/APGM-icon2.png" />
         <link rel="shortcut icon" href="/images/APGM-icon2.png" />
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

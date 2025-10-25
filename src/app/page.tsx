@@ -5,7 +5,7 @@ import TheProcess from '@/components/TheProcess';
 import ClientReviews from '@/components/ClientReviews';
 import AboutVictoria from '@/components/AboutVictoria';
 import Footer from '../components/Footer';
-import PMUChatbot from '../components/PMUChatbot';
+import ChatbotLoader from '@/components/ChatbotLoader';
 
 export default function Home() {
   return (
@@ -17,7 +17,7 @@ export default function Home() {
       <ClientReviews />
       <AboutVictoria />
       <Footer />
-      <PMUChatbot />
+      <ChatbotLoader />
     </div>
   );
 }
