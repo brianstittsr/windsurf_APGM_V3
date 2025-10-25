@@ -11,11 +11,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Test the GoHighLevel API connection
-    const response = await fetch('https://rest.gohighlevel.com/v1/locations/', {
+    // Test the GoHighLevel API connection using Private Integration endpoint
+    // Private Integrations use the services.leadconnectorhq.com domain
+    const response = await fetch('https://services.leadconnectorhq.com/users/me', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
+        'Version': '2021-07-28',
         'Content-Type': 'application/json'
       }
     });
@@ -25,15 +27,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: 'Connection successful',
-        locations: data.locations || []
+        user: {
+          id: data.id,
+          name: data.name || data.firstName + ' ' + data.lastName,
+          email: data.email,
+          companyId: data.companyId
+        }
       });
     } else {
       const errorText = await response.text();
       console.error('GHL API Error:', response.status, errorText);
+      
+      // Try to parse error response
+      let errorMessage = 'Invalid API Key or connection failed';
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch (e) {
+        // Use default error message
+      }
+      
       return NextResponse.json(
         { 
           success: false,
-          error: 'Invalid API Key or connection failed',
+          error: errorMessage,
           details: errorText
         },
         { status: 401 }

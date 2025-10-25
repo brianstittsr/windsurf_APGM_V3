@@ -100,9 +100,10 @@ export default function GoHighLevelManager() {
       const data = await response.json();
 
       if (response.ok && data.success) {
+        const userName = data.user?.name || 'User';
         setTestResult({ 
           type: 'success', 
-          message: `✅ Connection successful! Found ${data.locations?.length || 0} location(s).` 
+          message: `✅ Connection successful! Connected as: ${userName}` 
         });
       } else {
         setTestResult({ 
