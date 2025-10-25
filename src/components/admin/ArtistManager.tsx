@@ -52,11 +52,19 @@ export default function ArtistManager() {
       const artistsList = usersSnapshot.docs
         .map(doc => {
           const data = doc.data();
+          
+          // Handle various field name possibilities - check both root and profile object
+          const displayName = data.displayName || data.name || data.fullName || 
+                             (data.profile?.firstName && data.profile?.lastName ? `${data.profile.firstName} ${data.profile.lastName}` : '') ||
+                             data.profile?.firstName || data.profile?.lastName || '';
+          const email = data.email || data.profile?.email || '';
+          const phone = data.phone || data.profile?.phone || '';
+          
           return {
             id: doc.id,
-            displayName: data.displayName || '',
-            email: data.email || '',
-            phone: data.phone || '',
+            displayName,
+            email,
+            phone,
             specialties: data.specialties || [],
             bio: data.bio || '',
             isActive: data.isActive !== false,
