@@ -13,9 +13,10 @@ import ArtistManager from '../../components/admin/ArtistManager';
 import BookingCalendarManager from '../../components/admin/BookingCalendarManager';
 import RegistrationFormsManager from '../../components/admin/RegistrationFormsManager';
 import GoHighLevelManager from '../../components/admin/GoHighLevelManager';
+import GoHighLevelMCP from '../../components/admin/GoHighLevelMCP';
 import Footer from '../../components/Footer';
 
-type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel';
+type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp';
 
 export default function DashboardPage() {
   const { user, userRole, loading } = useAuth();
@@ -211,6 +212,8 @@ export default function DashboardPage() {
         return <RegistrationFormsManager />;
       case 'gohighlevel':
         return <GoHighLevelManager />;
+      case 'gohighlevel-mcp':
+        return <GoHighLevelMCP />;
       default:
         return null;
     }
@@ -337,6 +340,16 @@ export default function DashboardPage() {
                   style={{padding: '12px 16px', cursor: 'pointer'}}
                 >
                   <i className="fas fa-cloud-upload-alt me-2"></i>GoHighLevel
+                </button>
+              </li>
+              <li className="nav-item" role="presentation">
+                <button
+                  className={`nav-link fw-bold ${activeTab === 'gohighlevel-mcp' ? 'active border-bottom border-primary' : ''}`}
+                  type="button"
+                  onClick={() => setActiveTab('gohighlevel-mcp')}
+                  style={{padding: '12px 16px', cursor: 'pointer'}}
+                >
+                  <i className="fas fa-server me-2"></i>GoHighLevel MCP
                 </button>
               </li>
             </ul>
