@@ -45,22 +45,30 @@ export default function UserManager() {
       const usersSnapshot = await getDocs(usersCollection);
       const usersList = usersSnapshot.docs.map(doc => {
         const data = doc.data();
-        // Handle various field name possibilities
-        const displayName = data.displayName || data.name || data.fullName || '';
-        const email = data.email || '';
-        const phone = data.phone || data.phoneNumber || '';
+        
+        // Log the raw data to see what we're working with
+        console.log('Raw Firebase data for doc', doc.id, ':', data);
+        
+        // Handle various field name possibilities - be very aggressive
+        const displayName = data.displayName || data.name || data.fullName || data.userName || data.display_name || '';
+        const email = data.email || data.emailAddress || data.mail || '';
+        const phone = data.phone || data.phoneNumber || data.phone_number || data.mobile || '';
         const role = data.role || 'client';
         const isActive = data.isActive !== false;
         
-        console.log('User doc:', doc.id, { displayName, email, phone, role, isActive, ...data });
-        
-        return {
+        const mappedUser = {
           id: doc.id,
           displayName,
           email,
           phone,
           role,
-          isActive,
+          isActive
+        };
+        
+        console.log('Mapped user:', mappedUser);
+        
+        return {
+          ...mappedUser,
           ...data
         } as User;
       });
