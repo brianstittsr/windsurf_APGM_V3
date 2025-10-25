@@ -30,8 +30,14 @@ export default function UserManager() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    console.log('UserManager mounted, fetching users...');
     fetchUsers();
   }, []);
+
+  // Debug: Log users whenever they change
+  useEffect(() => {
+    console.log('Users state updated:', users);
+  }, [users]);
 
   const fetchUsers = async () => {
     try {
@@ -273,10 +279,12 @@ export default function UserManager() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredUsers.map((user) => (
+                      {filteredUsers.map((user) => {
+                        console.log('Rendering user row:', user);
+                        return (
                         <tr key={user.id}>
-                          <td>{user.displayName}</td>
-                          <td>{user.email}</td>
+                          <td>{user.displayName || 'N/A'}</td>
+                          <td>{user.email || 'N/A'}</td>
                           <td>
                             <span className={getRoleBadgeClass(user.role)}>
                               {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
@@ -309,7 +317,8 @@ export default function UserManager() {
                             </div>
                           </td>
                         </tr>
-                      ))}
+                      );
+                      })}
                     </tbody>
                   </table>
                 </div>
