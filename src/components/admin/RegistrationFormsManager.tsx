@@ -38,23 +38,31 @@ export default function RegistrationFormsManager() {
 
   const fetchForms = async () => {
     try {
-      // Try to fetch from healthForms collection
+      // Fetch health forms
       const formsCollection = collection(db, 'healthForms');
       const formsSnapshot = await getDocs(formsCollection);
+      
+      // Fetch appointments to get client details
+      const appointmentsCollection = collection(db, 'appointments');
+      const appointmentsSnapshot = await getDocs(appointmentsCollection);
+      const appointmentsMap = new Map();
+      appointmentsSnapshot.docs.forEach(doc => {
+        appointmentsMap.set(doc.id, doc.data());
+      });
+      
       const formsList = formsSnapshot.docs.map(doc => {
         const data = doc.data();
         
-        console.log('Raw form data for doc', doc.id, ':', JSON.stringify(data, null, 2));
+        // Get appointment data if available
+        const appointment = data.appointmentId ? appointmentsMap.get(data.appointmentId) : null;
         
-        // Handle nested profile object structure
-        const clientName = data.clientName || data.name || data.fullName ||
-                          (data.profile?.firstName && data.profile?.lastName ? 
-                           `${data.profile.firstName} ${data.profile.lastName}` : '') ||
-                          data.profile?.firstName || data.profile?.lastName ||
-                          (data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : '') ||
-                          data.firstName || data.lastName || '';
-        const clientEmail = data.clientEmail || data.email || data.profile?.email || '';
-        const phone = data.phone || data.profile?.phone || data.phoneNumber || '';
+        // Use signature as fallback for client name
+        const clientName = appointment?.clientName || 
+                          appointment?.name ||
+                          data.signature || 
+                          'Unknown';
+        const clientEmail = appointment?.clientEmail || appointment?.email || '';
+        const phone = appointment?.phone || appointment?.clientPhone || '';
         
         const mappedForm = {
           ...data,
@@ -64,8 +72,6 @@ export default function RegistrationFormsManager() {
           phone,
           status: data.status || 'submitted'
         };
-        
-        console.log('Mapped form:', JSON.stringify(mappedForm, null, 2));
         
         return mappedForm as RegistrationForm;
       });
