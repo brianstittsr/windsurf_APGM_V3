@@ -50,10 +50,19 @@ export default function ArtistManager() {
       const usersCollection = collection(db, 'users');
       const usersSnapshot = await getDocs(usersCollection);
       const artistsList = usersSnapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as Artist))
+        .map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            displayName: data.displayName || '',
+            email: data.email || '',
+            phone: data.phone || '',
+            specialties: data.specialties || [],
+            bio: data.bio || '',
+            isActive: data.isActive !== false,
+            ...data
+          } as Artist;
+        })
         .filter(user => (user as any).role === 'artist');
       setArtists(artistsList);
     } catch (error) {

@@ -35,10 +35,18 @@ export default function UserManager() {
     try {
       const usersCollection = collection(db, 'users');
       const usersSnapshot = await getDocs(usersCollection);
-      const usersList = usersSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as User));
+      const usersList = usersSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          displayName: data.displayName || '',
+          email: data.email || '',
+          phone: data.phone || '',
+          role: data.role || 'client',
+          isActive: data.isActive !== false,
+          ...data
+        } as User;
+      });
       setUsers(usersList);
     } catch (error) {
       console.error('Error fetching users:', error);
