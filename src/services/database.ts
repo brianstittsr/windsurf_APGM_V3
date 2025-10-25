@@ -15,7 +15,8 @@ import {
   serverTimestamp,
   onSnapshot,
   QuerySnapshot,
-  DocumentData
+  DocumentData,
+  writeBatch
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import {
@@ -64,7 +65,6 @@ export class DatabaseService {
   
   // Get a Firestore batch
   static getBatch() {
-    const { writeBatch } = require('firebase/firestore');
     return writeBatch(db);
   }
   // Create
@@ -584,7 +584,6 @@ export class AvailabilityService {
       console.warn('Could not update availability document:', error);
       // Create the availability document if it doesn't exist
       try {
-        const { doc, setDoc } = await import('firebase/firestore');
         const availabilityDoc = {
           [time]: {
             available: false,
@@ -635,8 +634,6 @@ export class BusinessSettingsService {
   }
 
   static async createOrUpdateSettings(settings: BusinessSettings): Promise<void> {
-    const { db } = await import('@/lib/firebase');
-    const { doc, setDoc, serverTimestamp } = await import('firebase/firestore');
     const docRef = doc(db, COLLECTIONS.BUSINESS_SETTINGS, 'main');
     await setDoc(docRef, {
       ...settings,
