@@ -31,6 +31,7 @@ export interface CouponCode {
   applicableServices?: string[];
   isActive: boolean;
   removeDepositOption?: boolean;
+  depositReduction?: number; // Amount to subtract from deposit (in dollars)
   createdAt: Date;
   updatedAt: Date;
 }

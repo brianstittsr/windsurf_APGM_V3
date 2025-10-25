@@ -75,6 +75,8 @@ export interface CouponCode {
   isActive: boolean;
   expirationDate?: Timestamp;
   applicableServices?: string[]; // service IDs, empty means all services
+  removeDepositOption?: boolean;
+  depositReduction?: number; // Amount to subtract from deposit (in dollars)
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

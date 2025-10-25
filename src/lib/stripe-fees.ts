@@ -36,13 +36,15 @@ export function calculateStripeFee(amount: number): number {
  * @param taxRate Tax rate (e.g., 0.0775 for 7.75%)
  * @param depositAmount Deposit amount in dollars (will be calculated from settings if not provided)
  * @param paymentMethod Payment method type ('card' | 'affirm' | 'klarna' | 'cherry')
+ * @param depositReduction Amount to subtract from deposit (in dollars)
  * @returns Complete fee calculation breakdown
  */
 export async function calculateTotalWithStripeFees(
   servicePrice: number,
   taxRate?: number,
   depositAmount?: number,
-  paymentMethod: string = 'card'
+  paymentMethod: string = 'card',
+  depositReduction: number = 0
 ): Promise<StripeFeeCalculation> {
   // Get business settings if not provided
   const settings = await BusinessSettingsService.getSettings();
@@ -60,7 +62,12 @@ export async function calculateTotalWithStripeFees(
   
   // Only credit cards can use deposits, all other methods require full payment
   const requiresFullPayment = !isCreditCard;
-  const deposit = requiresFullPayment ? subtotal + tax : finalDepositAmount;
+  let deposit = requiresFullPayment ? subtotal + tax : finalDepositAmount;
+  
+  // Apply deposit reduction if applicable (only for credit cards)
+  if (isCreditCard && depositReduction > 0) {
+    deposit = Math.max(0, deposit - depositReduction);
+  }
   
   let stripeFee: number;
   

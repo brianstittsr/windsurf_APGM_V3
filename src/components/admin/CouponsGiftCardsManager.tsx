@@ -19,6 +19,7 @@ interface CouponFormData {
   applicableServices: string;
   isActive: boolean;
   removeDepositOption?: boolean;
+  depositReduction?: number;
 }
 
 interface GiftCardFormData {
@@ -51,7 +52,8 @@ export default function CouponsGiftCardsManager() {
     expirationDate: '',
     applicableServices: '',
     isActive: true,
-    removeDepositOption: false
+    removeDepositOption: false,
+    depositReduction: 0
   });
 
   // Gift card form states
@@ -122,7 +124,8 @@ export default function CouponsGiftCardsManager() {
         expirationDate: new Date(couponFormData.expirationDate),
         applicableServices: couponFormData.applicableServices ? couponFormData.applicableServices.split(',').map(s => s.trim()) : [],
         isActive: couponFormData.isActive,
-        removeDepositOption: couponFormData.removeDepositOption || false
+        removeDepositOption: couponFormData.removeDepositOption || false,
+        depositReduction: couponFormData.depositReduction || 0
       };
 
       await CouponService.createCoupon(couponData);
@@ -153,7 +156,8 @@ export default function CouponsGiftCardsManager() {
         expirationDate: new Date(couponFormData.expirationDate),
         applicableServices: couponFormData.applicableServices ? couponFormData.applicableServices.split(',').map(s => s.trim()) : [],
         isActive: couponFormData.isActive,
-        removeDepositOption: couponFormData.removeDepositOption || false
+        removeDepositOption: couponFormData.removeDepositOption || false,
+        depositReduction: couponFormData.depositReduction || 0
       };
 
       await CouponService.updateCoupon(editingCoupon.id, updateData);
@@ -290,7 +294,8 @@ export default function CouponsGiftCardsManager() {
       expirationDate: coupon.expirationDate?.toISOString().split('T')[0] || '',
       applicableServices: coupon.applicableServices?.join(', ') || '',
       isActive: coupon.isActive,
-      removeDepositOption: coupon.removeDepositOption || false
+      removeDepositOption: coupon.removeDepositOption || false,
+      depositReduction: coupon.depositReduction || 0
     });
     setShowCouponModal(true);
   };
@@ -751,6 +756,20 @@ export default function CouponsGiftCardsManager() {
                         Remove $50 Deposit Option
                       </label>
                     </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label htmlFor="depositReduction" className="form-label">Deposit Reduction ($)</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      id="depositReduction"
+                      value={couponFormData.depositReduction || 0}
+                      onChange={(e) => setCouponFormData({ ...couponFormData, depositReduction: parseFloat(e.target.value) || 0 })}
+                      min="0"
+                      step="0.01"
+                      placeholder="Amount to subtract from deposit"
+                    />
                   </div>
                 </div>
                 <div className="modal-footer">

@@ -175,7 +175,7 @@ export default function CheckoutCart({
       if (appliedCoupon) {
         console.log('🎫 Applying coupon usage...');
         const { CouponService } = await import('@/services/couponService');
-        await CouponService.applyCoupon(appliedCoupon.id);
+        await CouponService.useCoupon(appliedCoupon.id);
         console.log('✅ Coupon usage applied');
       }
 
@@ -307,12 +307,14 @@ export default function CheckoutCart({
       try {
         const totalDiscounts = couponDiscount + giftCardDiscount;
         const discountedServicePrice = Math.max(0, service.price - totalDiscounts);
+        const depositReduction = appliedCoupon?.depositReduction || 0;
         
         const calculation = await calculateTotalWithStripeFees(
           discountedServicePrice,
           undefined, // Use settings tax rate
           undefined, // Use settings deposit percentage
-          selectedPaymentMethod
+          selectedPaymentMethod,
+          depositReduction
         );
         
         setFeeCalculation(calculation);
@@ -334,7 +336,7 @@ export default function CheckoutCart({
     };
     
     loadFeeCalculation();
-  }, [service.price, couponDiscount, giftCardDiscount, selectedPaymentMethod]);
+  }, [service.price, couponDiscount, giftCardDiscount, selectedPaymentMethod, appliedCoupon]);
   
   // Use calculated values or defaults while loading
   const subtotal = feeCalculation?.subtotal || 0;

@@ -30,6 +30,7 @@ export class CouponService {
     applicableServices?: string[];
     isActive: boolean;
     removeDepositOption?: boolean;
+    depositReduction?: number;
   }): Promise<string> {
     const docRef = await addDoc(collection(db, this.collectionName), {
       code: couponData.code,
@@ -42,6 +43,7 @@ export class CouponService {
       usageCount: 0,
       isActive: couponData.isActive,
       removeDepositOption: couponData.removeDepositOption || false,
+      depositReduction: couponData.depositReduction || 0,
       expirationDate: Timestamp.fromDate(couponData.expirationDate),
       applicableServices: couponData.applicableServices || [],
       createdAt: Timestamp.now(),
