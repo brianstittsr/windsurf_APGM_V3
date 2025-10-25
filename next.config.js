@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  // Disable static generation for all pages during build
-  staticPageGenerationTimeout: 0,
+  // Increase static generation timeout to 120 seconds to prevent build failures
+  staticPageGenerationTimeout: 120,
   // Disable ESLint during build
   eslint: {
     ignoreDuringBuilds: true,
