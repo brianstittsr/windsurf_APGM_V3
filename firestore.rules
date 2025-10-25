@@ -182,6 +182,12 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // CRM Settings collection - Admin only
+    match /crmSettings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
     // Chatbot collections
     match /chatbot/{document=**} {
       allow read, write: if isAuthenticated();
