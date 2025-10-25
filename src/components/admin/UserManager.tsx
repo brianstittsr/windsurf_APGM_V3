@@ -47,12 +47,14 @@ export default function UserManager() {
         const data = doc.data();
         
         // Log the raw data to see what we're working with
-        console.log('Raw Firebase data for doc', doc.id, ':', data);
+        console.log('Raw Firebase data for doc', doc.id, ':', JSON.stringify(data, null, 2));
         
-        // Handle various field name possibilities - be very aggressive
-        const displayName = data.displayName || data.name || data.fullName || data.userName || data.display_name || '';
-        const email = data.email || data.emailAddress || data.mail || '';
-        const phone = data.phone || data.phoneNumber || data.phone_number || data.mobile || '';
+        // Handle various field name possibilities - check both root and profile object
+        const displayName = data.displayName || data.name || data.fullName || data.userName || data.display_name || 
+                           (data.profile?.firstName && data.profile?.lastName ? `${data.profile.firstName} ${data.profile.lastName}` : '') ||
+                           data.profile?.firstName || data.profile?.lastName || '';
+        const email = data.email || data.emailAddress || data.mail || data.profile?.email || '';
+        const phone = data.phone || data.phoneNumber || data.phone_number || data.mobile || data.profile?.phone || '';
         const role = data.role || 'client';
         const isActive = data.isActive !== false;
         
@@ -65,7 +67,7 @@ export default function UserManager() {
           isActive
         };
         
-        console.log('Mapped user:', mappedUser);
+        console.log('Mapped user:', JSON.stringify(mappedUser, null, 2));
         
         return {
           ...mappedUser,
