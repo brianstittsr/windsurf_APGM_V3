@@ -9,7 +9,7 @@ import { GHLOrchestrator } from './ghl-orchestrator';
 export interface WorkflowTrigger {
   type: 'booking_created' | 'booking_confirmed' | 'booking_cancelled' | 
         'user_registered' | 'payment_received' | 'review_submitted' |
-        'consultation_requested' | 'appointment_reminder' | 'follow_up';
+        'consultation_requested' | 'appointment_reminder' | 'follow_up' | 'deposit_paid';
   data: any;
 }
 
@@ -83,6 +83,9 @@ export class BMADWorkflowEngine {
       
       case 'follow_up':
         return await this.handleFollowUp(trigger.data);
+      
+      case 'deposit_paid':
+        return await this.handleDepositPaid(trigger.data);
       
       default:
         console.log('Unknown trigger type:', trigger.type);
@@ -468,6 +471,121 @@ P.S. Don't forget to share your beautiful results on social media and tag us! �
       return { success: false, message: 'GHL not configured' };
     } catch (error) {
       return { success: false, message: 'Follow-up failed', error };
+    }
+  }
+
+  /**
+   * WORKFLOW: Deposit Paid
+   * Send registration link with GRANOPEN250 coupon code
+   */
+  private async handleDepositPaid(bookingData: any) {
+    console.log('💳 Deposit paid workflow started');
+
+    try {
+      if (this.ghlOrchestrator) {
+        const registrationMessage = `🎉 Thank you for your $50 deposit, ${bookingData.name}!
+
+Your ${bookingData.serviceName} appointment is confirmed for ${bookingData.date} at ${bookingData.time}!
+
+**Next Steps:**
+
+📧 **Register on our website:**
+[Registration Link]
+
+🎁 **Use coupon code: GRANOPEN250**
+This gives you $250 off your service!
+
+💰 **Final Payment:**
+Only $200 due at your appointment (after deposit credit)
+
+**Your Total Savings: $300!** 🎊
+
+We'll send you a reminder 24 hours before your appointment with preparation instructions.
+
+Questions? Reply to this message anytime!`;
+
+        // Send SMS
+        await this.ghlOrchestrator.sendMessage(bookingData.contactId, {
+          message: registrationMessage,
+          type: 'SMS'
+        });
+
+        // Send Email with clickable links
+        const emailMessage = `
+<html>
+<body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h2 style="color: #764ba2;">🎉 Deposit Received - Thank You!</h2>
+  
+  <p>Hi ${bookingData.name},</p>
+  
+  <p>Your $50 deposit has been received and your appointment is confirmed!</p>
+  
+  <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+    <h3 style="margin-top: 0;">Appointment Details:</h3>
+    <p><strong>Service:</strong> ${bookingData.serviceName}</p>
+    <p><strong>Date:</strong> ${bookingData.date}</p>
+    <p><strong>Time:</strong> ${bookingData.time}</p>
+  </div>
+  
+  <h3>Next Steps:</h3>
+  
+  <div style="margin: 20px 0;">
+    <a href="${process.env.NEXT_PUBLIC_SITE_URL}/register?coupon=GRANOPEN250" 
+       style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+              color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+      Register Now with GRANOPEN250
+    </a>
+  </div>
+  
+  <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
+    <h4 style="margin-top: 0;">💰 Your Savings:</h4>
+    <p style="margin: 5px 0;">Service Price: $${bookingData.price || 500}</p>
+    <p style="margin: 5px 0;">Deposit Paid: -$50</p>
+    <p style="margin: 5px 0;">GRANOPEN250 Coupon: -$250</p>
+    <p style="margin: 5px 0; font-size: 18px; font-weight: bold; color: #28a745;">
+      Final Payment: $200
+    </p>
+    <p style="margin: 5px 0; font-weight: bold; color: #764ba2;">
+      Total Savings: $300! 🎊
+    </p>
+  </div>
+  
+  <p style="margin-top: 30px;">We'll send you a reminder 24 hours before your appointment with preparation instructions.</p>
+  
+  <p>Questions? Reply to this email anytime!</p>
+  
+  <p style="margin-top: 30px;">
+    See you soon!<br>
+    <strong>Your PMU Team</strong> 💕
+  </p>
+</body>
+</html>`;
+
+        await this.ghlOrchestrator.sendMessage(bookingData.contactId, {
+          message: emailMessage,
+          type: 'Email',
+          subject: '🎉 Deposit Received - Register with GRANOPEN250 Coupon!'
+        });
+
+        // Update opportunity stage
+        if (bookingData.opportunityId) {
+          // Move to "Deposit Paid" stage
+          console.log('Updating opportunity stage to deposit_paid');
+        }
+
+        return { 
+          success: true, 
+          message: 'Deposit paid workflow completed',
+          results: [
+            { action: 'send_sms', success: true },
+            { action: 'send_email', success: true }
+          ]
+        };
+      }
+
+      return { success: false, message: 'GHL not configured' };
+    } catch (error) {
+      return { success: false, message: 'Deposit workflow failed', error };
     }
   }
 
