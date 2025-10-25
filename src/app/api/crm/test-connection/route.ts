@@ -4,6 +4,8 @@ export async function POST(request: NextRequest) {
   try {
     const { apiKey } = await request.json();
 
+    console.log('🔑 Testing GHL API Key:', apiKey ? `${apiKey.substring(0, 20)}...` : 'NO KEY PROVIDED');
+
     if (!apiKey) {
       return NextResponse.json(
         { error: 'API Key is required' },
@@ -14,6 +16,8 @@ export async function POST(request: NextRequest) {
     // Test the GoHighLevel API connection using Private Integration endpoint
     // Private Integrations use the services.leadconnectorhq.com domain
     // Try a simpler endpoint that requires fewer scopes - locations
+    console.log('📡 Calling GHL API: https://services.leadconnectorhq.com/locations/');
+    
     const response = await fetch('https://services.leadconnectorhq.com/locations/', {
       method: 'GET',
       headers: {
@@ -23,7 +27,12 @@ export async function POST(request: NextRequest) {
       }
     });
     
-    console.log('GHL API Response Status:', response.status);
+    console.log('📊 GHL API Response Status:', response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ GHL API Error Response:', errorText);
+    }
 
     if (response.ok) {
       const data = await response.json();
