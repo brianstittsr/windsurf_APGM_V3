@@ -10,6 +10,8 @@ export async function POST(request: NextRequest) {
   try {
     const { uri } = await request.json();
 
+    console.log('🔍 MCP Resource Request - URI:', uri);
+
     if (!uri) {
       return NextResponse.json(
         { error: 'Resource URI is required' },
@@ -21,12 +23,17 @@ export async function POST(request: NextRequest) {
     const settingsList = await DatabaseService.getAll('crmSettings');
     const settings = settingsList.length > 0 ? settingsList[0] : null;
     
+    console.log('⚙️ Settings loaded:', settings ? 'Yes' : 'No');
+    
     if (!settings || !(settings as any).apiKey) {
+      console.error('❌ No API key found in settings');
       return NextResponse.json(
-        { error: 'GHL API key not configured' },
+        { error: 'GHL API key not configured. Please configure it in the GoHighLevel tab first.' },
         { status: 400 }
       );
     }
+
+    console.log('🔑 API Key found:', (settings as any).apiKey ? 'Yes' : 'No');
 
     const orchestrator = new GHLOrchestrator({
       apiKey: (settings as any).apiKey,
@@ -35,6 +42,8 @@ export async function POST(request: NextRequest) {
 
     let resourceData;
     let resourceType;
+
+    console.log('📡 Fetching resource from GHL...');
 
     // Map MCP resource URIs to GHL API calls
     switch (uri) {
@@ -112,14 +121,24 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error loading MCP resource:', error);
+    console.error('❌ Error loading MCP resource:', error);
+    
+    // Check if it's a GHL API error
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const isAuthError = errorMessage.includes('401') || errorMessage.includes('Unauthorized');
+    
     return NextResponse.json(
       { 
         success: false,
-        error: 'Failed to load resource',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: isAuthError 
+          ? 'GHL API authentication failed. Please check your API key has the required scopes enabled.'
+          : 'Failed to load resource',
+        details: errorMessage,
+        suggestion: isAuthError 
+          ? 'Go to GoHighLevel → Settings → Integrations → Private Integrations and ensure all scopes are enabled, then regenerate your API key.'
+          : 'Check server logs for more details'
       },
-      { status: 500 }
+      { status: isAuthError ? 401 : 500 }
     );
   }
 }

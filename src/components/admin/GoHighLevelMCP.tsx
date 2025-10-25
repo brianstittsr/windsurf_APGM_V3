@@ -80,6 +80,8 @@ export default function GoHighLevelMCP() {
 
   const loadResource = async (uri: string) => {
     try {
+      setMessage({ type: 'success', text: `Loading ${uri}...` });
+      
       const response = await fetch('/api/crm/mcp/resource', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -90,12 +92,22 @@ export default function GoHighLevelMCP() {
         const data = await response.json();
         setResourceContent(data);
         setSelectedResource(uri);
+        setMessage({ type: 'success', text: `Successfully loaded ${uri}` });
       } else {
-        setMessage({ type: 'error', text: 'Failed to load resource' });
+        const errorData = await response.json();
+        const errorMsg = errorData.error || 'Failed to load resource';
+        const suggestion = errorData.suggestion || '';
+        setMessage({ 
+          type: 'error', 
+          text: `${errorMsg}${suggestion ? ' ' + suggestion : ''}` 
+        });
       }
     } catch (error) {
       console.error('Error loading resource:', error);
-      setMessage({ type: 'error', text: 'Error loading resource' });
+      setMessage({ 
+        type: 'error', 
+        text: 'Network error loading resource. Check your connection and API key configuration.' 
+      });
     }
   };
 
