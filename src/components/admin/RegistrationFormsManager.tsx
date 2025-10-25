@@ -41,11 +41,26 @@ export default function RegistrationFormsManager() {
       // Try to fetch from healthForms collection
       const formsCollection = collection(db, 'healthForms');
       const formsSnapshot = await getDocs(formsCollection);
-      const formsList = formsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        status: 'submitted',
-        ...doc.data()
-      } as RegistrationForm));
+      const formsList = formsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        
+        // Handle nested profile object structure
+        const clientName = data.clientName || 
+                          (data.profile?.firstName && data.profile?.lastName ? 
+                           `${data.profile.firstName} ${data.profile.lastName}` : '') ||
+                          data.profile?.firstName || data.profile?.lastName || '';
+        const clientEmail = data.clientEmail || data.email || data.profile?.email || '';
+        const phone = data.phone || data.profile?.phone || '';
+        
+        return {
+          id: doc.id,
+          clientName,
+          clientEmail,
+          phone,
+          status: data.status || 'submitted',
+          ...data
+        } as RegistrationForm;
+      });
       
       setForms(formsList.sort((a, b) => {
         const dateA = a.submittedAt ? new Date(a.submittedAt).getTime() : 0;
