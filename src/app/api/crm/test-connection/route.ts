@@ -13,7 +13,8 @@ export async function POST(request: NextRequest) {
 
     // Test the GoHighLevel API connection using Private Integration endpoint
     // Private Integrations use the services.leadconnectorhq.com domain
-    const response = await fetch('https://services.leadconnectorhq.com/users/me', {
+    // Try a simpler endpoint that requires fewer scopes - locations
+    const response = await fetch('https://services.leadconnectorhq.com/locations/', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -21,18 +22,20 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json'
       }
     });
+    
+    console.log('GHL API Response Status:', response.status);
 
     if (response.ok) {
       const data = await response.json();
+      const locations = data.locations || [];
       return NextResponse.json({
         success: true,
         message: 'Connection successful',
-        user: {
-          id: data.id,
-          name: data.name || data.firstName + ' ' + data.lastName,
-          email: data.email,
-          companyId: data.companyId
-        }
+        locationCount: locations.length,
+        locations: locations.slice(0, 3).map((loc: any) => ({
+          id: loc.id,
+          name: loc.name
+        }))
       });
     } else {
       const errorText = await response.text();
@@ -40,9 +43,17 @@ export async function POST(request: NextRequest) {
       
       // Try to parse error response
       let errorMessage = 'Invalid API Key or connection failed';
+      let scopeError = false;
+      
       try {
         const errorData = JSON.parse(errorText);
         errorMessage = errorData.message || errorData.error || errorMessage;
+        
+        // Check if it's a scope error
+        if (errorMessage.includes('scope') || errorMessage.includes('authorized')) {
+          scopeError = true;
+          errorMessage = 'API Key missing required scopes. Please ensure your Private Integration has "locations.readonly" or "locations.write" scope enabled in GoHighLevel Settings → Integrations → Private Integrations.';
+        }
       } catch (e) {
         // Use default error message
       }
@@ -51,6 +62,7 @@ export async function POST(request: NextRequest) {
         { 
           success: false,
           error: errorMessage,
+          scopeError,
           details: errorText
         },
         { status: 401 }

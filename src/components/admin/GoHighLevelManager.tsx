@@ -100,15 +100,16 @@ export default function GoHighLevelManager() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        const userName = data.user?.name || 'User';
+        const locationCount = data.locationCount || 0;
         setTestResult({ 
           type: 'success', 
-          message: `✅ Connection successful! Connected as: ${userName}` 
+          message: `✅ Connection successful! Found ${locationCount} location(s).` 
         });
       } else {
+        const errorMsg = data.error || 'Please check your API Key.';
         setTestResult({ 
           type: 'error', 
-          message: `❌ Connection failed: ${data.error || 'Please check your API Key.'}` 
+          message: `❌ ${errorMsg}` 
         });
       }
     } catch (error) {
