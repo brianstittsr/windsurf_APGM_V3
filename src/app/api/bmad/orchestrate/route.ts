@@ -171,6 +171,33 @@ async function parseIntent(message: string) {
     };
   }
 
+  // Workflow operations
+  if (lowerMessage.includes('workflow') || lowerMessage.includes('automation') || lowerMessage.includes('automate')) {
+    if (lowerMessage.includes('show') || lowerMessage.includes('list') || lowerMessage.includes('view')) {
+      return {
+        action: 'list_workflows',
+        entity: 'workflow',
+        operation: 'list'
+      };
+    }
+    if (lowerMessage.includes('trigger') || lowerMessage.includes('run') || lowerMessage.includes('execute')) {
+      return {
+        action: 'trigger_workflow',
+        entity: 'workflow',
+        operation: 'trigger',
+        data: extractWorkflowData(message)
+      };
+    }
+    if (lowerMessage.includes('setup') || lowerMessage.includes('create') || lowerMessage.includes('configure')) {
+      return {
+        action: 'setup_workflow',
+        entity: 'workflow',
+        operation: 'setup',
+        data: { message }
+      };
+    }
+  }
+
   // Default: general query
   return {
     action: 'general_query',
@@ -234,6 +261,15 @@ async function executeAction(intent: any) {
 
     case 'create_ghl_contact':
       return await createGHLContact(intent.data);
+
+    case 'list_workflows':
+      return await listWorkflows();
+
+    case 'trigger_workflow':
+      return await triggerWorkflow(intent.data);
+
+    case 'setup_workflow':
+      return await setupWorkflow(intent.data);
 
     case 'general_query':
       return handleGeneralQuery(intent.data.message);
@@ -485,3 +521,117 @@ function extractContactData(message: string) {
   
   return data;
 }
+
+function extractWorkflowData(message: string) {
+  const data: any = {};
+  
+  // Extract workflow type
+  if (message.toLowerCase().includes('booking')) data.type = 'booking_created';
+  if (message.toLowerCase().includes('confirmation')) data.type = 'booking_confirmed';
+  if (message.toLowerCase().includes('registration')) data.type = 'user_registered';
+  if (message.toLowerCase().includes('consultation')) data.type = 'consultation_requested';
+  if (message.toLowerCase().includes('payment')) data.type = 'payment_received';
+  if (message.toLowerCase().includes('review')) data.type = 'review_submitted';
+  if (message.toLowerCase().includes('reminder')) data.type = 'appointment_reminder';
+  if (message.toLowerCase().includes('follow')) data.type = 'follow_up';
+  
+  return data;
+}
+
+async function listWorkflows() {
+  return {
+    success: true,
+    response: `🔄 **Available BMAD Workflows:**
+
+1. **New Booking** - Triggers when customer books appointment
+   - Creates GHL contact
+   - Sends confirmation SMS
+   - Creates follow-up task
+
+2. **Booking Confirmation** - When customer confirms
+   - Sends preparation instructions
+   - Schedules reminder
+
+3. **User Registration** - New account created
+   - Creates GHL contact
+   - Sends welcome message
+
+4. **Consultation Request** - Customer requests consultation
+   - Creates opportunity
+   - Sends consultation info
+
+5. **Payment Received** - Payment processed
+   - Sends receipt
+   - Confirms appointment
+
+6. **Review Submitted** - Customer leaves review
+   - Sends thank you
+   - Offers referral discount
+
+7. **Appointment Reminder** - 24 hours before
+   - Sends reminder SMS
+   - Requests confirmation
+
+8. **Follow-Up** - 2 days after appointment
+   - Checks satisfaction
+   - Requests review
+
+All workflows integrate with GoHighLevel automatically!`,
+    data: {
+      workflows: [
+        'booking_created', 'booking_confirmed', 'user_registered',
+        'consultation_requested', 'payment_received', 'review_submitted',
+        'appointment_reminder', 'follow_up'
+      ]
+    },
+    summary: 'Listed 8 available workflows'
+  };
+}
+
+async function triggerWorkflow(data: any) {
+  const { workflowEngine } = await import('@/services/bmad-workflows');
+  
+  try {
+    const result = await workflowEngine.executeWorkflow({
+      type: data.type,
+      data: data
+    });
+
+    return {
+      success: result.success,
+      response: `✅ **Workflow triggered!**\n\n${result.message}\n\nCheck GoHighLevel for updates.`,
+      data: result,
+      summary: `Triggered ${data.type} workflow`
+    };
+  } catch (error) {
+    return {
+      success: false,
+      response: `❌ Failed to trigger workflow: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      data: null
+    };
+  }
+}
+
+async function setupWorkflow(data: any) {
+  return {
+    success: true,
+    response: `🔧 **Workflow Setup Guide:**
+
+Workflows are automatically active! They trigger when:
+
+📅 **Booking workflows** - When bookings are created/confirmed
+👤 **User workflows** - When users register
+💳 **Payment workflows** - When payments are received
+⭐ **Review workflows** - When reviews are submitted
+
+To customize workflows:
+1. Edit message templates in \`src/services/bmad-workflows.ts\`
+2. Adjust timing and conditions
+3. Add custom actions
+
+Need help with a specific workflow? Just ask!`,
+    data: { message: data.message },
+    summary: 'Provided workflow setup information'
+  };
+}
+
