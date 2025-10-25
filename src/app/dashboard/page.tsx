@@ -9,9 +9,11 @@ import ReviewsManager from '../../components/admin/ReviewsManager';
 import ServicesManager from '../../components/admin/ServicesManager';
 import CouponsGiftCardsManager from '../../components/admin/CouponsGiftCardsManager';
 import BusinessSettingsManager from '../../components/admin/BusinessSettingsManager';
+import ArtistManager from '../../components/admin/ArtistManager';
+import BookingCalendarManager from '../../components/admin/BookingCalendarManager';
 import Footer from '../../components/Footer';
 
-type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business';
+type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings';
 
 export default function DashboardPage() {
   const { user, userRole, loading } = useAuth();
@@ -111,7 +113,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="row">
-                    <div className="col-md-6 mb-4">
+                    <div className="col-md-3 mb-4">
                       <div className="card bg-secondary text-white">
                         <div className="card-body">
                           <h5 className="card-title">Business Settings</h5>
@@ -120,7 +122,35 @@ export default function DashboardPage() {
                             className="btn btn-light btn-sm"
                             onClick={() => setActiveTab('business')}
                           >
-                            Business Settings
+                            Settings
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-md-3 mb-4">
+                      <div className="card bg-danger text-white">
+                        <div className="card-body">
+                          <h5 className="card-title">Artists</h5>
+                          <p className="card-text">Manage artist profiles and specialties</p>
+                          <button
+                            className="btn btn-light btn-sm"
+                            onClick={() => setActiveTab('artists')}
+                          >
+                            Manage Artists
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-md-3 mb-4">
+                      <div className="card bg-dark text-white">
+                        <div className="card-body">
+                          <h5 className="card-title">Bookings</h5>
+                          <p className="card-text">View and manage all appointments</p>
+                          <button
+                            className="btn btn-light btn-sm"
+                            onClick={() => setActiveTab('bookings')}
+                          >
+                            View Calendar
                           </button>
                         </div>
                       </div>
@@ -141,6 +171,10 @@ export default function DashboardPage() {
         return <CouponsGiftCardsManager />;
       case 'business':
         return <BusinessSettingsManager />;
+      case 'artists':
+        return <ArtistManager />;
+      case 'bookings':
+        return <BookingCalendarManager />;
       default:
         return null;
     }
@@ -227,6 +261,26 @@ export default function DashboardPage() {
                   style={{padding: '12px 16px', cursor: 'pointer'}}
                 >
                   <i className="fas fa-cog me-2"></i>Business Settings
+                </button>
+              </li>
+              <li className="nav-item" role="presentation">
+                <button
+                  className={`nav-link fw-bold ${activeTab === 'artists' ? 'active border-bottom border-primary' : ''}`}
+                  type="button"
+                  onClick={() => setActiveTab('artists')}
+                  style={{padding: '12px 16px', cursor: 'pointer'}}
+                >
+                  <i className="fas fa-user-tie me-2"></i>Artists
+                </button>
+              </li>
+              <li className="nav-item" role="presentation">
+                <button
+                  className={`nav-link fw-bold ${activeTab === 'bookings' ? 'active border-bottom border-primary' : ''}`}
+                  type="button"
+                  onClick={() => setActiveTab('bookings')}
+                  style={{padding: '12px 16px', cursor: 'pointer'}}
+                >
+                  <i className="fas fa-calendar-alt me-2"></i>Bookings
                 </button>
               </li>
             </ul>
