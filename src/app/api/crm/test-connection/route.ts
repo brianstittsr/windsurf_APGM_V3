@@ -52,7 +52,22 @@ export async function POST(request: NextRequest) {
         // Check if it's a scope error
         if (errorMessage.includes('scope') || errorMessage.includes('authorized')) {
           scopeError = true;
-          errorMessage = 'API Key missing required scopes. Please ensure your Private Integration has "locations.readonly" or "locations.write" scope enabled in GoHighLevel Settings → Integrations → Private Integrations.';
+          errorMessage = `API Key missing required scopes. Please enable these scopes in GoHighLevel Settings → Integrations → Private Integrations:
+
+REQUIRED SCOPES FOR BMAD ORCHESTRATOR:
+✅ businesses.readonly
+✅ calendars.readonly, calendars.write
+✅ campaigns.readonly
+✅ contacts.readonly, contacts.write
+✅ conversations.readonly, conversations.write  
+✅ forms.readonly
+✅ invoices.readonly, invoices.write
+✅ locations.readonly
+✅ opportunities.readonly, opportunities.write
+✅ surveys.readonly
+✅ workflows.readonly
+
+After enabling scopes, regenerate your API key and try again.`;
         }
       } catch (e) {
         // Use default error message
