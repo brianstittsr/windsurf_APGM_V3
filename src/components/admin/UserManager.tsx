@@ -39,16 +39,26 @@ export default function UserManager() {
       const usersSnapshot = await getDocs(usersCollection);
       const usersList = usersSnapshot.docs.map(doc => {
         const data = doc.data();
+        // Handle various field name possibilities
+        const displayName = data.displayName || data.name || data.fullName || '';
+        const email = data.email || '';
+        const phone = data.phone || data.phoneNumber || '';
+        const role = data.role || 'client';
+        const isActive = data.isActive !== false;
+        
+        console.log('User doc:', doc.id, { displayName, email, phone, role, isActive, ...data });
+        
         return {
           id: doc.id,
-          displayName: data.displayName || '',
-          email: data.email || '',
-          phone: data.phone || '',
-          role: data.role || 'client',
-          isActive: data.isActive !== false,
+          displayName,
+          email,
+          phone,
+          role,
+          isActive,
           ...data
         } as User;
       });
+      console.log('Fetched users:', usersList);
       setUsers(usersList);
     } catch (error) {
       console.error('Error fetching users:', error);
