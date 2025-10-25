@@ -14,9 +14,10 @@ import BookingCalendarManager from '../../components/admin/BookingCalendarManage
 import RegistrationFormsManager from '../../components/admin/RegistrationFormsManager';
 import GoHighLevelManager from '../../components/admin/GoHighLevelManager';
 import GoHighLevelMCP from '../../components/admin/GoHighLevelMCP';
+import BMADOrchestrator from '../../components/admin/BMADOrchestrator';
 import Footer from '../../components/Footer';
 
-type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp';
+type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'bmad-orchestrator';
 
 export default function DashboardPage() {
   const { user, userRole, loading } = useAuth();
@@ -214,6 +215,8 @@ export default function DashboardPage() {
         return <GoHighLevelManager />;
       case 'gohighlevel-mcp':
         return <GoHighLevelMCP />;
+      case 'bmad-orchestrator':
+        return <BMADOrchestrator />;
       default:
         return null;
     }
@@ -350,6 +353,16 @@ export default function DashboardPage() {
                   style={{padding: '12px 16px', cursor: 'pointer'}}
                 >
                   <i className="fas fa-server me-2"></i>GoHighLevel MCP
+                </button>
+              </li>
+              <li className="nav-item" role="presentation">
+                <button
+                  className={`nav-link fw-bold ${activeTab === 'bmad-orchestrator' ? 'active border-bottom border-primary' : ''}`}
+                  type="button"
+                  onClick={() => setActiveTab('bmad-orchestrator')}
+                  style={{padding: '12px 16px', cursor: 'pointer'}}
+                >
+                  <i className="fas fa-robot me-2"></i>BMAD Orchestrator
                 </button>
               </li>
             </ul>
