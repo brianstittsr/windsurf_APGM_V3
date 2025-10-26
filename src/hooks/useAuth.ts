@@ -53,11 +53,15 @@ export function useAuth() {
               const userProfile = await UserService.getUserById(firebaseUser.uid);
               
               if (userProfile) {
-                console.log('✅ User profile loaded:', userProfile.profile.email, 'Role:', userProfile.role);
+                // Safely access email and role, accommodating both nested and flat structures.
+                const userEmail = (userProfile as any).profile?.email || (userProfile as any).email;
+                const userRole = (userProfile as any).role || 'client';
+
+                console.log('✅ User profile loaded:', userEmail, 'Role:', userRole);
                 setAuthState({
                   user: firebaseUser,
                   userProfile: userProfile,
-                  userRole: userProfile.role,
+                  userRole: userRole,
                   loading: false,
                   error: null
                 });
