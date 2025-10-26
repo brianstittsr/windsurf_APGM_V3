@@ -11,6 +11,10 @@ service cloud.firestore {
       return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
+    function isArtist() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'artist';
+    }
+
     function isAdminOrArtist() {
       return isAuthenticated() &&
         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
@@ -62,15 +66,9 @@ service cloud.firestore {
     }
 
     // Artist availability collection
-    match /artistAvailability/{docId} {
+    match /artist-availability/{artistId} {
       allow read: if true; // Public read access for booking calendar
-      allow write: if isAdminOrArtist() &&
-        (resource == null || resource.data.artistId == request.auth.uid);
-      allow create: if isAdminOrArtist() &&
-        request.resource.data.artistId is string;
-      allow update: if isAdminOrArtist() &&
-        resource.data.artistId == request.resource.data.artistId;
-      allow delete: if isAdminOrArtist();
+      allow write: if isAdmin() || (isArtist() && request.auth.uid == artistId);
     }
 
     // Reviews collection - Public read, authenticated create, admin manage
