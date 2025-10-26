@@ -11,8 +11,9 @@ import {
   orderBy, 
   Timestamp 
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 import { User, UserProfile } from '@/types/database';
+import { workflowEngine } from './bmad-workflows';
 
 export class UserService {
   private static collection = 'users';
@@ -20,7 +21,7 @@ export class UserService {
   // Create a new user
   static async createUser(userData: Omit<User, 'id'>): Promise<string> {
     try {
-      const docRef = doc(collection(db, this.collection));
+      const docRef = doc(collection(getDb(), this.collection));
       const user: User = {
         id: docRef.id,
         ...userData
@@ -28,6 +29,12 @@ export class UserService {
       
       await setDoc(docRef, user);
       console.log('User created successfully:', docRef.id);
+
+      // Trigger user registration workflow
+      await workflowEngine.executeWorkflow({
+        type: 'user_registered',
+        data: user
+      });
       return docRef.id;
     } catch (error) {
       console.error('Error creating user:', error);
@@ -38,7 +45,7 @@ export class UserService {
   // Get user by ID
   static async getUserById(userId: string): Promise<User | null> {
     try {
-      const docRef = doc(db, this.collection, userId);
+      const docRef = doc(getDb(), this.collection, userId);
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
@@ -56,7 +63,7 @@ export class UserService {
   static async getUserByEmail(email: string): Promise<User | null> {
     try {
       const q = query(
-        collection(db, this.collection), 
+        collection(getDb(), this.collection), 
         where('profile.email', '==', email)
       );
       const querySnapshot = await getDocs(q);
@@ -76,7 +83,7 @@ export class UserService {
   // Update user
   static async updateUser(userId: string, updates: Partial<User>): Promise<void> {
     try {
-      const docRef = doc(db, this.collection, userId);
+      const docRef = doc(getDb(), this.collection, userId);
       await updateDoc(docRef, {
         ...updates,
         'profile.updatedAt': Timestamp.now()
@@ -91,7 +98,7 @@ export class UserService {
   // Update user role
   static async updateUserRole(userId: string, role: 'client' | 'admin' | 'artist'): Promise<void> {
     try {
-      const docRef = doc(db, this.collection, userId);
+      const docRef = doc(getDb(), this.collection, userId);
       await updateDoc(docRef, {
         role: role,
         'profile.updatedAt': Timestamp.now()
@@ -107,7 +114,7 @@ export class UserService {
   static async getUsersByRole(role: 'client' | 'admin' | 'artist'): Promise<User[]> {
     try {
       const q = query(
-        collection(db, this.collection),
+        collection(getDb(), this.collection),
         where('role', '==', role),
         orderBy('profile.createdAt', 'desc')
       );
@@ -124,7 +131,7 @@ export class UserService {
   static async getActiveUsers(): Promise<User[]> {
     try {
       const q = query(
-        collection(db, this.collection),
+        collection(getDb(), this.collection),
         where('isActive', '==', true),
         orderBy('profile.createdAt', 'desc')
       );
@@ -140,7 +147,7 @@ export class UserService {
   // Deactivate user (soft delete)
   static async deactivateUser(userId: string): Promise<void> {
     try {
-      const docRef = doc(db, this.collection, userId);
+      const docRef = doc(getDb(), this.collection, userId);
       await updateDoc(docRef, {
         isActive: false,
         'profile.updatedAt': Timestamp.now()
@@ -155,7 +162,7 @@ export class UserService {
   // Activate user
   static async activateUser(userId: string): Promise<void> {
     try {
-      const docRef = doc(db, this.collection, userId);
+      const docRef = doc(getDb(), this.collection, userId);
       await updateDoc(docRef, {
         isActive: true,
         'profile.updatedAt': Timestamp.now()
@@ -170,7 +177,7 @@ export class UserService {
   // Delete user (hard delete)
   static async deleteUser(userId: string): Promise<void> {
     try {
-      const docRef = doc(db, this.collection, userId);
+      const docRef = doc(getDb(), this.collection, userId);
       await deleteDoc(docRef);
       console.log('User deleted:', userId);
     } catch (error) {

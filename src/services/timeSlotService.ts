@@ -7,7 +7,7 @@ import {
   orderBy,
   Timestamp 
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 import { AvailabilityService, ArtistAvailability, TimeRange } from './availabilityService';
 import { AppointmentService } from './database';
 import { Appointment } from '@/types/database';

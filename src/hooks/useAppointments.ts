@@ -1,10 +1,10 @@
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 
 export function useAppointments() {
   const createAppointment = async (appointmentData: any) => {
     try {
-      const appointmentsRef = collection(db, 'appointments');
+      const appointmentsRef = collection(getDb(), 'appointments');
       const docRef = await addDoc(appointmentsRef, {
         ...appointmentData,
         createdAt: Timestamp.now(),

@@ -274,7 +274,7 @@ Book your free consultation today and let's create your perfect look!`;
 
         await this.ghlOrchestrator.sendMessage(contact.id, {
           message: welcomeMessage,
-          type: 'Email'
+          type: 'SMS' // Changed from 'Email' to 'SMS' for a chat-based welcome
         });
         results.push({ action: 'send_welcome', success: true });
       }
@@ -594,7 +594,7 @@ Questions? Reply to this message anytime!`;
    */
   async getActiveWorkflows(): Promise<Workflow[]> {
     try {
-      const workflows = await DatabaseService.getAll('workflows');
+      const workflows = await DatabaseService.getAll('workflows') as Workflow[];
       return workflows.filter((w: any) => w.isActive);
     } catch (error) {
       console.error('Failed to get workflows:', error);

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getStripeConfig, getStripeModeAsync, getStripeModeDescription } from '@/lib/stripe-config';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 
 export async function GET() {
   try {
@@ -10,7 +10,7 @@ export async function GET() {
     let source = 'database';
     
     try {
-      const configDoc = await getDoc(doc(db, 'systemConfig', 'stripe'));
+      const configDoc = await getDoc(doc(getDb(), 'systemConfig', 'stripe'));
       if (configDoc.exists()) {
         const dbMode = configDoc.data().mode;
         if (dbMode === 'live' || dbMode === 'test') {

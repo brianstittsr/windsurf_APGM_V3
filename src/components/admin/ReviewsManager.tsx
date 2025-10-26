@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, orderBy, query, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 
 interface Review {
   id: string;
@@ -49,7 +49,7 @@ export default function ReviewsManager() {
 
   const loadReviews = async () => {
     try {
-      const q = query(collection(db, 'reviews'), orderBy('createdAt', 'desc'));
+      const q = query(collection(getDb(), 'reviews'), orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
       const reviewsData = querySnapshot.docs.map(doc => ({
         id: doc.id,
@@ -75,9 +75,9 @@ export default function ReviewsManager() {
       };
 
       if (editingReview) {
-        await updateDoc(doc(db, 'reviews', editingReview.id), reviewData);
+        await updateDoc(doc(getDb(), 'reviews', editingReview.id), reviewData);
       } else {
-        await addDoc(collection(db, 'reviews'), reviewData);
+        await addDoc(collection(getDb(), 'reviews'), reviewData);
       }
 
       setShowModal(false);
@@ -107,7 +107,7 @@ export default function ReviewsManager() {
   const handleDelete = async (reviewId: string) => {
     if (confirm('Are you sure you want to delete this review?')) {
       try {
-        await deleteDoc(doc(db, 'reviews', reviewId));
+        await deleteDoc(doc(getDb(), 'reviews', reviewId));
         loadReviews();
       } catch (error) {
         console.error('Error deleting review:', error);
@@ -117,7 +117,7 @@ export default function ReviewsManager() {
 
   const toggleVisibility = async (review: Review) => {
     try {
-      await updateDoc(doc(db, 'reviews', review.id), {
+      await updateDoc(doc(getDb(), 'reviews', review.id), {
         isVisible: !review.isVisible,
         updatedAt: Timestamp.now()
       });
@@ -129,7 +129,7 @@ export default function ReviewsManager() {
 
   const toggleApproval = async (review: Review) => {
     try {
-      await updateDoc(doc(db, 'reviews', review.id), {
+      await updateDoc(doc(getDb(), 'reviews', review.id), {
         isApproved: !review.isApproved,
         updatedAt: Timestamp.now()
       });

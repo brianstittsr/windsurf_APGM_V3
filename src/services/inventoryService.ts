@@ -11,7 +11,7 @@ import {
   Timestamp,
   runTransaction
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 
 export interface InventoryItem {
   id: string;
@@ -71,7 +71,7 @@ export class InventoryService {
   // Get all inventory items
   static async getInventoryItems(): Promise<InventoryItem[]> {
     try {
-      const inventoryRef = collection(db, 'inventory');
+      const inventoryRef = collection(getDb(), 'inventory');
       const q = query(inventoryRef, orderBy('name'));
       const snapshot = await getDocs(q);
       
@@ -100,7 +100,7 @@ export class InventoryService {
   static async saveInventoryItem(item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     try {
       const docId = item.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
-      const docRef = doc(db, 'inventory', docId);
+      const docRef = doc(getDb(), 'inventory', docId);
       
       const now = Timestamp.now();
       await setDoc(docRef, {
@@ -120,8 +120,8 @@ export class InventoryService {
   // Update inventory stock
   static async updateStock(itemId: string, newStock: number, reason: string, performedBy: string, performedByName: string): Promise<void> {
     try {
-      await runTransaction(db, async (transaction) => {
-        const itemRef = doc(db, 'inventory', itemId);
+      await runTransaction(getDb(), async (transaction) => {
+        const itemRef = doc(getDb(), 'inventory', itemId);
         const itemDoc = await transaction.get(itemRef);
         
         if (!itemDoc.exists()) {
@@ -140,7 +140,7 @@ export class InventoryService {
         
         // Create transaction record
         const transactionId = `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        const transactionRef = doc(db, 'inventoryTransactions', transactionId);
+        const transactionRef = doc(getDb(), 'inventoryTransactions', transactionId);
         
         const inventoryTransaction: InventoryTransaction = {
           id: transactionId,
@@ -168,7 +168,7 @@ export class InventoryService {
   static async createSupplyRequest(request: Omit<SupplyRequest, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     try {
       const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const docRef = doc(db, 'supplyRequests', requestId);
+      const docRef = doc(getDb(), 'supplyRequests', requestId);
       
       const now = Timestamp.now();
       const supplyRequest: SupplyRequest = {
@@ -189,7 +189,7 @@ export class InventoryService {
   // Get supply requests
   static async getSupplyRequests(userId?: string): Promise<SupplyRequest[]> {
     try {
-      const requestsRef = collection(db, 'supplyRequests');
+      const requestsRef = collection(getDb(), 'supplyRequests');
       let q = query(requestsRef, orderBy('requestDate', 'desc'));
       
       if (userId) {
@@ -211,9 +211,9 @@ export class InventoryService {
   // Process pickup (subtract from inventory)
   static async processPickup(requestId: string, performedBy: string, performedByName: string): Promise<void> {
     try {
-      await runTransaction(db, async (transaction) => {
+      await runTransaction(getDb(), async (transaction) => {
         // Get the supply request
-        const requestRef = doc(db, 'supplyRequests', requestId);
+        const requestRef = doc(getDb(), 'supplyRequests', requestId);
         const requestDoc = await transaction.get(requestRef);
         
         if (!requestDoc.exists()) {
@@ -228,7 +228,7 @@ export class InventoryService {
         
         // Process each item in the request
         for (const item of request.items) {
-          const inventoryRef = doc(db, 'inventory', item.inventoryItemId);
+          const inventoryRef = doc(getDb(), 'inventory', item.inventoryItemId);
           const inventoryDoc = await transaction.get(inventoryRef);
           
           if (!inventoryDoc.exists()) {
@@ -251,7 +251,7 @@ export class InventoryService {
           
           // Create transaction record
           const transactionId = `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-          const transactionRef = doc(db, 'inventoryTransactions', transactionId);
+          const transactionRef = doc(getDb(), 'inventoryTransactions', transactionId);
           
           const inventoryTransaction: InventoryTransaction = {
             id: transactionId,
@@ -287,7 +287,7 @@ export class InventoryService {
   // Approve supply request
   static async approveSupplyRequest(requestId: string, approvedItems: SupplyRequestItem[], performedBy: string): Promise<void> {
     try {
-      const requestRef = doc(db, 'supplyRequests', requestId);
+      const requestRef = doc(getDb(), 'supplyRequests', requestId);
       await updateDoc(requestRef, {
         status: 'approved',
         approvedDate: Timestamp.now(),
@@ -303,7 +303,7 @@ export class InventoryService {
   // Get inventory transactions
   static async getInventoryTransactions(itemId?: string): Promise<InventoryTransaction[]> {
     try {
-      const transactionsRef = collection(db, 'inventoryTransactions');
+      const transactionsRef = collection(getDb(), 'inventoryTransactions');
       let q = query(transactionsRef, orderBy('timestamp', 'desc'));
       
       if (itemId) {

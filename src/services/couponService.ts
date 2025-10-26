@@ -11,7 +11,7 @@ import {
   orderBy,
   Timestamp
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 import { CouponCode } from '@/types/coupons';
 
 export class CouponService {
@@ -32,7 +32,7 @@ export class CouponService {
     removeDepositOption?: boolean;
     depositReduction?: number;
   }): Promise<string> {
-    const docRef = await addDoc(collection(db, this.collectionName), {
+    const docRef = await addDoc(collection(getDb(), this.collectionName), {
       code: couponData.code,
       type: couponData.type,
       value: couponData.type === 'free_service' ? 100 : couponData.value,
@@ -55,7 +55,7 @@ export class CouponService {
   // Get coupon by code
   static async getCouponByCode(code: string): Promise<CouponCode | null> {
     const q = query(
-      collection(db, this.collectionName),
+      collection(getDb(), this.collectionName),
       where('code', '==', code.toUpperCase())
     );
     const querySnapshot = await getDocs(q);
@@ -76,7 +76,7 @@ export class CouponService {
 
   // Get coupon by ID
   static async getCouponById(id: string): Promise<CouponCode | null> {
-    const docRef = doc(db, this.collectionName, id);
+    const docRef = doc(getDb(), this.collectionName, id);
     const docSnap = await getDoc(docRef);
 
     if (!docSnap.exists()) {
@@ -101,7 +101,7 @@ export class CouponService {
       updateData.expirationDate = Timestamp.fromDate(updates.expirationDate);
     }
 
-    await updateDoc(doc(db, this.collectionName, couponId), updateData);
+    await updateDoc(doc(getDb(), this.collectionName, couponId), updateData);
   }
 
   // Validate coupon for use
@@ -143,6 +143,11 @@ export class CouponService {
 
   // Calculate discount
   static calculateDiscount(coupon: CouponCode, orderAmount: number): number {
+    // Special handling for GRANDOPEN250 coupon
+    if (coupon.code === 'GRANDOPEN250') {
+      return Math.min(250, orderAmount);
+    }
+
     if (coupon.type === 'percentage') {
       return (orderAmount * coupon.value) / 100;
     } else if (coupon.type === 'fixed') {
@@ -167,7 +172,7 @@ export class CouponService {
 
   // Delete coupon
   static async deleteCoupon(couponId: string): Promise<void> {
-    const couponRef = doc(db, this.collectionName, couponId);
+    const couponRef = doc(getDb(), this.collectionName, couponId);
     await deleteDoc(couponRef);
   }
 
@@ -181,7 +186,7 @@ export class CouponService {
   // Get all coupons
   static async getAllCoupons(): Promise<CouponCode[]> {
     const q = query(
-      collection(db, this.collectionName),
+      collection(getDb(), this.collectionName),
       orderBy('createdAt', 'desc')
     );
     const querySnapshot = await getDocs(q);

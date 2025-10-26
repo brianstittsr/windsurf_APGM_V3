@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 
 export async function GET(request: NextRequest) {
   try {
     console.log('🔍 Checking for existing PDF documents...');
     
     // Check if pdfDocuments collection exists and has any documents
-    const pdfCollection = collection(db, 'pdfDocuments');
+    const pdfCollection = collection(getDb(), 'pdfDocuments');
     const pdfQuery = query(pdfCollection, orderBy('generatedAt', 'desc'), limit(10));
     const pdfSnapshot = await getDocs(pdfQuery);
     
-    const pdfs = [];
+    const pdfs: any[] = [];
     pdfSnapshot.forEach((doc) => {
       const data = doc.data();
       pdfs.push({
@@ -24,11 +24,11 @@ export async function GET(request: NextRequest) {
     console.log(`📊 Found ${pdfs.length} PDF documents in database`);
     
     // Also check users collection to see if there are any users who might have PDFs
-    const usersCollection = collection(db, 'users');
+    const usersCollection = collection(getDb(), 'users');
     const usersQuery = query(usersCollection, limit(5));
     const usersSnapshot = await getDocs(usersQuery);
     
-    const users = [];
+    const users: any[] = [];
     usersSnapshot.forEach((doc) => {
       const data = doc.data();
       users.push({

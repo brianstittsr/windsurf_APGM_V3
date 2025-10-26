@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { collection, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+import { getDb } from '../../lib/firebase';
 
 interface RegistrationForm {
   id: string;
@@ -39,11 +39,11 @@ export default function RegistrationFormsManager() {
   const fetchForms = async () => {
     try {
       // Fetch health forms
-      const formsCollection = collection(db, 'healthForms');
+      const formsCollection = collection(getDb(), 'healthForms');
       const formsSnapshot = await getDocs(formsCollection);
       
       // Fetch appointments to get client details
-      const appointmentsCollection = collection(db, 'appointments');
+      const appointmentsCollection = collection(getDb(), 'appointments');
       const appointmentsSnapshot = await getDocs(appointmentsCollection);
       const appointmentsMap = new Map();
       appointmentsSnapshot.docs.forEach(doc => {
@@ -91,7 +91,7 @@ export default function RegistrationFormsManager() {
 
   const handleStatusChange = async (formId: string, newStatus: string) => {
     try {
-      const formRef = doc(db, 'healthForms', formId);
+      const formRef = doc(getDb(), 'healthForms', formId);
       await updateDoc(formRef, {
         status: newStatus,
         reviewedAt: new Date(),
@@ -112,7 +112,7 @@ export default function RegistrationFormsManager() {
     }
 
     try {
-      await deleteDoc(doc(db, 'healthForms', formId));
+      await deleteDoc(doc(getDb(), 'healthForms', formId));
       alert('Form deleted successfully!');
       fetchForms();
     } catch (error) {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 
 interface TimeSlot {
   time: string;
@@ -53,7 +53,7 @@ export function useTimeSlots(selectedDate: string) {
         console.log('🗓️ useTimeSlots: Day of week:', dayOfWeek, '- getDay() returned:', date.getDay());
 
         // Query artistAvailability collection for all documents
-        const availabilityRef = collection(db, 'artistAvailability');
+        const availabilityRef = collection(getDb(), 'artistAvailability');
         const snapshot = await getDocs(availabilityRef);
         console.log('📊 useTimeSlots: Total artistAvailability documents:', snapshot.docs.length);
 

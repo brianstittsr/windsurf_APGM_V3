@@ -10,7 +10,7 @@ import {
   Timestamp,
   serverTimestamp
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 import { UserActivity, ActivityFilters } from '@/types/activity';
 
 export class ActivityService {
@@ -26,7 +26,7 @@ export class ActivityService {
         timestamp: serverTimestamp()
       };
 
-      const docRef = await addDoc(collection(db, this.COLLECTION), activityData);
+      const docRef = await addDoc(collection(getDb(), this.COLLECTION), activityData);
       console.log(`📝 Activity logged: ${activity.activityType} for user ${activity.userId}`);
       return docRef.id;
     } catch (error) {
@@ -44,7 +44,7 @@ export class ActivityService {
   ): Promise<UserActivity[]> {
     try {
       let q = query(
-        collection(db, this.COLLECTION),
+        collection(getDb(), this.COLLECTION),
         where('userId', '==', userId),
         orderBy('timestamp', 'desc')
       );

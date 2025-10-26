@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify admin permissions
-    const userDoc = await getDoc(doc(db, 'users', adminUserId));
+    const userDoc = await getDoc(doc(getDb(), 'users', adminUserId));
     if (!userDoc.exists() || userDoc.data().role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized. Admin access required.' },
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update system configuration in Firestore
-    const configRef = doc(db, 'systemConfig', 'stripe');
+    const configRef = doc(getDb(), 'systemConfig', 'stripe');
     await updateDoc(configRef, {
       mode: mode,
       updatedAt: new Date(),

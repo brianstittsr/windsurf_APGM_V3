@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { collection, getDocs, doc, updateDoc, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 
 interface UserProfile {
   firstName: string;
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     console.log('🔄 Starting emergency contact migration...');
     
     // Get all users from the database
-    const usersCollection = collection(db, 'users');
+    const usersCollection = collection(getDb(), 'users');
     const usersSnapshot = await getDocs(usersCollection);
     
     let totalUsers = 0;
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
             updateData['profile.emergencyContactPhone'] = '';
           }
 
-          await updateDoc(doc(db, 'users', userId), updateData);
+          await updateDoc(doc(getDb(), 'users', userId), updateData);
           usersUpdated++;
           migrationLog.push(`  ✅ Updated user ${userId} with emergency contact fields`);
           

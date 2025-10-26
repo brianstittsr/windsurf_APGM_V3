@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 import { ServiceItem } from '@/types/service';
 
 export function useServices() {
@@ -14,7 +14,7 @@ export function useServices() {
         setLoading(true);
         setError(null);
         
-        const servicesRef = collection(db, 'services');
+        const servicesRef = collection(getDb(), 'services');
         const q = query(servicesRef, orderBy('order', 'asc'));
         const snapshot = await getDocs(q);
         

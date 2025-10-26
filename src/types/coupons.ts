@@ -1,4 +1,6 @@
 // Gift Card Types
+import { Timestamp } from 'firebase/firestore';
+
 export interface GiftCard {
   id: string;
   code: string;
@@ -9,11 +11,12 @@ export interface GiftCard {
   purchaserEmail: string;
   purchaserName: string;
   message?: string;
-  expiresAt: Date;
+  expirationDate: Date | Timestamp;
   isRedeemed: boolean;
-  redeemedAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
+  redeemedAt?: Date | Timestamp;
+  isActive: boolean;
+  createdAt: Date | Timestamp;
+  updatedAt: Date | Timestamp;
 }
 
 // Coupon Types

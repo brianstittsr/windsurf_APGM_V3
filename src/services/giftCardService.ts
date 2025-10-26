@@ -11,7 +11,7 @@ import {
   orderBy,
   Timestamp
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 import { GiftCard } from '@/types/coupons';
 
 const COLLECTION_NAME = 'giftCards';
@@ -39,14 +39,14 @@ export class GiftCardService {
       updatedAt: now
     };
 
-    const docRef = await addDoc(collection(db, COLLECTION_NAME), newGiftCard);
+    const docRef = await addDoc(collection(getDb(), COLLECTION_NAME), newGiftCard);
     return docRef.id;
   }
 
   // Get gift card by code
   static async getGiftCardByCode(code: string): Promise<GiftCard | null> {
     const q = query(
-      collection(db, COLLECTION_NAME),
+      collection(getDb(), COLLECTION_NAME),
       where('code', '==', code.toUpperCase()),
       where('isActive', '==', true)
     );
@@ -63,7 +63,7 @@ export class GiftCardService {
 
   // Get gift card by ID
   static async getGiftCardById(id: string): Promise<GiftCard | null> {
-    const docRef = doc(db, COLLECTION_NAME, id);
+    const docRef = doc(getDb(), COLLECTION_NAME, id);
     const docSnap = await getDoc(docRef);
 
     if (!docSnap.exists()) {
@@ -89,7 +89,7 @@ export class GiftCardService {
       return { isValid: false, error: 'Gift card is not active' };
     }
 
-    if (giftCard.expirationDate && giftCard.expirationDate.toDate() < new Date()) {
+        if (giftCard.expirationDate && (giftCard.expirationDate as Timestamp).toDate() < new Date()) {
       return { isValid: false, error: 'Gift card has expired' };
     }
 
@@ -120,7 +120,7 @@ export class GiftCardService {
     const newRemainingAmount = giftCard.remainingAmount - amount;
     const isRedeemed = newRemainingAmount <= 0;
 
-    await updateDoc(doc(db, COLLECTION_NAME, giftCardId), {
+    await updateDoc(doc(getDb(), COLLECTION_NAME, giftCardId), {
       remainingAmount: Math.max(0, newRemainingAmount),
       isRedeemed,
       updatedAt: Timestamp.now()
@@ -129,7 +129,7 @@ export class GiftCardService {
 
   // Update gift card
   static async updateGiftCard(id: string, updates: Partial<Omit<GiftCard, 'id' | 'code' | 'createdAt'>>): Promise<void> {
-    await updateDoc(doc(db, COLLECTION_NAME, id), {
+    await updateDoc(doc(getDb(), COLLECTION_NAME, id), {
       ...updates,
       updatedAt: Timestamp.now()
     });
@@ -137,7 +137,7 @@ export class GiftCardService {
 
   // Deactivate gift card
   static async deactivateGiftCard(id: string): Promise<void> {
-    await updateDoc(doc(db, COLLECTION_NAME, id), {
+    await updateDoc(doc(getDb(), COLLECTION_NAME, id), {
       isActive: false,
       updatedAt: Timestamp.now()
     });
@@ -145,24 +145,27 @@ export class GiftCardService {
 
   // Delete gift card
   static async deleteGiftCard(id: string): Promise<void> {
-    await deleteDoc(doc(db, COLLECTION_NAME, id));
+    await deleteDoc(doc(getDb(), COLLECTION_NAME, id));
   }
 
   // Get all gift cards
   static async getAllGiftCards(): Promise<GiftCard[]> {
     const q = query(
-      collection(db, COLLECTION_NAME),
+      collection(getDb(), COLLECTION_NAME),
       orderBy('createdAt', 'desc')
     );
 
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      expiresAt: doc.data().expiresAt?.toDate(),
-      redeemedAt: doc.data().redeemedAt?.toDate(),
-      createdAt: doc.data().createdAt?.toDate(),
-      updatedAt: doc.data().updatedAt?.toDate()
-    } as GiftCard));
+        return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        expirationDate: (data.expirationDate as Timestamp)?.toDate(),
+        redeemedAt: (data.redeemedAt as Timestamp)?.toDate(),
+        createdAt: (data.createdAt as Timestamp)?.toDate(),
+        updatedAt: (data.updatedAt as Timestamp)?.toDate(),
+      } as GiftCard;
+    });
   }
 }

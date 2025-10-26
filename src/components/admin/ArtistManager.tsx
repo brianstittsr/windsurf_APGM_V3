@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, getDocs, doc, deleteDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+import { collection, getDocs, doc, deleteDoc, setDoc, updateDoc, getDoc } from 'firebase/firestore';
+import { getDb } from '../../lib/firebase';
 import { useAuth } from '../../hooks/useAuth';
 
 interface Artist {
@@ -47,7 +47,9 @@ export default function ArtistManager() {
 
   const fetchArtists = async () => {
     try {
-      const usersCollection = collection(db, 'users');
+      const usersCollection = collection(getDb(), 'users');
+      if (!currentUser) return;
+      const userDoc = await getDoc(doc(getDb(), 'users', currentUser.uid));
       const usersSnapshot = await getDocs(usersCollection);
       const artistsList = usersSnapshot.docs
         .map(doc => {
@@ -90,7 +92,7 @@ export default function ArtistManager() {
 
     setSubmitting(true);
     try {
-      const artistDocRef = doc(collection(db, 'users'));
+      const artistDocRef = doc(collection(getDb(), 'users'));
       await setDoc(artistDocRef, {
         email: formData.email,
         displayName: formData.displayName,
@@ -124,7 +126,7 @@ export default function ArtistManager() {
 
     setSubmitting(true);
     try {
-      const artistDocRef = doc(db, 'users', editingArtist.id);
+      const artistDocRef = doc(getDb(), 'users', editingArtist.id);
       await updateDoc(artistDocRef, {
         displayName: formData.displayName,
         phone: formData.phone || '',
@@ -154,7 +156,7 @@ export default function ArtistManager() {
     }
 
     try {
-      await deleteDoc(doc(db, 'users', artistId));
+      await deleteDoc(doc(getDb(), 'users', artistId));
       alert('Artist deleted successfully!');
       fetchArtists();
     } catch (error) {

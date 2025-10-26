@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { collection, doc, getDoc, setDoc, updateDoc, query, where, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 
 interface TimeSlot {
   time: string;
@@ -55,7 +55,7 @@ export function useAvailability(selectedDate: string) {
         const date = new Date(selectedDate);
         const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][date.getDay()];
         
-        const availabilityRef = collection(db, 'artistAvailability');
+        const availabilityRef = collection(getDb(), 'artistAvailability');
         const snapshot = await getDocs(availabilityRef);
         
         const timeSlots: TimeSlot[] = [];
@@ -78,7 +78,7 @@ export function useAvailability(selectedDate: string) {
         });
 
         // Check for existing bookings and mark those slots as unavailable
-        const bookingsRef = collection(db, 'bookings');
+        const bookingsRef = collection(getDb(), 'bookings');
         const bookingsQuery = query(bookingsRef, where('date', '==', selectedDate));
         const bookingsSnapshot = await getDocs(bookingsQuery);
         
@@ -115,7 +115,7 @@ export function useAvailability(selectedDate: string) {
     try {
       // For artistAvailability collection, we'll create a separate bookings collection
       // to track booked slots without modifying the base availability
-      const bookingRef = doc(db, 'bookings', `${selectedDate}_${time}_${artistId}`);
+      const bookingRef = doc(getDb(), 'bookings', `${selectedDate}_${time}_${artistId}`);
       
       await setDoc(bookingRef, {
         date: selectedDate,

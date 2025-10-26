@@ -18,7 +18,7 @@ import {
   DocumentData,
   writeBatch
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 import {
   User,
   Service,
@@ -60,16 +60,16 @@ export const COLLECTIONS = {
 export class DatabaseService {
   // Get a Firestore collection reference
   static getCollection(collectionName: string) {
-    return collection(db, collectionName);
+    return collection(getDb(), collectionName);
   }
   
   // Get a Firestore batch
   static getBatch() {
-    return writeBatch(db);
+    return writeBatch(getDb());
   }
   // Create
   static async create<T>(collectionName: string, data: Omit<T, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
-    const docRef = await addDoc(collection(db, collectionName), {
+    const docRef = await addDoc(collection(getDb(), collectionName), {
       ...data,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
@@ -79,7 +79,7 @@ export class DatabaseService {
 
   // Read
   static async getById<T>(collectionName: string, id: string): Promise<T | null> {
-    const docRef = doc(db, collectionName, id);
+    const docRef = doc(getDb(), collectionName, id);
     const docSnap = await getDoc(docRef);
     
     if (docSnap.exists()) {
@@ -90,7 +90,7 @@ export class DatabaseService {
 
   // Update
   static async update<T>(collectionName: string, id: string, data: Partial<T>): Promise<void> {
-    const docRef = doc(db, collectionName, id);
+    const docRef = doc(getDb(), collectionName, id);
     await updateDoc(docRef, {
       ...data,
       updatedAt: serverTimestamp()
@@ -99,13 +99,13 @@ export class DatabaseService {
 
   // Delete
   static async delete(collectionName: string, id: string): Promise<void> {
-    const docRef = doc(db, collectionName, id);
+    const docRef = doc(getDb(), collectionName, id);
     await deleteDoc(docRef);
   }
 
   // Get all documents
   static async getAll<T>(collectionName: string): Promise<T[]> {
-    const querySnapshot = await getDocs(collection(db, collectionName));
+    const querySnapshot = await getDocs(collection(getDb(), collectionName));
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
   }
 
@@ -116,7 +116,7 @@ export class DatabaseService {
     orderByField?: string,
     limitCount?: number
   ): Promise<T[]> {
-    let q = query(collection(db, collectionName));
+    let q = query(collection(getDb(), collectionName));
     
     // Add where conditions
     conditions.forEach(condition => {
@@ -143,7 +143,7 @@ export class DatabaseService {
     callback: (data: T[]) => void,
     conditions?: Array<{ field: string; operator: any; value: any }>
   ): () => void {
-    let q = query(collection(db, collectionName));
+    let q = query(collection(getDb(), collectionName));
     
     if (conditions) {
       conditions.forEach(condition => {
@@ -179,7 +179,7 @@ export class UserService {
       hearAboutUs: profile.hearAboutUs
     };
     
-    const docRef = await addDoc(collection(db, COLLECTIONS.USERS), {
+    const docRef = await addDoc(collection(getDb(), COLLECTIONS.USERS), {
       ...userDataWithoutProfile,
       profile: {
         ...profileData,
@@ -242,12 +242,12 @@ export class UserService {
       }
     };
     
-    await setDoc(doc(db, COLLECTIONS.USERS, uid), userDoc);
+    await setDoc(doc(getDb(), COLLECTIONS.USERS, uid), userDoc);
   }
 
   // Role management methods
   static async updateUserRole(userId: string, role: 'client' | 'admin' | 'artist'): Promise<void> {
-    await updateDoc(doc(db, COLLECTIONS.USERS, userId), {
+    await updateDoc(doc(getDb(), COLLECTIONS.USERS, userId), {
       role: role,
       'profile.updatedAt': serverTimestamp()
     });
@@ -274,14 +274,14 @@ export class UserService {
   }
 
   static async activateUser(userId: string): Promise<void> {
-    await updateDoc(doc(db, COLLECTIONS.USERS, userId), {
+    await updateDoc(doc(getDb(), COLLECTIONS.USERS, userId), {
       isActive: true,
       'profile.updatedAt': serverTimestamp()
     });
   }
 
   static async deactivateUser(userId: string): Promise<void> {
-    await updateDoc(doc(db, COLLECTIONS.USERS, userId), {
+    await updateDoc(doc(getDb(), COLLECTIONS.USERS, userId), {
       isActive: false,
       'profile.updatedAt': serverTimestamp()
     });
@@ -439,7 +439,7 @@ export class AppointmentService {
 export class HealthFormService {
   static async createHealthForm(healthFormData: Omit<HealthForm, 'id'>): Promise<string> {
     // HealthForm doesn't have createdAt/updatedAt, so we use a different approach
-    const docRef = await addDoc(collection(db, COLLECTIONS.HEALTH_FORMS), healthFormData);
+    const docRef = await addDoc(collection(getDb(), COLLECTIONS.HEALTH_FORMS), healthFormData);
     return docRef.id;
   }
 
@@ -459,7 +459,7 @@ export class HealthFormService {
 export class CandidateAssessmentService {
   static async createAssessment(assessmentData: Omit<CandidateAssessment, 'id'>): Promise<string> {
     // CandidateAssessment doesn't have createdAt/updatedAt, so we use a different approach
-    const docRef = await addDoc(collection(db, COLLECTIONS.CANDIDATE_ASSESSMENTS), assessmentData);
+    const docRef = await addDoc(collection(getDb(), COLLECTIONS.CANDIDATE_ASSESSMENTS), assessmentData);
     return docRef.id;
   }
 
@@ -475,7 +475,7 @@ export class CandidateAssessmentService {
 export class PaymentService {
   static async createPayment(paymentData: Omit<Payment, 'id'>): Promise<string> {
     // Payment doesn't have createdAt/updatedAt, so we use a different approach
-    const docRef = await addDoc(collection(db, COLLECTIONS.PAYMENTS), paymentData);
+    const docRef = await addDoc(collection(getDb(), COLLECTIONS.PAYMENTS), paymentData);
     return docRef.id;
   }
 
@@ -494,7 +494,7 @@ export class PaymentService {
 
 export class GiftCardService {
   static async createGiftCard(giftCardData: Omit<GiftCard, 'id' | 'createdAt'>): Promise<string> {
-    const docRef = await addDoc(collection(db, COLLECTIONS.GIFT_CARDS), {
+    const docRef = await addDoc(collection(getDb(), COLLECTIONS.GIFT_CARDS), {
       ...giftCardData,
       createdAt: serverTimestamp()
     });
@@ -535,7 +535,7 @@ export class GiftCardService {
 export class ContactFormService {
   static async createContactForm(contactData: Omit<ContactForm, 'id'>): Promise<string> {
     // ContactForm doesn't have createdAt/updatedAt, so we use a different approach
-    const docRef = await addDoc(collection(db, COLLECTIONS.CONTACT_FORMS), contactData);
+    const docRef = await addDoc(collection(getDb(), COLLECTIONS.CONTACT_FORMS), contactData);
     return docRef.id;
   }
 
@@ -591,7 +591,7 @@ export class AvailabilityService {
             artistId
           }
         };
-        await setDoc(doc(db, COLLECTIONS.AVAILABILITY, date), availabilityDoc);
+        await setDoc(doc(getDb(), COLLECTIONS.AVAILABILITY, date), availabilityDoc);
         console.log('Created new availability document for date:', date);
       } catch (createError) {
         console.error('Failed to create availability document:', createError);
@@ -604,7 +604,7 @@ export class AvailabilityService {
 export class NotificationService {
   static async createNotification(notificationData: Omit<Notification, 'id'>): Promise<string> {
     // Notification doesn't have createdAt/updatedAt, so we use a different approach
-    const docRef = await addDoc(collection(db, COLLECTIONS.NOTIFICATIONS), notificationData);
+    const docRef = await addDoc(collection(getDb(), COLLECTIONS.NOTIFICATIONS), notificationData);
     return docRef.id;
   }
 
@@ -634,7 +634,7 @@ export class BusinessSettingsService {
   }
 
   static async createOrUpdateSettings(settings: BusinessSettings): Promise<void> {
-    const docRef = doc(db, COLLECTIONS.BUSINESS_SETTINGS, 'main');
+    const docRef = doc(getDb(), COLLECTIONS.BUSINESS_SETTINGS, 'main');
     await setDoc(docRef, {
       ...settings,
       createdAt: serverTimestamp(),

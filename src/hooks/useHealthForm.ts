@@ -1,10 +1,10 @@
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 
 export function useHealthForm() {
   const submitHealthForm = async (healthFormData: any, signature: string) => {
     try {
-      const healthFormsRef = collection(db, 'healthForms');
+      const healthFormsRef = collection(getDb(), 'healthForms');
       const docRef = await addDoc(healthFormsRef, {
         ...healthFormData,
         signature,

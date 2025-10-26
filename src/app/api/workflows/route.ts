@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 import { MarketingWorkflow } from '@/services/WorkflowEngine';
 
 export async function GET(request: NextRequest) {
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
 
     if (workflowId) {
       // Get specific workflow
-      const workflowDoc = await getDoc(doc(db, 'marketingWorkflows', workflowId));
+      const workflowDoc = await getDoc(doc(getDb(), 'marketingWorkflows', workflowId));
       if (!workflowDoc.exists()) {
         return NextResponse.json(
           { error: 'Workflow not found' },
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ workflow: { id: workflowDoc.id, ...workflowDoc.data() } });
     } else {
       // Get all workflows
-      const querySnapshot = await getDocs(collection(db, 'marketingWorkflows'));
+      const querySnapshot = await getDocs(collection(getDb(), 'marketingWorkflows'));
       const workflows = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       }
     };
 
-    await setDoc(doc(db, 'marketingWorkflows', workflowId), workflowData);
+    await setDoc(doc(getDb(), 'marketingWorkflows', workflowId), workflowData);
 
     return NextResponse.json({ 
       success: true, 
@@ -96,7 +96,7 @@ export async function PUT(request: NextRequest) {
       updatedAt: new Date().toISOString()
     };
 
-    await updateDoc(doc(db, 'marketingWorkflows', workflow.id), workflowData);
+    await updateDoc(doc(getDb(), 'marketingWorkflows', workflow.id), workflowData);
 
     return NextResponse.json({ 
       success: true, 
@@ -125,7 +125,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    await deleteDoc(doc(db, 'marketingWorkflows', workflowId));
+    await deleteDoc(doc(getDb(), 'marketingWorkflows', workflowId));
 
     return NextResponse.json({ 
       success: true, 

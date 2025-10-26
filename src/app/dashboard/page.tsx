@@ -15,9 +15,12 @@ import RegistrationFormsManager from '../../components/admin/RegistrationFormsMa
 import GoHighLevelManager from '../../components/admin/GoHighLevelManager';
 import GoHighLevelMCP from '../../components/admin/GoHighLevelMCP';
 import BMADOrchestrator from '../../components/admin/BMADOrchestrator';
+import ArtistAvailabilityManager from '../../components/admin/ArtistAvailabilityManager';
+import BookingCalendar from '../../components/admin/BookingCalendar';
+import AlexaIntegrationManager from '../../components/admin/AlexaIntegrationManager';
 import Footer from '../../components/Footer';
 
-type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'bmad-orchestrator';
+type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'alexa';
 
 export default function DashboardPage() {
   const { user, userRole, loading } = useAuth();
@@ -217,6 +220,10 @@ export default function DashboardPage() {
         return <GoHighLevelMCP />;
       case 'bmad-orchestrator':
         return <BMADOrchestrator />;
+      case 'availability':
+        return <ArtistAvailabilityManager />;
+      case 'calendar':
+        return <BookingCalendar />;
       default:
         return null;
     }
@@ -313,6 +320,26 @@ export default function DashboardPage() {
                   style={{padding: '12px 16px', cursor: 'pointer'}}
                 >
                   <i className="fas fa-user-tie me-2"></i>Artists
+                </button>
+              </li>
+              <li className="nav-item" role="presentation">
+                <button
+                  className={`nav-link fw-bold ${activeTab === 'availability' ? 'active border-bottom border-primary' : ''}`}
+                  type="button"
+                  onClick={() => setActiveTab('availability')}
+                  style={{padding: '12px 16px', cursor: 'pointer'}}
+                >
+                  <i className="fas fa-calendar-check me-2"></i>Artist Availability
+                </button>
+              </li>
+              <li className="nav-item" role="presentation">
+                <button
+                  className={`nav-link fw-bold ${activeTab === 'calendar' ? 'active border-bottom border-primary' : ''}`}
+                  type="button"
+                  onClick={() => setActiveTab('calendar')}
+                  style={{padding: '12px 16px', cursor: 'pointer'}}
+                >
+                  <i className="fas fa-calendar me-2"></i>Calendar
                 </button>
               </li>
               <li className="nav-item" role="presentation">

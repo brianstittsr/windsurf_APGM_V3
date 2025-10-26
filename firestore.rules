@@ -31,12 +31,16 @@ service cloud.firestore {
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
 
+    // BROAD DIAGNOSTIC RULE: Allow any authenticated user to read anything.
+    // This is temporary to isolate the problem.
+    match /{document=**} {
+      allow read: if isAuthenticated();
+    }
+
     // Users collection - CRITICAL: Admin can manage all users, users can read/update their own
     match /users/{userId} {
-      allow read: if isAuthenticated() &&
-        (request.auth.uid == userId ||
-         isAdminOrArtist());
-      allow create: if isAuthenticated() && isAdmin(); // Only admins can create new users
+      allow read: if isAuthenticated(); // Allow any logged-in user to read user profiles (needed for booking)
+      allow create: if isAuthenticated() && (request.auth.uid == userId || isAdmin()); // Allow users to create their own profile, or admins to create any
       allow update: if isAuthenticated() &&
         (request.auth.uid == userId ||
          isAdmin());
@@ -59,15 +63,18 @@ service cloud.firestore {
 
     // Bookings collection - Track booked time slots
     match /bookings/{bookingId} {
-      allow read: if true; // Public read for availability checking
+      // Allow listing for availability checks
+      allow list: if isAuthenticated();
+      // Allow reading a specific document
+      allow get: if true; 
       allow write: if isAuthenticated();
       allow create: if isAuthenticated();
       allow delete: if isAdminOrArtist();
     }
 
-    // Artist availability collection
-    match /artist-availability/{artistId} {
-      allow read: if true; // Public read access for booking calendar
+    // Artist availability collection (using collection group query rule)
+    match /{path=**}/artist-availability/{artistId} {
+      allow read: if isAuthenticated();
       allow write: if isAdmin() || (isArtist() && request.auth.uid == artistId);
     }
 

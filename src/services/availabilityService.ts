@@ -10,7 +10,7 @@ import {
   orderBy,
   Timestamp 
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 
 // Types
 export interface TimeRange {
@@ -53,7 +53,7 @@ export class AvailabilityService {
   // Get artist's weekly availability
   static async getArtistAvailability(artistId: string): Promise<ArtistAvailability[]> {
     try {
-      const availabilityRef = collection(db, 'artistAvailability');
+      const availabilityRef = collection(getDb(), 'artistAvailability');
       const q = query(
         availabilityRef, 
         where('artistId', '==', artistId)
@@ -85,7 +85,7 @@ export class AvailabilityService {
   ): Promise<void> {
     try {
       const docId = `${artistId}_${dayOfWeek}`;
-      const docRef = doc(db, 'artistAvailability', docId);
+      const docRef = doc(getDb(), 'artistAvailability', docId);
       
       const updateData = {
         ...availabilityData,
@@ -105,7 +105,7 @@ export class AvailabilityService {
   static async toggleDayAvailability(artistId: string, dayOfWeek: string, isEnabled: boolean): Promise<void> {
     try {
       const docId = `${artistId}_${dayOfWeek}`;
-      const docRef = doc(db, 'artistAvailability', docId);
+      const docRef = doc(getDb(), 'artistAvailability', docId);
       
       // Use setDoc with merge to handle both existing and non-existing documents
       await setDoc(docRef, {
@@ -132,7 +132,7 @@ export class AvailabilityService {
   ): Promise<void> {
     try {
       const docId = `${artistId}_${dayOfWeek}`;
-      const docRef = doc(db, 'artistAvailability', docId);
+      const docRef = doc(getDb(), 'artistAvailability', docId);
       
       // Get current availability
       const availability = await this.getArtistAvailability(artistId);
@@ -166,7 +166,7 @@ export class AvailabilityService {
   ): Promise<void> {
     try {
       const docId = `${artistId}_${dayOfWeek}`;
-      const docRef = doc(db, 'artistAvailability', docId);
+      const docRef = doc(getDb(), 'artistAvailability', docId);
       
       // Get current availability
       const availability = await this.getArtistAvailability(artistId);
@@ -196,7 +196,7 @@ export class AvailabilityService {
   ): Promise<void> {
     try {
       const docId = `${artistId}_${dayOfWeek}`;
-      const docRef = doc(db, 'artistAvailability', docId);
+      const docRef = doc(getDb(), 'artistAvailability', docId);
       
       // Get current availability
       const availability = await this.getArtistAvailability(artistId);
@@ -236,7 +236,7 @@ export class AvailabilityService {
     try {
       const promises = daysOfWeek.map(day => {
         const docId = `${artistId}_${day}`;
-        const docRef = doc(db, 'artistAvailability', docId);
+        const docRef = doc(getDb(), 'artistAvailability', docId);
         const daySchedule = defaultSchedule[day];
         
         const timeRanges: TimeRange[] = daySchedule.isWorking ? [{
@@ -268,7 +268,7 @@ export class AvailabilityService {
   // Schedule exceptions (holidays, time off, etc.)
   static async getScheduleExceptions(artistId: string): Promise<ScheduleException[]> {
     try {
-      const exceptionsRef = collection(db, 'artistScheduleExceptions');
+      const exceptionsRef = collection(getDb(), 'artistScheduleExceptions');
       const q = query(
         exceptionsRef, 
         where('artistId', '==', artistId)
@@ -291,7 +291,7 @@ export class AvailabilityService {
   // Add schedule exception
   static async addScheduleException(exception: Omit<ScheduleException, 'id' | 'createdAt' | 'updatedAt'>): Promise<void> {
     try {
-      const exceptionsRef = collection(db, 'artistScheduleExceptions');
+      const exceptionsRef = collection(getDb(), 'artistScheduleExceptions');
       const docRef = doc(exceptionsRef);
       
       await setDoc(docRef, {
@@ -310,7 +310,7 @@ export class AvailabilityService {
   static async updateServicesOffered(artistId: string, dayOfWeek: string, servicesOffered: string[]): Promise<void> {
     try {
       const docId = `${artistId}_${dayOfWeek}`;
-      const docRef = doc(db, 'artistAvailability', docId);
+      const docRef = doc(getDb(), 'artistAvailability', docId);
       
       await setDoc(docRef, {
         id: docId,
@@ -328,7 +328,7 @@ export class AvailabilityService {
   // Remove schedule exception
   static async removeScheduleException(exceptionId: string): Promise<void> {
     try {
-      const docRef = doc(db, 'artistScheduleExceptions', exceptionId);
+      const docRef = doc(getDb(), 'artistScheduleExceptions', exceptionId);
       await deleteDoc(docRef);
     } catch (error) {
       console.error('Error removing schedule exception:', error);
@@ -352,7 +352,7 @@ export class AvailabilityService {
       const dayOfWeek = dayNames[dateObj.getDay()];
       
       // Create a booked slots document for this specific date
-      const bookedSlotsRef = doc(db, 'bookedSlots', date);
+      const bookedSlotsRef = doc(getDb(), 'bookedSlots', date);
       
       // Get existing booked slots for this date
       const { getDoc } = await import('firebase/firestore');
@@ -390,7 +390,7 @@ export class AvailabilityService {
     try {
       console.log(`🔓 Releasing time slot: ${date} ${timeSlot} for artist ${artistId}`);
       
-      const bookedSlotsRef = doc(db, 'bookedSlots', date);
+      const bookedSlotsRef = doc(getDb(), 'bookedSlots', date);
       
       // Get existing booked slots for this date
       const { getDoc, updateDoc, deleteField } = await import('firebase/firestore');
@@ -414,7 +414,7 @@ export class AvailabilityService {
   // Get booked slots for a specific date
   static async getBookedSlots(date: string): Promise<Record<string, any>> {
     try {
-      const bookedSlotsRef = doc(db, 'bookedSlots', date);
+      const bookedSlotsRef = doc(getDb(), 'bookedSlots', date);
       const { getDoc } = await import('firebase/firestore');
       const bookedSlotsDoc = await getDoc(bookedSlotsRef);
       

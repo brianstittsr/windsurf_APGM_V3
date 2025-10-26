@@ -40,40 +40,25 @@ if (!getApps().length) {
 }
 
 // Initialize Firebase services with error handling
-let db: Firestore;
-let auth: Auth;
-let storage: FirebaseStorage;
+const auth = getAuth(app);
+const storage = getStorage(app);
+
+// Export a function to get the Firestore instance, preventing singleton issues
+const getDb = () => getFirestore(app);
 
 try {
-  // Always initialize Firebase services
-  db = getFirestore(app);
-  auth = getAuth(app);
-  storage = getStorage(app);
-  
-  if (!isFirebaseConfigured()) {
-    // Development mode warning
-    console.warn('⚠️ Firebase environment variables not configured. Using demo configuration.');
-    console.log('📝 Please copy env-template.txt to .env.local and configure your Firebase project.');
-    console.log('🔗 Project setup: https://console.firebase.google.com/u/0/project/aprettygirlmatterllc');
-    
-    // Connect to emulators in development if available
-    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true') {
-      try {
-        connectFirestoreEmulator(db, 'localhost', 8080);
-        connectAuthEmulator(auth, 'http://localhost:9099');
-        connectStorageEmulator(storage, 'localhost', 9199);
-        console.log('Connected to Firebase emulators');
-      } catch (error) {
-        // Emulators already connected or not available
-        console.log('Firebase emulators not available or already connected.');
-      }
-    }
+  // Connect to emulators in development if configured
+  if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true') {
+    const db = getDb();
+    connectFirestoreEmulator(db, 'localhost', 8080);
+    connectAuthEmulator(auth, 'http://localhost:9099');
+    connectStorageEmulator(storage, 'localhost', 9199);
+    console.log('🔥 Connected to Firebase emulators');
   }
 } catch (error) {
-  console.error('Firebase initialization error:', error);
-  // Re-throw the error so it can be handled by the calling code
-  throw new Error(`Firebase initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  // This will catch if emulators are already running, which is fine.
+  console.log('ℹ️ Firebase emulators not available or already connected.');
 }
 
-export { db, auth, storage, isFirebaseConfigured };
+export { getDb, auth, storage, isFirebaseConfigured };
 export default app;

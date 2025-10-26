@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 
 interface NextAvailableDate {
   date: string;
@@ -52,7 +52,7 @@ export function useNextAvailableDate() {
       console.log('🕐 Current time:', today.toLocaleString());
 
       // Query artistAvailability collection for all documents
-      const availabilityRef = collection(db, 'artistAvailability');
+      const availabilityRef = collection(getDb(), 'artistAvailability');
       const snapshot = await getDocs(availabilityRef);
       console.log('📊 Total artistAvailability documents:', snapshot.docs.length);
       

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { InventoryService, InventoryItem, SupplyRequest, SupplyRequestItem } from '@/services/inventoryService';
-import { auth, db } from '@/lib/firebase';
+import { auth, getDb } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 
 interface SupplyItem {

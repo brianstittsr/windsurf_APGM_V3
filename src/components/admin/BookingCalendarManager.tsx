@@ -2,17 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import { collection, getDocs, doc, deleteDoc, updateDoc, query, where } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+import { getDb } from '../../lib/firebase';
 
 interface Appointment {
   id: string;
   clientName: string;
   clientEmail: string;
+  clientPhone?: string;
   serviceName: string;
-  appointmentDate: string;
-  appointmentTime: string;
+  appointmentDate?: string;
+  appointmentTime?: string;
+  date?: string;
+  time?: string;
+  artistName?: string;
   status: 'confirmed' | 'pending' | 'completed' | 'cancelled';
   notes?: string;
+  price?: number;
+  depositPaid?: boolean;
   createdAt?: Date;
 }
 
@@ -28,15 +34,43 @@ export default function BookingCalendarManager() {
 
   const fetchAppointments = async () => {
     try {
-      const appointmentsCollection = collection(db, 'appointments');
-      const appointmentsSnapshot = await getDocs(appointmentsCollection);
-      const appointmentsList = appointmentsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Appointment));
+      // Try bookings collection first (new format)
+      const bookingsCollection = collection(getDb(), 'bookings');
+      const bookingsSnapshot = await getDocs(bookingsCollection);
+      let appointmentsList = bookingsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          clientName: data.clientName,
+          clientEmail: data.clientEmail,
+          clientPhone: data.clientPhone,
+          serviceName: data.serviceName,
+          appointmentDate: data.date,
+          appointmentTime: data.time,
+          date: data.date,
+          time: data.time,
+          artistName: data.artistName,
+          status: data.status,
+          notes: data.notes,
+          price: data.price,
+          depositPaid: data.depositPaid,
+          createdAt: data.createdAt
+        } as Appointment;
+      });
+
+      // If no bookings found, try appointments collection (old format)
+      if (appointmentsList.length === 0) {
+        const appointmentsCollection = collection(getDb(), 'appointments');
+        const appointmentsSnapshot = await getDocs(appointmentsCollection);
+        appointmentsList = appointmentsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Appointment));
+      }
+
       setAppointments(appointmentsList.sort((a, b) => {
-        const dateA = new Date(`${a.appointmentDate}T${a.appointmentTime}`);
-        const dateB = new Date(`${b.appointmentDate}T${b.appointmentTime}`);
+        const dateA = new Date(`${a.appointmentDate || a.date}T${a.appointmentTime || a.time}`);
+        const dateB = new Date(`${b.appointmentDate || b.date}T${b.appointmentTime || b.time}`);
         return dateB.getTime() - dateA.getTime();
       }));
     } catch (error) {
@@ -49,11 +83,21 @@ export default function BookingCalendarManager() {
 
   const handleStatusChange = async (appointmentId: string, newStatus: string) => {
     try {
-      const appointmentRef = doc(db, 'appointments', appointmentId);
-      await updateDoc(appointmentRef, {
-        status: newStatus,
-        updatedAt: new Date()
-      });
+      // Try bookings collection first
+      let appointmentRef = doc(getDb(), 'bookings', appointmentId);
+      try {
+        await updateDoc(appointmentRef, {
+          status: newStatus,
+          updatedAt: new Date()
+        });
+      } catch (e) {
+        // If not found in bookings, try appointments
+        appointmentRef = doc(getDb(), 'appointments', appointmentId);
+        await updateDoc(appointmentRef, {
+          status: newStatus,
+          updatedAt: new Date()
+        });
+      }
       fetchAppointments();
     } catch (error) {
       console.error('Error updating appointment:', error);
@@ -67,7 +111,13 @@ export default function BookingCalendarManager() {
     }
 
     try {
-      await deleteDoc(doc(db, 'appointments', appointmentId));
+      // Try bookings collection first
+      try {
+        await deleteDoc(doc(getDb(), 'bookings', appointmentId));
+      } catch (e) {
+        // If not found in bookings, try appointments
+        await deleteDoc(doc(getDb(), 'appointments', appointmentId));
+      }
       alert('Appointment deleted successfully!');
       fetchAppointments();
     } catch (error) {
@@ -92,12 +142,12 @@ export default function BookingCalendarManager() {
   });
 
   const upcomingAppointments = filteredAppointments.filter(apt => {
-    const aptDate = new Date(`${apt.appointmentDate}T${apt.appointmentTime}`);
+    const aptDate = new Date(`${apt.appointmentDate || apt.date}T${apt.appointmentTime || apt.time}`);
     return aptDate >= new Date();
   });
 
   const pastAppointments = filteredAppointments.filter(apt => {
-    const aptDate = new Date(`${apt.appointmentDate}T${apt.appointmentTime}`);
+    const aptDate = new Date(`${apt.appointmentDate || apt.date}T${apt.appointmentTime || apt.time}`);
     return aptDate < new Date();
   });
 
@@ -198,14 +248,19 @@ export default function BookingCalendarManager() {
                       {upcomingAppointments.map((apt) => (
                         <tr key={apt.id}>
                           <td>
-                            <strong>{new Date(`${apt.appointmentDate}T${apt.appointmentTime}`).toLocaleDateString()}</strong><br />
-                            <small className="text-muted">{apt.appointmentTime}</small>
+                            <strong>{new Date(`${apt.appointmentDate || apt.date}T${apt.appointmentTime || apt.time}`).toLocaleDateString()}</strong><br />
+                            <small className="text-muted">{apt.appointmentTime || apt.time}</small>
                           </td>
                           <td>
                             <strong>{apt.clientName}</strong><br />
                             <small className="text-muted">{apt.clientEmail}</small>
+                            {apt.artistName && <><br /><small className="text-info">Artist: {apt.artistName}</small></>}
                           </td>
-                          <td>{apt.serviceName}</td>
+                          <td>
+                            {apt.serviceName}
+                            {apt.price && <><br /><small className="text-success">${apt.price}</small></>}
+                            {apt.depositPaid && <><br /><span className="badge bg-success">Deposit Paid</span></>}
+                          </td>
                           <td>
                             <select
                               className="form-select form-select-sm"
@@ -262,14 +317,19 @@ export default function BookingCalendarManager() {
                       {pastAppointments.map((apt) => (
                         <tr key={apt.id} className="table-light">
                           <td>
-                            <strong>{new Date(`${apt.appointmentDate}T${apt.appointmentTime}`).toLocaleDateString()}</strong><br />
-                            <small className="text-muted">{apt.appointmentTime}</small>
+                            <strong>{new Date(`${apt.appointmentDate || apt.date}T${apt.appointmentTime || apt.time}`).toLocaleDateString()}</strong><br />
+                            <small className="text-muted">{apt.appointmentTime || apt.time}</small>
                           </td>
                           <td>
                             <strong>{apt.clientName}</strong><br />
                             <small className="text-muted">{apt.clientEmail}</small>
+                            {apt.artistName && <><br /><small className="text-info">Artist: {apt.artistName}</small></>}
                           </td>
-                          <td>{apt.serviceName}</td>
+                          <td>
+                            {apt.serviceName}
+                            {apt.price && <><br /><small className="text-success">${apt.price}</small></>}
+                            {apt.depositPaid && <><br /><span className="badge bg-success">Deposit Paid</span></>}
+                          </td>
                           <td>
                             <span className={getStatusBadgeClass(apt.status)}>
                               {apt.status.charAt(0).toUpperCase() + apt.status.slice(1)}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     // Create admin user document with specific ID
     const adminUserId = 'admin-user-001';
-    const userRef = doc(db, 'users', adminUserId);
+    const userRef = doc(getDb(), 'users', adminUserId);
     
     // Check if user already exists
     const existingUser = await getDoc(userRef);
@@ -98,7 +98,7 @@ export async function GET() {
   try {
     // Check if admin user exists
     const adminUserId = 'admin-user-001';
-    const userRef = doc(db, 'users', adminUserId);
+    const userRef = doc(getDb(), 'users', adminUserId);
     const userDoc = await getDoc(userRef);
     
     if (userDoc.exists()) {

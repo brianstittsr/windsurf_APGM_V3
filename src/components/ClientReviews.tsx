@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 
 interface Review {
   id: string;
@@ -74,6 +74,7 @@ export default function ClientReviews() {
   useEffect(() => {
     const loadReviews = async () => {
       try {
+        const db = getDb();
         if (!db) {
           setReviews(fallbackReviews);
           setLoading(false);
@@ -81,7 +82,7 @@ export default function ClientReviews() {
         }
 
         const q = query(
-          collection(db, 'reviews'),
+          collection(getDb(), 'reviews'),
           where('isApproved', '==', true),
           where('isVisible', '==', true),
           orderBy('createdAt', 'desc'),

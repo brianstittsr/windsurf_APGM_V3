@@ -290,11 +290,11 @@ function RegisterForm() {
                         />
                         <label className="form-check-label text-muted" htmlFor="agreeToTerms">
                           I agree to the{' '}
-                          <Link href="/terms" className="text-primary text-decoration-none fw-medium">
+                          <Link href="/terms-of-service" className="text-primary text-decoration-none fw-medium">
                             Terms of Service
                           </Link>{' '}
                           and{' '}
-                          <Link href="/privacy" className="text-primary text-decoration-none fw-medium">
+                          <Link href="/privacy-policy" className="text-primary text-decoration-none fw-medium">
                             Privacy Policy
                           </Link>
                         </label>
