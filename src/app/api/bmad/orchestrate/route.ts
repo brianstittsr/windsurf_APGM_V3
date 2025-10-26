@@ -13,6 +13,14 @@ interface OrchestratorRequest {
   context: any;
 }
 
+interface ActionResult {
+  success: boolean;
+  response: string;
+  data: any;
+  summary: string;
+  suggestions: string[];
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { message, conversationHistory, context }: OrchestratorRequest = await request.json();
@@ -36,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Execute the action
-    const result = await executeAction(intent);
+    const result: ActionResult = await executeAction(intent, conversationHistory);
 
     return NextResponse.json({
       response: result.response,
@@ -222,8 +230,12 @@ function checkMissingInformation(intent: any): string[] {
       break;
 
     case 'create_coupon':
-      if (!intent.data?.code) missing.push('What should the coupon code be?');
-      if (!intent.data?.discount) missing.push('What discount should it provide? (e.g., 20% or $50)');
+      const fields = ['code', 'description', 'type', 'value', 'expirationDate'];
+      for (const field of fields) {
+        if (!intent.data?.[field]) {
+          missing.push(`What is the coupon\'s ${field}?`);
+        }
+      }
       break;
 
     case 'create_ghl_contact':
@@ -234,7 +246,7 @@ function checkMissingInformation(intent: any): string[] {
   return missing;
 }
 
-async function executeAction(intent: any) {
+async function executeAction(intent: any, conversationHistory: any[]): Promise<ActionResult> {
   console.log('⚡ Executing action:', intent.action);
 
   switch (intent.action) {
@@ -254,7 +266,7 @@ async function executeAction(intent: any) {
       return await listBookingsToday();
 
     case 'create_coupon':
-      return await createCoupon(intent.data);
+      return await handleCouponCreation(intent.data, conversationHistory);
 
     case 'sync_ghl_contacts':
       return await syncGHLContacts();
@@ -274,17 +286,37 @@ async function executeAction(intent: any) {
     case 'general_query':
       return handleGeneralQuery(intent.data.message);
 
+    case 'update_business_settings':
+      return {
+        success: false,
+        response: 'This feature is not yet implemented.',
+        data: null,
+        summary: 'Update business settings is not yet implemented.',
+        suggestions: []
+      };
+
+    case 'view_analytics':
+      return {
+        success: false,
+        response: 'This feature is not yet implemented.',
+        data: null,
+        summary: 'View analytics is not yet implemented.',
+        suggestions: []
+      };
+
     default:
       return {
         success: false,
         response: 'I\'m not sure how to help with that yet. Could you try rephrasing?',
-        data: null
+        data: null,
+        summary: 'Action not implemented.',
+        suggestions: []
       };
   }
 }
 
 // Action implementations
-async function listServices() {
+async function listServices(): Promise<ActionResult> {
   const services = await DatabaseService.getAll('services');
   const serviceList = services.map((s: any, i: number) => 
     `${i + 1}. **${s.name}** - $${s.price}${s.duration ? ` (${s.duration} min)` : ''}`
@@ -299,7 +331,7 @@ async function listServices() {
   };
 }
 
-async function createService(data: any) {
+async function createService(data: any): Promise<ActionResult> {
   const newService = {
     name: data.name,
     price: data.price,
@@ -309,7 +341,7 @@ async function createService(data: any) {
     createdAt: new Date()
   };
 
-  const id = await DatabaseService.add('services', newService);
+  const id = await DatabaseService.create('services', newService);
 
   return {
     success: true,
@@ -320,7 +352,7 @@ async function createService(data: any) {
   };
 }
 
-async function listUsers() {
+async function listUsers(): Promise<ActionResult> {
   const users = await DatabaseService.getAll('users');
   const userList = users.slice(0, 10).map((u: any, i: number) => {
     const name = u.displayName || u.name || `${u.profile?.firstName || ''} ${u.profile?.lastName || ''}`.trim();
@@ -337,7 +369,7 @@ async function listUsers() {
   };
 }
 
-async function listBookings(filter?: string) {
+async function listBookings(filter?: string): Promise<ActionResult> {
   const bookings = await DatabaseService.getAll('bookings');
   const bookingList = bookings.slice(0, 10).map((b: any, i: number) => 
     `${i + 1}. ${b.serviceName || 'Service'} - ${new Date(b.date).toLocaleDateString()} at ${b.time}`
@@ -347,11 +379,12 @@ async function listBookings(filter?: string) {
     success: true,
     response: `📅 **Bookings** (showing first 10):\n\n${bookingList || 'No bookings found.'}`,
     data: bookings,
-    summary: `Found ${bookings.length} booking(s)`
+    summary: `Found ${bookings.length} booking(s)`,
+    suggestions: []
   };
 }
 
-async function listBookingsToday() {
+async function listBookingsToday(): Promise<ActionResult> {
   const bookings = await DatabaseService.getAll('bookings');
   const today = new Date().toDateString();
   const todayBookings = bookings.filter((b: any) => new Date(b.date).toDateString() === today);
@@ -364,33 +397,116 @@ async function listBookingsToday() {
     success: true,
     response: `📅 **Today's Appointments:**\n\n${bookingList || 'No appointments scheduled for today.'}`,
     data: todayBookings,
-    summary: `Found ${todayBookings.length} appointment(s) today`
+    summary: `Found ${todayBookings.length} appointment(s) today`,
+    suggestions: []
   };
 }
 
-async function createCoupon(data: any) {
-  const newCoupon = {
-    code: data.code.toUpperCase(),
-    discount: data.discount,
-    type: data.discount.includes('%') ? 'percentage' : 'fixed',
-    expiresAt: data.expiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-    maxUses: data.maxUses || 100,
-    usedCount: 0,
-    isActive: true,
-    createdAt: new Date()
-  };
+async function handleCouponCreation(data: any, conversationHistory: any[]): Promise<ActionResult> {
+  // This function will now manage the conversation flow
+  const { session, allDataCollected } = manageCouponConversation(data, conversationHistory);
 
-  const id = await DatabaseService.add('coupons', newCoupon);
+  if (!allDataCollected) {
+    return {
+      success: false,
+      response: session.nextQuestion || 'Something went wrong, please try again.',
+      data: session,
+      summary: 'Continuing coupon creation...',
+      suggestions: session.suggestions || []
+    };
+  }
+
+  return await createCoupon(session.couponData);
+}
+
+function manageCouponConversation(data: any, history: any[] = []) {
+  const couponQuestions = [
+    { field: 'code', question: 'What should the coupon code be? (e.g., SUMMER25)', suggestions: ['CANCEL'] },
+    { field: 'description', question: 'What is the description for this coupon?', suggestions: ['CANCEL'] },
+    { field: 'type', question: 'What type of coupon is it?', suggestions: ['percentage', 'fixed', 'free_service', 'exact_amount', 'CANCEL'] },
+    { field: 'value', question: 'What is the discount value? (e.g., 25 for 25% or 50 for $50)', suggestions: ['CANCEL'] },
+    { field: 'expirationDate', question: 'When does the coupon expire? (YYYY-MM-DD)', suggestions: ['30 days from now', '90 days from now', 'CANCEL'] },
+    { field: 'minOrderAmount', question: 'What is the minimum order amount for this coupon to apply? (Enter 0 for no minimum)', suggestions: ['0', '50', '100', 'CANCEL'] },
+    { field: 'usageLimit', question: 'What is the usage limit for this coupon? (Enter 0 for unlimited)', suggestions: ['0', '1', '100', 'CANCEL'] },
+    { field: 'applicableServices', question: 'Which services does this apply to? (comma-separated, or leave blank for all)', suggestions: ['all', 'microblading', 'eyeliner', 'CANCEL'] },
+    { field: 'isActive', question: 'Should this coupon be active immediately?', suggestions: ['Yes', 'No', 'CANCEL'] },
+  ];
+
+  let couponData = data.couponData || {};
+  const lastQuestion = data.lastQuestion;
+
+  // If there's a last question, process the answer
+  if (lastQuestion) {
+    const answer = history[history.length - 1]?.content;
+    if (answer && answer.toLowerCase() !== 'cancel') {
+      couponData[lastQuestion.field] = answer;
+    }
+  }
+
+  // Find the next unanswered question
+  const nextQuestion = couponQuestions.find(q => !couponData.hasOwnProperty(q.field));
+
+  if (!nextQuestion) {
+    return { 
+      session: { couponData, nextQuestion: '' }, 
+      allDataCollected: true 
+    };
+  }
 
   return {
-    success: true,
-    response: `🎟️ **Coupon created successfully!**\n\nCode: **${newCoupon.code}**\nDiscount: ${newCoupon.discount}\nExpires: ${new Date(newCoupon.expiresAt).toLocaleDateString()}`,
-    data: { id, ...newCoupon },
-    summary: `Created coupon: ${newCoupon.code}`
+    session: {
+      nextQuestion: nextQuestion.question,
+      couponData,
+      suggestions: nextQuestion.suggestions,
+      lastQuestion: { field: nextQuestion.field }
+    },
+    allDataCollected: false
   };
 }
 
-async function syncGHLContacts() {
+async function createCoupon(data: any): Promise<ActionResult> {
+  try {
+    const { CouponService } = await import('@/services/couponService');
+
+    // Sanitize and format data to match CouponService requirements
+    const couponData = {
+      code: data.code.toUpperCase(),
+      description: data.description,
+      type: data.type,
+      value: parseFloat(data.value) || 0,
+      expirationDate: new Date(data.expirationDate),
+      minOrderAmount: parseFloat(data.minOrderAmount) || 0,
+      usageLimit: parseInt(data.usageLimit) || 0,
+      applicableServices: data.applicableServices === 'all' ? [] : data.applicableServices.split(',').map((s: string) => s.trim()),
+      isActive: data.isActive.toLowerCase() === 'yes',
+      // Set defaults for fields not asked in conversation
+      exactAmount: 0,
+      removeDepositOption: false,
+      depositReduction: 0,
+    };
+
+    const newCoupon = await CouponService.createCoupon(couponData);
+
+    return {
+      success: true,
+      response: `🎟️ **Coupon created successfully!**\n\nCode: **${couponData.code}**\nDescription: ${couponData.description}`,
+      data: newCoupon,
+      summary: `Created coupon: ${couponData.code}`,
+      suggestions: ['Create another coupon', 'View all coupons']
+    };
+  } catch (error) {
+    console.error('Error creating coupon via orchestrator:', error);
+    return {
+      success: false,
+      response: `❌ There was an error creating the coupon: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      data: null,
+      summary: 'Coupon creation failed',
+      suggestions: ['Try again', 'CANCEL']
+    };
+  }
+}
+
+async function syncGHLContacts(): Promise<ActionResult> {
   try {
     const settingsList = await DatabaseService.getAll('crmSettings');
     const settings = settingsList.length > 0 ? settingsList[0] : null;
@@ -399,7 +515,9 @@ async function syncGHLContacts() {
       return {
         success: false,
         response: '❌ GoHighLevel API key not configured. Please set it up in the GoHighLevel tab first.',
-        data: null
+        data: null,
+        summary: 'GHL API key missing',
+        suggestions: []
       };
     }
 
@@ -414,18 +532,21 @@ async function syncGHLContacts() {
       success: true,
       response: `✅ **Contacts synced from GoHighLevel!**\n\nSynced ${contacts.contacts?.length || 0} contacts.`,
       data: contacts,
-      summary: `Synced ${contacts.contacts?.length || 0} contacts from GHL`
+      summary: `Synced ${contacts.contacts?.length || 0} contacts from GHL`,
+      suggestions: []
     };
   } catch (error) {
     return {
       success: false,
       response: `❌ Error syncing contacts: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      data: null
+      data: null,
+      summary: 'GHL sync failed',
+      suggestions: []
     };
   }
 }
 
-async function createGHLContact(data: any) {
+async function createGHLContact(data: any): Promise<ActionResult> {
   try {
     const settingsList = await DatabaseService.getAll('crmSettings');
     const settings = settingsList.length > 0 ? settingsList[0] : null;
@@ -434,7 +555,9 @@ async function createGHLContact(data: any) {
       return {
         success: false,
         response: '❌ GoHighLevel API key not configured.',
-        data: null
+        data: null,
+        summary: 'GHL API key missing',
+        suggestions: []
       };
     }
 
@@ -449,22 +572,26 @@ async function createGHLContact(data: any) {
       success: true,
       response: `✅ **Contact created in GoHighLevel!**\n\nEmail: ${data.email}`,
       data: contact,
-      summary: `Created GHL contact: ${data.email}`
+      summary: `Created GHL contact: ${data.email}`,
+      suggestions: []
     };
   } catch (error) {
     return {
       success: false,
       response: `❌ Error creating contact: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      data: null
+      data: null,
+      summary: 'GHL contact creation failed',
+      suggestions: []
     };
   }
 }
 
-function handleGeneralQuery(message: string) {
+function handleGeneralQuery(message: string): ActionResult {
   return {
     success: true,
     response: `I understand you're asking about: "${message}"\n\nI can help you with:\n- Managing services and pricing\n- Creating and viewing users\n- Handling bookings and appointments\n- Creating coupons and promotions\n- Syncing with GoHighLevel\n- Executing MCP server operations\n\nWhat would you like to do?`,
     data: null,
+    summary: 'General query received',
     suggestions: [
       'Show me all services',
       'View today\'s appointments',
@@ -538,7 +665,7 @@ function extractWorkflowData(message: string) {
   return data;
 }
 
-async function listWorkflows() {
+async function listWorkflows(): Promise<ActionResult> {
   return {
     success: true,
     response: `🔄 **Available BMAD Workflows:**
@@ -584,11 +711,12 @@ All workflows integrate with GoHighLevel automatically!`,
         'appointment_reminder', 'follow_up'
       ]
     },
-    summary: 'Listed 8 available workflows'
+    summary: 'Listed 8 available workflows',
+    suggestions: []
   };
 }
 
-async function triggerWorkflow(data: any) {
+async function triggerWorkflow(data: any): Promise<ActionResult> {
   const { workflowEngine } = await import('@/services/bmad-workflows');
   
   try {
@@ -601,18 +729,21 @@ async function triggerWorkflow(data: any) {
       success: result.success,
       response: `✅ **Workflow triggered!**\n\n${result.message}\n\nCheck GoHighLevel for updates.`,
       data: result,
-      summary: `Triggered ${data.type} workflow`
+      summary: `Triggered ${data.type} workflow`,
+      suggestions: []
     };
   } catch (error) {
     return {
       success: false,
       response: `❌ Failed to trigger workflow: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      data: null
+      data: null,
+      summary: 'Workflow trigger failed',
+      suggestions: []
     };
   }
 }
 
-async function setupWorkflow(data: any) {
+async function setupWorkflow(data: any): Promise<ActionResult> {
   return {
     success: true,
     response: `🔧 **Workflow Setup Guide:**
@@ -631,7 +762,8 @@ To customize workflows:
 
 Need help with a specific workflow? Just ask!`,
     data: { message: data.message },
-    summary: 'Provided workflow setup information'
+    summary: 'Provided workflow setup information',
+    suggestions: []
   };
 }
 

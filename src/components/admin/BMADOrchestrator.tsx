@@ -27,6 +27,7 @@ export default function BMADOrchestrator() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [context, setContext] = useState<OrchestratorContext | null>(null);
+  const [analystActive, setAnalystActive] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -46,7 +47,9 @@ export default function BMADOrchestrator() {
     const welcomeMessage: Message = {
       id: Date.now().toString(),
       role: 'assistant',
-      content: `👋 **Welcome to BMAD Orchestrator!**
+      content: analystActive
+        ? `Hello, I'm **Mary, your BMAD Analyst.**\n\nI'm here to help you with strategic tasks, such as:\n\n- **Creating a Project Brief**\n- **Analyzing Business Performance**\n- **Defining Project Scope & Requirements**\n\nWhat can I help you with today?`
+        : `👋 **Welcome to BMAD Orchestrator!**
 
 I'm your intelligent assistant for managing this permanent makeup website. I can help you with:
 
@@ -290,7 +293,7 @@ Just tell me what you'd like to do, and I'll guide you through it! If I need mor
                     {message.role === 'assistant' && (
                       <div className="mb-2">
                         <i className="fas fa-robot me-2"></i>
-                        <strong>BMAD Orchestrator</strong>
+                        <strong>{analystActive ? 'Mary the Analyst' : 'BMAD Orchestrator'}</strong>
                       </div>
                     )}
                     {message.role === 'system' && (
@@ -339,7 +342,7 @@ Just tell me what you'd like to do, and I'll guide you through it! If I need mor
               <div className="input-group">
                 <textarea
                   className="form-control"
-                  placeholder="Ask BMAD anything... (Press Enter to send, Shift+Enter for new line)"
+                  placeholder={analystActive ? 'Ask Mary about your project brief...' : 'Ask BMAD anything...'}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
@@ -395,6 +398,21 @@ Just tell me what you'd like to do, and I'll guide you through it! If I need mor
                     <li>Workflow Automation</li>
                     <li>Customer Communications</li>
                   </ul>
+                </div>
+                <div className="col-md-4">
+                  <h6 className="text-danger">BMAD Analyst</h6>
+                  <ul className="small">
+                    <li>Business Insights</li>
+                    <li>Performance Analytics</li>
+                    <li>Revenue Tracking</li>
+                    <li>Customer Behavior</li>
+                  </ul>
+                  <button 
+                    className={`btn btn-sm ${analystActive ? 'btn-danger' : 'btn-success'}`}
+                    onClick={() => setAnalystActive(!analystActive)}
+                  >
+                    {analystActive ? 'Deactivate Analyst' : 'Activate Analyst'}
+                  </button>
                 </div>
               </div>
             </div>
