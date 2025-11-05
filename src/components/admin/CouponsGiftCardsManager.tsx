@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { collection, getDocs, doc, deleteDoc, updateDoc, Timestamp } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
 import { CouponService } from '../../services/couponService';
 import { GiftCardService } from '../../services/giftCardService';
 import { GiftCard, CouponCode } from '../../types/coupons';
@@ -15,7 +14,7 @@ interface CouponFormData {
   exactAmount?: number;
   minOrderAmount?: number;
   usageLimit?: number;
-  expirationDate: string;
+  expirationDate: string; // YYYY-MM-DD format for input
   applicableServices: string;
   isActive: boolean;
   removeDepositOption?: boolean;
@@ -29,7 +28,8 @@ interface GiftCardFormData {
   purchaserEmail: string;
   purchaserName: string;
   message: string;
-  expiresAt: string;
+  expirationDate: string; // YYYY-MM-DD format for input
+  isActive: boolean;
 }
 
 export default function CouponsGiftCardsManager() {
@@ -66,7 +66,8 @@ export default function CouponsGiftCardsManager() {
     purchaserEmail: '',
     purchaserName: '',
     message: '',
-    expiresAt: ''
+    expirationDate: '',
+    isActive: true
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -205,8 +206,9 @@ export default function CouponsGiftCardsManager() {
         purchaserEmail: giftCardFormData.purchaserEmail,
         purchaserName: giftCardFormData.purchaserName,
         message: giftCardFormData.message,
-        expiresAt: new Date(giftCardFormData.expiresAt),
-        isRedeemed: false
+        expirationDate: new Date(giftCardFormData.expirationDate),
+        isRedeemed: false,
+        isActive: giftCardFormData.isActive
       };
 
       await GiftCardService.createGiftCard(giftCardData);
@@ -233,7 +235,8 @@ export default function CouponsGiftCardsManager() {
         purchaserEmail: giftCardFormData.purchaserEmail,
         purchaserName: giftCardFormData.purchaserName,
         message: giftCardFormData.message,
-        expiresAt: new Date(giftCardFormData.expiresAt)
+        expirationDate: new Date(giftCardFormData.expirationDate),
+        isActive: giftCardFormData.isActive
       };
 
       await GiftCardService.updateGiftCard(editingGiftCard.id, updateData);
@@ -276,7 +279,9 @@ export default function CouponsGiftCardsManager() {
       usageLimit: 0,
       expirationDate: '',
       applicableServices: '',
-      isActive: true
+      isActive: true,
+      removeDepositOption: false,
+      depositReduction: 0
     });
     setShowCouponModal(true);
   };
@@ -291,7 +296,7 @@ export default function CouponsGiftCardsManager() {
       exactAmount: coupon.exactAmount || 0,
       minOrderAmount: coupon.minOrderAmount || 0,
       usageLimit: coupon.usageLimit || 0,
-      expirationDate: coupon.expirationDate?.toISOString().split('T')[0] || '',
+      expirationDate: coupon.expirationDate ? (coupon.expirationDate as any).toDate().toISOString().split('T')[0] : '',
       applicableServices: coupon.applicableServices?.join(', ') || '',
       isActive: coupon.isActive,
       removeDepositOption: coupon.removeDepositOption || false,
@@ -309,7 +314,8 @@ export default function CouponsGiftCardsManager() {
       purchaserEmail: '',
       purchaserName: '',
       message: '',
-      expiresAt: ''
+      expirationDate: '',
+      isActive: true
     });
     setShowGiftCardModal(true);
   };
@@ -323,7 +329,8 @@ export default function CouponsGiftCardsManager() {
       purchaserEmail: giftCard.purchaserEmail,
       purchaserName: giftCard.purchaserName,
       message: giftCard.message || '',
-      expiresAt: giftCard.expiresAt?.toISOString().split('T')[0] || ''
+      expirationDate: giftCard.expirationDate ? (giftCard.expirationDate as any).toDate().toISOString().split('T')[0] : '',
+      isActive: giftCard.isActive
     });
     setShowGiftCardModal(true);
   };
@@ -459,7 +466,7 @@ export default function CouponsGiftCardsManager() {
                                formatCurrency(coupon.exactAmount || 0)}
                             </td>
                             <td>{coupon.usageCount}/{coupon.usageLimit || '∞'}</td>
-                            <td>{coupon.expirationDate?.toLocaleDateString()}</td>
+                            <td>{coupon.expirationDate ? (coupon.expirationDate as any).toDate().toLocaleDateString() : ''}</td>
                             <td>
                               <span className={`badge ${coupon.isActive ? 'bg-success' : 'bg-warning'}`}>
                                 {coupon.isActive ? 'Active' : 'Inactive'}
@@ -548,10 +555,10 @@ export default function CouponsGiftCardsManager() {
                             </td>
                             <td>{formatCurrency(giftCard.initialAmount)}</td>
                             <td>{formatCurrency(giftCard.remainingAmount)}</td>
-                            <td>{giftCard.expiresAt?.toLocaleDateString()}</td>
+                            <td>{giftCard.expirationDate ? (giftCard.expirationDate as any).toDate().toLocaleDateString() : ''}</td>
                             <td>
-                              <span className={`badge ${giftCard.isRedeemed ? 'bg-warning' : 'bg-success'}`}>
-                                {giftCard.isRedeemed ? 'Redeemed' : 'Active'}
+                              <span className={`badge ${giftCard.isRedeemed ? 'bg-warning' : giftCard.isActive ? 'bg-success' : 'bg-danger'}`}>
+                                {giftCard.isRedeemed ? 'Redeemed' : giftCard.isActive ? 'Active' : 'Inactive'}
                               </span>
                             </td>
                             <td>
@@ -827,15 +834,15 @@ export default function CouponsGiftCardsManager() {
                     </div>
                     <div className="col-md-6">
                       <div className="mb-3">
-                        <label htmlFor="expiresAt" className="form-label">
+                        <label htmlFor="expirationDate" className="form-label">
                           Expiration Date <span className="text-danger">*</span>
                         </label>
                         <input
                           type="date"
                           className="form-control"
-                          id="expiresAt"
-                          value={giftCardFormData.expiresAt}
-                          onChange={(e) => setGiftCardFormData({ ...giftCardFormData, expiresAt: e.target.value })}
+                          id="expirationDate"
+                          value={giftCardFormData.expirationDate}
+                          onChange={(e) => setGiftCardFormData({ ...giftCardFormData, expirationDate: e.target.value })}
                           required
                         />
                       </div>
