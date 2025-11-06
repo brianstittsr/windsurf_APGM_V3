@@ -125,7 +125,7 @@ export default function ContactPage() {
                 <p className="lead fs-4 mb-4">Ready to enhance your natural beauty? We'd love to hear from you!</p>
                 <div className="row justify-content-center">
                   <div className="col-md-8">
-                    <p className="mb-0">Schedule your consultation today and discover how semi-permanent makeup can transform your daily routine.</p>
+                    <p className="mb-0">Schedule your consultation today and discover how permanent makeup can transform your daily routine.</p>
                   </div>
                 </div>
               </div>
@@ -416,7 +416,7 @@ export default function ContactPage() {
                   <div className="accordion-item border-0 shadow-sm mb-3">
                     <h3 className="accordion-header" id="heading1">
                       <button className="accordion-button fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="true" aria-controls="faq1">
-                        Am I a candidate for microblading or semi-permanent brows?
+                        Am I a candidate for microblading or permanent brows?
                       </button>
                     </h3>
                     <div id="faq1" className="accordion-collapse collapse show" data-bs-parent="#contactFAQ" aria-labelledby="heading1">
@@ -512,7 +512,7 @@ export default function ContactPage() {
                     </h3>
                     <div id="faq8" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
                       <div className="accordion-body paragraph-text text-start">
-                        You may not have any semi-permanent makeup done while you are pregnant or breastfeeding.
+                        You may not have any permanent makeup done while you are pregnant or breastfeeding.
                       </div>
                     </div>
                   </div>
@@ -525,7 +525,7 @@ export default function ContactPage() {
                     </h3>
                     <div id="faq9" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
                       <div className="accordion-body paragraph-text text-start">
-                        Yes, you can get semi-permanent makeup and botox! You&apos;ll just need to space out the appointments. A month before/after each is ideal.
+                        Yes, you can get permanent makeup and botox! You&apos;ll just need to space out the appointments. A month before/after each is ideal.
                       </div>
                     </div>
                   </div>

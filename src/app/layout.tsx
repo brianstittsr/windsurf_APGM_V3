@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "A Pretty Girl Matter",
-  description: "Professional semi-permanent makeup services by Victoria Escobar. Microblading, semi-permanent eyeliner, lip blushing, and more. Transform your look with natural, beautiful results.",
+  description: "Professional permanent makeup services by Victoria Escobar. Microblading, permanent eyeliner, lip blushing, and more. Transform your look with natural, beautiful results.",
   icons: {
     icon: [
       { url: "/images/APGM-icon2.png", sizes: "48x48", type: "image/png" },
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     type: "website",
     url: "https://aprettygirlmatter.com",
     title: "A Pretty Girl Matter",
-    description: "Professional semi-permanent makeup services by Victoria Escobar. Microblading, semi-permanent eyeliner, lip blushing, and more.",
+    description: "Professional permanent makeup services by Victoria Escobar. Microblading, permanent eyeliner, lip blushing, and more.",
     siteName: "A Pretty Girl Matter",
     images: [
       {
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "A Pretty Girl Matter",
-    description: "Professional semi-permanent makeup services by Victoria Escobar.",
+    description: "Professional permanent makeup services by Victoria Escobar.",
     images: ["https://aprettygirlmatter.com/images/APGM-icon2.png"],
   },
 };

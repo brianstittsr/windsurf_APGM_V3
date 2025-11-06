@@ -230,7 +230,7 @@ function handleServiceInfo(intent: any) {
       response: `✨ **Microblading** - The Art of Natural Brows
 
 **What is it?**
-A semi-permanent technique creating hair-like strokes for fuller, natural-looking eyebrows.
+A permanent technique creating hair-like strokes for fuller, natural-looking eyebrows.
 
 **Perfect for:**
 • Sparse or thin brows
@@ -299,7 +299,7 @@ Interested in booking?`,
       response: `💋 **Lip Blush** - Natural Lip Enhancement
 
 **What is it?**
-Semi-permanent lip color that enhances your natural lip tone and shape.
+Permanent lip color that enhances your natural lip tone and shape.
 
 **Perfect for:**
 • Pale or uneven lip color

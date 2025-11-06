@@ -1,6 +1,6 @@
 export default function AboutVictoria() {
   const certifications = [
-    "Certified Semi-permanent makeup Artist",
+    "Certified Permanent makeup Artist",
     "Microblading Specialist Certification",
     "Advanced Color Theory Training",
     "Bloodborne Pathogen Certified",
@@ -23,7 +23,7 @@ export default function AboutVictoria() {
             <span className="text-primary"> Victoria</span>
           </h2>
           <p className="paragraph-text text-secondary mx-auto text-wrap" style={{maxWidth: '64rem', wordWrap: 'break-word', overflowWrap: 'break-word'}}>
-            Meet the artist behind the beauty. Victoria combines technical expertise with artistic vision to create stunning, natural-looking semi-permanent makeup results.
+            Meet the artist behind the beauty. Victoria combines technical expertise with artistic vision to create stunning, natural-looking permanent makeup results.
           </p>
         </div>
 
@@ -33,7 +33,7 @@ export default function AboutVictoria() {
             <div className="position-relative">
               <img
                 src="/images/about/about-victoria.jpg"
-                alt="Victoria - Semi-permanent makeup Artist"
+                alt="Victoria - Permanent makeup Artist"
                 className="rounded-3 shadow w-100 h-auto"
               />
               
@@ -50,10 +50,10 @@ export default function AboutVictoria() {
               </h3>
               <div className="text-black lh-base">
                 <p className="fs-4 mb-4">
-                  As a proud veteran and a dedicated member of Alpha Kappa Alpha Sorority, Inc., I've always believed in service, strength, and sisterhood. After completing my military service, I felt called to create something meaningful that combined my love for artistry with my mission to empower others. That vision led me to found A Pretty Girl Matter, where I specialize in semi-permanent makeup that elevates natural beauty and restores confidence.
+                  As a proud veteran and a dedicated member of Alpha Kappa Alpha Sorority, Inc., I've always believed in service, strength, and sisterhood. After completing my military service, I felt called to create something meaningful that combined my love for artistry with my mission to empower others. That vision led me to found A Pretty Girl Matter, where I specialize in permanent makeup that elevates natural beauty and restores confidence.
                 </p>
                 <p className="fs-5 mb-4">
-                  My passion for this craft was born from witnessing how transformational it can be—not only enhancing outer appearance, but also uplifting inner confidence. I've trained with some of the top PMU academies in the world—including The Collective, Beauty Slesh, Beauty Angels, and Plush Beauty Academy—mastering advanced techniques in microblading, ombré brows, combo brows, lip blushing, semi-permanent eyeliner, and tiny tattoos.
+                  My passion for this craft was born from witnessing how transformational it can be—not only enhancing outer appearance, but also uplifting inner confidence. I've trained with some of the top PMU academies in the world—including The Collective, Beauty Slesh, Beauty Angels, and Plush Beauty Academy—mastering advanced techniques in microblading, ombré brows, combo brows, lip blushing, permanent eyeliner, and tiny tattoos.
                 </p>
                 <p className="fs-5 mb-4">
                   With this exclusive education and hands-on artistry, I am able to deliver precise, personalized results and provide comprehensive care from consultation to aftercare. For me, every client's appointment is more than a service—it's an experience rooted in empowerment, excellence, and care.
@@ -84,7 +84,7 @@ export default function AboutVictoria() {
               <h4 className="h5 fw-bold text-dark mb-3">My Mission</h4>
               <p className="text-black fst-italic mb-0 fs-5">
                 &quot;My mission is simple: to help you wake up looking and feeling your absolute best with 
-                effortless, natural-looking semi-permanent makeup. Whether you're a busy professional, a mom, or 
+                effortless, natural-looking permanent makeup. Whether you're a busy professional, a mom, or 
                 someone who values confidence and convenience, I'm here to create a look that's uniquely 
                 yours.&quot;
               </p>

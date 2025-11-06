@@ -47,11 +47,11 @@ export default function TermsOfService() {
                     <div className="mb-5">
                       <h2 className="h4 fw-bold text-primary mb-3">2. Services Provided</h2>
                       <p className="text-black mb-3">
-                        A Pretty Girl Matter, LLC provides semi-permanent makeup services including but not limited to:
+                        A Pretty Girl Matter, LLC provides permanent makeup services including but not limited to:
                       </p>
                       <ul className="text-black mb-3">
                         <li>Microblading and powder eyebrows</li>
-                        <li>Semi-permanent eyeliner</li>
+                        <li>Permanent eyeliner</li>
                         <li>Lip blushing and lip liner</li>
                         <li>Color correction services</li>
                         <li>Touch-up and maintenance services</li>
@@ -100,7 +100,7 @@ export default function TermsOfService() {
                       <h2 className="h4 fw-bold text-primary mb-3">5. Informed Consent</h2>
                       <p className="text-black">
                         Before any procedure, you will be required to sign an informed consent form acknowledging that 
-                        you understand the risks, benefits, and potential complications of semi-permanent makeup procedures. 
+                        you understand the risks, benefits, and potential complications of permanent makeup procedures. 
                         This includes understanding that results may vary and that touch-up sessions may be necessary.
                       </p>
                     </div>
@@ -139,7 +139,7 @@ export default function TermsOfService() {
                     <div className="mb-5">
                       <h2 className="h4 fw-bold text-primary mb-3">8. Results and Expectations</h2>
                       <p className="text-black">
-                        Semi-permanent makeup results vary from person to person based on skin type, lifestyle, and individual 
+                        Permanent makeup results vary from person to person based on skin type, lifestyle, and individual 
                         healing processes. We cannot guarantee specific results or longevity of procedures. Touch-up 
                         sessions are typically recommended 4-8 weeks after the initial procedure and may be required 
                         for optimal results.

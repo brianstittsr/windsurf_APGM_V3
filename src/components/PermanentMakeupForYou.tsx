@@ -8,7 +8,7 @@ export default function PermanentMakeupForYou() {
         {/* Header */}
         <div className="text-center mb-5">
           <h2 className="main-heading fw-bold text-dark mb-4">
-            <span className="text-rose-600">SEMI-PERMANENT MAKEUP</span>
+            <span className="text-rose-600">PERMANENT MAKEUP</span>
             <br />
             DESIGNED JUST FOR YOU
           </h2>
@@ -21,7 +21,7 @@ export default function PermanentMakeupForYou() {
             <div className="position-relative" style={{ height: '400px' }}>
               <img
                 src="/images/before-after.png"
-                alt="Before and After semi-permanent makeup transformation"
+                alt="Before and After permanent makeup transformation"
                 className="w-100 h-100 img-fluid rounded-custom-lg shadow-custom-lg"
                 style={{
                   objectFit: 'cover'
@@ -39,7 +39,7 @@ export default function PermanentMakeupForYou() {
               THE CHOICE IS <span className="text-primary">YOURS</span>
             </h2>
             <p className="paragraph-text text-secondary lh-base">
-              Forget the outdated idea that semi-permanent makeup has to look dark or harsh. At A Pretty Girl Matter, every look is customized to your style and preferences, whether you want a subtle, natural finish or a striking, statement look.
+              Forget the outdated idea that permanent makeup has to look dark or harsh. At A Pretty Girl Matter, every look is customized to your style and preferences, whether you want a subtle, natural finish or a striking, statement look.
             </p>
           </div>
         </div>
