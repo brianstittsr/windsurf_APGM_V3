@@ -109,11 +109,11 @@ export default function UserAvatar({
               className="dropdown-item btn btn-link text-start w-100 border-0 p-2"
               onClick={() => {
                 setIsDropdownOpen(false);
-                window.location.href = '/my-appointments';
+                window.location.href = '/my-bookings';
               }}
             >
               <i className="fas fa-calendar-alt me-2"></i>
-              My Appointments
+              My Bookings
             </button>
             
             <button 

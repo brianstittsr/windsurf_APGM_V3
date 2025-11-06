@@ -9,7 +9,8 @@ export async function POST(req: Request) {
     // First, verify the requesting user is an admin.
     const idToken = req.headers.get('Authorization')?.split('Bearer ')[1];
     if (!idToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      console.log('⚠️ No token provided in Authorization header');
+      return NextResponse.json({ error: 'Unauthorized - No token provided' }, { status: 401 });
     }
 
     // Use try-catch to handle potential Admin SDK initialization errors
@@ -57,8 +58,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Forbidden - Not an admin user' }, { status: 403 });
     }
 
+    console.log(`✅ User ${requesterUid} verified as admin: ${isAdmin}`);
+    
     // Proceed with the requested action
     const { action, uid, email, newPassword } = await req.json();
+    console.log(`🔄 Processing action: ${action} for uid: ${uid}`);
 
     if (!action || !uid) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
@@ -104,19 +108,56 @@ export async function POST(req: Request) {
         
         try {
           // Try Admin SDK first for password update
-          await adminAuth.updateUser(uid, { password: newPassword });
-          return NextResponse.json({ message: 'Password updated successfully' });
-        } catch (adminError) {
-          console.error('Admin SDK password update error:', adminError);
-          
-          // If Admin SDK fails and we're updating the current user's password,
-          // we could use client SDK with reauthentication, but this requires
-          // the current password which we don't have in this flow
-          
-          // For API simplicity, we'll just report the error
+          try {
+            console.log(`🔐 Attempting password update for user ${uid}`);
+            await adminAuth.updateUser(uid, { password: newPassword });
+            console.log(`✅ Password updated successfully for user ${uid}`);
+            return NextResponse.json({ message: 'Password updated successfully' });
+          } catch (adminError) {
+            console.error('Admin SDK password update error:', adminError);
+            
+            // If we're updating our own password as admin, try a direct client-side approach
+            if (uid === requesterUid) {
+              console.log(`⚠️ Admin SDK failed, attempting direct Firebase update for self-password change`);
+              
+              // We'll use direct Firebase Auth REST API since we can't reauthenticate without the current password
+              const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+              const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:update?key=${apiKey}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  idToken,
+                  password: newPassword,
+                  returnSecureToken: true
+                })
+              });
+              
+              if (response.ok) {
+                console.log(`✅ Password updated successfully via direct Firebase API`);
+                return NextResponse.json({ message: 'Password updated successfully' });
+              } else {
+                const errorData = await response.json();
+                console.error('Firebase API error:', errorData);
+                return NextResponse.json({ 
+                  error: 'Password update failed', 
+                  details: errorData.error?.message || 'Unknown error'
+                }, { status: 500 });
+              }
+            }
+            
+            // For API simplicity, we'll report the admin error
+            return NextResponse.json({ 
+              error: 'Unable to update password. Firebase Admin SDK not properly configured.', 
+              details: adminError instanceof Error ? adminError.message : 'Unknown error'
+            }, { status: 500 });
+          }
+        } catch (error) {
+          console.error('Password update error:', error);
           return NextResponse.json({ 
-            error: 'Unable to update password. Firebase Admin SDK not properly configured.', 
-            details: adminError instanceof Error ? adminError.message : 'Unknown error'
+            error: 'Password update failed', 
+            details: error instanceof Error ? error.message : 'Unknown error'
           }, { status: 500 });
         }
 
