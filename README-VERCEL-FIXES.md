@@ -10,7 +10,8 @@ This document explains the fixes applied to resolve Vercel build errors.
 
 2. **Suspense Boundary Missing for useSearchParams()**
    - Fixed the error: `useSearchParams() should be wrapped in a suspense boundary at page "/quick-deposit"`
-   - Added proper Suspense boundary in QuickDepositPage
+   - Fixed the error: `useSearchParams() should be wrapped in a suspense boundary at page "/quick-deposit/success"`
+   - Added proper Suspense boundary in both QuickDepositPage and QuickDepositSuccessPage
 
 ## Files Modified
 
@@ -30,6 +31,10 @@ This document explains the fixes applied to resolve Vercel build errors.
 5. **`src/app/quick-deposit/page.tsx`**
    - Added Suspense boundary for useSearchParams() to fix Next.js build error
    - Restructured component with QuickDepositForm inside Suspense
+
+6. **`src/app/quick-deposit/success/page.tsx`**
+   - Added Suspense boundary for useSearchParams() to fix Next.js build error
+   - Restructured component with QuickDepositSuccessContent inside Suspense
 
 ## Firebase Admin Setup
 
