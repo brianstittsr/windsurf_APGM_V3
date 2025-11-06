@@ -19,6 +19,7 @@ interface ServiceFormData {
   image: string;
 }
 
+// Default form data structure
 const defaultFormData: ServiceFormData = {
   name: '',
   description: '',
@@ -33,6 +34,29 @@ const defaultFormData: ServiceFormData = {
 };
 
 export default function ServicesManager() {
+  // Custom CSS for save button animation and highlighting
+  const saveButtonStyle = {
+    transition: 'all 0.3s ease',
+    animation: 'pulse 1.5s infinite',
+  };
+  
+  // Add custom pulse animation
+  useEffect(() => {
+    // Add pulse animation style to document head
+    const styleEl = document.createElement('style');
+    styleEl.innerHTML = `
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+    `;
+    document.head.appendChild(styleEl);
+    
+    return () => {
+      document.head.removeChild(styleEl);
+    };
+  }, []);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,9 +70,13 @@ export default function ServicesManager() {
 
   useEffect(() => {
     loadServices();
+    
+    // Add a console log to confirm the component loaded properly
+    console.log('ServicesManager component loaded');
   }, []);
 
   const loadServices = async () => {
+    console.log('Loading services...');
     try {
       setLoading(true);
       const servicesData = await ServiceService.getAllServices();
@@ -74,7 +102,14 @@ export default function ServicesManager() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Make sure we have at least the required fields
+    if (!formData.name || !formData.price || !formData.duration) {
+      setError('Please fill in all required fields');
+      return;
+    }
+    
     setUploading(true);
+    console.log('Submitting service form...', formData);
 
     try {
       let imageUrl = formData.image;
@@ -319,10 +354,10 @@ export default function ServicesManager() {
           <div className="modal-dialog modal-lg modal-dialog-scrollable">
             <div className="modal-content border-0 shadow-lg">
               <div className="modal-header bg-primary text-white border-0">
-                <h5 className="modal-title fw-bold d-flex align-items-center">
+                <h4 className="modal-title fw-bold d-flex align-items-center">
                   <i className="fas fa-cogs me-2"></i>
                   {editingService ? 'Edit Service' : 'Add New Service'}
-                </h5>
+                </h4>
                 <button
                   type="button"
                   className="btn-close btn-close-white"
@@ -331,6 +366,10 @@ export default function ServicesManager() {
               </div>
               <form onSubmit={handleSubmit}>
                 <div className="modal-body bg-light">
+                  <p className="alert alert-info d-flex align-items-center">
+                    <i className="fas fa-info-circle me-2 fs-4"></i>
+                    <span>Fill out the form below and click <strong>Save Service</strong> at the bottom when you're done.</span>
+                  </p>
                   <div className="row g-4">
                     <div className="col-md-6">
                       <div className="mb-3">
@@ -340,12 +379,13 @@ export default function ServicesManager() {
                         </label>
                         <input
                           type="text"
-                          className="form-control form-control-lg border-2"
+                          className={`form-control form-control-lg border-2 ${!formData.name && 'is-invalid'}`}
                           value={formData.name}
                           onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                           placeholder="Enter service name"
                           required
                         />
+                        {!formData.name && <div className="invalid-feedback">Service name is required</div>}
                       </div>
                     </div>
                     <div className="col-md-3">
@@ -358,7 +398,7 @@ export default function ServicesManager() {
                           <span className="input-group-text bg-success text-white border-success">$</span>
                           <input
                             type="number"
-                            className="form-control border-2"
+                            className={`form-control border-2 ${!formData.price && 'is-invalid'}`}
                             value={formData.price}
                             onChange={(e) => setFormData(prev => ({ ...prev, price: Number(e.target.value) }))}
                             placeholder="0.00"
@@ -366,6 +406,7 @@ export default function ServicesManager() {
                             min="0"
                             step="0.01"
                           />
+                          {!formData.price && <div className="invalid-feedback">Price is required</div>}
                         </div>
                       </div>
                     </div>
@@ -396,12 +437,13 @@ export default function ServicesManager() {
                         </label>
                         <input
                           type="text"
-                          className="form-control form-control-lg border-2"
+                          className={`form-control form-control-lg border-2 ${!formData.duration && 'is-invalid'}`}
                           value={formData.duration}
                           onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
                           placeholder="e.g., 2-3 hours"
                           required
                         />
+                        {!formData.duration && <div className="invalid-feedback">Duration is required</div>}
                       </div>
                     </div>
                     <div className="col-md-6">
@@ -567,7 +609,14 @@ export default function ServicesManager() {
                     </div>
                   </div>
                 </div>
-                <div className="modal-footer bg-light border-0 p-4">
+                <div className="modal-footer bg-light border-0 p-4 d-flex justify-content-between">
+                  <div className="text-danger">
+                    {formData.name && formData.price && formData.duration ? (
+                      <span className="text-success"><i className="fas fa-check-circle me-1"></i>Ready to save</span>
+                    ) : (
+                      <span><i className="fas fa-exclamation-triangle me-1"></i>Please fill required fields</span>
+                    )}
+                  </div>
                   <button
                     type="button"
                     className="btn btn-outline-secondary btn-lg rounded-pill px-4 me-3"
@@ -577,8 +626,14 @@ export default function ServicesManager() {
                   </button>
                   <button
                     type="submit"
-                    className="btn btn-primary btn-lg rounded-pill px-4 shadow"
+                    className="btn btn-success btn-lg rounded-pill px-5 py-2 shadow fw-bold position-relative"
+                    style={!uploading ? saveButtonStyle : {}}
                     disabled={uploading}
+                    id="saveServiceButton"
+                    onClick={(e) => {
+                      console.log('Save button clicked');
+                      // The form's onSubmit will handle submission
+                    }}
                   >
                     {uploading ? (
                       <>
@@ -587,8 +642,8 @@ export default function ServicesManager() {
                       </>
                     ) : (
                       <>
-                        <i className={`fas ${editingService ? 'fa-edit' : 'fa-plus'} me-2`}></i>
-                        {editingService ? 'Update Service' : 'Create Service'}
+                        <i className={`fas fa-save me-2`}></i>
+                        {editingService ? 'Save Changes' : 'Save Service'}
                       </>
                     )}
                   </button>
