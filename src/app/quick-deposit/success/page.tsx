@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { workflowEngine } from '@/services/bmad-workflows';
 
-export default function QuickDepositSuccessPage() {
+function QuickDepositSuccessContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [bookingDetails, setBookingDetails] = useState<any>(null);
@@ -227,5 +227,13 @@ export default function QuickDepositSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function QuickDepositSuccessPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading payment confirmation...</div>}>
+      <QuickDepositSuccessContent />
+    </Suspense>
   );
 }
