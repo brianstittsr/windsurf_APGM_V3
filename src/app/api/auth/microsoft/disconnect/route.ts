@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { doc, updateDoc, deleteField } from 'firebase/firestore';
-import { db } from '../../../../../lib/firebase';
+import { getDb } from '../../../../../lib/firebase';
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Remove Outlook connection data from the artist-availability document
+    const db = getDb();
     const availabilityRef = doc(db, 'artist-availability', artistId);
     await updateDoc(availabilityRef, {
       outlookConnected: deleteField(),

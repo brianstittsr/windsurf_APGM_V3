@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../../../lib/firebase';
+import { getDb } from '../../../../lib/firebase';
 
 export async function POST(req: NextRequest) {
   try {
     // Fetch all bookings from Firestore
+    const db = getDb();
     const bookingsRef = collection(db, 'bookings');
     const snapshot = await getDocs(bookingsRef);
     

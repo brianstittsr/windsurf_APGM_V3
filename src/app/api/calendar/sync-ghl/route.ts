@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../../../../lib/firebase';
+import { getDb } from '../../../../lib/firebase';
 
 interface Booking {
   id: string;
@@ -22,6 +22,7 @@ interface Booking {
 
 async function getGHLApiKey() {
   try {
+    const db = getDb();
     const settingsDoc = await getDoc(doc(db, 'crmSettings', 'gohighlevel'));
     if (settingsDoc.exists()) {
       return settingsDoc.data().apiKey;
@@ -34,6 +35,7 @@ async function getGHLApiKey() {
 
 async function getGHLLocationId() {
   try {
+    const db = getDb();
     const settingsDoc = await getDoc(doc(db, 'crmSettings', 'gohighlevel'));
     if (settingsDoc.exists()) {
       return settingsDoc.data().locationId;
@@ -181,6 +183,7 @@ export async function POST(req: NextRequest) {
     const appointmentId = await createOrUpdateGHLAppointment(booking, contactId, apiKey);
 
     // Update booking in Firestore with GHL IDs
+    const db = getDb();
     const bookingRef = doc(db, 'bookings', bookingId);
     await updateDoc(bookingRef, {
       ghlContactId: contactId,

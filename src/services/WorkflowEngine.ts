@@ -1,5 +1,5 @@
 import { collection, doc, setDoc, getDoc, getDocs, query, where, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 
 export interface WorkflowStep {
   id: string;
@@ -83,6 +83,7 @@ export class WorkflowEngine {
         executionLog: []
       };
 
+      const db = getDb();
       await setDoc(doc(db, 'workflowExecutions', executionId), execution);
       
       // Update workflow stats
@@ -101,6 +102,10 @@ export class WorkflowEngine {
   // Process a workflow execution
   async processWorkflowExecution(executionId: string): Promise<void> {
     try {
+      // Get Firestore DB instance
+      const db = getDb();
+      
+      // Get execution doc
       const executionDoc = await getDoc(doc(db, 'workflowExecutions', executionId));
       if (!executionDoc.exists()) {
         throw new Error('Workflow execution not found');
@@ -160,7 +165,7 @@ export class WorkflowEngine {
       }
 
       // Update execution
-      await updateDoc(doc(db, 'workflowExecutions', executionId), execution);
+      await updateDoc(doc(getDb(), 'workflowExecutions', executionId), execution as any);
 
       // Continue processing if needed
       if (stepResult.success && stepResult.shouldAdvance && !stepResult.nextExecutionTime) {
@@ -170,7 +175,7 @@ export class WorkflowEngine {
     } catch (error) {
       console.error('Error processing workflow execution:', error);
       // Mark execution as failed
-      await updateDoc(doc(db, 'workflowExecutions', executionId), {
+      await updateDoc(doc(getDb(), 'workflowExecutions', executionId), {
         status: 'failed',
         executionLog: [{
           stepId: 'system',
@@ -247,7 +252,7 @@ export class WorkflowEngine {
       };
 
       // Log the email to Firebase for tracking
-      await addDoc(collection(db, 'emailLogs'), {
+      await addDoc(collection(getDb(), 'emailLogs'), {
         ...emailData,
         sentAt: serverTimestamp(),
         status: 'sent'
@@ -276,6 +281,7 @@ export class WorkflowEngine {
       // For now, we'll simulate the SMS sending and log it
       
       // Get user's phone number from their profile
+      const db = getDb();
       const userDoc = await getDoc(doc(db, 'users', execution.userId));
       const userData = userDoc.data();
       const phoneNumber = userData?.phone;
@@ -297,7 +303,7 @@ export class WorkflowEngine {
       };
 
       // Log the SMS to Firebase for tracking
-      await addDoc(collection(db, 'smsLogs'), {
+      await addDoc(collection(getDb(), 'smsLogs'), {
         ...smsData,
         sentAt: serverTimestamp(),
         status: 'sent'
@@ -370,6 +376,7 @@ export class WorkflowEngine {
       }
 
       // Get user data to evaluate condition
+      const db = getDb();
       const userDoc = await getDoc(doc(db, 'users', execution.userId));
       const userData = userDoc.data();
 
@@ -429,6 +436,7 @@ export class WorkflowEngine {
       }
 
       // Add tags to user profile
+      const db = getDb();
       const userRef = doc(db, 'users', execution.userId);
       const userDoc = await getDoc(userRef);
       const userData = userDoc.data();
@@ -468,7 +476,7 @@ export class WorkflowEngine {
       };
 
       // Create task in Firebase
-      await addDoc(collection(db, 'workflowTasks'), taskData);
+      await addDoc(collection(getDb(), 'workflowTasks'), taskData);
 
       return {
         success: true,
@@ -487,6 +495,7 @@ export class WorkflowEngine {
   // Complete workflow execution
   private async completeWorkflowExecution(executionId: string): Promise<void> {
     try {
+      const db = getDb();
       const execution = await getDoc(doc(db, 'workflowExecutions', executionId));
       const executionData = execution.data() as WorkflowExecution;
 
@@ -505,6 +514,7 @@ export class WorkflowEngine {
   // Update workflow statistics
   private async updateWorkflowStats(workflowId: string, action: 'enrolled' | 'completed'): Promise<void> {
     try {
+      const db = getDb();
       const workflowRef = doc(db, 'marketingWorkflows', workflowId);
       const workflowDoc = await getDoc(workflowRef);
       
@@ -530,6 +540,7 @@ export class WorkflowEngine {
   // Get workflow executions for a user
   async getUserWorkflowExecutions(userId: string): Promise<WorkflowExecution[]> {
     try {
+      const db = getDb();
       const q = query(
         collection(db, 'workflowExecutions'),
         where('userId', '==', userId)
@@ -545,6 +556,7 @@ export class WorkflowEngine {
   // Get all workflow executions for a workflow
   async getWorkflowExecutions(workflowId: string): Promise<WorkflowExecution[]> {
     try {
+      const db = getDb();
       const q = query(
         collection(db, 'workflowExecutions'),
         where('workflowId', '==', workflowId)
@@ -561,6 +573,7 @@ export class WorkflowEngine {
   async processScheduledWorkflows(): Promise<void> {
     try {
       const now = new Date().toISOString();
+      const db = getDb();
       const q = query(
         collection(db, 'workflowExecutions'),
         where('status', '==', 'active'),
@@ -582,6 +595,7 @@ export class WorkflowEngine {
   async triggerWorkflows(trigger: string, userId: string, userEmail: string, additionalData?: any): Promise<void> {
     try {
       // Get all active workflows with this trigger
+      const db = getDb();
       const q = query(
         collection(db, 'marketingWorkflows'),
         where('trigger', '==', trigger),

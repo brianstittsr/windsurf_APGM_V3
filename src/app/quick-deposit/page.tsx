@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ServiceService } from '@/services/database';
 import { workflowEngine } from '@/services/bmad-workflows';
@@ -9,7 +9,7 @@ import { loadStripe } from '@stripe/stripe-js';
 // Get Stripe publishable key from env
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string);
 
-export default function QuickDepositPage() {
+function QuickDepositForm() {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -326,5 +326,13 @@ export default function QuickDepositPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function QuickDepositPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading deposit form...</div>}>
+      <QuickDepositForm />
+    </Suspense>
   );
 }
