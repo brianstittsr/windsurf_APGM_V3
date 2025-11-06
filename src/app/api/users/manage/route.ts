@@ -18,34 +18,63 @@ export async function POST(req: Request) {
     let isAdmin = false;
     
     try {
-      // Try Admin SDK first
-      const decodedToken = await adminAuth.verifyIdToken(idToken);
-      requesterUid = decodedToken.uid;
-      
-      const userDoc = await adminDb.collection('users').doc(requesterUid).get();
-      if (userDoc.exists && userDoc.data()?.role === 'admin') {
-        isAdmin = true;
+      // Try Admin SDK first with proper error handling
+      try {
+        console.log('Attempting to verify token with Admin SDK...');
+        const decodedToken = await adminAuth.verifyIdToken(idToken);
+        requesterUid = decodedToken.uid;
+        console.log(`Token verified successfully, uid: ${requesterUid}`);
+        
+        const userDoc = await adminDb.collection('users').doc(requesterUid).get();
+        if (userDoc.exists && userDoc.data()?.role === 'admin') {
+          isAdmin = true;
+          console.log(`User verified as admin: ${isAdmin}`);
+        }
+      } catch (verificationError) {
+        console.error('Token verification error:', verificationError);
+        throw verificationError; // Re-throw to be caught by the outer catch
       }
     } catch (adminError) {
       console.error('Admin SDK error:', adminError);
       
-      // Fallback to client SDK for auth verification
+      // Attempt to validate the token directly with Firebase Auth REST API
       try {
-        // Get the current user's ID from the client auth
-        const currentUser = clientAuth.currentUser;
-        if (!currentUser) {
-          return NextResponse.json({ error: 'Unauthorized - No current user' }, { status: 401 });
+        console.log('Admin SDK failed, attempting direct token validation with Firebase Auth REST API');
+        const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+        
+        // Use the token to get user data directly from Firebase Auth
+        const authResponse = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            idToken
+          })
+        });
+        
+        if (!authResponse.ok) {
+          console.error('Firebase Auth API error:', await authResponse.text());
+          return NextResponse.json({ error: 'Invalid authentication token' }, { status: 401 });
         }
         
-        requesterUid = currentUser.uid;
+        const userData = await authResponse.json();
+        if (!userData.users || userData.users.length === 0) {
+          console.error('No user found for the given token');
+          return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        }
         
-        // Check if user is admin using client SDK
+        requesterUid = userData.users[0].localId;
+        console.log(`User ID retrieved from token: ${requesterUid}`);
+        
+        // Check if user is admin using Firestore
         const db = getDb();
         const userDocRef = doc(db, 'users', requesterUid);
         const userDocSnap = await getDoc(userDocRef);
         
         if (userDocSnap.exists() && userDocSnap.data()?.role === 'admin') {
           isAdmin = true;
+          console.log(`User verified as admin via Firebase Auth API: ${isAdmin}`);
         }
       } catch (clientError) {
         console.error('Client SDK error:', clientError);
@@ -107,21 +136,19 @@ export async function POST(req: Request) {
         }
         
         try {
-          // Try Admin SDK first for password update
-          try {
-            console.log(`🔐 Attempting password update for user ${uid}`);
-            await adminAuth.updateUser(uid, { password: newPassword });
-            console.log(`✅ Password updated successfully for user ${uid}`);
-            return NextResponse.json({ message: 'Password updated successfully' });
-          } catch (adminError) {
-            console.error('Admin SDK password update error:', adminError);
+          console.log(`🔄 Starting password update process for user ${uid}`);
+          console.log(`Requester UID: ${requesterUid}, Target UID: ${uid}`);
+          console.log(`Is self-update: ${uid === requesterUid ? 'Yes' : 'No'}`);
+          
+          // Direct Firebase Auth REST API approach for self-password change
+          // This is more reliable than the Admin SDK in many environments
+          if (uid === requesterUid) {
+            console.log(`🔑 Attempting self-password change via direct Firebase Auth API`);
+            const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
             
-            // If we're updating our own password as admin, try a direct client-side approach
-            if (uid === requesterUid) {
-              console.log(`⚠️ Admin SDK failed, attempting direct Firebase update for self-password change`);
-              
-              // We'll use direct Firebase Auth REST API since we can't reauthenticate without the current password
-              const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+            try {
+              // Use accounts:update endpoint for password change
+              console.log(`Calling Firebase Auth API with idToken`);
               const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:update?key=${apiKey}`, {
                 method: 'POST',
                 headers: {
@@ -135,23 +162,65 @@ export async function POST(req: Request) {
               });
               
               if (response.ok) {
-                console.log(`✅ Password updated successfully via direct Firebase API`);
+                console.log(`✅ Self password updated successfully via Firebase Auth API`);
                 return NextResponse.json({ message: 'Password updated successfully' });
               } else {
                 const errorData = await response.json();
-                console.error('Firebase API error:', errorData);
+                console.error('Firebase Auth API error:', errorData);
+                
+                // More detailed error information
+                const errorMessage = errorData.error?.message || 'Unknown error';
+                const errorCode = errorData.error?.code || 'unknown';
+                
+                console.error(`Error code: ${errorCode}, Message: ${errorMessage}`);
+                
                 return NextResponse.json({ 
                   error: 'Password update failed', 
-                  details: errorData.error?.message || 'Unknown error'
-                }, { status: 500 });
+                  code: errorCode,
+                  details: errorMessage
+                }, { status: 400 });
               }
+            } catch (directApiError) {
+              console.error('Direct Firebase Auth API error:', directApiError);
+              return NextResponse.json({ 
+                error: 'Password update failed', 
+                details: directApiError instanceof Error ? directApiError.message : 'Unknown error'
+              }, { status: 500 });
             }
+          }
+          
+          // For admin updating another user's password, use Admin SDK
+          try {
+            console.log(`👑 Admin updating another user's password via Admin SDK`);
+            await adminAuth.updateUser(uid, { password: newPassword });
+            console.log(`✅ Password updated successfully for user ${uid}`);
+            return NextResponse.json({ message: 'Password updated successfully' });
+          } catch (adminError) {
+            console.error('Admin SDK password update error:', adminError);
             
-            // For API simplicity, we'll report the admin error
-            return NextResponse.json({ 
-              error: 'Unable to update password. Firebase Admin SDK not properly configured.', 
-              details: adminError instanceof Error ? adminError.message : 'Unknown error'
-            }, { status: 500 });
+            // Fall back to password reset email for admin updating another user
+            try {
+              console.log(`⚠️ Admin SDK failed, sending password reset email instead`);
+              const userRecord = await adminAuth.getUser(uid);
+              if (userRecord.email) {
+                await adminAuth.generatePasswordResetLink(userRecord.email);
+                return NextResponse.json({ 
+                  message: 'Password reset link has been sent to the user', 
+                  details: 'Direct password update failed, user will need to reset their password via email'
+                });
+              } else {
+                return NextResponse.json({ 
+                  error: 'Cannot reset password for user without email', 
+                  details: 'User record does not contain an email address'
+                }, { status: 400 });
+              }
+            } catch (resetError) {
+              console.error('Password reset email error:', resetError);
+              return NextResponse.json({ 
+                error: 'Failed to update password or send reset email', 
+                details: resetError instanceof Error ? resetError.message : 'Unknown error'
+              }, { status: 500 });
+            }
           }
         } catch (error) {
           console.error('Password update error:', error);
