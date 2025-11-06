@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PMU Website Troubleshooter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #7952b3;
+            border-bottom: 2px solid #7952b3;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #7952b3;
+            margin-top: 30px;
+        }
+        .card {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #7952b3;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #673ab7;
+        }
+        button:disabled {
+            background-color: #b5a8c9;
+            cursor: not-allowed;
+        }
+        .buttons {
+            margin: 20px 0;
+        }
+        .output {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .status.error {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+        .status.success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+        .status.info {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #bbdefb;
+        }
+        input[type="text"],
+        input[type="password"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 250px;
+            margin: 5px 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>PMU Website Troubleshooter</h1>
+    
+    <div class="card">
+        <h2>Current Status</h2>
+        <div id="authStatus" class="status info">Checking authentication status...</div>
+        <div id="profileStatus" class="status info">Checking user profile...</div>
+        <div id="ghlStatus" class="status info">Checking GHL settings...</div>
+        <div id="apiStatus" class="status info">Checking API status...</div>
+    </div>
+    
+    <div class="card">
+        <h2>Firebase Authentication</h2>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="text" id="email" placeholder="Email">
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" placeholder="Password">
+        </div>
+        <div class="buttons">
+            <button id="loginBtn">Login</button>
+            <button id="logoutBtn">Logout</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>User Profile Management</h2>
+        <div class="buttons">
+            <button id="checkProfileBtn">Check Current Profile</button>
+            <button id="createAdminProfileBtn">Create Admin Profile</button>
+            <button id="createVictoriaProfileBtn">Create Victoria Profile</button>
+        </div>
+        <div id="profileOutput" class="output"></div>
+    </div>
+    
+    <div class="card">
+        <h2>GHL Integration</h2>
+        <div class="buttons">
+            <button id="checkGhlBtn">Check GHL Settings</button>
+            <button id="fixGhlPermissionsBtn">Fix GHL Permissions</button>
+        </div>
+        <div id="ghlOutput" class="output"></div>
+    </div>
+    
+    <div class="card">
+        <h2>API Diagnostics</h2>
+        <div class="buttons">
+            <button id="testApiBtn">Test API Connection</button>
+        </div>
+        <div id="apiOutput" class="output"></div>
+    </div>
+    
+    <div class="card">
+        <h2>Domain Authorization</h2>
+        <div class="buttons">
+            <button id="checkDomainBtn">Check Authorized Domains</button>
+        </div>
+        <div id="domainOutput" class="output"></div>
+    </div>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        // Firebase configuration - will be dynamically populated based on your actual config
+        const firebaseConfig = {
+            // This will be populated from your site's Firebase config
+            // No need to hardcode anything here
+        };
+        
+        let appInitialized = false;
+        let auth;
+        let db;
+
+        function initializeApp() {
+            try {
+                // Check if Firebase is already initialized on the page
+                if (typeof firebase !== 'undefined') {
+                    if (firebase.apps.length > 0) {
+                        console.log('Firebase already initialized, using existing instance');
+                        appInitialized = true;
+                        auth = firebase.auth();
+                        db = firebase.firestore();
+                    } else {
+                        // Try to extract Firebase config from window
+                        const configScript = Array.from(document.querySelectorAll('script')).find(script => 
+                            script.textContent && script.textContent.includes('apiKey') && 
+                            script.textContent.includes('authDomain') && 
+                            script.textContent.includes('projectId')
+                        );
+                        
+                        if (configScript) {
+                            const configMatch = configScript.textContent.match(/\{[\s\S]*apiKey[\s\S]*projectId[\s\S]*\}/);
+                            if (configMatch) {
+                                try {
+                                    // Extract and evaluate the config object
+                                    const configString = configMatch[0].replace(/var\s+\w+\s*=\s*/, '');
+                                    const extractedConfig = eval(`(${configString})`);
+                                    console.log('Extracted Firebase config:', extractedConfig);
+                                    
+                                    // Initialize with extracted config
+                                    firebase.initializeApp(extractedConfig);
+                                    appInitialized = true;
+                                    auth = firebase.auth();
+                                    db = firebase.firestore();
+                                } catch (e) {
+                                    console.error('Failed to extract config:', e);
+                                }
+                            }
+                        }
+                        
+                        // If extraction failed, initialize with empty config
+                        if (!appInitialized) {
+                            console.log('Could not extract Firebase config, using empty config');
+                            // We'll rely on the existing Firebase instance on the page
+                        }
+                    }
+                } else {
+                    console.error('Firebase SDK not loaded');
+                    updateStatus('authStatus', 'Firebase SDK not found. This tool must be run on your website.', 'error');
+                }
+            } catch (error) {
+                console.error('Error initializing Firebase:', error);
+            }
+        }
+
+        // Initialize on page load
+        window.onload = function() {
+            initializeApp();
+            checkAuth();
+        };
+
+        // Auth state listener
+        function checkAuth() {
+            if (!appInitialized) {
+                console.log('App not initialized, cannot check auth');
+                updateStatus('authStatus', 'Firebase not initialized', 'error');
+                return;
+            }
+            
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    console.log('User is signed in:', user.email);
+                    updateStatus('authStatus', `Authenticated as ${user.email}`, 'success');
+                    checkProfile(user);
+                } else {
+                    console.log('No user is signed in');
+                    updateStatus('authStatus', 'Not authenticated', 'info');
+                    updateStatus('profileStatus', 'No user signed in', 'info');
+                }
+            });
+        }
+
+        // Check user profile
+        async function checkProfile(user) {
+            try {
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    const role = userData.role || 'user';
+                    updateStatus('profileStatus', `Profile found for ${user.email} (Role: ${role})`, 'success');
+                    console.log('User profile:', userData);
+                } else {
+                    updateStatus('profileStatus', `No profile found for ${user.email}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error checking profile:', error);
+                updateStatus('profileStatus', `Error checking profile: ${error.message}`, 'error');
+            }
+        }
+
+        // Check GHL settings
+        async function checkGHL() {
+            try {
+                const ghlDoc = await db.collection('crmSettings').doc('gohighlevel').get();
+                if (ghlDoc.exists) {
+                    const data = ghlDoc.data();
+                    updateStatus('ghlStatus', `GHL settings found. API Key: ${data.apiKey ? '✅ Set' : '❌ Not set'}, Location ID: ${data.locationId ? '✅ Set' : '❌ Not set'}`, 'success');
+                    return ghlDoc.data();
+                } else {
+                    updateStatus('ghlStatus', 'GHL settings not found', 'error');
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error checking GHL settings:', error);
+                updateStatus('ghlStatus', `Error checking GHL settings: ${error.message}`, 'error');
+                return null;
+            }
+        }
+
+        // Update status element
+        function updateStatus(id, message, type) {
+            const element = document.getElementById(id);
+            element.textContent = message;
+            element.className = `status ${type}`;
+        }
+
+        // Update output element
+        function updateOutput(id, message) {
+            const element = document.getElementById(id);
+            element.textContent = message;
+        }
+
+        // Event listeners
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            if (!appInitialized) {
+                alert('Firebase not initialized. This tool must be run on your website.');
+                return;
+            }
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                alert('Please enter both email and password');
+                return;
+            }
+            
+            try {
+                updateStatus('authStatus', 'Logging in...', 'info');
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch (error) {
+                console.error('Login error:', error);
+                updateStatus('authStatus', `Login error: ${error.message}`, 'error');
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            if (!appInitialized) return;
+            
+            try {
+                await auth.signOut();
+                updateStatus('authStatus', 'Logged out', 'info');
+                updateStatus('profileStatus', 'No user signed in', 'info');
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        });
+
+        document.getElementById('checkProfileBtn').addEventListener('click', async () => {
+            if (!appInitialized) return;
+            
+            const user = auth.currentUser;
+            if (!user) {
+                updateOutput('profileOutput', 'No user signed in');
+                return;
+            }
+            
+            try {
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if (userDoc.exists) {
+                    updateOutput('profileOutput', JSON.stringify(userDoc.data(), null, 2));
+                } else {
+                    updateOutput('profileOutput', `No profile found for UID: ${user.uid}`);
+                }
+            } catch (error) {
+                console.error('Error checking profile:', error);
+                updateOutput('profileOutput', `Error: ${error.message}`);
+            }
+        });
+
+        document.getElementById('createAdminProfileBtn').addEventListener('click', async () => {
+            if (!appInitialized) return;
+            
+            const user = auth.currentUser;
+            if (!user) {
+                updateOutput('profileOutput', 'No user signed in');
+                return;
+            }
+            
+            try {
+                updateOutput('profileOutput', 'Creating admin profile...');
+                
+                await db.collection('users').doc(user.uid).set({
+                    profile: {
+                        firstName: 'Admin',
+                        lastName: 'User',
+                        email: user.email,
+                        phone: ''
+                    },
+                    role: 'admin',
+                    isActive: true,
+                    createdAt: new Date()
+                });
+                
+                updateOutput('profileOutput', `Admin profile created for ${user.email} with UID: ${user.uid}`);
+                checkAuth(); // Refresh status
+            } catch (error) {
+                console.error('Error creating profile:', error);
+                updateOutput('profileOutput', `Error: ${error.message}`);
+            }
+        });
+
+        document.getElementById('createVictoriaProfileBtn').addEventListener('click', async () => {
+            if (!appInitialized) return;
+            
+            const user = auth.currentUser;
+            if (!user) {
+                updateOutput('profileOutput', 'No user signed in');
+                return;
+            }
+            
+            try {
+                // Check if current user is an admin
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                const userData = userDoc.data();
+                if (!userData || userData.role !== 'admin') {
+                    updateOutput('profileOutput', 'You must be logged in as an admin to create users');
+                    return;
+                }
+                
+                const victoriaEmail = 'victoria@aprettygirlmatter.com';
+                updateOutput('profileOutput', `Creating profile for ${victoriaEmail}...`);
+                
+                // Check if Victoria already exists in Firestore
+                const usersSnapshot = await db.collection('users')
+                    .where('profile.email', '==', victoriaEmail)
+                    .get();
+                
+                if (!usersSnapshot.empty) {
+                    let output = `User with email ${victoriaEmail} already exists:\n`;
+                    usersSnapshot.forEach(doc => {
+                        output += `ID: ${doc.id}\n`;
+                        output += `Data: ${JSON.stringify(doc.data(), null, 2)}\n`;
+                    });
+                    updateOutput('profileOutput', output);
+                    return;
+                }
+                
+                // Create a random ID for Victoria
+                const victoriaUid = 'victoria_' + Math.random().toString(36).substring(2, 10);
+                
+                // Create the user profile document
+                await db.collection('users').doc(victoriaUid).set({
+                    profile: {
+                        firstName: 'Victoria',
+                        lastName: 'Admin',
+                        email: victoriaEmail,
+                        phone: ''
+                    },
+                    role: 'admin',
+                    isActive: true,
+                    createdAt: new Date()
+                });
+                
+                updateOutput('profileOutput', `Profile created for ${victoriaEmail} with ID: ${victoriaUid}\n\nNOTE: You still need to create the Firebase Auth user from the Firebase Console`);
+            } catch (error) {
+                console.error('Error creating Victoria profile:', error);
+                updateOutput('profileOutput', `Error: ${error.message}`);
+            }
+        });
+
+        document.getElementById('checkGhlBtn').addEventListener('click', async () => {
+            if (!appInitialized) return;
+            
+            try {
+                const ghlData = await checkGHL();
+                if (ghlData) {
+                    const sanitizedData = { ...ghlData };
+                    if (sanitizedData.apiKey) {
+                        sanitizedData.apiKey = '********';
+                    }
+                    updateOutput('ghlOutput', JSON.stringify(sanitizedData, null, 2));
+                } else {
+                    updateOutput('ghlOutput', 'No GHL settings found');
+                }
+            } catch (error) {
+                console.error('Error checking GHL:', error);
+                updateOutput('ghlOutput', `Error: ${error.message}`);
+            }
+        });
+
+        document.getElementById('fixGhlPermissionsBtn').addEventListener('click', async () => {
+            if (!appInitialized) return;
+            
+            const user = auth.currentUser;
+            if (!user) {
+                updateOutput('ghlOutput', 'No user signed in');
+                return;
+            }
+            
+            try {
+                updateOutput('ghlOutput', 'Creating/updating GHL settings...');
+                
+                // Create/update the GHL settings document
+                const ghlDocRef = db.collection('crmSettings').doc('gohighlevel');
+                const ghlDoc = await ghlDocRef.get();
+                
+                if (!ghlDoc.exists) {
+                    await ghlDocRef.set({
+                        apiKey: '',
+                        locationId: '',
+                        lastUpdated: new Date(),
+                        updatedBy: user.email
+                    });
+                    
+                    updateOutput('ghlOutput', 'Created placeholder GHL settings document');
+                } else {
+                    const data = ghlDoc.data();
+                    updateOutput('ghlOutput', `GHL settings already exist.\nAPI Key: ${data.apiKey ? '✅ Set' : '❌ Not set'}\nLocation ID: ${data.locationId ? '✅ Set' : '❌ Not set'}`);
+                }
+                
+                await checkGHL(); // Refresh status
+            } catch (error) {
+                console.error('Error fixing GHL permissions:', error);
+                updateOutput('ghlOutput', `Error: ${error.message}`);
+            }
+        });
+
+        document.getElementById('testApiBtn').addEventListener('click', async () => {
+            if (!appInitialized) return;
+            
+            const user = auth.currentUser;
+            if (!user) {
+                updateOutput('apiOutput', 'No user signed in');
+                return;
+            }
+            
+            try {
+                updateOutput('apiOutput', 'Testing API connection...');
+                
+                // Get ID token for auth
+                const idToken = await user.getIdToken();
+                
+                // Test the API endpoint
+                const response = await fetch('/api/users/manage', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${idToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStatus('apiStatus', 'API connection successful', 'success');
+                    updateOutput('apiOutput', `API returned: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    const errorText = await response.text();
+                    updateStatus('apiStatus', `API error (${response.status})`, 'error');
+                    updateOutput('apiOutput', `API error (${response.status}): ${errorText}`);
+                }
+            } catch (error) {
+                console.error('API test error:', error);
+                updateStatus('apiStatus', 'API connection failed', 'error');
+                updateOutput('apiOutput', `Error: ${error.message}`);
+            }
+        });
+
+        document.getElementById('checkDomainBtn').addEventListener('click', () => {
+            const currentDomain = window.location.hostname;
+            let output = `Current domain: ${currentDomain}\n\n`;
+            
+            output += 'To add this domain to Firebase Auth:\n';
+            output += '1. Go to Firebase Console\n';
+            output += '2. Navigate to Authentication → Settings → Authorized domains\n';
+            output += `3. Add "${currentDomain}" to the list\n\n`;
+            
+            output += 'Common authorized domains:\n';
+            output += '- localhost\n';
+            output += '- 127.0.0.1\n';
+            output += '- www.aprettygirlmatter.com\n';
+            output += '- aprettygirlmatter.com\n';
+            
+            updateOutput('domainOutput', output);
+            
+            // Try to check if domain is authorized
+            try {
+                const currentUser = auth.currentUser;
+                if (!currentUser) {
+                    output += '\nCannot check if domain is authorized (no user signed in)';
+                    updateOutput('domainOutput', output);
+                    return;
+                }
+                
+                // Try to use a popup to check if domain is authorized
+                // This is a hacky way to check, but it's the best we can do client-side
+                auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+                    .catch(error => {
+                        if (error.code === 'auth/unauthorized-domain') {
+                            output += '\n\n❌ DOMAIN NOT AUTHORIZED IN FIREBASE';
+                            updateOutput('domainOutput', output);
+                        } else if (error.code === 'auth/cancelled-popup-request') {
+                            output += '\n\nUser cancelled the popup, domain appears to be authorized';
+                            updateOutput('domainOutput', output);
+                        } else {
+                            output += `\n\nError checking domain: ${error.message}`;
+                            updateOutput('domainOutput', output);
+                        }
+                    });
+            } catch (error) {
+                console.error('Error checking domain authorization:', error);
+            }
+        });
+    </script>
+</body>
+</html>

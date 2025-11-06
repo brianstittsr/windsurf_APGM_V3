@@ -39,6 +39,7 @@ export default function BookingCalendar() {
   const fetchBookings = async () => {
     setLoading(true);
     try {
+      // Try fetching from the primary 'bookings' collection first
       const bookingsRef = collection(getDb(), 'bookings');
       const startDate = getViewStartDate();
       const endDate = getViewEndDate();
@@ -50,14 +51,95 @@ export default function BookingCalendar() {
       );
 
       const snapshot = await getDocs(q);
-      const bookingsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Booking[];
+      let bookingsData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        
+        // Ensure all required fields are present
+        const booking: Booking = {
+          id: doc.id,
+          clientName: data.clientName || 'Unknown Client',
+          clientEmail: data.clientEmail || '',
+          clientPhone: data.clientPhone || '',
+          artistId: data.artistId || '',
+          artistName: data.artistName || 'Unknown Artist',
+          serviceName: data.serviceName || 'Unknown Service',
+          date: data.date || '',
+          time: data.time || '',
+          status: data.status || 'pending',
+          price: data.price || 0,
+          depositPaid: data.depositPaid || false,
+          notes: data.notes,
+          ghlContactId: data.ghlContactId,
+          ghlAppointmentId: data.ghlAppointmentId,
+          createdAt: data.createdAt
+        };
+        
+        return booking;
+      });
 
+      // If no bookings found in the primary collection, try the legacy 'appointments' collection
+      if (bookingsData.length === 0) {
+        console.log('No bookings found in primary collection, checking legacy appointments...');
+        const appointmentsRef = collection(getDb(), 'appointments');
+        
+        // Convert date range query to work with legacy fields
+        const appointmentsQuery = query(appointmentsRef);
+        const appointmentsSnapshot = await getDocs(appointmentsQuery);
+        
+        // Map legacy appointments to booking format
+        const legacyBookings = appointmentsSnapshot.docs
+          .map(doc => {
+            const data = doc.data();
+            // Check if the appointment date falls within our date range
+            const apptDate = data.scheduledDate || data.appointmentDate;
+            if (!apptDate) return null;
+            
+            const formattedDate = typeof apptDate === 'string' ? apptDate : 
+              apptDate.toDate ? apptDate.toDate().toISOString().split('T')[0] : null;
+              
+            // Skip if not in range
+            if (!formattedDate || 
+                formattedDate < startDate.toISOString().split('T')[0] || 
+                formattedDate > endDate.toISOString().split('T')[0]) {
+              return null;
+            }
+            
+            // Create booking from appointment
+            return {
+              id: doc.id,
+              clientName: data.clientName || '',
+              clientEmail: data.clientEmail || '',
+              clientPhone: data.clientPhone || '',
+              artistId: data.artistId || '',
+              artistName: data.artistName || '',
+              serviceName: data.serviceName || '',
+              date: formattedDate,
+              time: data.scheduledTime || data.appointmentTime || '',
+              status: data.status || 'pending',
+              price: data.totalAmount || 0,
+              depositPaid: (data.depositAmount > 0 && data.paymentStatus === 'deposit_paid') || false,
+              notes: data.specialRequests || '',
+              createdAt: data.createdAt
+            } as Booking;
+          })
+          .filter(booking => booking !== null) as Booking[];
+          
+        if (legacyBookings.length > 0) {
+          console.log(`Found ${legacyBookings.length} legacy appointments`);
+          bookingsData = legacyBookings;
+        }
+      }
+
+      console.log(`Displaying ${bookingsData.length} bookings for date range ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`);
       setBookings(bookingsData);
     } catch (error) {
       console.error('Error fetching bookings:', error);
+      // Show error message
+      const errorMessage = document.createElement('div');
+      errorMessage.className = 'alert alert-danger mt-3';
+      errorMessage.innerHTML = `<strong>Error loading bookings:</strong> ${error instanceof Error ? error.message : 'Unknown error'}`;
+      document.querySelector('.container-fluid')?.appendChild(errorMessage);
+      setTimeout(() => errorMessage.remove(), 5000);
     } finally {
       setLoading(false);
     }

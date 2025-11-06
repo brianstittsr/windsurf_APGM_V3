@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Admin User Profile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #3367d6;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Create Admin User Profile</h1>
+    
+    <h2>1. Sign in as admin</h2>
+    <p>First, sign in with your admin credentials:</p>
+    <button id="signInBtn">Sign in with Email/Password</button>
+    
+    <h2>2. Create user profile</h2>
+    <p>Once signed in, click to create the user profile document:</p>
+    <button id="createProfileBtn" disabled>Create User Profile</button>
+    
+    <h2>Status:</h2>
+    <pre id="status">Not started</pre>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <script>
+        // Get Firebase config from your .env.local or the app itself
+        // This is just a placeholder - it will be replaced at runtime
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        
+        // Initialize Firebase if not already initialized
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const statusElem = document.getElementById('status');
+        const signInBtn = document.getElementById('signInBtn');
+        const createProfileBtn = document.getElementById('createProfileBtn');
+        
+        // Sign in function
+        signInBtn.addEventListener('click', async () => {
+            try {
+                statusElem.textContent = 'Signing in...';
+                signInBtn.disabled = true;
+                
+                const email = 'admin@example.com';
+                const password = 'admin123';
+                
+                await auth.signInWithEmailAndPassword(email, password);
+                statusElem.innerHTML = '<span class="success">Successfully signed in as admin@example.com!</span>';
+                createProfileBtn.disabled = false;
+            } catch (error) {
+                statusElem.innerHTML = `<span class="error">Error signing in: ${error.message}</span>`;
+                signInBtn.disabled = false;
+            }
+        });
+        
+        // Create profile function
+        createProfileBtn.addEventListener('click', async () => {
+            try {
+                statusElem.textContent = 'Creating user profile...';
+                createProfileBtn.disabled = true;
+                
+                const uid = 'luFdSPKRuwd0OqKFu72adyoTQFr1';
+                const email = 'admin@example.com';
+                
+                // Create user profile document
+                await db.collection('users').doc(uid).set({
+                    profile: {
+                        firstName: 'Admin',
+                        lastName: 'User',
+                        email: email,
+                        phone: ''
+                    },
+                    role: 'admin',
+                    isActive: true,
+                    createdAt: new Date()
+                });
+                
+                statusElem.innerHTML = '<span class="success">✅ User profile successfully created!</span><br>' +
+                                       `<span class="success">ID: ${uid}</span><br>` +
+                                       `<span class="success">Email: ${email}</span>`;
+            } catch (error) {
+                statusElem.innerHTML = `<span class="error">❌ Error creating user profile: ${error.message}</span>`;
+                createProfileBtn.disabled = false;
+            }
+        });
+        
+        // Check auth state
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                signInBtn.disabled = true;
+                createProfileBtn.disabled = false;
+                statusElem.textContent = `Signed in as ${user.email}`;
+            } else {
+                signInBtn.disabled = false;
+                createProfileBtn.disabled = true;
+            }
+        });
+    </script>
+</body>
+</html>

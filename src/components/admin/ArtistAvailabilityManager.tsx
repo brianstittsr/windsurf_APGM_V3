@@ -5,6 +5,7 @@ import { doc, setDoc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { getDb } from '../../lib/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import OutlookCalendarSetup from './OutlookCalendarSetup';
+import FirestorePermissionTest from './FirestorePermissionTest';
 
 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -21,23 +22,70 @@ export default function ArtistAvailabilityManager() {
   useEffect(() => {
     const fetchArtists = async () => {
       try {
+        console.log('Fetching artists...');
         const usersCollection = collection(getDb(), 'users');
         const usersSnapshot = await getDocs(usersCollection);
-        const artistsList = usersSnapshot.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .filter((user: any) => user.role === 'artist');
-        setArtists(artistsList);
-        if (artistsList.length > 0) {
-          setSelectedArtist(artistsList[0].id);
+        
+        // Map and log each user to debug
+        const usersList = usersSnapshot.docs.map(doc => {
+          const userData = { id: doc.id, ...doc.data() };
+          return userData;
+        });
+        
+        console.log('All users:', usersList);
+        
+        // Filter artists with improved logging
+        const artistsList = usersList.filter((user: any) => {
+          const isArtist = user.role === 'artist';
+          if (isArtist) {
+            console.log('Found artist:', user);
+          }
+          return isArtist;
+        });
+        
+        console.log('Artists list:', artistsList);
+        
+        // Extract display name more safely
+        const artistsWithNames = artistsList.map((artist: any) => {
+          const displayName = artist.displayName || 
+                            (artist.profile?.firstName && artist.profile?.lastName ? 
+                             `${artist.profile.firstName} ${artist.profile.lastName}` : '') || 
+                            artist.profile?.firstName || artist.profile?.lastName || 
+                            artist.name || artist.email || artist.id || 'Unknown Artist';
+          
+          return { ...artist, displayName };
+        });
+        
+        setArtists(artistsWithNames);
+        if (artistsWithNames.length > 0) {
+          console.log('Selected first artist:', artistsWithNames[0]);
+          setSelectedArtist(artistsWithNames[0].id);
+        } else {
+          console.log('No artists found');
         }
       } catch (error) {
-        console.error('Error fetching artists:', error);
+        console.error('❌ Error fetching artists:', error);
         // Fallback: If admin can't list all users, just use current user if they're an artist
         if (user && user.uid) {
-          const userDoc = await getDoc(doc(getDb(), 'users', user.uid));
-          if (userDoc.exists() && userDoc.data()?.role === 'artist') {
-            setArtists([{ id: user.uid, displayName: userDoc.data()?.displayName || 'Current User' }]);
-            setSelectedArtist(user.uid);
+          console.log('Trying to use current user as fallback');
+          try {
+            const userDoc = await getDoc(doc(getDb(), 'users', user.uid));
+            const userData = userDoc.exists() ? userDoc.data() : null;
+            console.log('Current user data:', userData);
+            
+            if (userData && userData.role === 'artist') {
+              const displayName = userData.displayName || 
+                                (userData.profile?.firstName && userData.profile?.lastName ? 
+                                 `${userData.profile.firstName} ${userData.profile.lastName}` : '') || 
+                                userData.profile?.firstName || userData.profile?.lastName || 
+                                userData.name || userData.email || 'Current User';
+              
+              setArtists([{ id: user.uid, displayName, ...userData }]);
+              setSelectedArtist(user.uid);
+              console.log('Using current user as artist');
+            }
+          } catch (userError) {
+            console.error('❌ Error fetching current user:', userError);
           }
         }
       }
@@ -68,28 +116,77 @@ export default function ArtistAvailabilityManager() {
 
   useEffect(() => {
     const fetchAvailability = async () => {
-      if (selectedArtist) {
-        setLoading(true);
-        const docRef = doc(getDb(), 'artist-availability', selectedArtist);
+      if (!selectedArtist) {
+        console.log('No artist selected, skipping availability fetch');
+        return;
+      }
+      
+      setLoading(true);
+      console.log(`Fetching availability for artist: ${selectedArtist}`);
+      
+      try {
+        const db = getDb();
+        const docRef = doc(db, 'artist-availability', selectedArtist);
+        console.log('Availability document reference:', docRef);
+        
         const docSnap = await getDoc(docRef);
+        
         if (docSnap.exists()) {
+          console.log('Found availability document:', docSnap.data());
           const data = docSnap.data();
-          setAvailability(data.availability || {});
+          
+          // Check if availability data exists and is valid
+          if (data.availability && typeof data.availability === 'object') {
+            console.log('Setting availability:', data.availability);
+            setAvailability(data.availability);
+          } else {
+            console.log('No valid availability data found, using empty object');
+            setAvailability({});
+          }
+          
+          // Set break time if available, default to 15
           setBreakTime(data.breakTime || 15);
         } else {
+          console.log('No availability document found, using empty defaults');
           setAvailability({});
+          setBreakTime(15);
         }
+      } catch (error) {
+        console.error('❌ Error fetching availability:', error);
+        // Set defaults on error
+        setAvailability({});
+        setBreakTime(15);
+        
+        // Show error alert
+        alert(`Error loading availability data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      } finally {
         setLoading(false);
       }
     };
+    
     fetchAvailability();
   }, [selectedArtist]);
 
   const handleDayToggle = (day: string) => {
-    setAvailability((prev: any) => ({
-      ...prev,
-      [day]: prev[day] ? undefined : { enabled: true, slots: [] }
-    }));
+    console.log(`Toggling day: ${day}`);
+    
+    setAvailability((prev: any) => {
+      // Create a new object to avoid reference issues
+      const newAvailability = { ...prev };
+      
+      if (prev[day]) {
+        // If day exists, remove it
+        console.log(`Removing day: ${day}`);
+        delete newAvailability[day];
+      } else {
+        // If day doesn't exist, add it with default structure
+        console.log(`Adding day: ${day}`);
+        newAvailability[day] = { enabled: true, slots: [] };
+      }
+      
+      console.log('Updated availability:', newAvailability);
+      return newAvailability;
+    });
   };
 
   const handleTimeSlotChange = (day: string, index: number, field: 'start' | 'end' | 'service', value: string) => {
@@ -114,15 +211,107 @@ export default function ArtistAvailabilityManager() {
     }));
   };
 
-  const handleSave = async () => {
-    if (selectedArtist) {
-      try {
-        await setDoc(doc(getDb(), 'artist-availability', selectedArtist), { availability, breakTime });
-        alert('Availability saved successfully!');
-      } catch (error) {
-        console.error('Error saving availability:', error);
-        alert('Error saving availability. Please try again.');
+  // Check for circular references that can't be serialized to Firestore
+  const isCircular = (obj: any): boolean => {
+    const seenObjects = new WeakMap();
+    const detect = (obj: any): boolean => {
+      if (obj && typeof obj === 'object') {
+        if (seenObjects.has(obj)) {
+          return true;
+        }
+        seenObjects.set(obj, true);
+        return Object.keys(obj).some(key => detect(obj[key]));
       }
+      return false;
+    };
+    return detect(obj);
+  };
+  
+  // Clean the availability object to ensure it's serializable
+  const prepareAvailabilityData = () => {
+    // Create a deep copy to avoid modifying the original state
+    const cleanedAvailability: any = {};
+    
+    try {
+      // Manually construct a clean object
+      Object.keys(availability).forEach(day => {
+        if (availability[day] && availability[day].enabled) {
+          cleanedAvailability[day] = {
+            enabled: true,
+            slots: availability[day].slots.map((slot: any) => ({
+              start: slot.start || '',
+              end: slot.end || '',
+              service: slot.service || ''
+            }))
+          };
+        }
+      });
+      
+      // Test if it can be serialized
+      JSON.stringify(cleanedAvailability);
+      return { valid: true, data: cleanedAvailability };
+    } catch (e) {
+      console.error('❌ Error preparing availability data:', e);
+      return { valid: false, error: e };
+    }
+  };
+
+  const handleSave = async () => {
+    if (!selectedArtist) {
+      console.error('❌ No artist selected');
+      alert('Please select an artist before saving.');
+      return;
+    }
+    
+    // Check if we have valid availability data
+    if (!availability || Object.keys(availability).length === 0) {
+      console.warn('⚠ No availability data to save');
+      // Continue anyway as this might be intentional (clearing availability)
+    }
+    
+    // Check for potential circular references
+    if (isCircular(availability)) {
+      console.error('❌ Circular reference detected in availability data');
+      alert('Invalid data structure detected. Please refresh the page and try again.');
+      return;
+    }
+    
+    // Prepare data for saving
+    const { valid, data, error } = prepareAvailabilityData();
+    if (!valid) {
+      console.error('❌ Failed to prepare availability data:', error);
+      alert('Failed to prepare availability data. Please try again.');
+      return;
+    }
+    
+    try {
+      console.log('Saving availability for artist:', selectedArtist);
+      console.log('Cleaned data to be saved:', { availability: data, breakTime });
+      
+      const db = getDb();
+      console.log('Firestore instance:', db);
+      
+      const docRef = doc(db, 'artist-availability', selectedArtist);
+      console.log('Document reference:', docRef);
+      
+      // Save the cleaned availability data
+      await setDoc(docRef, { 
+        availability: data, 
+        breakTime,
+        updatedAt: new Date() 
+      });
+      
+      console.log('✅ Availability saved successfully!');
+      alert('Availability saved successfully!');
+    } catch (error) {
+      console.error('❌ Error saving availability:', error);
+      // More detailed error information
+      if (error instanceof Error) {
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
+      alert(`Error saving availability. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -132,13 +321,28 @@ export default function ArtistAvailabilityManager() {
 
   return (
     <div className="container-fluid">
+      {/* Add Firestore Permission Test component for diagnostics */}
+      <FirestorePermissionTest />
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h4>Artist Availability</h4>
         <div style={{width: '250px'}}>
-          <select className="form-select" value={selectedArtist} onChange={(e) => setSelectedArtist(e.target.value)}>
-            {artists.map(artist => (
-              <option key={artist.id} value={artist.id}>{artist.displayName}</option>
-            ))}
+          <select 
+            className="form-select" 
+            value={selectedArtist} 
+            onChange={(e) => {
+              console.log('Selected artist changed to:', e.target.value);
+              setSelectedArtist(e.target.value);
+            }}
+          >
+            {artists.length > 0 ? (
+              artists.map(artist => (
+                <option key={artist.id} value={artist.id}>
+                  {artist.displayName || 'Unknown Artist'}
+                </option>
+              ))
+            ) : (
+              <option value="">No artists available</option>
+            )}
           </select>
         </div>
       </div>

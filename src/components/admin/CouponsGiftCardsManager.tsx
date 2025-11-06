@@ -6,6 +6,39 @@ import { CouponService } from '../../services/couponService';
 import { GiftCardService } from '../../services/giftCardService';
 import { GiftCard, CouponCode } from '../../types/coupons';
 
+// Helper function to safely format dates from various sources
+const safeFormatDate = (date: any, format: 'localDate' | 'isoDate' = 'localDate'): string => {
+  if (!date) return '';
+  
+  try {
+    // Check if it's a Firestore Timestamp
+    if (typeof date === 'object' && date !== null && 'toDate' in date && typeof date.toDate === 'function') {
+      const jsDate = date.toDate();
+      return format === 'localDate' ? jsDate.toLocaleDateString() : jsDate.toISOString().split('T')[0];
+    }
+    
+    // Check if it's a JavaScript Date
+    if (date instanceof Date) {
+      return format === 'localDate' ? date.toLocaleDateString() : date.toISOString().split('T')[0];
+    }
+    
+    // Check if it's a string that can be parsed as a date
+    if (typeof date === 'string') {
+      const parsedDate = new Date(date);
+      if (!isNaN(parsedDate.getTime())) {
+        return format === 'localDate' ? parsedDate.toLocaleDateString() : parsedDate.toISOString().split('T')[0];
+      }
+      return date; // Just return the string if it can't be parsed
+    }
+    
+    // Fallback for unknown formats
+    return String(date);
+  } catch (error) {
+    console.error('Error formatting date:', error, date);
+    return '';
+  }
+};
+
 interface CouponFormData {
   code: string;
   description: string;
@@ -296,7 +329,7 @@ export default function CouponsGiftCardsManager() {
       exactAmount: coupon.exactAmount || 0,
       minOrderAmount: coupon.minOrderAmount || 0,
       usageLimit: coupon.usageLimit || 0,
-      expirationDate: coupon.expirationDate ? (coupon.expirationDate as any).toDate().toISOString().split('T')[0] : '',
+      expirationDate: safeFormatDate(coupon.expirationDate, 'isoDate'),
       applicableServices: coupon.applicableServices?.join(', ') || '',
       isActive: coupon.isActive,
       removeDepositOption: coupon.removeDepositOption || false,
@@ -329,7 +362,7 @@ export default function CouponsGiftCardsManager() {
       purchaserEmail: giftCard.purchaserEmail,
       purchaserName: giftCard.purchaserName,
       message: giftCard.message || '',
-      expirationDate: giftCard.expirationDate ? (giftCard.expirationDate as any).toDate().toISOString().split('T')[0] : '',
+      expirationDate: safeFormatDate(giftCard.expirationDate, 'isoDate'),
       isActive: giftCard.isActive
     });
     setShowGiftCardModal(true);
@@ -466,7 +499,9 @@ export default function CouponsGiftCardsManager() {
                                formatCurrency(coupon.exactAmount || 0)}
                             </td>
                             <td>{coupon.usageCount}/{coupon.usageLimit || '∞'}</td>
-                            <td>{coupon.expirationDate ? (coupon.expirationDate as any).toDate().toLocaleDateString() : ''}</td>
+                            <td>
+                              {safeFormatDate(coupon.expirationDate)}
+                            </td>
                             <td>
                               <span className={`badge ${coupon.isActive ? 'bg-success' : 'bg-warning'}`}>
                                 {coupon.isActive ? 'Active' : 'Inactive'}
@@ -555,7 +590,9 @@ export default function CouponsGiftCardsManager() {
                             </td>
                             <td>{formatCurrency(giftCard.initialAmount)}</td>
                             <td>{formatCurrency(giftCard.remainingAmount)}</td>
-                            <td>{giftCard.expirationDate ? (giftCard.expirationDate as any).toDate().toLocaleDateString() : ''}</td>
+                            <td>
+                              {safeFormatDate(giftCard.expirationDate)}
+                            </td>
                             <td>
                               <span className={`badge ${giftCard.isRedeemed ? 'bg-warning' : giftCard.isActive ? 'bg-success' : 'bg-danger'}`}>
                                 {giftCard.isRedeemed ? 'Redeemed' : giftCard.isActive ? 'Active' : 'Inactive'}

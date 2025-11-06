@@ -183,19 +183,61 @@ export class CouponService {
     });
   }
 
+  // Helper function to safely convert Firestore Timestamp to Date
+  private static safeTimestampToDate(timestampField: any): Date | null {
+    if (!timestampField) return null;
+    
+    try {
+      // Check if it's a Firestore Timestamp with toDate method
+      if (typeof timestampField === 'object' && timestampField !== null && 
+          'toDate' in timestampField && typeof timestampField.toDate === 'function') {
+        return timestampField.toDate();
+      }
+      
+      // If it's already a Date, return it
+      if (timestampField instanceof Date) {
+        return timestampField;
+      }
+      
+      // Try to parse string dates
+      if (typeof timestampField === 'string') {
+        const parsedDate = new Date(timestampField);
+        if (!isNaN(parsedDate.getTime())) {
+          return parsedDate;
+        }
+      }
+      
+      // If nothing works, log a warning and return null
+      console.warn('Unable to convert timestamp to date:', timestampField);
+      return null;
+    } catch (error) {
+      console.error('Error converting timestamp to date:', error);
+      return null;
+    }
+  }
+
   // Get all coupons
   static async getAllCoupons(): Promise<CouponCode[]> {
     const q = query(
       collection(getDb(), this.collectionName),
       orderBy('createdAt', 'desc')
     );
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      expirationDate: doc.data().expirationDate?.toDate(),
-      createdAt: doc.data().createdAt?.toDate(),
-      updatedAt: doc.data().updatedAt?.toDate()
-    } as CouponCode));
+    
+    try {
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          expirationDate: this.safeTimestampToDate(data.expirationDate) || new Date(),
+          createdAt: this.safeTimestampToDate(data.createdAt) || new Date(),
+          updatedAt: this.safeTimestampToDate(data.updatedAt) || new Date()
+        } as CouponCode;
+      });
+    } catch (error) {
+      console.error('Error fetching coupons:', error);
+      return [];
+    }
   }
 }
