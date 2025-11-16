@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
-import { auth, isFirebaseConfigured } from '@/lib/firebase';
+import { auth, isFirebaseConfigured, getDb } from '@/lib/firebase';
+import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { UserService } from '@/services/userService';
 import { User, UserProfile } from '@/types/database';
 
@@ -67,7 +68,55 @@ export function useAuth() {
                 });
               } else {
                 console.log('⚠️ No user profile found for:', firebaseUser.uid);
-                // Default to client role if no profile found
+                
+                // Check if this is Victoria's email (for admin access)
+                if (firebaseUser.email === 'victoria@aprettygirlmatter.com') {
+                  console.log('🔧 Creating admin profile for Victoria...');
+                  
+                  try {
+                    // Create Victoria's admin profile
+                    const victoriaProfile = {
+                      uid: firebaseUser.uid,
+                      email: firebaseUser.email,
+                      displayName: 'Victoria Escobar',
+                      firstName: 'Victoria',
+                      lastName: 'Escobar',
+                      role: 'admin',
+                      createdAt: Timestamp.now(),
+                      updatedAt: Timestamp.now(),
+                      isActive: true,
+                      profile: {
+                        firstName: 'Victoria',
+                        lastName: 'Escobar',
+                        email: firebaseUser.email,
+                        phone: '',
+                        createdAt: Timestamp.now(),
+                        updatedAt: Timestamp.now()
+                      }
+                    };
+                    
+                    // Save to Firestore
+                    const userDocRef = doc(getDb(), 'users', firebaseUser.uid);
+                    await setDoc(userDocRef, victoriaProfile);
+                    
+                    console.log('✅ Admin profile created for Victoria');
+                    
+                    // Set state with admin role
+                    setAuthState({
+                      user: firebaseUser,
+                      userProfile: victoriaProfile as User,
+                      userRole: 'admin',
+                      loading: false,
+                      error: null
+                    });
+                    return;
+                    
+                  } catch (profileError) {
+                    console.error('❌ Error creating admin profile:', profileError);
+                  }
+                }
+                
+                // Default to client role if no profile found and not Victoria
                 setAuthState({
                   user: firebaseUser,
                   userProfile: null,

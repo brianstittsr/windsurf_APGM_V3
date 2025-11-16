@@ -15,46 +15,36 @@ export async function POST(request: NextRequest) {
 
     // Test the GoHighLevel API connection using Private Integration endpoint
     // Private Integrations use the services.leadconnectorhq.com domain
-    // Try a simpler endpoint that requires fewer scopes - locations
-    console.log('📡 Calling GHL API: https://services.leadconnectorhq.com/locations/');
+    // The correct endpoint is /locations
+    const apiUrl = 'https://services.leadconnectorhq.com/locations/';
+    console.log('📡 Calling GHL API:', apiUrl);
     
-    const response = await fetch('https://services.leadconnectorhq.com/locations/', {
+    const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Version': '2021-07-28',
+        'Accept': 'application/json',
         'Content-Type': 'application/json'
       }
     });
     
     console.log('📊 GHL API Response Status:', response.status);
     
+    // Clone the response before reading it to avoid the "Body is unusable" error
+    // We'll read the original response for logging and use the clone for processing
+    const responseClone = response.clone();
+    
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ GHL API Error Response:', errorText);
-    }
-
-    if (response.ok) {
-      const data = await response.json();
-      const locations = data.locations || [];
-      return NextResponse.json({
-        success: true,
-        message: 'Connection successful',
-        locationCount: locations.length,
-        locations: locations.slice(0, 3).map((loc: any) => ({
-          id: loc.id,
-          name: loc.name
-        }))
-      });
-    } else {
-      const errorText = await response.text();
-      console.error('GHL API Error:', response.status, errorText);
       
-      // Try to parse error response
+      // Use the cloned response for error handling
       let errorMessage = 'Invalid API Key or connection failed';
       let scopeError = false;
       
       try {
+        // Parse the error text
         const errorData = JSON.parse(errorText);
         errorMessage = errorData.message || errorData.error || errorMessage;
         
@@ -67,7 +57,7 @@ REQUIRED SCOPES FOR BMAD ORCHESTRATOR:
 ✅ businesses.readonly
 ✅ calendars.readonly, calendars.write
 ✅ campaigns.readonly
-✅ contacts.readonly, contacts.write
+✅ contacts.readonly, contacts.write  
 ✅ conversations.readonly, conversations.write  
 ✅ forms.readonly
 ✅ invoices.readonly, invoices.write
@@ -80,6 +70,7 @@ After enabling scopes, regenerate your API key and try again.`;
         }
       } catch (e) {
         // Use default error message
+        console.error('Error parsing error response:', e);
       }
       
       return NextResponse.json(
@@ -87,10 +78,35 @@ After enabling scopes, regenerate your API key and try again.`;
           success: false,
           error: errorMessage,
           scopeError,
-          details: errorText
+          details: errorText,
+          status: response.status
         },
         { status: 401 }
       );
+    }
+
+    // For successful responses
+    try {
+      const data = await responseClone.json();
+      const locations = data.locations || [];
+      return NextResponse.json({
+        success: true,
+        message: 'Connection successful',
+        locationCount: locations.length,
+        locations: locations.slice(0, 3).map((loc: any) => ({
+          id: loc.id,
+          name: loc.name
+        }))
+      });
+    } catch (jsonError) {
+      console.error('Error parsing success response:', jsonError);
+      // In case of JSON parsing error, return the raw text
+      const rawText = await response.clone().text();
+      return NextResponse.json({
+        success: true,
+        message: 'Connection successful, but could not parse response',
+        raw: rawText
+      });
     }
   } catch (error) {
     console.error('Error testing GHL connection:', error);

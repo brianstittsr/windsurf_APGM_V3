@@ -3,6 +3,16 @@
 import { useState, useEffect } from 'react';
 
 interface ClientProfileData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  birthDate: string;
+  age: number;
   emergencyContactName: string;
   emergencyContactPhone: string;
 }
@@ -41,6 +51,112 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
   }, [data]);
 
   const steps: WizardStep[] = [
+    {
+      id: 'firstName',
+      title: 'Personal Information',
+      question: 'What is your first name?',
+      type: 'text',
+      placeholder: 'First Name',
+      required: true
+    },
+    {
+      id: 'lastName',
+      title: 'Personal Information',
+      question: 'What is your last name?',
+      type: 'text',
+      placeholder: 'Last Name',
+      required: true
+    },
+    {
+      id: 'email',
+      title: 'Contact Information',
+      question: 'What is your email address?',
+      type: 'email',
+      placeholder: 'your.email@example.com',
+      required: true,
+      validation: (value: string) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (value && !emailRegex.test(value)) {
+          return 'Please enter a valid email address';
+        }
+        return null;
+      }
+    },
+    {
+      id: 'phone',
+      title: 'Contact Information',
+      question: 'What is your phone number?',
+      type: 'tel',
+      placeholder: '(555) 123-4567',
+      required: true,
+      validation: (value: string) => {
+        const digits = value.replace(/\D/g, '');
+        if (value && digits.length !== 10) {
+          return 'Please enter a valid 10-digit phone number';
+        }
+        return null;
+      }
+    },
+    {
+      id: 'address',
+      title: 'Address Information',
+      question: 'What is your street address?',
+      type: 'text',
+      placeholder: '123 Main Street',
+      required: true
+    },
+    {
+      id: 'city',
+      title: 'Address Information',
+      question: 'What city do you live in?',
+      type: 'text',
+      placeholder: 'City',
+      required: true
+    },
+    {
+      id: 'state',
+      title: 'Address Information',
+      question: 'What state do you live in?',
+      type: 'text',
+      placeholder: 'State',
+      required: true
+    },
+    {
+      id: 'zip',
+      title: 'Address Information',
+      question: 'What is your zip code?',
+      type: 'text',
+      placeholder: '12345',
+      required: true,
+      validation: (value: string) => {
+        const zipRegex = /^\d{5}(-\d{4})?$/;
+        if (value && !zipRegex.test(value)) {
+          return 'Please enter a valid zip code';
+        }
+        return null;
+      }
+    },
+    {
+      id: 'birthDate',
+      title: 'Personal Information',
+      question: 'What is your date of birth?',
+      type: 'date',
+      placeholder: 'MM/DD/YYYY',
+      required: true,
+      validation: (value: string) => {
+        if (!value) return null;
+        const birthDate = new Date(value);
+        const today = new Date();
+        const age = today.getFullYear() - birthDate.getFullYear();
+        if (age < 18) {
+          return 'You must be at least 18 years old';
+        }
+        if (age > 120) {
+          return 'Please enter a valid birth date';
+        }
+        return null;
+      }
+    },
     {
       id: 'emergencyContactName',
       title: 'Emergency Contact',
@@ -96,16 +212,25 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
     let formattedValue = value;
     
     // Apply formatting based on field type
-    if (currentStep.id === 'emergencyContactPhone') {
+    if (currentStep.id === 'emergencyContactPhone' || currentStep.id === 'phone') {
       formattedValue = formatPhoneNumber(value);
+    }
+    
+    // Calculate age if birthDate is being updated
+    if (currentStep.id === 'birthDate' && value) {
+      const birthDate = new Date(value);
+      const today = new Date();
+      const calculatedAge = today.getFullYear() - birthDate.getFullYear() - 
+        (today.getMonth() < birthDate.getMonth() || 
+         (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate()) ? 1 : 0);
       
-      // Don't auto-advance on phone number formatting
       onChange({
         ...data,
-        [currentStep.id]: formattedValue
+        [currentStep.id]: formattedValue,
+        age: calculatedAge
       });
-      setErrors([]); // Clear errors when user types
-      return; // Exit early to prevent auto-advance
+      setErrors([]);
+      return;
     }
     
     onChange({

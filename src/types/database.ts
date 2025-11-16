@@ -113,6 +113,135 @@ export interface Appointment {
 }
 
 // Health Form Types
+export interface HealthFormResponse {
+  id: string;
+  clientId: string;
+  appointmentId: string;
+  serviceId: string;
+  serviceName: string;
+  serviceCategory: 'brows' | 'lips' | 'eyeliner';
+  
+  // Personal Information
+  personalInfo: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    address: string;
+    city: string;
+    state: string;
+    zip: string;
+    birthDate: string;
+    age: number;
+  };
+  
+  // Emergency Contact
+  emergencyContact: {
+    name: string;
+    phone: string;
+  };
+  
+  // Medical Questions (Yes/No with optional details)
+  medicalHistory: {
+    hadPermanentMakeupBefore: { answer: string; lastProcedureDate?: string };
+    hasMolesInArea: string;
+    hasPiercingsInArea: string;
+    hairLoss: string;
+    anemia: string;
+    coldSores: string;
+    cosmeticSensitivity: string;
+    prolongedBleeding: string;
+    diabetes: string;
+    trichotillomania: string;
+    jointReplacements: string;
+    healingProblems: string;
+    epilepsy: string;
+    eczema: string;
+    lowBloodPressure: string;
+    highBloodPressure: string;
+    hiv: string;
+    hemophilia: string;
+    thyroidDisturbances: string;
+    cancer: string;
+    hepatitis: string;
+    faintingSpells: string;
+    circulatoryProblems: string;
+    keloidScars: string;
+    liverDisease: string;
+    alopecia: string;
+    tumorsGrowthsCysts: string;
+    takingMedications: { answer: string; details?: string };
+    hadBotoxFillers: { answer: string; details?: string };
+    hadSurgeryRecently: { answer: string; details?: string };
+    hadColdSoreFeverBlister: string;
+  };
+  
+  // Allergies
+  allergies: {
+    latex: string;
+    vaseline: string;
+    food: string;
+    paints: string;
+    metals: string;
+    lidocaine: string;
+    lanolin: string;
+    crayons: string;
+    medication: string;
+    glycerin: string;
+    hairDyes: string;
+    fragrance: string;
+    aspirin: string;
+  };
+  
+  // Additional Health Questions
+  additionalHealth: {
+    scarEasily: string;
+    bruiseBleedEasily: string;
+    takingBirthControl: string;
+    pregnantOrTrying: string;
+    hormoneReplacement: string;
+  };
+  
+  // Service-Specific Questions
+  serviceSpecificQuestions?: {
+    [key: string]: string;
+  };
+  
+  // Informed Consent
+  informedConsent: {
+    clientFullName: string;
+    consentGiven: boolean;
+    consentSignature: string;
+    consentDate: Timestamp;
+    patchTestConsent: 'yes' | 'no';
+    patchTestWaiver: 'yes' | 'no';
+    procedureAuthorized: string;
+  };
+  
+  // Photo/Video Release
+  photoVideoRelease: {
+    releaseGranted: boolean;
+    releaseSignature: string;
+    releaseDate: Timestamp;
+  };
+  
+  // Metadata
+  submittedAt: Timestamp;
+  ipAddress: string;
+  isValid: boolean;
+  reviewedBy?: string;
+  reviewedAt?: Timestamp;
+  notes?: string;
+  clearanceRequired: boolean;
+  doctorClearance?: {
+    required: boolean;
+    received: boolean;
+    document?: string;
+    expiresAt?: Timestamp;
+  };
+}
+
+// Legacy Health Form Type (for backward compatibility)
 export interface HealthForm {
   id: string;
   clientId: string;

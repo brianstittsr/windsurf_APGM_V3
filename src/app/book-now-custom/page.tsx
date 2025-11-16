@@ -136,6 +136,16 @@ function BookNowCustomContent() {
   const { triggerNewClientWorkflow, triggerAppointmentBookedWorkflow } = useWorkflowTrigger();
   
   const [clientProfile, setClientProfile] = useState<ClientProfileData>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    zip: '',
+    birthDate: '',
+    age: 0,
     emergencyContactName: '',
     emergencyContactPhone: ''
   });
@@ -1295,24 +1305,13 @@ function BookNowCustomContent() {
                                     selectedTime
                                   }));
                                   
-                                  // For authenticated users with complete profile, skip to health form
-                                  const profile = userProfile?.profile;
-                                  if (isAuthenticated && userProfile && profile &&
-                                      profile.firstName && profile.lastName && 
-                                      profile.email && profile.phone) {
-                                    console.log('Going to health form for authenticated user');
-                                    setCurrentStep('health');
-                                  } else {
-                                    console.log('Going to profile form');
-                                    setCurrentStep('profile');
-                                  }
+                                  // Always go to profile form to collect all required information
+                                  // (firstName, lastName, email, phone, address, city, state, zip, birthDate, emergencyContact)
+                                  console.log('Going to profile form');
+                                  setCurrentStep('profile');
                                 }}
                               >
-                                {isAuthenticated && userProfile && userProfile.profile &&
-                                 userProfile.profile.firstName && userProfile.profile.lastName && 
-                                 userProfile.profile.email && userProfile.profile.phone 
-                                  ? 'Continue to Health Form' 
-                                  : 'Continue to Profile'}
+                                Continue to Profile
                                 <i className="fas fa-arrow-right ms-2"></i>
                               </button>
                             </div>
