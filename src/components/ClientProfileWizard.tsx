@@ -292,7 +292,7 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
       <div className="row justify-content-center">
         <div className="col-lg-6">
           <div className="card shadow-lg border-0">
-            <div className="card-header bg-primary text-white text-center py-4">
+            <div className="card-header text-white text-center py-4" style={{ backgroundColor: '#AD6269' }}>
               <h2 className="h3 mb-0">{currentStep.title}</h2>
               <p className="mb-0 opacity-75">Step {currentStepIndex + 1} of {steps.length}</p>
               {isPrePopulated && (
@@ -306,11 +306,11 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
               
               {/* Progress Bar */}
               <div className="mt-3">
-                <div className="progress" style={{ height: '8px' }}>
+                <div className="progress" style={{ height: '8px', backgroundColor: 'rgba(255,255,255,0.3)' }}>
                   <div 
-                    className="progress-bar bg-warning" 
+                    className="progress-bar" 
                     role="progressbar" 
-                    style={{ width: `${getProgressPercentage()}%` }}
+                    style={{ width: `${getProgressPercentage()}%`, backgroundColor: '#000000' }}
                   ></div>
                 </div>
                 <small className="text-white-50 mt-1 d-block">

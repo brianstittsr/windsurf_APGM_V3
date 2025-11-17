@@ -57,6 +57,20 @@ export interface PhotoVideoRelease {
   releaseSignature: string;
 }
 
+export interface ServiceSpecificConsent {
+  consentGiven: boolean;
+  signature: string;
+  signedAt: string;
+  understoodInformation: boolean;
+}
+
+export interface AftercareConsent {
+  consentGiven: boolean;
+  signature: string;
+  signedAt: string;
+  understoodInstructions: boolean;
+}
+
 export interface ComprehensiveHealthFormData {
   personalInfo: PersonalInfo;
   emergencyContact: EmergencyContact;
@@ -64,6 +78,8 @@ export interface ComprehensiveHealthFormData {
   allergies: Allergies;
   additionalHealth: AdditionalHealth;
   serviceSpecificQuestions: { [key: string]: string };
+  serviceSpecificConsent?: ServiceSpecificConsent;
+  aftercareConsent?: AftercareConsent;
   informedConsent: InformedConsent;
   photoVideoRelease: PhotoVideoRelease;
 }
@@ -87,6 +103,8 @@ type FormSection =
   | 'medical-history'
   | 'allergies'
   | 'additional-health'
+  | 'service-specific-intro'
+  | 'service-specific-aftercare'
   | 'informed-consent'
   | 'photo-video-release';
 
@@ -103,6 +121,18 @@ export default function ComprehensiveHealthFormWizard({
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [errors, setErrors] = useState<string[]>([]);
   const [showDetailsInput, setShowDetailsInput] = useState(false);
+  const [serviceConsent, setServiceConsent] = useState<ServiceSpecificConsent>({
+    consentGiven: false,
+    signature: '',
+    signedAt: '',
+    understoodInformation: false
+  });
+  const [aftercareConsent, setAftercareConsent] = useState<AftercareConsent>({
+    consentGiven: false,
+    signature: '',
+    signedAt: '',
+    understoodInstructions: false
+  });
 
   // Initialize data with personal info and emergency contact
   useEffect(() => {
@@ -340,6 +370,32 @@ export default function ComprehensiveHealthFormWizard({
         setCurrentSection('additional-health');
         break;
       case 'additional-health':
+        // Check if we should show service-specific intro
+        const serviceName = selectedService?.name?.toLowerCase() || '';
+        const isBrowService = serviceName.includes('brow') || serviceName.includes('powder') || 
+                             serviceName.includes('blade') || serviceName.includes('ombre') ||
+                             serviceName.includes('stroke') || serviceName.includes('combo');
+        const isEyelinerService = serviceName.includes('eyeliner') || serviceName.includes('eye liner');
+        const isLipService = serviceName.includes('lip');
+        
+        if (isBrowService || isEyelinerService || isLipService) {
+          setCurrentSection('service-specific-intro');
+        } else {
+          setCurrentSection('informed-consent');
+        }
+        break;
+      case 'service-specific-intro':
+        // Check if lip service needs aftercare section
+        const serviceNameIntro = selectedService?.name?.toLowerCase() || '';
+        const isLipServiceIntro = serviceNameIntro.includes('lip');
+        
+        if (isLipServiceIntro) {
+          setCurrentSection('service-specific-aftercare');
+        } else {
+          setCurrentSection('informed-consent');
+        }
+        break;
+      case 'service-specific-aftercare':
         setCurrentSection('informed-consent');
         break;
       case 'informed-consent':
@@ -367,9 +423,30 @@ export default function ComprehensiveHealthFormWizard({
         setCurrentSection('allergies');
         setCurrentQuestionIndex(allergyQuestions.length - 1);
         break;
-      case 'informed-consent':
+      case 'service-specific-intro':
         setCurrentSection('additional-health');
         setCurrentQuestionIndex(additionalHealthQuestions.length - 1);
+        break;
+      case 'service-specific-aftercare':
+        setCurrentSection('service-specific-intro');
+        break;
+      case 'informed-consent':
+        // Check if we came from service-specific aftercare or intro
+        const serviceName = selectedService?.name?.toLowerCase() || '';
+        const isBrowService = serviceName.includes('brow') || serviceName.includes('powder') || 
+                             serviceName.includes('blade') || serviceName.includes('ombre') ||
+                             serviceName.includes('stroke') || serviceName.includes('combo');
+        const isEyelinerService = serviceName.includes('eyeliner') || serviceName.includes('eye liner');
+        const isLipService = serviceName.includes('lip');
+        
+        if (isLipService) {
+          setCurrentSection('service-specific-aftercare');
+        } else if (isBrowService || isEyelinerService) {
+          setCurrentSection('service-specific-intro');
+        } else {
+          setCurrentSection('additional-health');
+          setCurrentQuestionIndex(additionalHealthQuestions.length - 1);
+        }
         break;
       case 'photo-video-release':
         setCurrentSection('informed-consent');
@@ -378,12 +455,13 @@ export default function ComprehensiveHealthFormWizard({
   };
 
   const getProgress = () => {
-    const totalSections = 6;
+    const totalSections = 7;
     const sectionOrder: FormSection[] = [
       'medical-intro',
       'medical-history',
       'allergies',
       'additional-health',
+      'service-specific-intro',
       'informed-consent',
       'photo-video-release'
     ];
@@ -603,6 +681,526 @@ export default function ComprehensiveHealthFormWizard({
                   disabled={showDetailsInput}
                 >
                   Next
+                  <i className="fas fa-arrow-right ms-2"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Service-Specific Intro section (Brows, Eyeliner, or Lips Pre-Procedure)
+  if (currentSection === 'service-specific-intro') {
+    const serviceName = selectedService?.name?.toLowerCase() || '';
+    const isEyelinerService = serviceName.includes('eyeliner') || serviceName.includes('eye liner');
+    const isLipService = serviceName.includes('lip');
+    
+    return (
+      <div className="container-fluid py-5">
+        <div className="row justify-content-center">
+          <div className="col-lg-10">
+            <div className="card shadow-lg border-0">
+              <div className="card-header text-white text-center py-4" style={{ backgroundColor: '#AD6269' }}>
+                <h2 className="h3 mb-0">
+                  {isEyelinerService ? 'PMU EYELINER PRE-PROCEDURE' : isLipService ? 'PMU LIPS PRE-PROCEDURE' : 'PMU BROWS PRE-PROCEDURE'}
+                </h2>
+                <p className="mb-0 opacity-75">{isLipService ? 'Preparation for Your Appointment' : 'What To Expect On The Day of Procedure'}</p>
+              </div>
+              
+              <div className="card-body p-5">
+                <div className="alert alert-info mb-4">
+                  <h5 className="fw-bold mb-3">
+                    <i className="fas fa-heart me-2"></i>
+                    Thank You For Choosing Us!
+                  </h5>
+                  <p className="mb-0">
+                    {isEyelinerService 
+                      ? "Thank you for choosing me for your eyeliner enhancement! Here's what you can expect and how to prepare for your session."
+                      : isLipService
+                      ? "Thank you for choosing me for your lip blush enhancement! Here's what you can expect and how to prepare for your session."
+                      : "Thank you for choosing me for your brow enhancement! Here's what you can expect and how to best prepare for your session."}
+                  </p>
+                </div>
+
+                {(isEyelinerService || isLipService) && (
+                  <div className="alert alert-warning mb-4">
+                    <h6 className="fw-bold mb-2">
+                      <i className="fas fa-exclamation-triangle me-2"></i>
+                      Arrive Makeup-Free
+                    </h6>
+                    <p className="mb-0">
+                      <strong>{isEyelinerService ? 'Eye Makeup:' : 'Lip Makeup:'}</strong> Please come to your appointment without any {isEyelinerService ? 'eye makeup or cosmetics, including lash extensions' : 'lip makeup or cosmetics'}. This {isEyelinerService ? 'allows for a thorough assessment and ensures' : 'ensures'} the best results{isLipService ? ' and allows me to assess your natural lip color and condition' : ''}.
+                    </p>
+                  </div>
+                )}
+
+                <h4 className="fw-bold mb-4 text-primary">What to Expect During Your Appointment:</h4>
+
+                {/* Consultation */}
+                <div className="mb-4">
+                  <h5 className="fw-bold text-dark mb-2">
+                    <i className="fas fa-comments me-2 text-primary"></i>
+                    Consultation
+                  </h5>
+                  <p className="text-muted ps-4">
+                    {isEyelinerService
+                      ? "We'll begin with a consultation where we'll discuss your desired eyeliner shape and thickness. I'll examine your skin type and any allergies or medical conditions to ensure a safe and tailored experience."
+                      : isLipService
+                      ? "Before we start, we'll have a consultation where we'll discuss your ideal lip shape, color, and any questions you may have. I'll examine your skin tone, texture, and overall lip health to choose the best pigment and technique for your lips."
+                      : "We'll start with a detailed consultation to discuss your desired brow shape, color, and overall look. I'll also examine your skin type and review any allergies or medical conditions to ensure your comfort and safety throughout the procedure."}
+                  </p>
+                </div>
+
+                {/* Numbing */}
+                <div className="mb-4">
+                  <h5 className="fw-bold text-dark mb-2">
+                    <i className="fas fa-hand-holding-medical me-2 text-primary"></i>
+                    Numbing
+                  </h5>
+                  <p className="text-muted ps-4">
+                    {isEyelinerService
+                      ? "A thick layer of topical numbing cream will be applied to your eyelids to minimize discomfort. The cream will take about 20-30 minutes to fully take effect."
+                      : isLipService
+                      ? "To keep you comfortable, I'll apply a thick layer of numbing cream to your lips. It will take about 20-30 minutes for the cream to take full effect, helping to reduce any discomfort during the procedure."
+                      : "To keep you comfortable, I'll apply a topical numbing cream to the brow area before beginning. This helps minimize any discomfort during the tattooing process."}
+                  </p>
+                </div>
+
+                {/* Mapping or Pigment Selection */}
+                {!isLipService && (
+                  <div className="mb-4">
+                    <h5 className="fw-bold text-dark mb-2">
+                      <i className="fas fa-ruler-combined me-2 text-primary"></i>
+                      Mapping
+                    </h5>
+                    <p className="text-muted ps-4">
+                      {isEyelinerService
+                        ? "After the anesthetic is carefully removed, I'll pre-draw a map of your new eyeliner shape using an oil-based crayon. This outline will guide us in applying the micro-pigmentation accurately along your lash line."
+                        : "To create your ideal brow shape, I'll start by mapping the brow area using a series of carefully placed lines that align with your facial proportions. This customized mapping, done with an oil-based crayon, outlines the shape within which hairlike strokes, shading, or a combination of both will be micro-pigmented to suit your natural brow structure."}
+                    </p>
+                  </div>
+                )}
+
+                {(!isEyelinerService && !isLipService) && (
+                  <div className="mb-4">
+                    <h5 className="fw-bold text-dark mb-2">
+                      <i className="fas fa-palette me-2 text-primary"></i>
+                      Pigment Selection
+                    </h5>
+                    <p className="text-muted ps-4">
+                      Together, we&apos;ll select a pigment color that best complements your natural hair color and skin tone, ensuring a beautiful and harmonious result.
+                    </p>
+                  </div>
+                )}
+
+                {/* Pigment Selection for Lips */}
+                {isLipService && (
+                  <div className="mb-4">
+                    <h5 className="fw-bold text-dark mb-2">
+                      <i className="fas fa-palette me-2 text-primary"></i>
+                      Pigment Selection
+                    </h5>
+                    <p className="text-muted ps-4">
+                      Together, we&apos;ll select a pigment color that best complements your natural lip color and skin tone, ensuring a beautiful and harmonious result.
+                    </p>
+                  </div>
+                )}
+
+                {/* Pigment Application */}
+                <div className="mb-4">
+                  <h5 className="fw-bold text-dark mb-2">
+                    <i className="fas fa-paint-brush me-2 text-primary"></i>
+                    Pigment Application
+                  </h5>
+                  <p className="text-muted ps-4">
+                    {isEyelinerService
+                      ? "Using a handheld device with a small needle, I'll apply pigment to the skin along your lash line, creating a natural-looking eyeliner that enhances your eyes."
+                      : isLipService
+                      ? "Using a handheld tool with a sterile needle, I'll apply the pigment to your lips with the shape and color tailored just for you."
+                      : "Using a handheld tool with a small needle, I'll apply pigment with precise, hair-like strokes to create a natural-looking brow shape tailored just for you."}
+                  </p>
+                </div>
+
+                {/* Procedure Duration */}
+                <div className="mb-4">
+                  <h5 className="fw-bold text-dark mb-2">
+                    <i className="fas fa-clock me-2 text-primary"></i>
+                    Procedure Duration
+                  </h5>
+                  <p className="text-muted ps-4">
+                    The procedure typically takes <strong>2-3 hours</strong>, depending on {isEyelinerService ? 'the complexity of the eyeliner shape and the amount of pigment needed' : isLipService ? 'the size of your lips and your desired results' : 'the complexity of your desired brow shape and the amount of pigment required'}.
+                  </p>
+                </div>
+
+                {/* Eyeliner-specific Important Note */}
+                {isEyelinerService && (
+                  <div className="alert alert-danger mb-4">
+                    <h5 className="fw-bold mb-3">
+                      <i className="fas fa-exclamation-circle me-2"></i>
+                      Important Note
+                    </h5>
+                    <p className="mb-3">
+                      Although it&apos;s uncommon, the topical lidocaine used during the procedure can cause temporary pupil dilation, particularly in clients with lighter-colored eyes. This may result in <strong>blurry vision for a few hours post-procedure</strong>.
+                    </p>
+                    <p className="mb-3">
+                      <strong>For this reason, please arrange for someone to drive you home.</strong> You&apos;ll be required to sign and initial that you have a backup ride from the spa before the lidocaine is applied.
+                    </p>
+                    <div className="form-check mb-2">
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        id="transportationConfirm"
+                        checked={serviceConsent.understoodInformation}
+                        onChange={(e) => setServiceConsent({...serviceConsent, understoodInformation: e.target.checked})}
+                      />
+                      <label className="form-check-label fw-bold" htmlFor="transportationConfirm">
+                        I confirm that I have arranged for transportation home after the procedure
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {/* Aftercare & Healing */}
+                <div className="mb-4">
+                  <h5 className="fw-bold text-dark mb-2">
+                    <i className="fas fa-first-aid me-2 text-primary"></i>
+                    Aftercare & Healing
+                  </h5>
+                  <p className="text-muted ps-4">
+                    Proper aftercare is essential to achieving the best results. After the procedure, I&apos;ll provide detailed aftercare instructions to support healing and ensure long-lasting, beautiful {isEyelinerService ? 'eyeliner' : isLipService ? 'lips' : 'brows'}.
+                  </p>
+                </div>
+
+                {/* Consent Section for Eyeliner or Lips */}
+                {(isEyelinerService || isLipService) && (
+                  <div className="border-top pt-4 mt-4">
+                    <h5 className="fw-bold mb-3">Consent Confirmation</h5>
+                    <p className="text-muted mb-3">
+                      By signing below, you confirm that you fully understand the information provided above and have had the opportunity to discuss any questions or concerns. You consent to proceed with the {isEyelinerService ? 'eyeliner' : 'lip blush'} enhancement procedure.
+                    </p>
+                    
+                    <div className="mb-3">
+                      <label className="form-label fw-bold">Electronic Signature *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Type your full name"
+                        value={serviceConsent.signature}
+                        onChange={(e) => setServiceConsent({
+                          ...serviceConsent,
+                          signature: e.target.value,
+                          signedAt: new Date().toISOString()
+                        })}
+                        style={{ fontFamily: 'Brush Script MT, cursive', fontSize: '1.5rem' }}
+                      />
+                      <small className="text-muted">
+                        By typing your name, you are providing your electronic signature
+                      </small>
+                    </div>
+
+                    {serviceConsent.signature && (
+                      <div className="alert alert-info">
+                        <small>
+                          <i className="fas fa-clock me-2"></i>
+                          Signed on: {new Date(serviceConsent.signedAt || new Date()).toLocaleString()}
+                        </small>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {!isEyelinerService && !isLipService && (
+                  <div className="alert alert-success mt-4">
+                    <h6 className="fw-bold mb-2">
+                      <i className="fas fa-check-circle me-2"></i>
+                      Ready to Continue?
+                    </h6>
+                    <p className="mb-0 small">
+                      Once you&apos;ve reviewed this information, click continue to proceed with the informed consent form.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="card-footer bg-light d-flex justify-content-between py-3">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary px-4"
+                  onClick={handlePrevious}
+                >
+                  <i className="fas fa-arrow-left me-2"></i>
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-lg px-5"
+                  onClick={() => {
+                    // Validate eyeliner or lip consent if applicable
+                    if (isEyelinerService || isLipService) {
+                      if (isEyelinerService && !serviceConsent.understoodInformation) {
+                        alert('Please confirm that you have arranged for transportation home.');
+                        return;
+                      }
+                      if (!serviceConsent.signature.trim()) {
+                        alert('Please provide your electronic signature.');
+                        return;
+                      }
+                      // Save consent to data
+                      onChange({
+                        ...data,
+                        serviceSpecificConsent: {
+                          ...serviceConsent,
+                          consentGiven: true
+                        }
+                      });
+                    }
+                    moveToNextSection();
+                  }}
+                  disabled={(isEyelinerService && (!serviceConsent.understoodInformation || !serviceConsent.signature.trim())) || (isLipService && !serviceConsent.signature.trim())}
+                >
+                  {isLipService ? 'Continue to Aftercare' : 'Continue to Consent Form'}
+                  <i className="fas fa-arrow-right ms-2"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Service-Specific Aftercare section (Lips Aftercare)
+  if (currentSection === 'service-specific-aftercare') {
+    return (
+      <div className="container-fluid py-5">
+        <div className="row justify-content-center">
+          <div className="col-lg-10">
+            <div className="card shadow-lg border-0">
+              <div className="card-header text-white text-center py-4" style={{ backgroundColor: '#AD6269' }}>
+                <h2 className="h3 mb-0">PMU LIPS AFTERCARE</h2>
+                <p className="mb-0 opacity-75">Essential Instructions for Beautiful, Long-Lasting Results</p>
+              </div>
+              
+              <div className="card-body p-5">
+                <div className="alert alert-success mb-4">
+                  <h5 className="fw-bold mb-3">
+                    <i className="fas fa-check-circle me-2"></i>
+                    Congratulations on Your New Lip Blush!
+                  </h5>
+                  <p className="mb-0">
+                    By following these instructions, you&apos;ll ensure that your lips heal beautifully and retain their color for lasting results.
+                  </p>
+                </div>
+
+                {/* Day 1 */}
+                <div className="mb-4">
+                  <h4 className="fw-bold text-primary mb-3">
+                    <i className="fas fa-calendar-day me-2"></i>
+                    Day 1: Immediately After the Procedure
+                  </h4>
+                  
+                  <div className="ps-4">
+                    <h6 className="fw-bold text-dark mb-2">Cleansing:</h6>
+                    <p className="text-muted mb-3">
+                      Gently cleanse your lips with a mild, fragrance-free cleanser and water. Pat dry with a clean towel.
+                    </p>
+                    
+                    <h6 className="fw-bold text-dark mb-2">Aftercare Ointment:</h6>
+                    <p className="text-muted mb-3">
+                      Apply a thin layer of the aftercare ointment provided by your artist to keep your lips moisturized and protected.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Days 2-14 */}
+                <div className="mb-4">
+                  <h4 className="fw-bold text-primary mb-3">
+                    <i className="fas fa-calendar-alt me-2"></i>
+                    Days 2-14: Ongoing Care
+                  </h4>
+                  
+                  <div className="ps-4">
+                    <h6 className="fw-bold text-dark mb-2">Ointment Application:</h6>
+                    <p className="text-muted mb-3">
+                      With a clean cotton swab, apply a small amount of aftercare ointment to your lips twice a day.
+                    </p>
+                    
+                    <h6 className="fw-bold text-dark mb-2">Do Not Touch:</h6>
+                    <p className="text-muted mb-3">
+                      Refrain from picking, scratching, or rubbing your lips to prevent scarring or pigment loss.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Additional Care Guidelines */}
+                <div className="mb-4">
+                  <h4 className="fw-bold text-primary mb-3">
+                    <i className="fas fa-clipboard-list me-2"></i>
+                    Additional Care Guidelines
+                  </h4>
+                  
+                  <div className="ps-4">
+                    <h6 className="fw-bold text-dark mb-2">
+                      <i className="fas fa-tint me-2 text-info"></i>
+                      Moisture Control:
+                    </h6>
+                    <ul className="text-muted mb-3">
+                      <li>Avoid getting the treated area wet for the first 24 hours after your procedure</li>
+                      <li>Avoid swimming, saunas, and hot tubs for at least two weeks</li>
+                    </ul>
+                    
+                    <h6 className="fw-bold text-dark mb-2">
+                      <i className="fas fa-sun me-2 text-warning"></i>
+                      Sun Protection:
+                    </h6>
+                    <p className="text-muted mb-3">
+                      Protect your lips from direct sunlight to prevent fading. Consider wearing a hat or using sunscreen on surrounding areas.
+                    </p>
+                    
+                    <h6 className="fw-bold text-dark mb-2">
+                      <i className="fas fa-makeup me-2 text-danger"></i>
+                      Makeup & Skincare:
+                    </h6>
+                    <p className="text-muted mb-3">
+                      Don&apos;t apply any makeup or skincare products on or near the treated area for one week. When you resume, be gentle to avoid disrupting healing.
+                    </p>
+                    
+                    <h6 className="fw-bold text-dark mb-2">
+                      <i className="fas fa-mug-hot me-2 text-brown"></i>
+                      Hot Liquids:
+                    </h6>
+                    <ul className="text-muted mb-3">
+                      <li>Avoid drinking hot liquids like coffee or tea for the first 24 hours</li>
+                      <li>Drink through a straw for the first few days to reduce moisture on your lips</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Managing Side Effects */}
+                <div className="mb-4">
+                  <h4 className="fw-bold text-primary mb-3">
+                    <i className="fas fa-heartbeat me-2"></i>
+                    Managing Side Effects
+                  </h4>
+                  
+                  <div className="ps-4">
+                    <h6 className="fw-bold text-dark mb-2">Comfort Care:</h6>
+                    <p className="text-muted mb-3">
+                      It&apos;s normal to experience slight itching, redness, or swelling. If needed, apply a cool compress for relief, but avoid direct contact with ice. Do not scratch or pick at any flakiness to prevent complications.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Healing Expectations */}
+                <div className="mb-4">
+                  <h4 className="fw-bold text-primary mb-3">
+                    <i className="fas fa-hourglass-half me-2"></i>
+                    Healing Expectations
+                  </h4>
+                  
+                  <div className="ps-4">
+                    <h6 className="fw-bold text-dark mb-2">Normal Changes:</h6>
+                    <p className="text-muted mb-3">
+                      During healing, your lips may appear dry, flaky, or lightly scabbed. This is normal—avoid picking at any dry areas to preserve the pigment.
+                    </p>
+                    
+                    <h6 className="fw-bold text-dark mb-2">Patience with Results:</h6>
+                    <p className="text-muted mb-3">
+                      Final color results may not appear for several weeks, as lip blush typically softens and lightens as it heals.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="alert alert-info mb-4">
+                  <h6 className="fw-bold mb-2">
+                    <i className="fas fa-phone me-2"></i>
+                    Questions or Concerns?
+                  </h6>
+                  <p className="mb-0">
+                    If you have any questions or concerns about your aftercare, please contact your artist. Follow-up appointments may be necessary to ensure that your permanent makeup heals properly.
+                  </p>
+                </div>
+
+                {/* Consent Section */}
+                <div className="border-top pt-4 mt-4">
+                  <h5 className="fw-bold mb-3">Aftercare Acknowledgment</h5>
+                  <p className="text-muted mb-3">
+                    By signing below, I certify that I have read and fully understand the above paragraphs, that I have had sufficient opportunity for discussion and to ask questions, and that I hereby consent to the information described above.
+                  </p>
+                  
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">Electronic Signature *</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Type your full name"
+                      value={aftercareConsent.signature}
+                      onChange={(e) => setAftercareConsent({
+                        ...aftercareConsent,
+                        signature: e.target.value,
+                        signedAt: new Date().toISOString(),
+                        understoodInstructions: true
+                      })}
+                      style={{ fontFamily: 'Brush Script MT, cursive', fontSize: '1.5rem' }}
+                    />
+                    <small className="text-muted">
+                      By typing your name, you are providing your electronic signature
+                    </small>
+                  </div>
+
+                  {aftercareConsent.signature && (
+                    <div className="alert alert-info">
+                      <small>
+                        <i className="fas fa-clock me-2"></i>
+                        Signed on: {new Date(aftercareConsent.signedAt || new Date()).toLocaleString()}
+                      </small>
+                    </div>
+                  )}
+                </div>
+
+                <div className="alert alert-warning mt-4">
+                  <h6 className="fw-bold mb-2">
+                    <i className="fas fa-star me-2"></i>
+                    Final Reminder
+                  </h6>
+                  <p className="mb-0 small">
+                    By following these instructions carefully, you&apos;ll achieve the best possible results for your new lip blush.
+                  </p>
+                </div>
+              </div>
+
+              <div className="card-footer bg-light d-flex justify-content-between py-3">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary px-4"
+                  onClick={handlePrevious}
+                >
+                  <i className="fas fa-arrow-left me-2"></i>
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-lg px-5"
+                  onClick={() => {
+                    if (!aftercareConsent.signature.trim()) {
+                      alert('Please provide your electronic signature to acknowledge the aftercare instructions.');
+                      return;
+                    }
+                    // Save aftercare consent to data
+                    onChange({
+                      ...data,
+                      aftercareConsent: {
+                        ...aftercareConsent,
+                        consentGiven: true
+                      }
+                    });
+                    moveToNextSection();
+                  }}
+                  disabled={!aftercareConsent.signature.trim()}
+                >
+                  Continue to Consent Form
                   <i className="fas fa-arrow-right ms-2"></i>
                 </button>
               </div>

@@ -207,6 +207,22 @@ export interface HealthFormResponse {
     [key: string]: string;
   };
   
+  // Service-Specific Consent (for procedures requiring additional consent like eyeliner)
+  serviceSpecificConsent?: {
+    consentGiven: boolean;
+    signature: string;
+    signedAt: string;
+    understoodInformation: boolean;
+  };
+  
+  // Aftercare Consent (for procedures with detailed aftercare like lips)
+  aftercareConsent?: {
+    consentGiven: boolean;
+    signature: string;
+    signedAt: string;
+    understoodInstructions: boolean;
+  };
+  
   // Informed Consent
   informedConsent: {
     clientFullName: string;
