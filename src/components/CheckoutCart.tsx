@@ -604,9 +604,20 @@ export default function CheckoutCart({
                       </div>
                     </div>
                     <div className="col-12 border-top pt-3">
-                      <div className="d-flex justify-content-between align-items-center">
-                        <span className="fw-bold h5 mb-0 text-success">Total Amount (Due After Procedure)</span>
-                        <span className="fw-bold h4 mb-0 text-success">{formatCurrency(totalAmount)}</span>
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <span className="text-muted">Original Service Price</span>
+                        <span className="text-muted">{formatCurrency(200)}</span>
+                      </div>
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <span className="text-success">
+                          <i className="fas fa-check-circle me-1"></i>
+                          Deposit Credited
+                        </span>
+                        <span className="text-success">-{formatCurrency(50)}</span>
+                      </div>
+                      <div className="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <span className="fw-bold h5 mb-0 text-success">Amount Due After Procedure</span>
+                        <span className="fw-bold h4 mb-0 text-success">{formatCurrency(150)}</span>
                       </div>
                     </div>
                   </div>
@@ -619,8 +630,9 @@ export default function CheckoutCart({
                       <p className="mb-2 fw-medium">What happens next?</p>
                       <ul className="mb-0 small">
                         <li>Your appointment is confirmed - no payment needed now</li>
+                        <li>A <strong>$50 deposit has been credited</strong> to your account</li>
                         <li>Attend your scheduled appointment</li>
-                        <li>Payment will be processed after the procedure</li>
+                        <li>The remaining <strong>$150 will be collected after the procedure</strong></li>
                         <li>You'll receive a receipt via email</li>
                       </ul>
                     </div>
