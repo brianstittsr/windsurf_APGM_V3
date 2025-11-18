@@ -355,8 +355,9 @@ export default function CheckoutCart({
     remainingAmount = 0;
   }
   
-  // Check if MODECALL200 coupon is applied (payment after procedure)
-  const isPayAfterProcedure = appliedCoupon?.code?.toUpperCase() === 'MODECALL200';
+  // Check if MODELCALL200 or MODECALL200 coupon is applied (payment after procedure)
+  const couponCode = appliedCoupon?.code?.toUpperCase();
+  const isPayAfterProcedure = couponCode === 'MODELCALL200' || couponCode === 'MODECALL200';
   
   // Determine if current payment method is pay-later
   const isPayLaterMethod = ['affirm', 'klarna', 'cherry'].includes(selectedPaymentMethod.toLowerCase());
@@ -559,40 +560,77 @@ export default function CheckoutCart({
           </div>
           )}
           
-          {/* Pay After Procedure Message (MODECALL200) */}
+          {/* Pay After Procedure Message (MODELCALL200) */}
           {isPayAfterProcedure && (
-            <div className="card border-0 shadow-sm mb-4" style={{borderRadius: '16px'}}>
-              <div className="card-body p-4">
-                <div className="d-flex align-items-center mb-3">
-                  <div className="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center me-3" style={{width: '56px', height: '56px'}}>
-                    <i className="fas fa-calendar-check" style={{fontSize: '1.5rem'}}></i>
+            <div className="card border-0 shadow-lg mb-4" style={{borderRadius: '16px', border: '3px solid #28a745'}}>
+              <div className="card-body p-5">
+                <div className="text-center mb-4">
+                  <div className="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 rounded-circle mb-3" style={{width: '80px', height: '80px'}}>
+                    <i className="fas fa-hand-holding-usd text-success" style={{fontSize: '2.5rem'}}></i>
                   </div>
-                  <div>
-                    <h5 className="card-title mb-1 fw-bold text-success">Payment After Procedure</h5>
-                    <p className="text-muted mb-0">Special arrangement for model call</p>
+                  <h3 className="fw-bold text-success mb-2">Payment After Procedure</h3>
+                  <p className="text-muted lead mb-0">Model Call Program - Special Arrangement</p>
+                </div>
+                
+                <div className="alert alert-success border-0 mb-4" style={{backgroundColor: '#d1f2eb', borderRadius: '12px'}}>
+                  <div className="text-center">
+                    <h5 className="fw-bold text-success mb-3">
+                      <i className="fas fa-check-circle me-2"></i>
+                      No Payment Required Today
+                    </h5>
+                    <p className="mb-2">You have been approved for our <strong>Model Call Program</strong>.</p>
+                    <p className="mb-0">Payment will be collected <strong>after your procedure is completed</strong>.</p>
                   </div>
                 </div>
                 
-                <div className="alert alert-success border-0" style={{backgroundColor: '#d1f2eb', borderRadius: '12px'}}>
-                  <div className="d-flex align-items-start">
-                    <i className="fas fa-info-circle text-success me-2 mt-1"></i>
-                    <div>
-                      <p className="mb-2 fw-medium">Payment will be collected after the procedure is completed.</p>
-                      <p className="mb-0 small">You have been approved for our model call program. No payment is required at this time. The full amount will be collected after your appointment.</p>
+                <div className="bg-light p-4 rounded-3 mb-4">
+                  <div className="row g-3">
+                    <div className="col-12">
+                      <div className="d-flex justify-content-between align-items-center">
+                        <span className="fw-bold">Service</span>
+                        <span>{service.name}</span>
+                      </div>
+                    </div>
+                    <div className="col-12">
+                      <div className="d-flex justify-content-between align-items-center">
+                        <span className="fw-bold">Appointment Date</span>
+                        <span>{new Date(appointmentDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                      </div>
+                    </div>
+                    <div className="col-12">
+                      <div className="d-flex justify-content-between align-items-center">
+                        <span className="fw-bold">Appointment Time</span>
+                        <span>{appointmentTime}</span>
+                      </div>
+                    </div>
+                    <div className="col-12 border-top pt-3">
+                      <div className="d-flex justify-content-between align-items-center">
+                        <span className="fw-bold h5 mb-0 text-success">Total Amount (Due After Procedure)</span>
+                        <span className="fw-bold h4 mb-0 text-success">{formatCurrency(totalAmount)}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="bg-light p-3 rounded-3 mt-3">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <span className="fw-bold">Total Amount (Due After Procedure)</span>
-                    <span className="fw-bold h5 mb-0 text-success">{formatCurrency(totalAmount)}</span>
+                <div className="alert alert-info border-0 mb-4" style={{borderRadius: '12px'}}>
+                  <div className="d-flex align-items-start">
+                    <i className="fas fa-info-circle text-info me-2 mt-1"></i>
+                    <div>
+                      <p className="mb-2 fw-medium">What happens next?</p>
+                      <ul className="mb-0 small">
+                        <li>Your appointment is confirmed - no payment needed now</li>
+                        <li>Attend your scheduled appointment</li>
+                        <li>Payment will be processed after the procedure</li>
+                        <li>You'll receive a receipt via email</li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
                 
                 <button
                   type="button"
-                  className="btn btn-success w-100 py-3 mt-3 rounded-pill"
+                  className="btn btn-success w-100 py-3 rounded-pill shadow-sm"
+                  style={{fontSize: '1.1rem'}}
                   onClick={() => {
                     // Skip payment and go directly to confirmation
                     setPaymentSuccess(true);
@@ -604,6 +642,11 @@ export default function CheckoutCart({
                   <i className="fas fa-check-circle me-2"></i>
                   Confirm Booking (No Payment Required)
                 </button>
+                
+                <p className="text-center text-muted small mt-3 mb-0">
+                  <i className="fas fa-shield-alt me-1"></i>
+                  Your appointment is secured. Payment will be collected after your procedure.
+                </p>
               </div>
             </div>
           )}
