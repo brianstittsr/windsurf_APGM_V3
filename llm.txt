@@ -1,0 +1,333 @@
+# A Pretty Girl Matter - Permanent Makeup Website
+
+## Project Overview
+A comprehensive Next.js 15 web application for a permanent makeup studio featuring online booking, payment processing, health form management, and CRM integration with GoHighLevel.
+
+## Tech Stack
+- Framework: Next.js 15.4.4 (App Router, Turbopack)
+- Language: TypeScript
+- Styling: Bootstrap 5, Custom CSS
+- Database: Firebase Firestore
+- Authentication: Firebase Auth
+- Payment: Stripe (Credit Cards, Affirm, Klarna, Cherry)
+- CRM: GoHighLevel Private Integration API
+- Email: SendGrid / Custom Email Service
+- PDF Generation: jsPDF, html2canvas
+- Deployment: Vercel / Netlify
+
+## Key Features
+1. Multi-step booking wizard with service selection
+2. Client profile management with Firebase
+3. Comprehensive health questionnaire (service-specific)
+4. Stripe payment integration with multiple payment methods
+5. Coupon and gift card system
+6. Admin dashboard for managing bookings, services, artists
+7. GoHighLevel CRM synchronization
+8. Automated workflow engine (BMAD Workflows)
+9. Email notifications with PDF attachments
+10. Calendar view for appointment management
+
+## Directory Structure
+- src/app/ - Next.js App Router pages and API routes
+- src/components/ - Reusable React components
+- src/services/ - Business logic and external integrations
+- src/types/ - TypeScript type definitions
+- src/utils/ - Utility functions
+- public/ - Static assets (images, videos, fonts)
+
+## Important Files
+
+### Configuration
+- .env.local - Environment variables (gitignored)
+- next.config.js - Next.js configuration
+- tsconfig.json - TypeScript configuration
+- package.json - Dependencies and scripts
+
+### Core Components
+- src/components/BookingWizard.tsx - Main booking flow orchestrator
+- src/components/ClientProfileWizard.tsx - Client information collection
+- src/components/ComprehensiveHealthFormWizard.tsx - Health questionnaire
+- src/components/CheckoutCart.tsx - Payment and checkout
+- src/components/Hero.tsx - Homepage hero section
+
+### Admin Components
+- src/components/admin/BookingCalendar.tsx - Calendar view
+- src/components/admin/GoHighLevelManager.tsx - CRM settings
+- src/components/admin/ServiceManager.tsx - Service management
+- src/components/admin/ArtistManager.tsx - Artist management
+
+### Services
+- src/services/ghl-orchestrator.ts - GoHighLevel API integration
+- src/services/bmad-workflows.ts - Automated workflow engine
+- src/services/firebase.ts - Firebase configuration
+
+### Types
+- src/types/database.ts - Firestore data structures
+- src/types/booking.ts - Booking-related types
+- src/types/stripe.ts - Payment types
+
+## Database Schema (Firestore)
+
+### Collections
+- users - User profiles and authentication
+- services - Available PMU services
+- artists - Artist profiles and availability
+- bookings - Appointment bookings
+- availability - Artist availability schedules
+- coupons - Discount coupons
+- giftCards - Gift card codes
+- healthForms - Client health questionnaires
+- crmSettings - GoHighLevel API configuration
+
+### Key Documents
+
+users/{userId}
+- email: string
+- name: string
+- phone: string
+- role: 'admin' | 'artist' | 'client'
+- createdAt: timestamp
+
+bookings/{bookingId}
+- clientName: string
+- clientEmail: string
+- clientPhone: string
+- serviceName: string
+- artistId: string
+- date: string (YYYY-MM-DD)
+- time: string (HH:MM)
+- status: 'pending' | 'confirmed' | 'completed' | 'cancelled'
+- price: number
+- depositPaid: boolean
+- ghlContactId?: string
+- ghlAppointmentId?: string
+
+services/{serviceId}
+- name: string
+- category: 'Brows' | 'Eyeliner' | 'Lips'
+- price: number
+- depositAmount: number
+- duration: number
+- description: string
+- imageUrl: string
+
+## API Routes
+
+### Booking & Calendar
+- POST /api/calendar/sync-ghl - Sync booking with GoHighLevel
+- POST /api/calendar/sync-all-ghl - Bulk sync all bookings
+- GET /api/bookings - Fetch bookings
+- POST /api/bookings - Create booking
+
+### CRM Integration
+- POST /api/crm/test-connection - Test GHL API connection
+- POST /api/crm/orchestrate - Execute GHL operations
+- POST /api/crm/mcp/initialize - Initialize MCP server
+- POST /api/crm/mcp/resource - Load MCP resource
+- POST /api/crm/mcp/tool - Execute MCP tool
+
+### Payments
+- POST /api/stripe/create-payment-intent - Create Stripe payment
+- POST /api/stripe/webhook - Handle Stripe webhooks
+
+### Email
+- POST /api/send-health-form-email - Send health form confirmation
+
+### Workflows
+- POST /api/workflows/trigger - Trigger automated workflows
+
+## Environment Variables
+
+Required in .env.local:
+- NEXT_PUBLIC_FIREBASE_API_KEY
+- NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+- NEXT_PUBLIC_FIREBASE_PROJECT_ID
+- NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+- NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+- NEXT_PUBLIC_FIREBASE_APP_ID
+- NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+- STRIPE_SECRET_KEY
+- GHL_API_KEY (optional, can be stored in Firestore)
+- GHL_LOCATION_ID (optional, can be stored in Firestore)
+
+## Coding Conventions
+
+### TypeScript
+- Use strict type checking
+- Define interfaces in src/types/
+- Use explicit return types for functions
+- Prefer interfaces over types for object shapes
+
+### React Components
+- Use functional components with hooks
+- Use TypeScript for props
+- Keep components focused and single-responsibility
+- Extract reusable logic into custom hooks
+
+### Styling
+- Use Bootstrap 5 utility classes
+- Brand color: #AD6269 (mauve/rose)
+- Inline styles for component-specific overrides
+- Responsive design with Bootstrap grid
+
+### File Naming
+- Components: PascalCase (e.g., BookingWizard.tsx)
+- Utilities: camelCase (e.g., formatCurrency.ts)
+- API routes: kebab-case folders (e.g., /api/send-email/)
+- Types: PascalCase interfaces (e.g., BookingData)
+
+### State Management
+- Use React hooks (useState, useEffect, useContext)
+- Firebase for persistent data
+- Local state for UI interactions
+- Context for auth and global settings
+
+## Special Features
+
+### MODELCALL200 Coupon
+- Special model call program coupon
+- Shows $200 original price
+- Credits $50 deposit
+- Displays $150 remaining balance due after procedure
+- Bypasses payment screen
+- Shows custom confirmation message
+
+### Service-Specific Health Forms
+- Different questions based on service category
+- Brows: Pre-procedure information
+- Eyeliner: Pre-procedure with consent signature
+- Lips: Pre-procedure AND aftercare with dual signatures
+- Electronic signatures with timestamps
+- Stored in Firebase with booking association
+
+### Payment Processing
+- Deposit required at booking (typically 50%)
+- Remaining balance due at appointment
+- Support for Stripe, Affirm, Klarna, Cherry
+- Coupon and gift card application
+- Automatic fee calculation (tax, Stripe fees)
+
+### GoHighLevel Integration
+- Private Integration API (not Agency API)
+- Required scopes: businesses, calendars, contacts, conversations, forms, invoices, locations, opportunities, surveys, workflows
+- Automatic contact creation on booking
+- Appointment synchronization
+- Workflow automation via BMAD engine
+
+## Common Tasks
+
+### Add a New Service
+1. Go to Admin Dashboard > Services
+2. Click "Add New Service"
+3. Fill in details (name, category, price, deposit, duration)
+4. Upload image
+5. Save
+
+### Update Firestore Rules
+1. Go to Firebase Console > Firestore > Rules
+2. Update rules (see FIRESTORE_RULES_SETUP.md)
+3. Publish changes
+4. Wait 1-2 minutes for propagation
+
+### Test GoHighLevel Connection
+1. Go to Admin Dashboard > GoHighLevel
+2. Enter API key and Location ID
+3. Click "Test Connection"
+4. Should see success message with location count
+
+### Deploy to Production
+1. Push to GitHub main branch
+2. Vercel/Netlify auto-deploys
+3. Verify environment variables are set
+4. Test booking flow end-to-end
+
+## Troubleshooting
+
+### Firebase Permission Errors
+- Check Firestore rules allow authenticated read for crmSettings
+- Verify user has correct role in users collection
+- Clear browser cache and re-login
+
+### GoHighLevel 401 Errors
+- Verify API key has all required scopes
+- Regenerate API key after enabling scopes
+- Check API key is saved in admin dashboard or .env.local
+
+### Payment Failures
+- Verify Stripe keys are correct (test vs live)
+- Check webhook endpoint is configured
+- Review Stripe dashboard for error details
+
+### Missing Video/Images
+- Ensure files exist in public/ directory
+- Check file paths are correct (case-sensitive)
+- Verify gitignore is not excluding assets
+
+## Documentation Files
+- GHL-INTEGRATION-SETUP.md - GoHighLevel setup guide
+- CONSOLE_ERRORS_FIX.md - Common error solutions
+- FIRESTORE_RULES_SETUP.md - Firebase security rules
+- MODELCALL200_EMAIL_TEMPLATE.md - Email template documentation
+- EYELINER_FORM_IMPLEMENTATION.md - Eyeliner form details
+- LIP_BLUSH_FORMS_IMPLEMENTATION.md - Lip blush form details
+
+## Development Commands
+- npm run dev - Start development server (port 3000)
+- npm run build - Build for production
+- npm run start - Start production server
+- npm run lint - Run ESLint
+
+## Git Workflow
+- Main branch: production-ready code
+- Commit messages: Descriptive, present tense
+- Push to GitHub triggers auto-deployment
+- Use .gitignore for sensitive files (.env.local)
+
+## Security Considerations
+- Never commit .env.local or API keys
+- Use Firebase security rules for data access control
+- Validate all user inputs
+- Use HTTPS in production
+- Sanitize data before displaying
+- Keep dependencies updated
+
+## Performance Optimization
+- Use Next.js Image component for images
+- Lazy load components when possible
+- Minimize bundle size
+- Use Turbopack for faster builds
+- Optimize images before upload
+- Cache API responses where appropriate
+
+## Accessibility
+- Use semantic HTML
+- Include alt text for images
+- Ensure keyboard navigation works
+- Maintain color contrast ratios
+- Use ARIA labels where needed
+
+## Browser Support
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
+- Mobile browsers (iOS Safari, Chrome Mobile)
+
+## Contact & Support
+- Studio: A Pretty Girl Matter
+- Email: victoria@aprettygirlmatter.com
+- Phone: (919) 441-0932
+- Website: www.aprettygirlmatter.com
+
+## Version History
+- v3.0 - Current version with GoHighLevel integration
+- v2.0 - Added health forms and payment processing
+- v1.0 - Initial booking system
+
+## License
+Proprietary - All rights reserved by A Pretty Girl Matter
+
+---
+
+Last Updated: November 17, 2025
+Maintained by: APGM Development Team
