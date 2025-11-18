@@ -2,22 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { apiKey } = await request.json();
+    const body = await request.json();
+    const apiKey = body.apiKey;
+    const locationId = body.locationId || 'kfGFMn1aPE1AhW18tpG8'; // Default location ID
 
-    // Diagnostic information
     const diagnostics = {
       keyProvided: !!apiKey,
       keyLength: apiKey?.length || 0,
-      keyFirstChars: apiKey ? apiKey.substring(0, 10) : 'N/A',
-      keyLastChars: apiKey ? apiKey.substring(apiKey.length - 10) : 'N/A',
-      hasSpaces: apiKey ? apiKey.includes(' ') : false,
-      hasNewlines: apiKey ? (apiKey.includes('\n') || apiKey.includes('\r')) : false,
-      trimmedLength: apiKey ? apiKey.trim().length : 0,
+      keyFirstChars: apiKey?.substring(0, 10) || '',
+      keyLastChars: apiKey?.substring(apiKey?.length - 10) || '',
+      hasSpaces: apiKey?.includes(' ') || false,
+      hasNewlines: apiKey?.includes('\n') || apiKey?.includes('\r') || false,
+      trimmedLength: apiKey?.trim().length || 0,
+      locationId: locationId
     };
 
-    console.log('🔍 API Key Diagnostics:', diagnostics);
-
-    if (!apiKey || apiKey.trim().length === 0) {
+    if (!apiKey) {
       return NextResponse.json({
         success: false,
         error: 'No API key provided',
@@ -29,9 +29,8 @@ export async function POST(request: NextRequest) {
     const cleanKey = apiKey.trim();
 
     // Test with GoHighLevel API
-    // Private Integrations don't have /locations/ endpoint
-    // Instead, test with /contacts/ which is available to all Private Integrations
-    const apiUrl = 'https://services.leadconnectorhq.com/contacts/?limit=1';
+    // Private Integrations require Location ID in query parameters
+    const apiUrl = `https://services.leadconnectorhq.com/contacts/?locationId=${locationId}&limit=1`;
     
     console.log('📡 Testing GHL API with cleaned key...');
     console.log('🔑 Key length:', cleanKey.length);

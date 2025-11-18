@@ -15,9 +15,9 @@ export async function POST(request: NextRequest) {
 
     // Test the GoHighLevel API connection using Private Integration endpoint
     // Private Integrations use the services.leadconnectorhq.com domain
-    // NOTE: Private Integrations don't have /locations/ endpoint
-    // Use /contacts/ instead which is available to all Private Integrations
-    const apiUrl = 'https://services.leadconnectorhq.com/contacts/?limit=1';
+    // NOTE: Private Integrations require Location ID in query parameters
+    const locationId = 'kfGFMn1aPE1AhW18tpG8'; // Default location ID
+    const apiUrl = `https://services.leadconnectorhq.com/contacts/?locationId=${locationId}&limit=1`;
     console.log('📡 Calling GHL API:', apiUrl);
     
     const response = await fetch(apiUrl, {
