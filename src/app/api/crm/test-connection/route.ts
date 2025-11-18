@@ -15,8 +15,9 @@ export async function POST(request: NextRequest) {
 
     // Test the GoHighLevel API connection using Private Integration endpoint
     // Private Integrations use the services.leadconnectorhq.com domain
-    // The correct endpoint is /locations
-    const apiUrl = 'https://services.leadconnectorhq.com/locations/';
+    // NOTE: Private Integrations don't have /locations/ endpoint
+    // Use /contacts/ instead which is available to all Private Integrations
+    const apiUrl = 'https://services.leadconnectorhq.com/contacts/?limit=1';
     console.log('📡 Calling GHL API:', apiUrl);
     
     const response = await fetch(apiUrl, {
@@ -57,11 +58,10 @@ REQUIRED SCOPES FOR BMAD ORCHESTRATOR:
 ✅ businesses.readonly
 ✅ calendars.readonly, calendars.write
 ✅ campaigns.readonly
-✅ contacts.readonly, contacts.write  
+✅ contacts.readonly, contacts.write (REQUIRED FOR TESTING)
 ✅ conversations.readonly, conversations.write  
 ✅ forms.readonly
 ✅ invoices.readonly, invoices.write
-✅ locations.readonly
 ✅ opportunities.readonly, opportunities.write
 ✅ surveys.readonly
 ✅ workflows.readonly
@@ -88,15 +88,13 @@ After enabling scopes, regenerate your API key and try again.`;
     // For successful responses
     try {
       const data = await responseClone.json();
-      const locations = data.locations || [];
+      const contacts = data.contacts || [];
       return NextResponse.json({
         success: true,
-        message: 'Connection successful',
-        locationCount: locations.length,
-        locations: locations.slice(0, 3).map((loc: any) => ({
-          id: loc.id,
-          name: loc.name
-        }))
+        message: 'Connection successful! Your Private Integration API key is working.',
+        contactCount: contacts.length,
+        testEndpoint: '/contacts/',
+        note: 'Private Integration API keys work within a single location. Use your Location ID for location-specific operations.'
       });
     } catch (jsonError) {
       console.error('Error parsing success response:', jsonError);

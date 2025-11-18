@@ -29,7 +29,9 @@ export async function POST(request: NextRequest) {
     const cleanKey = apiKey.trim();
 
     // Test with GoHighLevel API
-    const apiUrl = 'https://services.leadconnectorhq.com/locations/';
+    // Private Integrations don't have /locations/ endpoint
+    // Instead, test with /contacts/ which is available to all Private Integrations
+    const apiUrl = 'https://services.leadconnectorhq.com/contacts/?limit=1';
     
     console.log('📡 Testing GHL API with cleaned key...');
     console.log('🔑 Key length:', cleanKey.length);
@@ -74,7 +76,7 @@ export async function POST(request: NextRequest) {
 
       if (response.status === 403) {
         errorAnalysis.possibleIssues.push('API key is missing required scopes');
-        errorAnalysis.possibleIssues.push('Ensure "locations.readonly" scope is enabled');
+        errorAnalysis.possibleIssues.push('Ensure "contacts.readonly" scope is enabled');
         errorAnalysis.possibleIssues.push('Regenerate API key after enabling scopes');
       }
 
@@ -90,7 +92,7 @@ export async function POST(request: NextRequest) {
         errorAnalysis,
         recommendations: [
           '1. Go to GoHighLevel → Settings → Integrations → Private Integrations',
-          '2. Verify ALL scopes are enabled (especially locations.readonly)',
+          '2. Verify ALL scopes are enabled (especially contacts.readonly)',
           '3. Click "Regenerate API Key"',
           '4. Copy the ENTIRE new key (no spaces, no line breaks)',
           '5. Paste it carefully in the admin dashboard',
@@ -104,11 +106,9 @@ export async function POST(request: NextRequest) {
       success: true,
       message: '✅ API Key is valid and working!',
       diagnostics,
-      locationCount: responseData.locations?.length || 0,
-      locations: responseData.locations?.slice(0, 3).map((loc: any) => ({
-        id: loc.id,
-        name: loc.name
-      })) || []
+      contactCount: responseData.contacts?.length || 0,
+      testEndpoint: '/contacts/',
+      note: 'Private Integration API keys work! Use location-specific endpoints with your Location ID.'
     });
 
   } catch (error) {
