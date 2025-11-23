@@ -15,7 +15,8 @@
     "test-ghl": "tsx src/scripts/testGHLConnection.ts",
     "init-db": "tsx src/scripts/run-init-db.ts",
     "init-facebook-qr": "tsx src/scripts/initializeFacebookReviewsQR.ts",
-    "create-sample-booking": "tsx src/scripts/createSampleBooking.ts"
+    "create-sample-booking": "tsx src/scripts/createSampleBooking.ts",
+    "import-ghl-appointments": "tsx src/scripts/importGHLAppointments.ts"
   },
   "dependencies": {
     "@azure/msal-node": "^3.8.0",
