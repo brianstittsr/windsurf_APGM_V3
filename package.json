@@ -12,13 +12,15 @@
     "test-email": "tsx src/scripts/testEmailSending.ts",
     "test-firebase": "tsx src/scripts/testFirebaseEnv.ts",
     "test-contact": "tsx src/scripts/testContactForm.ts",
-    "init-db": "tsx src/scripts/run-init-db.ts"
+    "init-db": "tsx src/scripts/run-init-db.ts",
+    "init-facebook-qr": "tsx src/scripts/initializeFacebookReviewsQR.ts"
   },
   "dependencies": {
     "@azure/msal-node": "^3.8.0",
     "@stripe/react-stripe-js": "^3.9.0",
     "@stripe/stripe-js": "^7.8.0",
     "@types/nodemailer": "^6.4.17",
+    "@types/qrcode": "^1.5.6",
     "bootstrap": "^5.3.3",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.1",
@@ -30,6 +32,7 @@
     "next": "15.4.4",
     "nodemailer": "^7.0.5",
     "pdf-lib": "^1.17.1",
+    "qrcode": "^1.5.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-icons": "^5.5.0",

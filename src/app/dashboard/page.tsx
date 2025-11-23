@@ -17,10 +17,10 @@ import GoHighLevelMCP from '../../components/admin/GoHighLevelMCP';
 import BMADOrchestrator from '../../components/admin/BMADOrchestrator';
 import ArtistAvailabilityManager from '../../components/admin/ArtistAvailabilityManager';
 import BookingCalendar from '../../components/admin/BookingCalendar';
-import AlexaIntegrationManager from '../../components/admin/AlexaIntegrationManager';
+import QRCodeManager from '../../components/admin/QRCodeManager';
 import Footer from '../../components/Footer';
 
-type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'alexa';
+type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'alexa' | 'qrcodes';
 
 export default function DashboardPage() {
   const { user, userRole, loading } = useAuth();
@@ -192,6 +192,20 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </div>
+                    <div className="col-md-3 mb-4">
+                      <div className="card text-white" style={{backgroundColor: '#e83e8c'}}>
+                        <div className="card-body">
+                          <h5 className="card-title">QR Codes</h5>
+                          <p className="card-text">Generate and track QR codes</p>
+                          <button
+                            className="btn btn-light btn-sm"
+                            onClick={() => setActiveTab('qrcodes')}
+                          >
+                            Manage QR Codes
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -224,6 +238,8 @@ export default function DashboardPage() {
         return <ArtistAvailabilityManager />;
       case 'calendar':
         return <BookingCalendar />;
+      case 'qrcodes':
+        return <QRCodeManager />;
       default:
         return null;
     }
@@ -390,6 +406,16 @@ export default function DashboardPage() {
                   style={{padding: '12px 16px', cursor: 'pointer'}}
                 >
                   <i className="fas fa-robot me-2"></i>BMAD Orchestrator
+                </button>
+              </li>
+              <li className="nav-item" role="presentation">
+                <button
+                  className={`nav-link fw-bold ${activeTab === 'qrcodes' ? 'active border-bottom border-primary' : ''}`}
+                  type="button"
+                  onClick={() => setActiveTab('qrcodes')}
+                  style={{padding: '12px 16px', cursor: 'pointer'}}
+                >
+                  <i className="fas fa-qrcode me-2"></i>QR Codes
                 </button>
               </li>
             </ul>
