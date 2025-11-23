@@ -97,7 +97,7 @@ async function fetchGHLAppointments(apiKey: string, locationId: string, calendar
     
     // Fetch appointments from GHL for specific calendar
     const response = await fetch(
-      `https://services.leadconnectorhq.com/calendars/events/appointments?locationId=${locationId}&calendarId=${calendarId}&startTime=${startDate}&endTime=${endDate}`,
+      `https://services.leadconnectorhq.com/calendars/events?locationId=${locationId}&calendarId=${calendarId}&startTime=${startDate}&endTime=${endDate}`,
       {
         method: 'GET',
         headers: {
@@ -212,13 +212,13 @@ async function importGHLAppointments() {
 
     console.log(`\n✅ Importing from ALL ${calendars.length} calendar(s)\n`);
 
-    // Set date range (current month)
+    // Set date range (today to 3 months from now)
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const startDate = now.toISOString();
+    const futureDate = new Date(now.getFullYear(), now.getMonth() + 3, now.getDate());
+    const endDate = futureDate.toISOString();
     
-    const startDate = startOfMonth.toISOString();
-    const endDate = endOfMonth.toISOString();
+    console.log(`📅 Date range: ${startDate.split('T')[0]} to ${endDate.split('T')[0]}`);
 
     // Fetch appointments from ALL calendars
     let allAppointments: GHLAppointment[] = [];

@@ -332,6 +332,32 @@ export default function BookingCalendar() {
     }
   };
 
+  const syncFromGHL = async () => {
+    setSyncing(true);
+    try {
+      const response = await fetch('/api/sync/ghl-to-website', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || 'Failed to sync from GHL');
+      }
+
+      const result = await response.json();
+      
+      alert(`Successfully synced ${result.synced} appointments from GHL!\n\nCalendars checked: ${result.calendars}\nFailed: ${result.failed}`);
+      
+      fetchBookings();
+    } catch (error) {
+      console.error('Error syncing from GHL:', error);
+      alert(`Failed to sync from GHL: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const getStatusColor = (status: Booking['status']) => {
     switch (status) {
       case 'confirmed': return 'success';
@@ -363,19 +389,38 @@ export default function BookingCalendar() {
           Booking Calendar
         </h2>
         <button 
-          className="btn btn-danger"
-          onClick={syncAllBookingsWithGHL}
+          className="btn btn-success me-2"
+          onClick={syncFromGHL}
           disabled={syncing}
+          title="Import appointments from GHL to website"
         >
           {syncing ? (
             <>
-              <span className="spinner-border spinner-border-sm me-2"></span>
-              Syncing with GHL...
+              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Syncing...
             </>
           ) : (
             <>
-              <i className="bi bi-arrow-repeat me-2"></i>
-              Sync All with GHL
+              <i className="bi bi-download me-2"></i>
+              Sync FROM GHL
+            </>
+          )}
+        </button>
+        <button 
+          className="btn btn-primary"
+          onClick={syncAllBookingsWithGHL}
+          disabled={syncing}
+          title="Push website bookings to GHL"
+        >
+          {syncing ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Syncing...
+            </>
+          ) : (
+            <>
+              <i className="bi bi-upload me-2"></i>
+              Sync TO GHL
             </>
           )}
         </button>

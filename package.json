@@ -16,7 +16,10 @@
     "init-db": "tsx src/scripts/run-init-db.ts",
     "init-facebook-qr": "tsx src/scripts/initializeFacebookReviewsQR.ts",
     "create-sample-booking": "tsx src/scripts/createSampleBooking.ts",
-    "import-ghl-appointments": "tsx src/scripts/importGHLAppointments.ts"
+    "import-ghl-appointments": "tsx src/scripts/importGHLAppointments.ts",
+    "list-ghl-calendars": "tsx src/scripts/listGHLCalendars.ts",
+    "list-ghl-appointments": "tsx src/scripts/listGHLAppointments.ts",
+    "create-ghl-test-appointment": "tsx src/scripts/createGHLTestAppointment.ts"
   },
   "dependencies": {
     "@azure/msal-node": "^3.8.0",
