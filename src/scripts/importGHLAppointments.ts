@@ -62,13 +62,42 @@ interface GHLContact {
   phone: string;
 }
 
-async function fetchGHLAppointments(apiKey: string, locationId: string, startDate: string, endDate: string) {
+async function fetchGHLCalendars(apiKey: string, locationId: string) {
+  try {
+    console.log('📋 Fetching calendars from GHL...');
+    
+    const response = await fetch(
+      `https://services.leadconnectorhq.com/calendars/?locationId=${locationId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Version': '2021-07-28'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to fetch calendars: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log(`✅ Found ${data.calendars?.length || 0} calendars`);
+    return data.calendars || [];
+  } catch (error) {
+    console.error('Error fetching calendars:', error);
+    throw error;
+  }
+}
+
+async function fetchGHLAppointments(apiKey: string, locationId: string, calendarId: string, startDate: string, endDate: string) {
   try {
     console.log(`📅 Fetching appointments from ${startDate} to ${endDate}...`);
     
-    // Fetch appointments from GHL
+    // Fetch appointments from GHL for specific calendar
     const response = await fetch(
-      `https://services.leadconnectorhq.com/calendars/events/appointments?locationId=${locationId}&startTime=${startDate}&endTime=${endDate}`,
+      `https://services.leadconnectorhq.com/calendars/events/appointments?locationId=${locationId}&calendarId=${calendarId}&startTime=${startDate}&endTime=${endDate}`,
       {
         method: 'GET',
         headers: {
@@ -84,7 +113,7 @@ async function fetchGHLAppointments(apiKey: string, locationId: string, startDat
     }
 
     const data = await response.json();
-    console.log(`✅ Found ${data.events?.length || 0} appointments in GHL`);
+    console.log(`✅ Found ${data.events?.length || 0} appointments in calendar`);
     return data.events || [];
   } catch (error) {
     console.error('Error fetching GHL appointments:', error);
@@ -167,6 +196,34 @@ async function importGHLAppointments() {
     console.log('✅ GHL credentials found');
     console.log(`   Location ID: ${locationId}\n`);
 
+    // Fetch calendars and find "Service" calendar
+    const calendars = await fetchGHLCalendars(apiKey, locationId);
+    
+    if (calendars.length === 0) {
+      console.error('❌ No calendars found in GHL');
+      process.exit(1);
+    }
+
+    // Display available calendars
+    console.log('📋 Available calendars:');
+    calendars.forEach((cal: any) => {
+      console.log(`   - ${cal.name} (ID: ${cal.id})`);
+    });
+
+    // Find "Service" calendar (case-insensitive)
+    const serviceCalendar = calendars.find((cal: any) => 
+      cal.name.toLowerCase().includes('service')
+    );
+
+    if (!serviceCalendar) {
+      console.error('\n❌ "Service" calendar not found');
+      console.log('   Available calendars listed above');
+      console.log('   Please ensure you have a calendar with "Service" in the name');
+      process.exit(1);
+    }
+
+    console.log(`\n✅ Using calendar: "${serviceCalendar.name}" (ID: ${serviceCalendar.id})\n`);
+
     // Set date range (current month)
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -175,8 +232,8 @@ async function importGHLAppointments() {
     const startDate = startOfMonth.toISOString();
     const endDate = endOfMonth.toISOString();
 
-    // Fetch appointments from GHL
-    const ghlAppointments: GHLAppointment[] = await fetchGHLAppointments(apiKey, locationId, startDate, endDate);
+    // Fetch appointments from GHL Service calendar only
+    const ghlAppointments: GHLAppointment[] = await fetchGHLAppointments(apiKey, locationId, serviceCalendar.id, startDate, endDate);
 
     if (ghlAppointments.length === 0) {
       console.log('ℹ️  No appointments found in GHL for this date range');
