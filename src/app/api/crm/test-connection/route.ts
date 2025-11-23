@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { apiKey } = await request.json();
+    const { apiKey, locationId } = await request.json();
 
     console.log('🔑 Testing GHL API Key:', apiKey ? `${apiKey.substring(0, 20)}...` : 'NO KEY PROVIDED');
+    console.log('📍 Location ID:', locationId || 'NOT PROVIDED');
 
     if (!apiKey) {
       return NextResponse.json(
@@ -15,8 +16,10 @@ export async function POST(request: NextRequest) {
 
     // Test the GoHighLevel API connection using Private Integration endpoint
     // Private Integrations use the services.leadconnectorhq.com domain
-    // For location-specific Private Integration keys, try calendars endpoint first
-    const apiUrl = `https://services.leadconnectorhq.com/calendars/`;
+    // For location-specific Private Integration keys, we need locationId parameter
+    const apiUrl = locationId 
+      ? `https://services.leadconnectorhq.com/calendars/?locationId=${locationId}`
+      : `https://services.leadconnectorhq.com/calendars/`;
     console.log('📡 Calling GHL API:', apiUrl);
     console.log('🔑 Testing location-specific Private Integration key');
     

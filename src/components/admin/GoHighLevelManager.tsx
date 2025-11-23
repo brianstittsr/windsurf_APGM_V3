@@ -98,7 +98,10 @@ export default function GoHighLevelManager() {
       const response = await fetch('/api/crm/test-connection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey: settings.apiKey })
+        body: JSON.stringify({ 
+          apiKey: settings.apiKey,
+          locationId: settings.locationId 
+        })
       });
 
       const data = await response.json();

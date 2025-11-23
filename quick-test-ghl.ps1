@@ -1,5 +1,5 @@
 # Quick GHL API Test
-$ApiKey = "pit-8701ec64-d06c-4085-a3bc-bb170f873e88"
+$ApiKey = "pit-aef2c2c9-8bb5-461b-a2d8-a25bcf42f6d7"
 
 Write-Host "Testing GHL API Key..." -ForegroundColor Cyan
 Write-Host ""
@@ -10,23 +10,39 @@ try {
         "Version" = "2021-07-28"
     }
     
-    # For location-specific Private Integration, we need to get the location ID from the token
-    # Try fetching calendars first as a test
-    Write-Host "Testing with calendars endpoint..." -ForegroundColor Gray
-    $response = Invoke-RestMethod -Uri "https://services.leadconnectorhq.com/calendars/" -Headers $headers -Method Get
+    # For location-specific Private Integration, try multiple endpoints
+    Write-Host "Testing with contacts endpoint..." -ForegroundColor Gray
+    
+    # First try contacts (most basic scope)
+    try {
+        $response = Invoke-RestMethod -Uri "https://services.leadconnectorhq.com/contacts/?limit=1" -Headers $headers -Method Get
+        $endpoint = "contacts"
+    } catch {
+        Write-Host "Contacts failed, trying calendars..." -ForegroundColor Gray
+        $response = Invoke-RestMethod -Uri "https://services.leadconnectorhq.com/calendars/" -Headers $headers -Method Get
+        $endpoint = "calendars"
+    }
     
     Write-Host "SUCCESS!" -ForegroundColor Green
     Write-Host ""
     Write-Host "This is a location-specific Private Integration key" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "Calendars found: $($response.calendars.Count)" -ForegroundColor White
+    Write-Host "Working endpoint: $endpoint" -ForegroundColor Gray
     Write-Host ""
     
-    if ($response.calendars.Count -gt 0) {
-        Write-Host "Calendars:" -ForegroundColor Cyan
-        foreach ($cal in $response.calendars) {
-            Write-Host "  - $($cal.name) (ID: $($cal.id))" -ForegroundColor White
+    if ($endpoint -eq "calendars") {
+        Write-Host "Calendars found: $($response.calendars.Count)" -ForegroundColor White
+        Write-Host ""
+        
+        if ($response.calendars.Count -gt 0) {
+            Write-Host "Calendars:" -ForegroundColor Cyan
+            foreach ($cal in $response.calendars) {
+                Write-Host "  - $($cal.name) (ID: $($cal.id))" -ForegroundColor White
+            }
+            Write-Host ""
         }
+    } else {
+        Write-Host "Contacts endpoint accessible" -ForegroundColor White
+        Write-Host "Total contacts: $($response.total)" -ForegroundColor White
         Write-Host ""
     }
     
