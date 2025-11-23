@@ -12,6 +12,7 @@
     "test-email": "tsx src/scripts/testEmailSending.ts",
     "test-firebase": "tsx src/scripts/testFirebaseEnv.ts",
     "test-contact": "tsx src/scripts/testContactForm.ts",
+    "test-ghl": "tsx src/scripts/testGHLConnection.ts",
     "init-db": "tsx src/scripts/run-init-db.ts",
     "init-facebook-qr": "tsx src/scripts/initializeFacebookReviewsQR.ts",
     "create-sample-booking": "tsx src/scripts/createSampleBooking.ts"
