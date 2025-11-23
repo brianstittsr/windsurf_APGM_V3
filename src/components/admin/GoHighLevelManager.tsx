@@ -6,6 +6,7 @@ import { DatabaseService } from '@/services/database';
 interface CRMSettings {
   id?: string;
   apiKey: string;
+  locationId?: string;
   isEnabled: boolean;
   lastSync?: string;
   syncedContacts: number;
@@ -18,6 +19,7 @@ interface CRMSettings {
 export default function GoHighLevelManager() {
   const [settings, setSettings] = useState<CRMSettings>({
     apiKey: '',
+    locationId: '',
     isEnabled: false,
     syncedContacts: 0,
     syncedWorkflows: 0,
@@ -371,6 +373,24 @@ export default function GoHighLevelManager() {
                     </div>
                     <div className="form-text">
                       Get your API Key from GoHighLevel Settings → API Keys
+                    </div>
+                  </div>
+
+                  <div className="col-12">
+                    <label className="form-label fw-semibold">
+                      <i className="fas fa-map-marker-alt me-1 text-primary"></i>
+                      GoHighLevel Location ID *
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control form-control-lg border-2"
+                      value={settings.locationId || ''}
+                      onChange={(e) => setSettings(prev => ({ ...prev, locationId: e.target.value }))}
+                      placeholder="Enter your GoHighLevel Location ID"
+                      required
+                    />
+                    <div className="form-text">
+                      Get your Location ID from GoHighLevel Settings → Business Profile
                     </div>
                   </div>
                 </div>
