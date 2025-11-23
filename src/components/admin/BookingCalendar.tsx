@@ -308,15 +308,25 @@ export default function BookingCalendar() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to sync all bookings');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || 'Failed to sync all bookings');
       }
 
       const result = await response.json();
-      alert(`Successfully synced ${result.synced} bookings with GHL`);
+      
+      if (result.total === 0) {
+        alert('No bookings to sync. Create some bookings first!');
+      } else if (result.failed > 0) {
+        alert(`Synced ${result.synced} bookings. ${result.failed} failed.\n\nCheck console for details.`);
+        console.error('Sync errors:', result.errors);
+      } else {
+        alert(`Successfully synced ${result.synced} bookings with GHL`);
+      }
+      
       fetchBookings();
     } catch (error) {
       console.error('Error syncing all bookings:', error);
-      alert('Failed to sync bookings with GHL');
+      alert(`Failed to sync bookings with GHL: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSyncing(false);
     }

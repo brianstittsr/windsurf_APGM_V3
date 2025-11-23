@@ -43,7 +43,9 @@ async function initializeFacebookReviewsQR() {
   try {
     console.log('🚀 Initializing Facebook Reviews QR Code...');
 
-    const facebookReviewsUrl = 'https://www.facebook.com/people/A-Pretty-Girl-Matter/61581970516037/?sk=reviews';
+    // Use mobile Facebook URL for better mobile compatibility
+    // Users will see the page with reviews tab and can click "Recommend" button
+    const facebookReviewsUrl = 'https://m.facebook.com/profile.php?id=61581970516037&sk=reviews';
     
     // Generate QR code image
     console.log('📱 Generating QR code image...');

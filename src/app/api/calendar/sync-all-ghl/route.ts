@@ -14,6 +14,17 @@ export async function POST(req: NextRequest) {
       ...doc.data()
     }));
 
+    // If no bookings, return early with success
+    if (bookings.length === 0) {
+      return NextResponse.json({
+        success: true,
+        synced: 0,
+        failed: 0,
+        total: 0,
+        message: 'No bookings to sync'
+      });
+    }
+
     let syncedCount = 0;
     let failedCount = 0;
     const errors: string[] = [];

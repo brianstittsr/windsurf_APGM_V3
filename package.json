@@ -13,7 +13,8 @@
     "test-firebase": "tsx src/scripts/testFirebaseEnv.ts",
     "test-contact": "tsx src/scripts/testContactForm.ts",
     "init-db": "tsx src/scripts/run-init-db.ts",
-    "init-facebook-qr": "tsx src/scripts/initializeFacebookReviewsQR.ts"
+    "init-facebook-qr": "tsx src/scripts/initializeFacebookReviewsQR.ts",
+    "create-sample-booking": "tsx src/scripts/createSampleBooking.ts"
   },
   "dependencies": {
     "@azure/msal-node": "^3.8.0",
