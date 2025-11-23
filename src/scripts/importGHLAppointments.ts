@@ -196,7 +196,7 @@ async function importGHLAppointments() {
     console.log('✅ GHL credentials found');
     console.log(`   Location ID: ${locationId}\n`);
 
-    // Fetch calendars and find "Service" calendar
+    // Fetch calendars
     const calendars = await fetchGHLCalendars(apiKey, locationId);
     
     if (calendars.length === 0) {
@@ -210,19 +210,7 @@ async function importGHLAppointments() {
       console.log(`   - ${cal.name} (ID: ${cal.id})`);
     });
 
-    // Find "Service" calendar (case-insensitive)
-    const serviceCalendar = calendars.find((cal: any) => 
-      cal.name.toLowerCase().includes('service')
-    );
-
-    if (!serviceCalendar) {
-      console.error('\n❌ "Service" calendar not found');
-      console.log('   Available calendars listed above');
-      console.log('   Please ensure you have a calendar with "Service" in the name');
-      process.exit(1);
-    }
-
-    console.log(`\n✅ Using calendar: "${serviceCalendar.name}" (ID: ${serviceCalendar.id})\n`);
+    console.log(`\n✅ Importing from ALL ${calendars.length} calendar(s)\n`);
 
     // Set date range (current month)
     const now = new Date();
@@ -232,8 +220,21 @@ async function importGHLAppointments() {
     const startDate = startOfMonth.toISOString();
     const endDate = endOfMonth.toISOString();
 
-    // Fetch appointments from GHL Service calendar only
-    const ghlAppointments: GHLAppointment[] = await fetchGHLAppointments(apiKey, locationId, serviceCalendar.id, startDate, endDate);
+    // Fetch appointments from ALL calendars
+    let allAppointments: GHLAppointment[] = [];
+    
+    for (const calendar of calendars) {
+      console.log(`📅 Fetching from "${calendar.name}"...`);
+      try {
+        const appointments = await fetchGHLAppointments(apiKey, locationId, calendar.id, startDate, endDate);
+        console.log(`   ✅ Found ${appointments.length} appointment(s)`);
+        allAppointments = allAppointments.concat(appointments);
+      } catch (error) {
+        console.warn(`   ⚠️  Failed to fetch from "${calendar.name}":`, error instanceof Error ? error.message : 'Unknown error');
+      }
+    }
+
+    const ghlAppointments = allAppointments;
 
     if (ghlAppointments.length === 0) {
       console.log('ℹ️  No appointments found in GHL for this date range');
