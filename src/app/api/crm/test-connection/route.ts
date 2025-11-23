@@ -15,9 +15,10 @@ export async function POST(request: NextRequest) {
 
     // Test the GoHighLevel API connection using Private Integration endpoint
     // Private Integrations use the services.leadconnectorhq.com domain
-    // First, try to fetch locations to verify API key
-    const apiUrl = `https://services.leadconnectorhq.com/locations/search`;
+    // For location-specific Private Integration keys, try calendars endpoint first
+    const apiUrl = `https://services.leadconnectorhq.com/calendars/`;
     console.log('📡 Calling GHL API:', apiUrl);
+    console.log('🔑 Testing location-specific Private Integration key');
     
     const response = await fetch(apiUrl, {
       method: 'GET',
@@ -87,21 +88,23 @@ After enabling scopes, regenerate your API key and try again.`;
     // For successful responses
     try {
       const data = await responseClone.json();
-      const locations = data.locations || [];
-      const locationCount = locations.length;
+      const calendars = data.calendars || [];
+      const calendarCount = calendars.length;
       
-      console.log('✅ Found locations:', locationCount);
-      if (locations.length > 0) {
-        console.log('📍 First location:', locations[0].name, '- ID:', locations[0].id);
+      console.log('✅ Found calendars:', calendarCount);
+      if (calendars.length > 0) {
+        console.log('📅 First calendar:', calendars[0].name, '- ID:', calendars[0].id);
       }
       
+      // For location-specific Private Integration, we return 1 location
+      // since the key is tied to a specific location
       return NextResponse.json({
         success: true,
-        message: `Connection successful! Your Private Integration API key is working.`,
-        locationCount,
-        locations: locations.map((loc: any) => ({ id: loc.id, name: loc.name })),
-        testEndpoint: '/locations/search',
-        note: 'Private Integration API keys work within a single location. Use your Location ID for location-specific operations.'
+        message: `Connection successful! Location-specific Private Integration key is working.`,
+        locationCount: 1, // Location-specific keys are tied to one location
+        calendars: calendars.map((cal: any) => ({ id: cal.id, name: cal.name })),
+        testEndpoint: '/calendars/',
+        note: 'This is a location-specific Private Integration key. It has access to calendars and contacts within its location.'
       });
     } catch (jsonError) {
       console.error('Error parsing success response:', jsonError);
