@@ -8,6 +8,7 @@ interface CRMSettings {
   apiKey: string;
   locationId?: string;
   isEnabled: boolean;
+  useGHLAvailability?: boolean; // Toggle for using GHL calendar availability
   lastSync?: string;
   syncedContacts: number;
   syncedWorkflows: number;
@@ -21,6 +22,7 @@ export default function GoHighLevelManager() {
     apiKey: '',
     locationId: '',
     isEnabled: false,
+    useGHLAvailability: false,
     syncedContacts: 0,
     syncedWorkflows: 0,
     errors: []
@@ -391,6 +393,47 @@ export default function GoHighLevelManager() {
                     />
                     <div className="form-text">
                       Get your Location ID from GoHighLevel Settings → Business Profile
+                    </div>
+                  </div>
+
+                  <div className="col-12">
+                    <div className="card bg-light border-2 border-info">
+                      <div className="card-body">
+                        <div className="d-flex justify-content-between align-items-center">
+                          <div>
+                            <h6 className="mb-1 fw-bold">
+                              <i className="fas fa-calendar-check me-2 text-info"></i>
+                              Use GHL Calendar Availability
+                            </h6>
+                            <p className="mb-0 small text-muted">
+                              When enabled, booking system will use GHL calendar rules and available slots instead of website's built-in availability system.
+                            </p>
+                          </div>
+                          <div className="form-check form-switch ms-3">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              role="switch"
+                              id="useGHLAvailability"
+                              checked={settings.useGHLAvailability || false}
+                              onChange={(e) => setSettings(prev => ({ ...prev, useGHLAvailability: e.target.checked }))}
+                              style={{ width: '3rem', height: '1.5rem' }}
+                            />
+                            <label className="form-check-label ms-2 fw-bold" htmlFor="useGHLAvailability">
+                              {settings.useGHLAvailability ? 'ON' : 'OFF'}
+                            </label>
+                          </div>
+                        </div>
+                        <div className="mt-3">
+                          <small className="text-muted">
+                            <i className="fas fa-info-circle me-1"></i>
+                            <strong>GHL Mode:</strong> Uses calendar booking rules, free slots, and team member availability from GoHighLevel.
+                            <br />
+                            <i className="fas fa-info-circle me-1"></i>
+                            <strong>Website Mode:</strong> Uses artist availability configured in the Artist Availability tab.
+                          </small>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

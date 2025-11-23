@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useHealthForm } from '@/hooks/useHealthForm';
 import { useTimeSlots } from '@/hooks/useTimeSlots';
+import { useAvailabilitySystem } from '@/hooks/useAvailabilitySystem';
 import { useNextAvailableDate } from '@/hooks/useNextAvailableDate';
 import { useServices } from '@/hooks/useFirebase';
 import ClientProfileWizard, { ClientProfileData } from '@/components/ClientProfileWizard';
@@ -127,7 +128,13 @@ function BookNowCustomContent() {
   const { submitHealthForm } = useHealthForm();
   const { availability, bookTimeSlot } = useAvailability(selectedDate);
   const { timeSlots, loading, error } = useTimeSlots(selectedDate);
+  const { availability: unifiedAvailability, loading: unifiedLoading, error: unifiedError, isUsingGHL } = useAvailabilitySystem(selectedDate);
   const { nextAvailable, findNextAvailableDate, findNextAvailableAfter, clearNextAvailable } = useNextAvailableDate();
+  
+  // Use unified availability system if available, otherwise fall back to original
+  const activeTimeSlots = unifiedAvailability || timeSlots;
+  const activeLoading = unifiedLoading || loading;
+  const activeError = unifiedError || error;
   
   // Auth hook for user profile auto-population
   const { isAuthenticated, userProfile, getClientProfileData } = useAuth();
@@ -1077,7 +1084,7 @@ function BookNowCustomContent() {
                       </div>
 
                       {/* Time Slots Loading/Error States */}
-                      {loading && (
+                      {activeLoading && (
                         <div className="text-center py-4">
                           <div className="spinner-border text-primary" role="status">
                             <span className="visually-hidden">Loading...</span>
@@ -1086,10 +1093,10 @@ function BookNowCustomContent() {
                         </div>
                       )}
 
-                      {error && (
+                      {activeError && (
                         <div className="alert alert-danger text-center">
                           <i className="fas fa-exclamation-triangle me-2"></i>
-                          Error loading time slots: {error}
+                          Error loading time slots: {activeError}
                         </div>
                       )}
 
@@ -1102,11 +1109,18 @@ function BookNowCustomContent() {
                       </div>
 
                       {/* Time Slots Display */}
-                      {timeSlots && !loading && (
+                      {activeTimeSlots && !activeLoading && (
                         <>
-                          {timeSlots.hasAvailability ? (
+                          {/* Show which system is being used */}
+                          {isUsingGHL && (
+                            <div className="alert alert-info mb-3" role="alert">
+                              <i className="fas fa-cloud me-2"></i>
+                              <strong>Using GHL Calendar:</strong> Showing available slots from GoHighLevel calendar booking rules
+                            </div>
+                          )}
+                          {activeTimeSlots.hasAvailability ? (
                             <div className="row justify-content-center g-4">
-                              {timeSlots.timeSlots
+                              {activeTimeSlots.timeSlots
                                 .filter(slot => slot.available && slot.artistName !== 'Admin')
                                 .map((slot, index) => (
                                   <div key={index} className="col-12 col-sm-6 col-md-5 col-lg-4 col-xl-3">
