@@ -4,10 +4,25 @@ import { getDb } from '../../../../lib/firebase';
 
 export async function POST(req: NextRequest) {
   try {
+    console.log('[sync-all-ghl] Starting sync process...');
+    
     // Fetch all bookings from Firestore
-    const db = getDb();
+    let db;
+    try {
+      db = getDb();
+      console.log('[sync-all-ghl] Firestore instance obtained');
+    } catch (error) {
+      console.error('[sync-all-ghl] Failed to get Firestore instance:', error);
+      return NextResponse.json(
+        { error: 'Failed to connect to database', details: error instanceof Error ? error.message : 'Unknown error' },
+        { status: 500 }
+      );
+    }
+    
     const bookingsRef = collection(db, 'bookings');
+    console.log('[sync-all-ghl] Fetching bookings...');
     const snapshot = await getDocs(bookingsRef);
+    console.log(`[sync-all-ghl] Found ${snapshot.size} bookings`);
     
     const bookings = snapshot.docs.map(doc => ({
       id: doc.id,
@@ -64,11 +79,13 @@ export async function POST(req: NextRequest) {
       message: `Successfully synced ${syncedCount} out of ${bookings.length} bookings`
     });
   } catch (error) {
-    console.error('Error syncing all bookings:', error);
+    console.error('[sync-all-ghl] Error syncing all bookings:', error);
+    console.error('[sync-all-ghl] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json(
       { 
         error: 'Failed to sync bookings with GHL', 
-        details: error instanceof Error ? error.message : 'Unknown error' 
+        details: error instanceof Error ? error.message : 'Unknown error',
+        stack: process.env.NODE_ENV === 'development' && error instanceof Error ? error.stack : undefined
       },
       { status: 500 }
     );
