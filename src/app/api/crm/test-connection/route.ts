@@ -15,9 +15,8 @@ export async function POST(request: NextRequest) {
 
     // Test the GoHighLevel API connection using Private Integration endpoint
     // Private Integrations use the services.leadconnectorhq.com domain
-    // NOTE: Private Integrations require Location ID in query parameters
-    const locationId = 'kfGFMn1aPE1AhW18tpG8'; // Default location ID
-    const apiUrl = `https://services.leadconnectorhq.com/contacts/?locationId=${locationId}&limit=1`;
+    // First, try to fetch locations to verify API key
+    const apiUrl = `https://services.leadconnectorhq.com/locations/search`;
     console.log('📡 Calling GHL API:', apiUrl);
     
     const response = await fetch(apiUrl, {
@@ -88,12 +87,20 @@ After enabling scopes, regenerate your API key and try again.`;
     // For successful responses
     try {
       const data = await responseClone.json();
-      const contacts = data.contacts || [];
+      const locations = data.locations || [];
+      const locationCount = locations.length;
+      
+      console.log('✅ Found locations:', locationCount);
+      if (locations.length > 0) {
+        console.log('📍 First location:', locations[0].name, '- ID:', locations[0].id);
+      }
+      
       return NextResponse.json({
         success: true,
-        message: 'Connection successful! Your Private Integration API key is working.',
-        contactCount: contacts.length,
-        testEndpoint: '/contacts/',
+        message: `Connection successful! Your Private Integration API key is working.`,
+        locationCount,
+        locations: locations.map((loc: any) => ({ id: loc.id, name: loc.name })),
+        testEndpoint: '/locations/search',
         note: 'Private Integration API keys work within a single location. Use your Location ID for location-specific operations.'
       });
     } catch (jsonError) {
