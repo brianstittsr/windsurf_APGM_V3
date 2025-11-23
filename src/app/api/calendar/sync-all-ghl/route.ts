@@ -1,15 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { getDb } from '../../../../lib/firebase';
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 
 export async function POST(req: NextRequest) {
   try {
     console.log('[sync-all-ghl] Starting sync process...');
     
+    // Initialize Firebase Admin if not already initialized
+    if (!getApps().length) {
+      const serviceAccount = {
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      };
+      initializeApp({
+        credential: cert(serviceAccount as any),
+      });
+    }
+    
     // Fetch all bookings from Firestore
     let db;
     try {
-      db = getDb();
+      db = getFirestore();
       console.log('[sync-all-ghl] Firestore instance obtained');
     } catch (error) {
       console.error('[sync-all-ghl] Failed to get Firestore instance:', error);
@@ -19,9 +31,8 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    const bookingsRef = collection(db, 'bookings');
     console.log('[sync-all-ghl] Fetching bookings...');
-    const snapshot = await getDocs(bookingsRef);
+    const snapshot = await db.collection('bookings').get();
     console.log(`[sync-all-ghl] Found ${snapshot.size} bookings`);
     
     const bookings = snapshot.docs.map(doc => ({
