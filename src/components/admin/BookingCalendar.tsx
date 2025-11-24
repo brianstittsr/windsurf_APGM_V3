@@ -407,7 +407,8 @@ export default function BookingCalendar() {
 
       const result = await response.json();
       
-      alert(`Successfully synced ${result.synced} appointments from GHL!\n\nCalendars checked: ${result.calendars}\nFailed: ${result.failed}`);
+      const message = `Successfully synced from GHL!\n\nSynced: ${result.synced}\nDeleted: ${result.deleted || 0}\nFailed: ${result.failed}\nCalendars checked: ${result.calendars}`;
+      alert(message);
       
       fetchBookings();
     } catch (error) {

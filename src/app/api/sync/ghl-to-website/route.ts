@@ -52,6 +52,8 @@ export async function POST(req: NextRequest) {
 
     let totalSynced = 0;
     let totalFailed = 0;
+    let totalDeleted = 0;
+    const ghlAppointmentIds = new Set<string>();
 
     // Fetch appointments from each calendar
     for (const calendar of calendars) {
@@ -72,6 +74,7 @@ export async function POST(req: NextRequest) {
         for (const appointment of appointments) {
           try {
             await syncAppointmentToWebsite(appointment, apiKey);
+            ghlAppointmentIds.add(appointment.id);
             totalSynced++;
           } catch (error) {
             console.error(`[ghl-sync] Failed to sync appointment ${appointment.id}:`, error);
@@ -99,6 +102,7 @@ export async function POST(req: NextRequest) {
       for (const appointment of contactAppointments) {
         try {
           await syncAppointmentToWebsite(appointment, apiKey);
+          ghlAppointmentIds.add(appointment.id);
           totalSynced++;
         } catch (error) {
           console.error(`[ghl-sync] Failed to sync contact appointment ${appointment.id}:`, error);
@@ -110,12 +114,33 @@ export async function POST(req: NextRequest) {
       console.error(`[ghl-sync] Failed to fetch contact appointments:`, error);
     }
 
-    console.log(`[ghl-sync] Sync complete. Synced: ${totalSynced}, Failed: ${totalFailed}`);
+    // Delete appointments that no longer exist in GHL
+    console.log(`[ghl-sync] Checking for deleted appointments...`);
+    const websiteBookings = await db.collection('bookings')
+      .where('ghlAppointmentId', '!=', null)
+      .get();
+    
+    for (const doc of websiteBookings.docs) {
+      const booking = doc.data();
+      if (booking.ghlAppointmentId && !ghlAppointmentIds.has(booking.ghlAppointmentId)) {
+        // Appointment exists on website but not in GHL - it was deleted
+        console.log(`[ghl-sync] Deleting appointment ${booking.ghlAppointmentId} (no longer in GHL)`);
+        try {
+          await db.collection('bookings').doc(doc.id).delete();
+          totalDeleted++;
+        } catch (error) {
+          console.error(`[ghl-sync] Failed to delete booking ${doc.id}:`, error);
+        }
+      }
+    }
+
+    console.log(`[ghl-sync] Sync complete. Synced: ${totalSynced}, Failed: ${totalFailed}, Deleted: ${totalDeleted}`);
 
     return NextResponse.json({
       success: true,
       synced: totalSynced,
       failed: totalFailed,
+      deleted: totalDeleted,
       calendars: calendars.length
     });
 
