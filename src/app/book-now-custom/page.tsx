@@ -1121,7 +1121,7 @@ function BookNowCustomContent() {
                           {activeTimeSlots.hasAvailability ? (
                             <div className="row justify-content-center g-4">
                               {activeTimeSlots.timeSlots
-                                .filter(slot => slot.available && slot.artistName !== 'Admin')
+                                .filter(slot => slot.available && slot.artistName !== 'Admin' && (slot.calendarName === 'Service Calendar' || !slot.calendarName))
                                 .map((slot, index) => (
                                   <div key={index} className="col-12 col-sm-6 col-md-5 col-lg-4 col-xl-3">
                                     <div
@@ -1173,7 +1173,7 @@ function BookNowCustomContent() {
                                           {/* Artist Avatar */}
                                           <div className="mb-3">
                                             <div className="position-relative d-inline-block">
-                                              {slot.artistName === 'Victoria' ? (
+                                              {(slot.artistName === 'Victoria' || slot.calendarName === 'Service Calendar') ? (
                                                 <Image
                                                   src="/images/VictoriaEscobar.jpeg"
                                                   alt="Victoria - Permanent Makeup Artist"
