@@ -75,19 +75,14 @@ export class GHLAvailabilityService {
   }
 
   /**
-   * Fetch calendar slots for a specific date from GHL
+   * Fetch calendar details including availability settings
    */
-  private static async fetchGHLCalendarSlots(
+  private static async fetchCalendarDetails(
     apiKey: string,
-    calendarId: string,
-    date: string
-  ): Promise<any[]> {
-    // GHL expects date in YYYY-MM-DD format
-    const startOfDay = new Date(date + 'T00:00:00');
-    const endOfDay = new Date(date + 'T23:59:59');
-
+    calendarId: string
+  ): Promise<any> {
     const response = await fetch(
-      `https://services.leadconnectorhq.com/calendars/${calendarId}/free-slots?startDate=${startOfDay.getTime()}&endDate=${endOfDay.getTime()}`,
+      `https://services.leadconnectorhq.com/calendars/${calendarId}`,
       {
         headers: {
           'Authorization': `Bearer ${apiKey}`,
@@ -97,12 +92,116 @@ export class GHLAvailabilityService {
     );
 
     if (!response.ok) {
-      console.warn(`Failed to fetch slots for calendar ${calendarId}: ${response.status}`);
+      console.warn(`Failed to fetch calendar details ${calendarId}: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    return data.calendar || data;
+  }
+
+  /**
+   * Fetch existing appointments for a calendar on a specific date
+   */
+  private static async fetchCalendarAppointments(
+    apiKey: string,
+    locationId: string,
+    calendarId: string,
+    date: string
+  ): Promise<any[]> {
+    const startOfDay = new Date(date + 'T00:00:00').toISOString();
+    const endOfDay = new Date(date + 'T23:59:59').toISOString();
+
+    const response = await fetch(
+      `https://services.leadconnectorhq.com/calendars/events?locationId=${locationId}&calendarId=${calendarId}&startTime=${startOfDay}&endTime=${endOfDay}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Version': '2021-07-28'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      console.warn(`Failed to fetch appointments for calendar ${calendarId}: ${response.status}`);
       return [];
     }
 
     const data = await response.json();
-    return data.slots || [];
+    return data.events || [];
+  }
+
+  /**
+   * Generate time slots in 1-hour increments based on calendar availability
+   */
+  private static generateTimeSlots(
+    calendar: any,
+    date: string,
+    existingAppointments: any[],
+    appointmentDuration: number = 3 // Default 3 hours
+  ): GHLTimeSlot[] {
+    const slots: GHLTimeSlot[] = [];
+    const dayOfWeek = new Date(date).getDay(); // 0 = Sunday, 6 = Saturday
+    
+    // Get availability for this day of week
+    const availability = calendar.availability?.[dayOfWeek] || calendar.openHours?.[dayOfWeek];
+    
+    if (!availability || !availability.openHour || !availability.closeHour) {
+      console.log(`No availability settings found for calendar ${calendar.name} on day ${dayOfWeek}`);
+      return slots;
+    }
+
+    // Parse open and close hours (format: "HH:MM" or "HH:MM:SS")
+    const [openHour, openMinute] = availability.openHour.split(':').map(Number);
+    const [closeHour, closeMinute] = availability.closeHour.split(':').map(Number);
+    
+    console.log(`Calendar ${calendar.name} hours: ${availability.openHour} - ${availability.closeHour}`);
+
+    // Generate slots in 1-hour increments
+    let currentHour = openHour;
+    let currentMinute = openMinute || 0;
+
+    while (true) {
+      // Calculate end time for this slot (current time + appointment duration)
+      const slotEndHour = currentHour + appointmentDuration;
+      const slotEndMinute = currentMinute;
+
+      // Check if this slot would end after closing time
+      if (slotEndHour > closeHour || (slotEndHour === closeHour && slotEndMinute > (closeMinute || 0))) {
+        break; // Stop generating slots
+      }
+
+      // Format times as HH:MM
+      const startTime = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
+      const endTime = `${String(slotEndHour).padStart(2, '0')}:${String(slotEndMinute).padStart(2, '0')}`;
+
+      // Check if this slot conflicts with existing appointments
+      const slotStart = new Date(`${date}T${startTime}:00`);
+      const slotEnd = new Date(`${date}T${endTime}:00`);
+      
+      const isAvailable = !existingAppointments.some(apt => {
+        const aptStart = new Date(apt.startTime);
+        const aptEnd = new Date(apt.endTime);
+        // Check for overlap
+        return (slotStart < aptEnd && slotEnd > aptStart);
+      });
+
+      slots.push({
+        time: startTime,
+        endTime: endTime,
+        duration: `${appointmentDuration} Hour${appointmentDuration !== 1 ? 's' : ''}`,
+        available: isAvailable,
+        artistId: calendar.teamMembers?.[0] || 'victoria',
+        artistName: calendar.name || 'Victoria',
+        calendarId: calendar.id,
+        calendarName: calendar.name
+      });
+
+      // Move to next hour
+      currentHour += 1;
+    }
+
+    return slots;
   }
 
   /**
@@ -131,33 +230,33 @@ export class GHLAvailabilityService {
       // Fetch slots from each calendar
       for (const calendar of calendars) {
         try {
-          const slots = await this.fetchGHLCalendarSlots(apiKey, calendar.id, date);
+          // Fetch full calendar details with availability settings
+          const calendarDetails = await this.fetchCalendarDetails(apiKey, calendar.id);
           
-          console.log(`[GHL Availability] Calendar "${calendar.name}": ${slots.length} slots`);
+          if (!calendarDetails) {
+            console.warn(`[GHL Availability] Could not fetch details for calendar ${calendar.name}`);
+            continue;
+          }
 
-          // Convert GHL slots to our format
-          slots.forEach((slot: any) => {
-            const startTime = new Date(slot.startTime);
-            const endTime = new Date(slot.endTime);
-            
-            // Calculate duration in hours
-            const durationMs = endTime.getTime() - startTime.getTime();
-            const durationHours = Math.round(durationMs / (1000 * 60 * 60));
-            
-            allTimeSlots.push({
-              time: startTime.toTimeString().slice(0, 5), // HH:MM format
-              endTime: endTime.toTimeString().slice(0, 5),
-              duration: `${durationHours} Hour${durationHours !== 1 ? 's' : ''}`,
-              available: true,
-              artistId: calendar.teamMembers?.[0] || 'victoria',
-              artistName: calendar.teamMembers?.[0] || 'Victoria',
-              calendarId: calendar.id,
-              calendarName: calendar.name
-            });
-          });
+          // Fetch existing appointments for this calendar on this date
+          const existingAppointments = await this.fetchCalendarAppointments(
+            apiKey,
+            locationId,
+            calendar.id,
+            date
+          );
+
+          console.log(`[GHL Availability] Calendar "${calendar.name}": ${existingAppointments.length} existing appointments`);
+
+          // Generate time slots based on calendar availability settings
+          const slots = this.generateTimeSlots(calendarDetails, date, existingAppointments, 3);
+          
+          console.log(`[GHL Availability] Calendar "${calendar.name}": ${slots.length} generated slots`);
+
+          allTimeSlots.push(...slots);
 
         } catch (error) {
-          console.error(`[GHL Availability] Error fetching slots for calendar ${calendar.name}:`, error);
+          console.error(`[GHL Availability] Error processing calendar ${calendar.name}:`, error);
         }
       }
 
