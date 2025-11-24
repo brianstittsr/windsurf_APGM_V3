@@ -101,7 +101,8 @@ export async function POST(req: NextRequest) {
           await syncAppointmentToWebsite(appointment, apiKey);
           totalSynced++;
         } catch (error) {
-          console.error(`[ghl-sync] Failed to sync contact appointment:`, error);
+          console.error(`[ghl-sync] Failed to sync contact appointment ${appointment.id}:`, error);
+          console.error(`[ghl-sync] Appointment data:`, JSON.stringify(appointment, null, 2));
           totalFailed++;
         }
       }
@@ -266,9 +267,12 @@ async function fetchGHLContactAppointments(
               endTime: appt.endTime,
               calendarId: appt.calendarId,
               contactId: appt.contactId,
-              status: appt.appointmentStatus || appt.appoinmentStatus, // Handle typo in API
+              appointmentStatus: appt.appointmentStatus || appt.appoinmentStatus || 'new', // Handle typo in API
+              assignedUserId: appt.assignedUserId,
               address: appt.address,
-              notes: appt.notes || ''
+              notes: appt.notes || '',
+              dateAdded: appt.dateAdded,
+              dateUpdated: appt.dateUpdated
             });
           }
         }
@@ -307,9 +311,21 @@ async function syncAppointmentToWebsite(ghlAppointment: any, apiKey: string) {
     }
   }
 
-  // Parse appointment data
-  const startTime = new Date(ghlAppointment.startTime);
-  const endTime = new Date(ghlAppointment.endTime);
+  // Parse appointment data - handle different date formats
+  // GHL contact appointments use format: "2025-11-25 11:00:00"
+  // GHL calendar events use ISO format: "2025-11-25T11:00:00.000Z"
+  const parseGHLDate = (dateStr: string) => {
+    if (!dateStr) return new Date();
+    // If it's already ISO format, use it directly
+    if (dateStr.includes('T')) {
+      return new Date(dateStr);
+    }
+    // Otherwise, assume it's "YYYY-MM-DD HH:MM:SS" format and convert to ISO
+    return new Date(dateStr.replace(' ', 'T') + 'Z');
+  };
+
+  const startTime = parseGHLDate(ghlAppointment.startTime);
+  const endTime = parseGHLDate(ghlAppointment.endTime);
 
   // Create booking object
   const bookingData = {
