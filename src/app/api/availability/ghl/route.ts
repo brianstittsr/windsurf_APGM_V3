@@ -103,6 +103,17 @@ export async function GET(req: NextRequest) {
 
 async function getGHLCredentials() {
   try {
+    // First try to get from the collection (any document)
+    const settingsSnapshot = await db.collection('crmSettings').limit(1).get();
+    if (!settingsSnapshot.empty) {
+      const data = settingsSnapshot.docs[0].data();
+      return {
+        apiKey: data?.apiKey || process.env.GHL_API_KEY || '',
+        locationId: data?.locationId || process.env.GHL_LOCATION_ID || ''
+      };
+    }
+    
+    // Fallback: try specific document ID for backwards compatibility
     const settingsDoc = await db.collection('crmSettings').doc('gohighlevel').get();
     if (settingsDoc.exists) {
       const data = settingsDoc.data();

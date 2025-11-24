@@ -170,10 +170,22 @@ async function deleteAppointmentFromWebsite(ghlAppointmentId: string) {
 }
 
 async function getGHLApiKey(): Promise<string> {
-  const settingsDoc = await db.collection('crmSettings').doc('gohighlevel').get();
-  if (settingsDoc.exists) {
-    const data = settingsDoc.data();
-    return data?.apiKey || process.env.GHL_API_KEY || '';
+  try {
+    // First try to get from the collection (any document)
+    const settingsSnapshot = await db.collection('crmSettings').limit(1).get();
+    if (!settingsSnapshot.empty) {
+      const data = settingsSnapshot.docs[0].data();
+      return data?.apiKey || process.env.GHL_API_KEY || '';
+    }
+    
+    // Fallback: try specific document ID for backwards compatibility
+    const settingsDoc = await db.collection('crmSettings').doc('gohighlevel').get();
+    if (settingsDoc.exists) {
+      const data = settingsDoc.data();
+      return data?.apiKey || process.env.GHL_API_KEY || '';
+    }
+  } catch (error) {
+    console.error('Error fetching GHL API key:', error);
   }
   return process.env.GHL_API_KEY || '';
 }

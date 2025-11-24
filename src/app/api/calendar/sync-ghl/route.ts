@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, query, limit, getDocs } from 'firebase/firestore';
 import { getDb } from '../../../../lib/firebase';
 
 interface Booking {
@@ -23,6 +23,15 @@ interface Booking {
 async function getGHLApiKey() {
   try {
     const db = getDb();
+    
+    // First try to get from the collection (any document)
+    const settingsQuery = query(collection(db, 'crmSettings'), limit(1));
+    const settingsSnapshot = await getDocs(settingsQuery);
+    if (!settingsSnapshot.empty) {
+      return settingsSnapshot.docs[0].data().apiKey;
+    }
+    
+    // Fallback: try specific document ID for backwards compatibility
     const settingsDoc = await getDoc(doc(db, 'crmSettings', 'gohighlevel'));
     if (settingsDoc.exists()) {
       return settingsDoc.data().apiKey;
@@ -36,6 +45,15 @@ async function getGHLApiKey() {
 async function getGHLLocationId() {
   try {
     const db = getDb();
+    
+    // First try to get from the collection (any document)
+    const settingsQuery = query(collection(db, 'crmSettings'), limit(1));
+    const settingsSnapshot = await getDocs(settingsQuery);
+    if (!settingsSnapshot.empty) {
+      return settingsSnapshot.docs[0].data().locationId;
+    }
+    
+    // Fallback: try specific document ID for backwards compatibility
     const settingsDoc = await getDoc(doc(db, 'crmSettings', 'gohighlevel'));
     if (settingsDoc.exists()) {
       return settingsDoc.data().locationId;
