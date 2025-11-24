@@ -237,69 +237,69 @@ function generateTimeSlots(
 ): any[] {
   const slots: any[] = [];
   const dayOfWeek = new Date(date).getDay();
-  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-  const dayName = dayNames[dayOfWeek];
   
-  console.log(`[GHL API] Calendar ${calendar.name} - Looking for day: ${dayName} (${dayOfWeek})`);
-  console.log(`[GHL API] Calendar structure:`, JSON.stringify({
-    hasAvailability: !!calendar.availability,
-    hasOpenHours: !!calendar.openHours,
-    availabilityKeys: calendar.availability ? Object.keys(calendar.availability) : [],
-    openHoursKeys: calendar.openHours ? Object.keys(calendar.openHours) : []
-  }));
+  console.log(`[GHL API] Calendar ${calendar.name} - Looking for day: ${dayOfWeek}`);
   
-  // Try both numeric index and day name
-  const availability = calendar.availability?.[dayOfWeek] || 
-                       calendar.availability?.[dayName] ||
-                       calendar.openHours?.[dayOfWeek] ||
-                       calendar.openHours?.[dayName];
+  // GHL uses openHours as an array of objects with daysOfTheWeek arrays
+  let daySchedule = null;
   
-  if (!availability || !availability.openHour || !availability.closeHour) {
-    console.log(`[GHL API] No availability settings for calendar ${calendar.name} on day ${dayName} (${dayOfWeek})`);
-    console.log(`[GHL API] Availability object:`, availability);
+  if (calendar.openHours && Array.isArray(calendar.openHours)) {
+    // Find the schedule entry that includes this day of week
+    daySchedule = calendar.openHours.find((schedule: any) => 
+      schedule.daysOfTheWeek && schedule.daysOfTheWeek.includes(dayOfWeek)
+    );
+  }
+  
+  if (!daySchedule || !daySchedule.hours || daySchedule.hours.length === 0) {
+    console.log(`[GHL API] No availability settings for calendar ${calendar.name} on day ${dayOfWeek}`);
     return slots;
   }
 
-  const [openHour, openMinute] = availability.openHour.split(':').map(Number);
-  const [closeHour, closeMinute] = availability.closeHour.split(':').map(Number);
-  
-  console.log(`[GHL API] Calendar ${calendar.name} hours: ${availability.openHour} - ${availability.closeHour}`);
-
-  let currentHour = openHour;
-  let currentMinute = openMinute || 0;
-
-  while (true) {
-    const slotEndHour = currentHour + appointmentDuration;
-    const slotEndMinute = currentMinute;
-
-    if (slotEndHour > closeHour || (slotEndHour === closeHour && slotEndMinute > (closeMinute || 0))) {
-      break;
-    }
-
-    const startTime = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
-    const endTime = `${String(slotEndHour).padStart(2, '0')}:${String(slotEndMinute).padStart(2, '0')}`;
-
-    const slotStart = new Date(`${date}T${startTime}:00`);
-    const slotEnd = new Date(`${date}T${endTime}:00`);
+  // Process each time block for this day
+  for (const timeBlock of daySchedule.hours) {
+    const openHour = timeBlock.openHour;
+    const openMinute = timeBlock.openMinute || 0;
+    const closeHour = timeBlock.closeHour;
+    const closeMinute = timeBlock.closeMinute || 0;
     
-    const isAvailable = !existingAppointments.some(apt => {
-      const aptStart = new Date(apt.startTime);
-      const aptEnd = new Date(apt.endTime);
-      return (slotStart < aptEnd && slotEnd > aptStart);
-    });
+    console.log(`[GHL API] Calendar ${calendar.name} time block: ${openHour}:${String(openMinute).padStart(2, '0')} - ${closeHour}:${String(closeMinute).padStart(2, '0')}`);
 
-    slots.push({
-      time: startTime,
-      endTime: endTime,
-      duration: `${appointmentDuration} Hour${appointmentDuration !== 1 ? 's' : ''}`,
-      available: isAvailable,
-      artistId: calendar.teamMembers?.[0] || 'victoria',
-      artistName: calendar.name || 'Victoria',
-      calendarId: calendar.id,
-      calendarName: calendar.name
-    });
+    let currentHour = openHour;
+    let currentMinute = openMinute;
 
-    currentHour += 1;
+    while (true) {
+      const slotEndHour = currentHour + appointmentDuration;
+      const slotEndMinute = currentMinute;
+
+      if (slotEndHour > closeHour || (slotEndHour === closeHour && slotEndMinute > closeMinute)) {
+        break;
+      }
+
+      const startTime = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
+      const endTime = `${String(slotEndHour).padStart(2, '0')}:${String(slotEndMinute).padStart(2, '0')}`;
+
+      const slotStart = new Date(`${date}T${startTime}:00`);
+      const slotEnd = new Date(`${date}T${endTime}:00`);
+      
+      const isAvailable = !existingAppointments.some(apt => {
+        const aptStart = new Date(apt.startTime);
+        const aptEnd = new Date(apt.endTime);
+        return (slotStart < aptEnd && slotEnd > aptStart);
+      });
+
+      slots.push({
+        time: startTime,
+        endTime: endTime,
+        duration: `${appointmentDuration} Hour${appointmentDuration !== 1 ? 's' : ''}`,
+        available: isAvailable,
+        artistId: calendar.teamMembers?.[0] || 'victoria',
+        artistName: calendar.name || 'Victoria',
+        calendarId: calendar.id,
+        calendarName: calendar.name
+      });
+
+      currentHour += 1;
+    }
   }
 
   return slots;

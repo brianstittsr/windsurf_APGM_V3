@@ -1,11 +1,29 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase-admin';
+import admin from 'firebase-admin';
+
+// Initialize Firebase Admin if not already initialized
+if (!admin.apps.length) {
+  try {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      }),
+    });
+  } catch (error) {
+    console.error('Firebase admin initialization error:', error);
+  }
+}
+
+const db = admin.firestore();
 
 async function getGHLCredentials() {
   try {
     const settingsDoc = await db.collection('crmSettings').doc('ghl').get();
     if (settingsDoc.exists) {
       const data = settingsDoc.data();
+      console.log('[Debug] Found credentials in Firestore');
       return {
         apiKey: data?.apiKey || '',
         locationId: data?.locationId || ''
@@ -14,6 +32,8 @@ async function getGHLCredentials() {
   } catch (error) {
     console.error('Error fetching GHL credentials:', error);
   }
+  
+  console.log('[Debug] Using env variables');
   return {
     apiKey: process.env.GHL_API_KEY || '',
     locationId: process.env.GHL_LOCATION_ID || ''
