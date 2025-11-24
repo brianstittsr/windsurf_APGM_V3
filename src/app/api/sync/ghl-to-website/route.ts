@@ -84,6 +84,31 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Also fetch appointments from Contacts (for opportunity-linked appointments)
+    try {
+      console.log(`[ghl-sync] Fetching appointments from Contacts...`);
+      const contactAppointments = await fetchGHLContactAppointments(
+        apiKey,
+        locationId,
+        startDate.toISOString(),
+        endDate.toISOString()
+      );
+      
+      console.log(`[ghl-sync] Found ${contactAppointments.length} contact appointments`);
+      
+      for (const appointment of contactAppointments) {
+        try {
+          await syncAppointmentToWebsite(appointment, apiKey);
+          totalSynced++;
+        } catch (error) {
+          console.error(`[ghl-sync] Failed to sync contact appointment:`, error);
+          totalFailed++;
+        }
+      }
+    } catch (error) {
+      console.error(`[ghl-sync] Failed to fetch contact appointments:`, error);
+    }
+
     console.log(`[ghl-sync] Sync complete. Synced: ${totalSynced}, Failed: ${totalFailed}`);
 
     return NextResponse.json({
@@ -181,6 +206,79 @@ async function fetchGHLAppointmentsByCalendar(
 
   const data = await response.json();
   return data.events || [];
+}
+
+async function fetchGHLContactAppointments(
+  apiKey: string,
+  locationId: string,
+  startTime: string,
+  endTime: string
+) {
+  // Fetch all contacts for the location
+  const contactsResponse = await fetch(
+    `https://services.leadconnectorhq.com/contacts/?locationId=${locationId}&limit=100`,
+    {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Version': '2021-07-28'
+      }
+    }
+  );
+
+  if (!contactsResponse.ok) {
+    throw new Error(`Failed to fetch contacts: ${contactsResponse.status}`);
+  }
+
+  const contactsData = await contactsResponse.json();
+  const contacts = contactsData.contacts || [];
+  
+  const allAppointments: any[] = [];
+  const startDate = new Date(startTime);
+  const endDate = new Date(endTime);
+
+  // Fetch appointments for each contact
+  for (const contact of contacts) {
+    try {
+      const apptResponse = await fetch(
+        `https://services.leadconnectorhq.com/contacts/${contact.id}/appointments`,
+        {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Version': '2021-07-28'
+          }
+        }
+      );
+
+      if (apptResponse.ok) {
+        const apptData = await apptResponse.json();
+        const appointments = apptData.events || [];
+        
+        // Filter appointments by date range and add to list
+        for (const appt of appointments) {
+          const apptStartDate = new Date(appt.startTime);
+          
+          if (apptStartDate >= startDate && apptStartDate <= endDate) {
+            // Transform to match calendar event format
+            allAppointments.push({
+              id: appt.id,
+              title: appt.title,
+              startTime: appt.startTime,
+              endTime: appt.endTime,
+              calendarId: appt.calendarId,
+              contactId: appt.contactId,
+              status: appt.appointmentStatus || appt.appoinmentStatus, // Handle typo in API
+              address: appt.address,
+              notes: appt.notes || ''
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`[ghl-sync] Failed to fetch appointments for contact ${contact.id}:`, error);
+    }
+  }
+
+  return allAppointments;
 }
 
 async function syncAppointmentToWebsite(ghlAppointment: any, apiKey: string) {
