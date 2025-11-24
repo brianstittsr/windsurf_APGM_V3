@@ -46,6 +46,7 @@ export async function GET(req: NextRequest) {
 
     // Fetch calendars
     const calendars = await fetchGHLCalendars(apiKey, locationId);
+    console.log(`[GHL API] Found ${calendars.length} calendars:`, calendars.map((c: any) => ({ id: c.id, name: c.name })));
     
     const allTimeSlots: any[] = [];
 
@@ -61,6 +62,14 @@ export async function GET(req: NextRequest) {
           console.warn(`[GHL API] Could not fetch details for calendar ${calendar.name}`);
           continue;
         }
+        
+        console.log(`[GHL API] Calendar details structure:`, JSON.stringify({
+          name: calendarDetails.name,
+          hasAvailability: !!calendarDetails.availability,
+          hasOpenHours: !!calendarDetails.openHours,
+          availabilityKeys: calendarDetails.availability ? Object.keys(calendarDetails.availability) : [],
+          openHoursKeys: calendarDetails.openHours ? Object.keys(calendarDetails.openHours) : []
+        }));
 
         // Fetch existing appointments for this calendar on this date
         const existingAppointments = await fetchCalendarAppointments(
