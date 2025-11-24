@@ -428,6 +428,7 @@ export default function BookingCalendar() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Create appointment error:', errorData);
         throw new Error(errorData.error || 'Failed to create appointment');
       }
 

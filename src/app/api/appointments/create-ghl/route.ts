@@ -97,8 +97,16 @@ export async function POST(request: NextRequest) {
 
     if (!createAppointmentResponse.ok) {
       const errorText = await createAppointmentResponse.text();
-      console.error('GHL appointment creation failed:', errorText);
-      throw new Error(`Failed to create appointment in GHL: ${createAppointmentResponse.status}`);
+      console.error('GHL appointment creation failed:', createAppointmentResponse.status, errorText);
+      console.error('Appointment payload:', JSON.stringify(appointmentPayload, null, 2));
+      return NextResponse.json(
+        { 
+          error: `Failed to create appointment in GHL: ${createAppointmentResponse.status}`,
+          details: errorText,
+          payload: appointmentPayload
+        },
+        { status: createAppointmentResponse.status }
+      );
     }
 
     const appointmentResult = await createAppointmentResponse.json();
