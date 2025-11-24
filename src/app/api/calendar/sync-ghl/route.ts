@@ -18,6 +18,7 @@ interface Booking {
   notes?: string;
   ghlContactId?: string;
   ghlAppointmentId?: string;
+  couponCode?: string;
 }
 
 async function getGHLApiKey() {
@@ -124,30 +125,36 @@ async function createOrUpdateGHLAppointment(booking: Booking, contactId: string,
   try {
     const locationId = await getGHLLocationId();
     
-    // Get the default calendar (Service Calendar)
-    const calendarsResponse = await fetch(
-      `https://services.leadconnectorhq.com/calendars/?locationId=${locationId}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Version': '2021-07-28'
+    // Service Calendar ID (for MOELCALL200 coupon and default)
+    const SERVICE_CALENDAR_ID = 'JvcOyRMMYoIPbH5s1Bg1';
+    
+    // Check if booking has MOELCALL200 coupon
+    const couponCode = (booking as any).couponCode?.toUpperCase();
+    const useServiceCalendar = couponCode === 'MOELCALL200' || couponCode === 'MODELCALL200';
+    
+    let calendarId = SERVICE_CALENDAR_ID; // Default to Service Calendar
+    
+    // If not using MOELCALL200, fetch calendars and use first one
+    if (!useServiceCalendar) {
+      const calendarsResponse = await fetch(
+        `https://services.leadconnectorhq.com/calendars/?locationId=${locationId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Version': '2021-07-28'
+          }
+        }
+      );
+      
+      if (calendarsResponse.ok) {
+        const calendarsData = await calendarsResponse.json();
+        const calendars = calendarsData.calendars || [];
+        
+        if (calendars.length > 0) {
+          calendarId = calendars[0].id;
         }
       }
-    );
-    
-    if (!calendarsResponse.ok) {
-      throw new Error('Failed to fetch calendars');
     }
-    
-    const calendarsData = await calendarsResponse.json();
-    const calendars = calendarsData.calendars || [];
-    
-    // Use the first calendar (Service Calendar) or throw error if none found
-    if (calendars.length === 0) {
-      throw new Error('No calendars found in GHL');
-    }
-    
-    const calendarId = calendars[0].id;
     
     // Parse date and add 3 hours for end time
     const startDateTime = new Date(`${booking.date}T${booking.time}:00`);

@@ -68,11 +68,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Service Calendar ID (for MOELCALL200 coupon)
+    const SERVICE_CALENDAR_ID = 'JvcOyRMMYoIPbH5s1Bg1';
+    
+    // Check if MOELCALL200 coupon is applied
+    const couponCode = appointmentData.couponCode?.toUpperCase();
+    const useServiceCalendar = couponCode === 'MOELCALL200' || couponCode === 'MODELCALL200';
+    
+    // Use Service Calendar if MOELCALL200 is applied, otherwise use provided calendarId
+    const calendarId = useServiceCalendar ? SERVICE_CALENDAR_ID : appointmentData.calendarId;
+    
     // Create the appointment in GHL
     const appointmentPayload = {
       locationId: credentials.locationId,
       contactId: contactId,
-      calendarId: appointmentData.calendarId,
+      calendarId: calendarId,
       startTime: appointmentData.startTime, // ISO format: "2025-11-25T11:00:00.000Z"
       endTime: appointmentData.endTime,
       title: appointmentData.title || appointmentData.serviceName,
