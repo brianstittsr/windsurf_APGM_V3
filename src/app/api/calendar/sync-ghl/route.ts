@@ -123,15 +123,44 @@ async function createOrUpdateGHLContact(booking: Booking, apiKey: string) {
 async function createOrUpdateGHLAppointment(booking: Booking, contactId: string, apiKey: string) {
   try {
     const locationId = await getGHLLocationId();
-    const appointmentDateTime = `${booking.date}T${booking.time}:00`;
+    
+    // Get the default calendar (Service Calendar)
+    const calendarsResponse = await fetch(
+      `https://services.leadconnectorhq.com/calendars/?locationId=${locationId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Version': '2021-07-28'
+        }
+      }
+    );
+    
+    if (!calendarsResponse.ok) {
+      throw new Error('Failed to fetch calendars');
+    }
+    
+    const calendarsData = await calendarsResponse.json();
+    const calendars = calendarsData.calendars || [];
+    
+    // Use the first calendar (Service Calendar) or throw error if none found
+    if (calendars.length === 0) {
+      throw new Error('No calendars found in GHL');
+    }
+    
+    const calendarId = calendars[0].id;
+    
+    // Parse date and add 3 hours for end time
+    const startDateTime = new Date(`${booking.date}T${booking.time}:00`);
+    const endDateTime = new Date(startDateTime.getTime() + (3 * 60 * 60 * 1000)); // Add 3 hours
 
     const appointmentData = {
       locationId,
       contactId,
+      calendarId,
       title: `${booking.serviceName} - ${booking.clientName}`,
       appointmentStatus: booking.status === 'confirmed' ? 'confirmed' : 'new',
-      startTime: appointmentDateTime,
-      endTime: appointmentDateTime, // You may want to calculate end time based on service duration
+      startTime: startDateTime.toISOString(),
+      endTime: endDateTime.toISOString(),
       notes: booking.notes || `Booking for ${booking.serviceName}. Price: $${booking.price}. Deposit Paid: ${booking.depositPaid ? 'Yes' : 'No'}`,
     };
 
@@ -168,7 +197,9 @@ async function createOrUpdateGHLAppointment(booking: Booking, contactId: string,
       return data.id;
     }
 
-    throw new Error('Failed to create GHL appointment');
+    const errorText = await response.text();
+    console.error('GHL appointment creation failed:', response.status, errorText);
+    throw new Error(`Failed to create GHL appointment: ${response.status} - ${errorText}`);
   } catch (error) {
     console.error('Error creating/updating GHL appointment:', error);
     throw error;
