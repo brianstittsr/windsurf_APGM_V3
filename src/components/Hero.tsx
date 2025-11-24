@@ -5,35 +5,21 @@ import Link from 'next/link';
 export default function Hero() {
   return (
     <section id="hero" className="d-flex align-items-center position-relative overflow-hidden" style={{ height: '100vh', width: '100vw', marginTop: '0', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}>
-      {/* Full-screen Video Background */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
+      {/* Full-screen Background Image */}
+      <div
         className="position-absolute"
         style={{
           top: 0,
           left: 0,
           width: '100vw',
           height: '100vh',
-          objectFit: 'cover',
-          objectPosition: 'center',
+          backgroundImage: 'url(/images/hero/victoria-escobar-hero-main.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
           zIndex: -2
         }}
-      >
-        <source src="/videos/hero-video.mp4" type="video/mp4" />
-        {/* Fallback image if video doesn't load */}
-        <img 
-          src="/images/hero/victoria-escobar-hero-main.jpg" 
-          alt="Hero background"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover'
-          }}
-        />
-      </video>
+      />
       
       {/* Dark overlay for text readability */}
       <div className="position-absolute start-0 bg-dark" style={{top: 0, left: 0, width: '100vw', height: '100vh', opacity: 0.4, zIndex: -1}}></div>
