@@ -52,31 +52,35 @@ export async function GET(req: NextRequest) {
     // Fetch slots from each calendar
     for (const calendar of calendars) {
       try {
-        const slots = await fetchGHLCalendarSlots(apiKey, calendar.id, date);
+        console.log(`[GHL API] Processing calendar: ${calendar.name} (${calendar.id})`);
         
-        // Convert GHL slots to our format
-        slots.forEach((slot: any) => {
-          const startTime = new Date(slot.startTime);
-          const endTime = new Date(slot.endTime);
-          
-          // Calculate duration in hours
-          const durationMs = endTime.getTime() - startTime.getTime();
-          const durationHours = Math.round(durationMs / (1000 * 60 * 60));
-          
-          allTimeSlots.push({
-            time: startTime.toTimeString().slice(0, 5),
-            endTime: endTime.toTimeString().slice(0, 5),
-            duration: `${durationHours} Hour${durationHours !== 1 ? 's' : ''}`,
-            available: true,
-            artistId: calendar.teamMembers?.[0] || 'victoria',
-            artistName: calendar.teamMembers?.[0] || 'Victoria',
-            calendarId: calendar.id,
-            calendarName: calendar.name
-          });
-        });
+        // Fetch full calendar details with availability settings
+        const calendarDetails = await fetchCalendarDetails(apiKey, calendar.id);
+        
+        if (!calendarDetails) {
+          console.warn(`[GHL API] Could not fetch details for calendar ${calendar.name}`);
+          continue;
+        }
+
+        // Fetch existing appointments for this calendar on this date
+        const existingAppointments = await fetchCalendarAppointments(
+          apiKey,
+          locationId,
+          calendar.id,
+          date
+        );
+
+        console.log(`[GHL API] Calendar "${calendar.name}": ${existingAppointments.length} existing appointments`);
+
+        // Generate time slots based on calendar availability settings
+        const slots = generateTimeSlots(calendarDetails, date, existingAppointments, 3);
+        
+        console.log(`[GHL API] Calendar "${calendar.name}": ${slots.length} generated slots`);
+
+        allTimeSlots.push(...slots);
 
       } catch (error) {
-        console.error(`Error fetching slots for calendar ${calendar.name}:`, error);
+        console.error(`[GHL API] Error processing calendar ${calendar.name}:`, error);
       }
     }
 
@@ -150,17 +154,9 @@ async function fetchGHLCalendars(apiKey: string, locationId: string) {
   return data.calendars || [];
 }
 
-async function fetchGHLCalendarSlots(
-  apiKey: string,
-  calendarId: string,
-  date: string
-): Promise<any[]> {
-  // GHL expects timestamps in milliseconds
-  const startOfDay = new Date(date + 'T00:00:00');
-  const endOfDay = new Date(date + 'T23:59:59');
-
+async function fetchCalendarDetails(apiKey: string, calendarId: string): Promise<any> {
   const response = await fetch(
-    `https://services.leadconnectorhq.com/calendars/${calendarId}/free-slots?startDate=${startOfDay.getTime()}&endDate=${endOfDay.getTime()}`,
+    `https://services.leadconnectorhq.com/calendars/${calendarId}`,
     {
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -170,10 +166,99 @@ async function fetchGHLCalendarSlots(
   );
 
   if (!response.ok) {
-    console.warn(`Failed to fetch slots for calendar ${calendarId}: ${response.status}`);
+    console.warn(`Failed to fetch calendar details ${calendarId}: ${response.status}`);
+    return null;
+  }
+
+  const data = await response.json();
+  return data.calendar || data;
+}
+
+async function fetchCalendarAppointments(
+  apiKey: string,
+  locationId: string,
+  calendarId: string,
+  date: string
+): Promise<any[]> {
+  const startOfDay = new Date(date + 'T00:00:00').toISOString();
+  const endOfDay = new Date(date + 'T23:59:59').toISOString();
+
+  const response = await fetch(
+    `https://services.leadconnectorhq.com/calendars/events?locationId=${locationId}&calendarId=${calendarId}&startTime=${startOfDay}&endTime=${endOfDay}`,
+    {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Version': '2021-07-28'
+      }
+    }
+  );
+
+  if (!response.ok) {
+    console.warn(`Failed to fetch appointments for calendar ${calendarId}: ${response.status}`);
     return [];
   }
 
   const data = await response.json();
-  return data.slots || [];
+  return data.events || [];
+}
+
+function generateTimeSlots(
+  calendar: any,
+  date: string,
+  existingAppointments: any[],
+  appointmentDuration: number = 3
+): any[] {
+  const slots: any[] = [];
+  const dayOfWeek = new Date(date).getDay();
+  
+  const availability = calendar.availability?.[dayOfWeek] || calendar.openHours?.[dayOfWeek];
+  
+  if (!availability || !availability.openHour || !availability.closeHour) {
+    console.log(`[GHL API] No availability settings for calendar ${calendar.name} on day ${dayOfWeek}`);
+    return slots;
+  }
+
+  const [openHour, openMinute] = availability.openHour.split(':').map(Number);
+  const [closeHour, closeMinute] = availability.closeHour.split(':').map(Number);
+  
+  console.log(`[GHL API] Calendar ${calendar.name} hours: ${availability.openHour} - ${availability.closeHour}`);
+
+  let currentHour = openHour;
+  let currentMinute = openMinute || 0;
+
+  while (true) {
+    const slotEndHour = currentHour + appointmentDuration;
+    const slotEndMinute = currentMinute;
+
+    if (slotEndHour > closeHour || (slotEndHour === closeHour && slotEndMinute > (closeMinute || 0))) {
+      break;
+    }
+
+    const startTime = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
+    const endTime = `${String(slotEndHour).padStart(2, '0')}:${String(slotEndMinute).padStart(2, '0')}`;
+
+    const slotStart = new Date(`${date}T${startTime}:00`);
+    const slotEnd = new Date(`${date}T${endTime}:00`);
+    
+    const isAvailable = !existingAppointments.some(apt => {
+      const aptStart = new Date(apt.startTime);
+      const aptEnd = new Date(apt.endTime);
+      return (slotStart < aptEnd && slotEnd > aptStart);
+    });
+
+    slots.push({
+      time: startTime,
+      endTime: endTime,
+      duration: `${appointmentDuration} Hour${appointmentDuration !== 1 ? 's' : ''}`,
+      available: isAvailable,
+      artistId: calendar.teamMembers?.[0] || 'victoria',
+      artistName: calendar.name || 'Victoria',
+      calendarId: calendar.id,
+      calendarName: calendar.name
+    });
+
+    currentHour += 1;
+  }
+
+  return slots;
 }
