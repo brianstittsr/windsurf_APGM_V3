@@ -278,22 +278,36 @@ export default function BookingCalendar() {
   };
 
   const handleDeleteBooking = async (bookingId: string) => {
-    if (!confirm('Are you sure you want to delete this booking?')) return;
+    const booking = bookings.find(b => b.id === bookingId);
+    const hasGHLAppointment = booking?.ghlAppointmentId;
+    
+    const confirmMessage = hasGHLAppointment 
+      ? 'Are you sure you want to delete this booking? This will also delete it from GoHighLevel.'
+      : 'Are you sure you want to delete this booking?';
+    
+    if (!confirm(confirmMessage)) return;
 
     try {
-      await deleteDoc(doc(getDb(), 'bookings', bookingId));
-      
-      // Remove from GHL
-      const booking = bookings.find(b => b.id === bookingId);
-      if (booking?.ghlAppointmentId) {
-        await deleteGHLAppointment(booking.ghlAppointmentId);
+      // Delete from GHL first if it exists
+      if (hasGHLAppointment && booking.ghlAppointmentId) {
+        console.log('Deleting from GHL:', booking.ghlAppointmentId);
+        const ghlDeleted = await deleteGHLAppointment(booking.ghlAppointmentId);
+        if (!ghlDeleted) {
+          const continueAnyway = confirm('Failed to delete from GoHighLevel. Continue deleting from website?');
+          if (!continueAnyway) return;
+        }
       }
       
+      // Delete from website database
+      console.log('Deleting from website database:', bookingId);
+      await deleteDoc(doc(getDb(), 'bookings', bookingId));
+      
+      alert('Booking deleted successfully!');
       fetchBookings();
       setShowModal(false);
     } catch (error) {
       console.error('Error deleting booking:', error);
-      alert('Failed to delete booking');
+      alert(`Failed to delete booking: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -323,15 +337,25 @@ export default function BookingCalendar() {
     }
   };
 
-  const deleteGHLAppointment = async (appointmentId: string) => {
+  const deleteGHLAppointment = async (appointmentId: string): Promise<boolean> => {
     try {
-      await fetch('/api/calendar/sync-ghl', {
+      const response = await fetch('/api/calendar/sync-ghl', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ appointmentId })
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Failed to delete GHL appointment:', errorData);
+        return false;
+      }
+      
+      console.log('Successfully deleted from GHL');
+      return true;
     } catch (error) {
       console.error('Error deleting GHL appointment:', error);
+      return false;
     }
   };
 
