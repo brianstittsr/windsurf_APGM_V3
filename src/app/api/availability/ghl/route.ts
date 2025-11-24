@@ -237,11 +237,26 @@ function generateTimeSlots(
 ): any[] {
   const slots: any[] = [];
   const dayOfWeek = new Date(date).getDay();
+  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const dayName = dayNames[dayOfWeek];
   
-  const availability = calendar.availability?.[dayOfWeek] || calendar.openHours?.[dayOfWeek];
+  console.log(`[GHL API] Calendar ${calendar.name} - Looking for day: ${dayName} (${dayOfWeek})`);
+  console.log(`[GHL API] Calendar structure:`, JSON.stringify({
+    hasAvailability: !!calendar.availability,
+    hasOpenHours: !!calendar.openHours,
+    availabilityKeys: calendar.availability ? Object.keys(calendar.availability) : [],
+    openHoursKeys: calendar.openHours ? Object.keys(calendar.openHours) : []
+  }));
+  
+  // Try both numeric index and day name
+  const availability = calendar.availability?.[dayOfWeek] || 
+                       calendar.availability?.[dayName] ||
+                       calendar.openHours?.[dayOfWeek] ||
+                       calendar.openHours?.[dayName];
   
   if (!availability || !availability.openHour || !availability.closeHour) {
-    console.log(`[GHL API] No availability settings for calendar ${calendar.name} on day ${dayOfWeek}`);
+    console.log(`[GHL API] No availability settings for calendar ${calendar.name} on day ${dayName} (${dayOfWeek})`);
+    console.log(`[GHL API] Availability object:`, availability);
     return slots;
   }
 
