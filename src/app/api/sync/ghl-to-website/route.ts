@@ -107,9 +107,22 @@ export async function POST(req: NextRequest) {
 
 async function getGHLCredentials() {
   try {
+    // First try to get from the collection (any document)
+    const settingsSnapshot = await db.collection('crmSettings').limit(1).get();
+    if (!settingsSnapshot.empty) {
+      const data = settingsSnapshot.docs[0].data();
+      console.log('[ghl-sync] Found credentials in Firestore');
+      return {
+        apiKey: data?.apiKey || process.env.GHL_API_KEY || '',
+        locationId: data?.locationId || process.env.GHL_LOCATION_ID || ''
+      };
+    }
+    
+    // Fallback: try specific document ID for backwards compatibility
     const settingsDoc = await db.collection('crmSettings').doc('gohighlevel').get();
     if (settingsDoc.exists) {
       const data = settingsDoc.data();
+      console.log('[ghl-sync] Found credentials in Firestore (legacy doc)');
       return {
         apiKey: data?.apiKey || process.env.GHL_API_KEY || '',
         locationId: data?.locationId || process.env.GHL_LOCATION_ID || ''
@@ -118,6 +131,8 @@ async function getGHLCredentials() {
   } catch (error) {
     console.error('Error fetching GHL credentials:', error);
   }
+  
+  console.log('[ghl-sync] Using environment variables for credentials');
   return {
     apiKey: process.env.GHL_API_KEY || '',
     locationId: process.env.GHL_LOCATION_ID || ''

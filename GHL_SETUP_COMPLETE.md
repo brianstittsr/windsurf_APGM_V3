@@ -1,16 +1,24 @@
-# GoHighLevel Setup - Complete Configuration
+# GoHighLevel Integration - Setup Complete! 🎉
+
+**UPDATED: Nov 23, 2025 - Location-Specific Private Integration Support**
 
 ## ✅ Your GoHighLevel Credentials
 
 ### **API Key:**
 ```
-pit-7448430c-05cd-4aa8-acfd-afc6cf3e84d2
+pit-aef2c2c9-8bb5-461b-a2d8-a25bcf42f6d7
 ```
+✅ **VERIFIED WORKING** - Tested Nov 23, 2025
 
 ### **Location ID:**
 ```
 kfGFMn1aPE1AhW18tpG8
 ```
+
+### **Your Calendars:**
+1. **Service Calendar** - ID: `JvcOyRMMYoIPbH5s1Bg1`
+2. **Victoria Escobar's Personal Calendar** - ID: `apjAQhxGgapiXteQga42`
+3. **Free Virtual Consultation** - ID: `lrcO6wctZdKrnhb8iwye`
 
 ---
 
