@@ -48,6 +48,19 @@ export async function GET(req: NextRequest) {
     const calendars = await fetchGHLCalendars(apiKey, locationId);
     console.log(`[GHL API] Found ${calendars.length} calendars:`, calendars.map((c: any) => ({ id: c.id, name: c.name })));
     
+    // Return early with debug info if no calendars
+    if (calendars.length === 0) {
+      return NextResponse.json({
+        hasAvailability: false,
+        timeSlots: [],
+        debug: {
+          message: 'No calendars found in GHL',
+          locationId,
+          hasApiKey: !!apiKey
+        }
+      });
+    }
+    
     const allTimeSlots: any[] = [];
 
     // Fetch slots from each calendar
@@ -98,7 +111,12 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       hasAvailability: allTimeSlots.length > 0,
-      timeSlots: allTimeSlots
+      timeSlots: allTimeSlots,
+      debug: {
+        calendarsChecked: calendars.length,
+        date,
+        totalSlots: allTimeSlots.length
+      }
     });
 
   } catch (error) {
