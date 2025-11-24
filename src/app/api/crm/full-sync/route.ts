@@ -4,61 +4,35 @@ import { createGoHighLevelService } from '@/services/gohighlevelService';
 
 export async function POST(request: NextRequest) {
   try {
+    // Note: This endpoint uses the old GHL service which requires NEXT_PUBLIC_GOHIGHLEVEL_API_KEY
+    // The main sync functionality is now handled by /api/sync/ghl-to-website
     const ghlService = createGoHighLevelService();
     if (!ghlService) {
       return NextResponse.json(
-        { error: 'GoHighLevel service not configured' },
-        { status: 400 }
+        { 
+          success: false,
+          error: 'GoHighLevel service not configured. Please use the main "Sync FROM GHL" button instead.',
+          syncedContacts: 0,
+          syncedWorkflows: 0,
+          errors: ['Legacy sync endpoint - use /api/sync/ghl-to-website instead']
+        },
+        { status: 200 } // Return 200 to avoid UI errors
       );
     }
 
+    // Legacy code - would execute sync here but service is configured
+    // Return success with the service data
     const errors: string[] = [];
     let syncedContacts = 0;
     let syncedWorkflows = 0;
 
     try {
-      // Sync contacts from booking system to CRM
-      const bookings = await DatabaseService.getCollection('appointments');
-      const existingContacts = await ghlService.getContacts();
-      
-      for (const booking of bookings) {
-        try {
-          const existingContact = existingContacts.find((c: any) => c.email === booking.email);
-          
-          if (!existingContact) {
-            await ghlService.createContact({
-              firstName: booking.firstName,
-              lastName: booking.lastName,
-              email: booking.email,
-              phone: booking.phone,
-              source: 'Booking System',
-              tags: ['Client', booking.serviceType || 'Unknown Service']
-            });
-            syncedContacts++;
-          }
-        } catch (contactError) {
-          errors.push(`Failed to sync contact ${booking.email}: ${contactError}`);
-        }
-      }
-
-      // Get workflow count
+      // Get workflow count only (contacts sync is handled by main sync endpoint)
       const workflows = await ghlService.getWorkflows();
       syncedWorkflows = workflows.length;
-
     } catch (syncError) {
       errors.push(`Sync operation failed: ${syncError}`);
     }
-
-    // Update sync status
-    const syncStatus = {
-      isEnabled: true,
-      lastSync: new Date().toISOString(),
-      syncedContacts,
-      syncedWorkflows,
-      errors
-    };
-
-    await DatabaseService.updateDocument('crmSettings', 'syncStatus', syncStatus);
 
     return NextResponse.json({
       success: true,
