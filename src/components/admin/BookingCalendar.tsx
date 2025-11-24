@@ -31,10 +31,45 @@ export default function BookingCalendar() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [calendars, setCalendars] = useState<Array<{id: string, name: string}>>([]);
+  const [newAppointment, setNewAppointment] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    calendarId: '',
+    serviceName: '',
+    date: '',
+    time: '',
+    duration: 180, // 3 hours in minutes
+    notes: '',
+    status: 'new' as const
+  });
 
   useEffect(() => {
     fetchBookings();
+    fetchGHLCalendars();
   }, [currentDate, viewMode]);
+
+  const fetchGHLCalendars = async () => {
+    try {
+      const response = await fetch('/api/crm/test-connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.calendars) {
+          setCalendars(data.calendars);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching GHL calendars:', error);
+    }
+  };
 
   const fetchBookings = async () => {
     setLoading(true);
@@ -358,6 +393,71 @@ export default function BookingCalendar() {
     }
   };
 
+  const createGHLAppointment = async () => {
+    setCreating(true);
+    try {
+      // Validate required fields
+      if (!newAppointment.name || !newAppointment.email || !newAppointment.calendarId || !newAppointment.date || !newAppointment.time) {
+        alert('Please fill in all required fields');
+        return;
+      }
+
+      // Create start and end times
+      const startDateTime = new Date(`${newAppointment.date}T${newAppointment.time}:00`);
+      const endDateTime = new Date(startDateTime.getTime() + newAppointment.duration * 60000);
+
+      const appointmentData = {
+        name: newAppointment.name,
+        email: newAppointment.email,
+        phone: newAppointment.phone,
+        calendarId: newAppointment.calendarId,
+        serviceName: newAppointment.serviceName,
+        title: newAppointment.serviceName || 'Appointment',
+        startTime: startDateTime.toISOString(),
+        endTime: endDateTime.toISOString(),
+        notes: newAppointment.notes,
+        status: newAppointment.status
+      };
+
+      const response = await fetch('/api/appointments/create-ghl', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(appointmentData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || 'Failed to create appointment');
+      }
+
+      const result = await response.json();
+      
+      alert('Appointment created successfully in GHL!');
+      
+      // Reset form
+      setNewAppointment({
+        name: '',
+        email: '',
+        phone: '',
+        calendarId: '',
+        serviceName: '',
+        date: '',
+        time: '',
+        duration: 180,
+        notes: '',
+        status: 'new'
+      });
+      
+      setShowCreateModal(false);
+      fetchBookings();
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      alert(`Failed to create appointment: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setCreating(false);
+    }
+  };
+
   const getStatusColor = (status: Booking['status']) => {
     switch (status) {
       case 'confirmed': return 'success';
@@ -388,42 +488,52 @@ export default function BookingCalendar() {
           <i className="bi bi-calendar3 me-2"></i>
           Booking Calendar
         </h2>
-        <button 
-          className="btn btn-success me-2"
-          onClick={syncFromGHL}
-          disabled={syncing}
-          title="Import appointments from GHL to website"
-        >
-          {syncing ? (
-            <>
-              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-              Syncing...
-            </>
-          ) : (
-            <>
-              <i className="bi bi-download me-2"></i>
-              Sync FROM GHL
-            </>
-          )}
-        </button>
-        <button 
-          className="btn btn-primary"
-          onClick={syncAllBookingsWithGHL}
-          disabled={syncing}
-          title="Push website bookings to GHL"
-        >
-          {syncing ? (
-            <>
-              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-              Syncing...
-            </>
-          ) : (
-            <>
-              <i className="bi bi-upload me-2"></i>
-              Sync TO GHL
-            </>
-          )}
-        </button>
+        <div>
+          <button 
+            className="btn btn-info me-2"
+            onClick={() => setShowCreateModal(true)}
+            title="Create new appointment in GHL"
+          >
+            <i className="bi bi-plus-circle me-2"></i>
+            Create Appointment
+          </button>
+          <button 
+            className="btn btn-success me-2"
+            onClick={syncFromGHL}
+            disabled={syncing}
+            title="Import appointments from GHL to website"
+          >
+            {syncing ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Syncing...
+              </>
+            ) : (
+              <>
+                <i className="bi bi-download me-2"></i>
+                Sync FROM GHL
+              </>
+            )}
+          </button>
+          <button 
+            className="btn btn-primary"
+            onClick={syncAllBookingsWithGHL}
+            disabled={syncing}
+            title="Push website bookings to GHL"
+          >
+            {syncing ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Syncing...
+              </>
+            ) : (
+              <>
+                <i className="bi bi-upload me-2"></i>
+                Sync TO GHL
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Calendar Controls */}
@@ -665,6 +775,147 @@ export default function BookingCalendar() {
                 </button>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
                   Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Appointment Modal */}
+      {showCreateModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="bi bi-plus-circle me-2"></i>
+                  Create New Appointment in GHL
+                </h5>
+                <button type="button" className="btn-close" onClick={() => setShowCreateModal(false)}></button>
+              </div>
+              <div className="modal-body">
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label">Client Name *</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={newAppointment.name}
+                      onChange={(e) => setNewAppointment({...newAppointment, name: e.target.value})}
+                      placeholder="John Doe"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Email *</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      value={newAppointment.email}
+                      onChange={(e) => setNewAppointment({...newAppointment, email: e.target.value})}
+                      placeholder="john@example.com"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Phone</label>
+                    <input
+                      type="tel"
+                      className="form-control"
+                      value={newAppointment.phone}
+                      onChange={(e) => setNewAppointment({...newAppointment, phone: e.target.value})}
+                      placeholder="+1 (555) 123-4567"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Calendar *</label>
+                    <select
+                      className="form-select"
+                      value={newAppointment.calendarId}
+                      onChange={(e) => setNewAppointment({...newAppointment, calendarId: e.target.value})}
+                    >
+                      <option value="">Select Calendar</option>
+                      {calendars.map(cal => (
+                        <option key={cal.id} value={cal.id}>{cal.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label">Service Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={newAppointment.serviceName}
+                      onChange={(e) => setNewAppointment({...newAppointment, serviceName: e.target.value})}
+                      placeholder="Microblading, Lip Blush, etc."
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label">Date *</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={newAppointment.date}
+                      onChange={(e) => setNewAppointment({...newAppointment, date: e.target.value})}
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label">Time *</label>
+                    <input
+                      type="time"
+                      className="form-control"
+                      value={newAppointment.time}
+                      onChange={(e) => setNewAppointment({...newAppointment, time: e.target.value})}
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label">Duration (minutes)</label>
+                    <select
+                      className="form-select"
+                      value={newAppointment.duration}
+                      onChange={(e) => setNewAppointment({...newAppointment, duration: parseInt(e.target.value)})}
+                    >
+                      <option value="60">1 hour</option>
+                      <option value="90">1.5 hours</option>
+                      <option value="120">2 hours</option>
+                      <option value="150">2.5 hours</option>
+                      <option value="180">3 hours</option>
+                      <option value="210">3.5 hours</option>
+                      <option value="240">4 hours</option>
+                    </select>
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label">Notes</label>
+                    <textarea
+                      className="form-control"
+                      rows={3}
+                      value={newAppointment.notes}
+                      onChange={(e) => setNewAppointment({...newAppointment, notes: e.target.value})}
+                      placeholder="Any additional notes..."
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>
+                  Cancel
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-primary"
+                  onClick={createGHLAppointment}
+                  disabled={creating}
+                >
+                  {creating ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-check-circle me-2"></i>
+                      Create Appointment
+                    </>
+                  )}
                 </button>
               </div>
             </div>
