@@ -54,10 +54,9 @@ export default function BookingCalendar() {
 
   const fetchGHLCalendars = async () => {
     try {
-      const response = await fetch('/api/crm/test-connection', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({})
+      const response = await fetch('/api/calendars/list', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
       });
 
       if (response.ok) {
@@ -65,6 +64,8 @@ export default function BookingCalendar() {
         if (data.calendars) {
           setCalendars(data.calendars);
         }
+      } else {
+        console.error('Failed to fetch calendars:', response.status);
       }
     } catch (error) {
       console.error('Error fetching GHL calendars:', error);
