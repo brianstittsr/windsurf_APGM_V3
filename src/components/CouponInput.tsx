@@ -68,21 +68,28 @@ export default function CouponInput({ serviceId, orderAmount, onCouponApplied, a
   };
 
   return (
-    <div className="card mb-3">
-      <div className="card-body">
-        <h6 className="card-title mb-3">
-          <i className="fas fa-tag me-2"></i>
-          Coupon Code
-        </h6>
+    <div className="card border-0 shadow-lg mb-4" style={{borderRadius: '16px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
+      <div className="card-body p-4">
+        <div className="d-flex align-items-center mb-3">
+          <div className="bg-white bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center me-3" style={{width: '48px', height: '48px'}}>
+            <i className="fas fa-tags text-white" style={{fontSize: '1.25rem'}}></i>
+          </div>
+          <div>
+            <h5 className="card-title mb-0 fw-bold text-white">
+              Have a Coupon Code?
+            </h5>
+            <p className="text-white text-opacity-75 mb-0 small">Save money on your booking!</p>
+          </div>
+        </div>
 
         {appliedCoupon ? (
-          <div className="d-flex align-items-center justify-content-between p-3 bg-success bg-opacity-10 rounded">
+          <div className="d-flex align-items-center justify-content-between p-3 bg-white rounded-3 shadow-sm">
             <div>
               <div className="d-flex align-items-center">
-                <i className="fas fa-check-circle text-success me-2"></i>
-                <strong className="text-success">Coupon Applied: {appliedCoupon.code}</strong>
+                <i className="fas fa-check-circle text-success me-2" style={{fontSize: '1.25rem'}}></i>
+                <strong className="text-success" style={{fontSize: '1.1rem'}}>Coupon Applied: {appliedCoupon.code}</strong>
               </div>
-              <small className="text-muted">{appliedCoupon.description}</small>
+              <small className="text-dark">{appliedCoupon.description}</small>
               <div className="mt-1">
                 <small className="text-success">
                   {appliedCoupon.type === 'percentage' 
@@ -109,7 +116,7 @@ export default function CouponInput({ serviceId, orderAmount, onCouponApplied, a
             <div className="input-group mb-2">
               <input
                 type="text"
-                className={`form-control ${error ? 'is-invalid' : success ? 'is-valid' : ''}`}
+                className={`form-control form-control-lg ${error ? 'is-invalid' : success ? 'is-valid' : ''}`}
                 placeholder="Enter coupon code"
                 value={couponCode}
                 onChange={(e) => {
@@ -119,12 +126,14 @@ export default function CouponInput({ serviceId, orderAmount, onCouponApplied, a
                 }}
                 onKeyPress={handleKeyPress}
                 disabled={loading}
+                style={{borderRadius: '12px 0 0 12px', fontSize: '1.1rem', fontWeight: '600'}}
               />
               <button
                 type="button"
-                className="btn btn-outline-primary"
+                className="btn btn-warning btn-lg fw-bold"
                 onClick={handleApplyCoupon}
                 disabled={loading || !couponCode.trim()}
+                style={{borderRadius: '0 12px 12px 0', minWidth: '120px'}}
               >
                 {loading ? (
                   <>
@@ -153,10 +162,10 @@ export default function CouponInput({ serviceId, orderAmount, onCouponApplied, a
           </>
         )}
 
-        <div className="mt-2">
-          <small className="text-muted">
-            <i className="fas fa-info-circle me-1"></i>
-            Have a coupon code? Enter it above to apply your discount.
+        <div className="mt-3 p-3 bg-white bg-opacity-10 rounded-3">
+          <small className="text-white d-flex align-items-center">
+            <i className="fas fa-gift me-2" style={{fontSize: '1rem'}}></i>
+            <span>Enter your coupon code above to unlock special savings and discounts!</span>
           </small>
         </div>
       </div>

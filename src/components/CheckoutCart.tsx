@@ -426,7 +426,7 @@ export default function CheckoutCart({
                   </div>
                 </div>
                 <div className="col">
-                  <h6 className="mb-1 fw-bold">Brian Stitt</h6>
+                  <h6 className="mb-1 fw-bold">{clientName}</h6>
                   <p className="text-muted mb-0 small">Primary Account Holder</p>
                 </div>
               </div>
