@@ -1120,12 +1120,7 @@ function BookNowCustomContent() {
                       {activeTimeSlots && !activeLoading && (
                         <>
                           {/* Show which system is being used */}
-                          {isUsingGHL && (
-                            <div className="alert alert-info mb-3" role="alert">
-                              <i className="fas fa-cloud me-2"></i>
-                              <strong>Using GHL Calendar:</strong> Showing available slots from GoHighLevel calendar booking rules
-                            </div>
-                          )}
+                          {/* GHL Calendar message hidden per user request */}
                           {activeTimeSlots.hasAvailability ? (
                             <div className="row justify-content-center g-4">
                               {activeTimeSlots.timeSlots
@@ -1304,7 +1299,7 @@ function BookNowCustomContent() {
                               <i className="fas fa-calendar-times text-muted mb-3" style={{ fontSize: '2.5rem' }}></i>
                               <h5 className="text-muted">No Available Time Slots</h5>
                               <p className="text-muted mb-0">
-                                Sorry, there are no available 4-hour time slots on this date.
+                                Sorry, there are no available 3-hour time slots on this date.
                                 Please select a different date.
                               </p>
                             </div>

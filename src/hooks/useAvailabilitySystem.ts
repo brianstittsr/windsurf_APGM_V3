@@ -48,8 +48,9 @@ export function useAvailabilitySystem(selectedDate: string) {
           console.log('[Availability System] Mode: Website (default)');
         }
       } catch (error) {
-        console.error('[Availability System] Error checking mode:', error);
-        setUseGHL(false);
+        console.error('[Availability System] Error checking mode (using GHL as default):', error);
+        // Default to GHL if Firestore permissions error
+        setUseGHL(true);
       }
     };
 
@@ -125,8 +126,8 @@ export function useAvailabilitySystem(selectedDate: string) {
                 const startHour = convertTo24Hour(range.startTime);
                 const endHour = convertTo24Hour(range.endTime);
 
-                for (let hour = startHour; hour <= endHour - 4; hour += 4) {
-                  const endTime = hour + 4;
+                for (let hour = startHour; hour <= endHour - 3; hour += 1) {
+                  const endTime = hour + 3;
                   const timeSlot = `${hour.toString().padStart(2, '0')}:00`;
                   const endTimeFormatted = `${endTime.toString().padStart(2, '0')}:00`;
                   
@@ -150,7 +151,7 @@ export function useAvailabilitySystem(selectedDate: string) {
                     timeSlots.push({
                       time: timeSlot,
                       endTime: endTimeFormatted,
-                      duration: '4 Hours',
+                      duration: '3 Hours',
                       available: !isBooked && !isPastTime,
                       artistId: data.artistId,
                       artistName: 'Victoria'
