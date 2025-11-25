@@ -47,6 +47,14 @@ import DatabaseSetup from '../../components/DatabaseSetup';
 import ProfileConfirmation from '../../components/ProfileConfirmation';
 // Email services moved to API routes to avoid client-side imports
 
+// Helper function to convert 24-hour time to 12-hour format
+function formatTimeTo12Hour(time24: string): string {
+  const [hours, minutes] = time24.split(':').map(Number);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const hours12 = hours % 12 || 12; // Convert 0 to 12 for midnight
+  return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
+
 function BookNowCustomContent() {
   const searchParams = useSearchParams();
   const isSetupMode = searchParams.get('setup') === 'true';
@@ -1164,7 +1172,7 @@ function BookNowCustomContent() {
                                               : '#AD6269', 
                                             fontSize: '1.1rem' 
                                           }}>
-                                            {slot.time}
+                                            {formatTimeTo12Hour(slot.time)}
                                           </h5>
                                         </div>
                                         
