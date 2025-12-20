@@ -78,10 +78,28 @@ service cloud.firestore {
       allow write: if isAdmin() || (isArtist() && request.auth.uid == artistId);
     }
 
+    // Artist availability collection (camelCase version used by booking system)
+    match /artistAvailability/{docId} {
+      allow read: if true; // Public read for booking calendar
+      allow write: if isAdminOrArtist();
+    }
+
+    // Booked slots collection - tracks which time slots are booked
+    match /bookedSlots/{date} {
+      allow read: if true; // Public read for availability checking
+      allow write: if isAuthenticated(); // Any authenticated user can book
+    }
+
+    // Artist schedule exceptions (holidays, time off)
+    match /artistScheduleExceptions/{exceptionId} {
+      allow read: if true; // Public read for booking calendar
+      allow write: if isAdminOrArtist();
+    }
+
     // Reviews collection - Public read, authenticated create, admin manage
     match /reviews/{reviewId} {
       allow read: if true; // Public read for homepage
-      allow create: if isAuthenticated();
+      allow create: if true; // Allow anonymous reviews
       allow update, delete: if isAdmin();
     }
 

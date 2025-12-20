@@ -394,7 +394,6 @@ export default function CheckoutCart({
               <i className="fas fa-calendar-check text-primary" style={{fontSize: '2rem'}}></i>
             </div>
             <h1 className="h2 fw-bold mb-2">Complete Your Booking</h1>
-            <p className="text-muted lead">Welcome back, Brian S</p>
             <div className="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
               <i className="fas fa-sparkles me-2"></i>
               A Pretty Girl Matter
@@ -643,9 +642,52 @@ export default function CheckoutCart({
                   type="button"
                   className="btn btn-success w-100 py-3 rounded-pill shadow-sm"
                   style={{fontSize: '1.1rem'}}
-                  onClick={() => {
+                  onClick={async () => {
+                    console.log('Confirm Booking button clicked');
                     // Skip payment and go directly to confirmation
                     setPaymentSuccess(true);
+                    
+                    // Create appointment for pay-after-procedure bookings
+                    try {
+                      console.log('📅 Creating appointment for pay-after-procedure booking...');
+                      
+                      const appointmentData = {
+                        clientId: clientId || 'temp-client-id',
+                        clientName: clientName,
+                        clientEmail: 'brianstittsr@gmail.com',
+                        serviceId: service.id,
+                        serviceName: service.name,
+                        artistId: 'victoria',
+                        scheduledDate: appointmentDate,
+                        scheduledTime: appointmentTime,
+                        status: 'confirmed' as const,
+                        paymentStatus: 'pending' as const,
+                        totalAmount: 150, // $200 - $50 deposit credit
+                        depositAmount: 50, // Credited deposit
+                        remainingAmount: 150,
+                        specialRequests: data.specialRequests || '',
+                        rescheduleCount: 0,
+                        confirmationSent: false,
+                        reminderSent: false
+                      };
+
+                      const { AppointmentService } = await import('@/services/database');
+                      const appointmentId = await AppointmentService.createAppointment(appointmentData);
+                      console.log('✅ Appointment created:', appointmentId);
+                      
+                      // Remove availability for the booked time slot
+                      try {
+                        const { AvailabilityService: NewAvailabilityService } = await import('@/services/availabilityService');
+                        await NewAvailabilityService.bookTimeSlot('victoria', appointmentDate, appointmentTime, appointmentId);
+                        console.log('✅ Time slot marked as unavailable');
+                      } catch (availabilityError) {
+                        console.warn('⚠️ Could not update availability:', availabilityError);
+                      }
+                      
+                    } catch (error) {
+                      console.error('Error creating appointment:', error);
+                    }
+                    
                     setTimeout(() => {
                       onNext();
                     }, 1000);
@@ -769,152 +811,6 @@ export default function CheckoutCart({
             </div>
           </div>
 
-          {/* Modern Order Summary */}
-          <div className="card border-0 shadow-sm" style={{borderRadius: '16px'}}>
-            <div className="card-body p-0">
-              <button 
-                className="btn btn-link text-decoration-none w-100 p-4 d-flex align-items-center justify-content-between"
-                onClick={() => setShowOrderSummary(!showOrderSummary)}
-                style={{borderRadius: '16px'}}
-              >
-                <div className="d-flex align-items-center">
-                  <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style={{width: '40px', height: '40px'}}>
-                    <i className="fas fa-receipt" style={{fontSize: '1rem'}}></i>
-                  </div>
-                  <div className="text-start">
-                    <div className="fw-bold text-dark">Order Summary</div>
-                    <small className="text-muted">Total: {formatCurrency(totalAmount)}</small>
-                  </div>
-                </div>
-                <i className={`fas fa-chevron-${showOrderSummary ? 'up' : 'down'} text-muted`}></i>
-              </button>
-              
-              {showOrderSummary && (
-                <div className="px-4 pb-4">
-                  <hr className="mt-0 mb-4" />
-                  <div className="space-y-3">
-                    <div className="d-flex justify-content-between align-items-center py-2">
-                      <div className="d-flex align-items-center">
-                        <i className="fas fa-spa text-primary me-2"></i>
-                        <span>{service.name}</span>
-                      </div>
-                      <span className="fw-medium">{formatCurrency(service.price)}</span>
-                    </div>
-                    
-                    {appliedCoupon && couponDiscount > 0 && (
-                      <div className="d-flex justify-content-between align-items-center py-2 text-success">
-                        <div className="d-flex align-items-center">
-                          <i className="fas fa-tag me-2"></i>
-                          <span>Coupon ({appliedCoupon.code})</span>
-                        </div>
-                        <span className="fw-medium">-{formatCurrency(couponDiscount)}</span>
-                      </div>
-                    )}
-                    
-                    {appliedGiftCard && giftCardDiscount > 0 && (
-                      <div className="d-flex justify-content-between align-items-center py-2 text-success">
-                        <div className="d-flex align-items-center">
-                          <i className="fas fa-gift me-2"></i>
-                          <span>Gift Card ({appliedGiftCard.code})</span>
-                        </div>
-                        <span className="fw-medium">-{formatCurrency(giftCardDiscount)}</span>
-                      </div>
-                    )}
-                    
-                    <div className="d-flex justify-content-between align-items-center py-2 border-top">
-                      <span>Subtotal</span>
-                      <span>{formatCurrency(subtotal)}</span>
-                    </div>
-                    
-                    <div className="d-flex justify-content-between align-items-center py-2">
-                      <span>Tax (7.75%)</span>
-                      <span>{formatCurrency(tax)}</span>
-                    </div>
-                    
-                    <div className="d-flex justify-content-between align-items-center py-2">
-                      <div className="d-flex align-items-center">
-                        <span>{getStripeFeeExplanation(selectedPaymentMethod)}</span>
-                        <i className="fas fa-info-circle text-muted ms-1" title="Secure payment processing"></i>
-                      </div>
-                      <span>{formatCurrency(stripeFee)}</span>
-                    </div>
-                    
-                    <div className="d-flex justify-content-between align-items-center py-3 border-top border-2">
-                      <span className="fw-bold h6 mb-0">Total Amount</span>
-                      <span className="fw-bold h6 mb-0">{formatCurrency(totalAmount)}</span>
-                    </div>
-                    
-                    {!isFreeService && !is100PercentDiscount && !isPayAfterProcedure && (
-                      <div className="bg-primary bg-opacity-10 p-3 rounded-3">
-                        <div className="d-flex justify-content-between align-items-center mb-2">
-                          <span className="fw-bold text-primary">Due Today (Deposit)</span>
-                          <span className="fw-bold text-primary h6 mb-0">{formatCurrency(depositAmount + stripeFee)}</span>
-                        </div>
-                        <div className="d-flex justify-content-between align-items-center">
-                          <small className="text-muted">Remaining balance (due at appointment)</small>
-                          <small className="text-muted fw-medium">{formatCurrency(remainingAmount)}</small>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {isPayAfterProcedure && (
-                      <div className="bg-success bg-opacity-10 p-3 rounded-3">
-                        <div className="d-flex justify-content-between align-items-center">
-                          <span className="fw-bold text-success">Due After Procedure</span>
-                          <span className="fw-bold text-success h6 mb-0">{formatCurrency(totalAmount)}</span>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {(isFreeService || is100PercentDiscount) && !isPayAfterProcedure && (
-                      <div className="bg-success bg-opacity-10 p-3 rounded-3">
-                        <div className="d-flex justify-content-between align-items-center">
-                          <span className="fw-bold text-success">Total Due</span>
-                          <span className="fw-bold text-success h6 mb-0">{formatCurrency(0)}</span>
-                        </div>
-                        <small className="text-success d-block mt-2">
-                          <i className="fas fa-check-circle me-1"></i>
-                          100% covered by coupon!
-                        </small>
-                      </div>
-                    )}
-                    
-                    {(appliedCoupon || appliedGiftCard) && (
-                      <div className="bg-success bg-opacity-10 p-3 rounded-3">
-                        <div className="d-flex align-items-center">
-                          <i className="fas fa-check-circle text-success me-2"></i>
-                          <small className="text-success fw-medium">
-                            {appliedCoupon && appliedGiftCard ? (
-                              `You saved ${formatCurrency(couponDiscount + giftCardDiscount)} total! (${formatCurrency(couponDiscount)} coupon + ${formatCurrency(giftCardDiscount)} gift card)`
-                            ) : appliedCoupon ? (
-                              `You saved ${formatCurrency(couponDiscount)} with coupon ${appliedCoupon.code}!`
-                            ) : (
-                              `You saved ${formatCurrency(giftCardDiscount)} with gift card ${appliedGiftCard?.code}!`
-                            )}
-                          </small>
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div className="text-center mt-3">
-                      <small className="text-muted">
-                        <i className="fas fa-info-circle me-1"></i>
-                        Cherry, Klarna, and Affirm require full payment upfront
-                      </small>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {!showOrderSummary && (
-                <div className="px-4 pb-4">
-                  <div className="text-center">
-                    <div className="h4 mb-1 text-primary">{formatCurrency(chargeAmount)}</div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </div>
     </div>

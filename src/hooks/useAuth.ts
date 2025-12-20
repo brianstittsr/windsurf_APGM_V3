@@ -104,7 +104,7 @@ export function useAuth() {
                     // Set state with admin role
                     setAuthState({
                       user: firebaseUser,
-                      userProfile: victoriaProfile as User,
+                      userProfile: victoriaProfile as unknown as User,
                       userRole: 'admin',
                       loading: false,
                       error: null
@@ -125,8 +125,28 @@ export function useAuth() {
                   error: null
                 });
               }
-            } catch (error) {
+            } catch (error: any) {
               console.error('❌ Error fetching user profile:', error);
+              
+              // Handle Firebase permission errors gracefully
+              if (error?.code === 'permission-denied' || error?.message?.includes('permission')) {
+                console.log('⚠️ Permission denied - user may not have a profile yet');
+                
+                // Check if this is an admin email that should have access
+                const adminEmails = ['victoria@aprettygirlmatter.com', 'admin@atlantaglamourpmu.com'];
+                if (firebaseUser.email && adminEmails.includes(firebaseUser.email)) {
+                  console.log('🔧 Admin email detected, granting admin access...');
+                  setAuthState({
+                    user: firebaseUser,
+                    userProfile: null,
+                    userRole: 'admin',
+                    loading: false,
+                    error: null
+                  });
+                  return;
+                }
+              }
+              
               setAuthState({
                 user: firebaseUser,
                 userProfile: null,

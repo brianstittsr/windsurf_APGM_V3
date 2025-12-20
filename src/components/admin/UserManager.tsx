@@ -15,7 +15,7 @@ interface UserFormData {
 }
 
 export default function UserManager() {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, userRole, loading: authLoading } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -34,8 +34,13 @@ export default function UserManager() {
   const [passwordResetStatus, setPasswordResetStatus] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    // Only fetch users when auth is ready and user is admin
+    if (!authLoading && currentUser && userRole === 'admin') {
+      fetchUsers();
+    } else if (!authLoading) {
+      setLoading(false);
+    }
+  }, [authLoading, currentUser, userRole]);
 
   const fetchUsers = async () => {
     setLoading(true);

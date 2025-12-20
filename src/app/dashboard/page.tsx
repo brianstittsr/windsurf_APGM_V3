@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useAuth } from '../../hooks/useAuth';
+import AdminSidebar from '../../components/admin/AdminSidebar';
 import UserManager from '../../components/admin/UserManager';
 import ReviewsManager from '../../components/admin/ReviewsManager';
 import ServicesManager from '../../components/admin/ServicesManager';
@@ -18,14 +18,49 @@ import BMADOrchestrator from '../../components/admin/BMADOrchestrator';
 import ArtistAvailabilityManager from '../../components/admin/ArtistAvailabilityManager';
 import BookingCalendar from '../../components/admin/BookingCalendar';
 import QRCodeManager from '../../components/admin/QRCodeManager';
-import Footer from '../../components/Footer';
+import CompetitorAnalysis from '../../components/admin/CompetitorAnalysis';
+import PageSpeedDashboard from '../../components/admin/PageSpeedDashboard';
+import GoogleReviewsDashboard from '../../components/admin/GoogleReviewsDashboard';
+import WhatsAppDashboard from '../../components/admin/WhatsAppDashboard';
+import LoyaltyDashboard from '../../components/admin/LoyaltyDashboard';
+import GeoCompetitorDashboard from '../../components/admin/GeoCompetitorDashboard';
+import { cn } from '@/lib/utils';
 
-type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'alexa' | 'qrcodes';
+type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'alexa' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors';
 
 export default function DashboardPage() {
   const { user, userRole, loading } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const getPageTitle = (tab: TabType): string => {
+    const titles: Record<TabType, string> = {
+      'overview': 'Dashboard Overview',
+      'users': 'User Management',
+      'reviews': 'Reviews Management',
+      'services': 'Services Management',
+      'coupons': 'Coupons & Gift Cards',
+      'business': 'Business Settings',
+      'artists': 'Artist Management',
+      'bookings': 'Bookings',
+      'forms': 'Registration Forms',
+      'gohighlevel': 'GoHighLevel Integration',
+      'gohighlevel-mcp': 'GoHighLevel MCP',
+      'bmad-orchestrator': 'BMAD Orchestrator',
+      'availability': 'Artist Availability',
+      'calendar': 'Booking Calendar',
+      'alexa': 'Alexa Skills',
+      'qrcodes': 'QR Code Manager',
+      'seo-competitor': 'SEO Competitor Analysis',
+      'seo-pagespeed': 'PageSpeed Insights',
+      'google-reviews': 'Google Reviews',
+      'whatsapp': 'WhatsApp Business',
+      'loyalty': 'Loyalty Program',
+      'geo-competitors': 'Geographical Competitor Analysis',
+    };
+    return titles[tab] || 'Dashboard';
+  };
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'admin')) {
@@ -240,197 +275,65 @@ export default function DashboardPage() {
         return <BookingCalendar />;
       case 'qrcodes':
         return <QRCodeManager />;
+      case 'seo-competitor':
+        return <CompetitorAnalysis />;
+      case 'seo-pagespeed':
+        return <PageSpeedDashboard />;
+      case 'google-reviews':
+        return <GoogleReviewsDashboard />;
+      case 'whatsapp':
+        return <WhatsAppDashboard />;
+      case 'loyalty':
+        return <LoyaltyDashboard />;
+      case 'geo-competitors':
+        return <GeoCompetitorDashboard />;
       default:
         return null;
     }
   };
 
   return (
-    <>
-      <div className="container-fluid py-4">
-        <div className="row mb-4">
-          <div className="col-12">
-            <nav aria-label="breadcrumb">
-              <ol className="breadcrumb">
-                <li className="breadcrumb-item">
-                  <Link href="/" className="text-decoration-none">Home</Link>
-                </li>
-                <li className="breadcrumb-item active" aria-current="page">Admin Dashboard</li>
-              </ol>
-            </nav>
-            <h2 className="mb-0">Admin Dashboard</h2>
-            <p className="text-muted">Welcome back, {user.displayName}</p>
-          </div>
-        </div>
+    <div className="flex min-h-screen" style={{ paddingTop: 0 }}>
+      {/* Sidebar */}
+      <AdminSidebar
+        activeTab={activeTab}
+        onTabChange={(tab) => setActiveTab(tab as TabType)}
+        collapsed={sidebarCollapsed}
+        onCollapsedChange={setSidebarCollapsed}
+      />
 
-        {/* Navigation Tabs */}
-        <div className="row mb-4">
-          <div className="col-12">
-            <div className="card border-0 shadow-sm" style={{borderRadius: '12px', overflow: 'hidden'}}>
-              <ul className="nav nav-tabs" role="tablist" style={{borderBottom: '2px solid #dee2e6'}}>
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link fw-bold ${activeTab === 'overview' ? 'active border-bottom border-primary' : ''}`}
-                  type="button"
-                  onClick={() => setActiveTab('overview')}
-                  style={{padding: '12px 16px', cursor: 'pointer'}}
-                >
-                  <i className="fas fa-tachometer-alt me-2"></i>Overview
-                </button>
-              </li>
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link fw-bold ${activeTab === 'users' ? 'active border-bottom border-primary' : ''}`}
-                  type="button"
-                  onClick={() => setActiveTab('users')}
-                  style={{padding: '12px 16px', cursor: 'pointer'}}
-                >
-                  <i className="fas fa-users me-2"></i>Users
-                </button>
-              </li>
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link fw-bold ${activeTab === 'reviews' ? 'active border-bottom border-primary' : ''}`}
-                  type="button"
-                  onClick={() => setActiveTab('reviews')}
-                  style={{padding: '12px 16px', cursor: 'pointer'}}
-                >
-                  <i className="fas fa-star me-2"></i>Reviews
-                </button>
-              </li>
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link fw-bold ${activeTab === 'services' ? 'active border-bottom border-primary' : ''}`}
-                  type="button"
-                  onClick={() => setActiveTab('services')}
-                  style={{padding: '12px 16px', cursor: 'pointer'}}
-                >
-                  <i className="fas fa-list me-2"></i>Services
-                </button>
-              </li>
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link fw-bold ${activeTab === 'coupons' ? 'active border-bottom border-primary' : ''}`}
-                  type="button"
-                  onClick={() => setActiveTab('coupons')}
-                  style={{padding: '12px 16px', cursor: 'pointer'}}
-                >
-                  <i className="fas fa-tags me-2"></i>Coupons & Gifts
-                </button>
-              </li>
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link fw-bold ${activeTab === 'business' ? 'active border-bottom border-primary' : ''}`}
-                  type="button"
-                  onClick={() => setActiveTab('business')}
-                  style={{padding: '12px 16px', cursor: 'pointer'}}
-                >
-                  <i className="fas fa-cog me-2"></i>Business Settings
-                </button>
-              </li>
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link fw-bold ${activeTab === 'artists' ? 'active border-bottom border-primary' : ''}`}
-                  type="button"
-                  onClick={() => setActiveTab('artists')}
-                  style={{padding: '12px 16px', cursor: 'pointer'}}
-                >
-                  <i className="fas fa-user-tie me-2"></i>Artists
-                </button>
-              </li>
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link fw-bold ${activeTab === 'availability' ? 'active border-bottom border-primary' : ''}`}
-                  type="button"
-                  onClick={() => setActiveTab('availability')}
-                  style={{padding: '12px 16px', cursor: 'pointer'}}
-                >
-                  <i className="fas fa-calendar-check me-2"></i>Artist Availability
-                </button>
-              </li>
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link fw-bold ${activeTab === 'calendar' ? 'active border-bottom border-primary' : ''}`}
-                  type="button"
-                  onClick={() => setActiveTab('calendar')}
-                  style={{padding: '12px 16px', cursor: 'pointer'}}
-                >
-                  <i className="fas fa-calendar me-2"></i>Calendar
-                </button>
-              </li>
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link fw-bold ${activeTab === 'bookings' ? 'active border-bottom border-primary' : ''}`}
-                  type="button"
-                  onClick={() => setActiveTab('bookings')}
-                  style={{padding: '12px 16px', cursor: 'pointer'}}
-                >
-                  <i className="fas fa-calendar-alt me-2"></i>Bookings
-                </button>
-              </li>
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link fw-bold ${activeTab === 'forms' ? 'active border-bottom border-primary' : ''}`}
-                  type="button"
-                  onClick={() => setActiveTab('forms')}
-                  style={{padding: '12px 16px', cursor: 'pointer'}}
-                >
-                  <i className="fas fa-file-alt me-2"></i>Forms
-                </button>
-              </li>
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link fw-bold ${activeTab === 'gohighlevel' ? 'active border-bottom border-primary' : ''}`}
-                  type="button"
-                  onClick={() => setActiveTab('gohighlevel')}
-                  style={{padding: '12px 16px', cursor: 'pointer'}}
-                >
-                  <i className="fas fa-cloud-upload-alt me-2"></i>GoHighLevel
-                </button>
-              </li>
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link fw-bold ${activeTab === 'gohighlevel-mcp' ? 'active border-bottom border-primary' : ''}`}
-                  type="button"
-                  onClick={() => setActiveTab('gohighlevel-mcp')}
-                  style={{padding: '12px 16px', cursor: 'pointer'}}
-                >
-                  <i className="fas fa-server me-2"></i>GoHighLevel MCP
-                </button>
-              </li>
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link fw-bold ${activeTab === 'bmad-orchestrator' ? 'active border-bottom border-primary' : ''}`}
-                  type="button"
-                  onClick={() => setActiveTab('bmad-orchestrator')}
-                  style={{padding: '12px 16px', cursor: 'pointer'}}
-                >
-                  <i className="fas fa-robot me-2"></i>BMAD Orchestrator
-                </button>
-              </li>
-              <li className="nav-item" role="presentation">
-                <button
-                  className={`nav-link fw-bold ${activeTab === 'qrcodes' ? 'active border-bottom border-primary' : ''}`}
-                  type="button"
-                  onClick={() => setActiveTab('qrcodes')}
-                  style={{padding: '12px 16px', cursor: 'pointer'}}
-                >
-                  <i className="fas fa-qrcode me-2"></i>QR Codes
-                </button>
-              </li>
-            </ul>
+      {/* Main Content */}
+      <main
+        className={cn(
+          "flex-1 transition-all duration-300 bg-gray-50",
+          sidebarCollapsed ? "ml-16" : "ml-64"
+        )}
+        style={{ paddingTop: 0, minHeight: '100vh' }}
+      >
+        {/* Header */}
+        <header className="sticky top-0 z-30 bg-white border-b px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {getPageTitle(activeTab)}
+              </h1>
+              <p className="text-sm text-gray-500">
+                Welcome back, {user.displayName || user.email}
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <a href="/" className="text-sm text-gray-600 hover:text-gray-900">
+                ← Back to Website
+              </a>
             </div>
           </div>
-        </div>
+        </header>
 
-        {/* Tab Content */}
-        <div className="row">
-          <div className="col-12">
-            {renderTabContent()}
-          </div>
+        {/* Content Area */}
+        <div className="p-6">
+          {renderTabContent()}
         </div>
-      </div>
-      <Footer />
-    </>
+      </main>
+    </div>
   );
 }
