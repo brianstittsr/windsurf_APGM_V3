@@ -1,25 +1,51 @@
 import { NextResponse } from 'next/server';
 import admin from 'firebase-admin';
 
-// Initialize Firebase Admin if not already initialized
-if (!admin.apps.length) {
-  try {
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      }),
-    });
-  } catch (error) {
-    console.error('Firebase admin initialization error:', error);
+// Lazy initialization of Firebase Admin
+function getFirebaseAdmin() {
+  if (!admin.apps.length) {
+    const projectId = process.env.FIREBASE_PROJECT_ID;
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    
+    if (!projectId || !clientEmail || !privateKey) {
+      return null;
+    }
+    
+    try {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId,
+          clientEmail,
+          privateKey,
+        }),
+      });
+    } catch (error) {
+      console.error('Firebase admin initialization error:', error);
+      return null;
+    }
   }
+  return admin;
 }
 
-const db = admin.firestore();
+function getDb() {
+  const adminInstance = getFirebaseAdmin();
+  if (!adminInstance) {
+    return null;
+  }
+  return adminInstance.firestore();
+}
 
 async function getGHLCredentials() {
   try {
+    const db = getDb();
+    if (!db) {
+      console.log('[Debug] Firebase not available, using env variables');
+      return {
+        apiKey: process.env.GHL_API_KEY || '',
+        locationId: process.env.GHL_LOCATION_ID || ''
+      };
+    }
     const settingsDoc = await db.collection('crmSettings').doc('ghl').get();
     if (settingsDoc.exists) {
       const data = settingsDoc.data();
