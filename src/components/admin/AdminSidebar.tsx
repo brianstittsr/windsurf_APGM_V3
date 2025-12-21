@@ -30,6 +30,17 @@ import {
   ChevronRight,
   ChevronDown,
   Mic,
+  DollarSign,
+  Target,
+  Globe,
+  Mail,
+  Video,
+  UserPlus,
+  Percent,
+  TrendingUp,
+  MousePointerClick,
+  Share2,
+  Megaphone,
 } from 'lucide-react';
 
 // Navigation item types
@@ -79,8 +90,24 @@ const navigationGroups: NavGroup[] = [
   },
   {
     id: 'marketing',
-    label: 'Marketing',
-    icon: Zap,
+    label: 'Marketing Hub',
+    icon: Megaphone,
+    items: [
+      { id: 'paid-traffic', label: 'Paid Traffic', icon: DollarSign },
+      { id: 'retargeting', label: 'Retargeting', icon: Target },
+      { id: 'reputation', label: 'Reputation', icon: Star },
+      { id: 'social-media', label: 'Social Media', icon: Share2 },
+      { id: 'email-marketing', label: 'Email Marketing', icon: Mail },
+      { id: 'video-marketing', label: 'Video Marketing', icon: Video },
+      { id: 'lead-generation', label: 'Lead Generation', icon: UserPlus },
+      { id: 'online-offers', label: 'Online Offers', icon: Percent },
+      { id: 'ppc-campaigns', label: 'PPC Campaigns', icon: MousePointerClick },
+    ],
+  },
+  {
+    id: 'promotions',
+    label: 'Promotions',
+    icon: Gift,
     items: [
       { id: 'coupons', label: 'Coupons & Gifts', icon: Gift },
       { id: 'loyalty', label: 'Loyalty Program', icon: Heart },
@@ -97,16 +124,25 @@ const navigationGroups: NavGroup[] = [
       { id: 'seo-competitor', label: 'Competitor Analysis', icon: Search },
       { id: 'seo-pagespeed', label: 'PageSpeed', icon: Gauge },
       { id: 'geo-competitors', label: 'Geo Analysis', icon: MapPin },
+      { id: 'website-convert', label: 'Conversion Optimization', icon: TrendingUp },
+    ],
+  },
+  {
+    id: 'automation',
+    label: 'Automation',
+    icon: Bot,
+    items: [
+      { id: 'marketing-automation', label: 'Marketing Automation', icon: Zap },
+      { id: 'bmad-orchestrator', label: 'BMAD Orchestrator', icon: Bot },
     ],
   },
   {
     id: 'integrations',
     label: 'Integrations',
-    icon: Zap,
+    icon: Globe,
     items: [
       { id: 'gohighlevel', label: 'GoHighLevel', icon: Zap },
       { id: 'gohighlevel-mcp', label: 'GHL MCP', icon: Zap },
-      { id: 'bmad-orchestrator', label: 'BMAD Orchestrator', icon: Bot },
       { id: 'alexa', label: 'Alexa Skills', icon: Mic },
     ],
   },
