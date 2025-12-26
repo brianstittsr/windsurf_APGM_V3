@@ -1,6 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { CheckCircle2, ArrowLeft, ArrowRight, User, Mail, Phone, MapPin, Calendar, Users } from 'lucide-react';
 
 interface ClientProfileData {
   firstName: string;
@@ -31,6 +37,7 @@ interface WizardStep {
   type: 'text' | 'email' | 'tel' | 'date' | 'select';
   placeholder?: string;
   required: boolean;
+  icon: React.ReactNode;
   defaultValue?: string;
   options?: { value: string; label: string }[];
   validation?: (value: string) => string | null;
@@ -41,13 +48,9 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
   const [errors, setErrors] = useState<string[]>([]);
   const [isPrePopulated, setIsPrePopulated] = useState(false);
 
-  // Check if data is pre-populated (user is authenticated)
   useEffect(() => {
-    const hasPrePopulatedData = Object.values(data).some(value => value && value.trim() !== '');
+    const hasPrePopulatedData = Object.values(data).some(value => value && String(value).trim() !== '');
     setIsPrePopulated(hasPrePopulatedData);
-    
-    // Don't auto-skip steps - let user navigate manually
-    // This prevents the wizard from jumping ahead when phone number is entered
   }, [data]);
 
   const steps: WizardStep[] = [
@@ -57,7 +60,8 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
       question: 'What is your first name?',
       type: 'text',
       placeholder: 'First Name',
-      required: true
+      required: true,
+      icon: <User className="w-5 h-5" />
     },
     {
       id: 'lastName',
@@ -65,7 +69,8 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
       question: 'What is your last name?',
       type: 'text',
       placeholder: 'Last Name',
-      required: true
+      required: true,
+      icon: <User className="w-5 h-5" />
     },
     {
       id: 'email',
@@ -74,6 +79,7 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
       type: 'email',
       placeholder: 'your.email@example.com',
       required: true,
+      icon: <Mail className="w-5 h-5" />,
       validation: (value: string) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (value && !emailRegex.test(value)) {
@@ -89,6 +95,7 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
       type: 'tel',
       placeholder: '(555) 123-4567',
       required: true,
+      icon: <Phone className="w-5 h-5" />,
       validation: (value: string) => {
         const digits = value.replace(/\D/g, '');
         if (value && digits.length !== 10) {
@@ -103,7 +110,8 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
       question: 'What is your street address?',
       type: 'text',
       placeholder: '123 Main Street',
-      required: true
+      required: true,
+      icon: <MapPin className="w-5 h-5" />
     },
     {
       id: 'city',
@@ -111,7 +119,8 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
       question: 'What city do you live in?',
       type: 'text',
       placeholder: 'City',
-      required: true
+      required: true,
+      icon: <MapPin className="w-5 h-5" />
     },
     {
       id: 'state',
@@ -119,7 +128,8 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
       question: 'What state do you live in?',
       type: 'text',
       placeholder: 'State',
-      required: true
+      required: true,
+      icon: <MapPin className="w-5 h-5" />
     },
     {
       id: 'zip',
@@ -128,6 +138,7 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
       type: 'text',
       placeholder: '12345',
       required: true,
+      icon: <MapPin className="w-5 h-5" />,
       validation: (value: string) => {
         const zipRegex = /^\d{5}(-\d{4})?$/;
         if (value && !zipRegex.test(value)) {
@@ -143,6 +154,7 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
       type: 'date',
       placeholder: 'MM/DD/YYYY',
       required: true,
+      icon: <Calendar className="w-5 h-5" />,
       validation: (value: string) => {
         if (!value) return null;
         const birthDate = new Date(value);
@@ -163,7 +175,8 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
       question: 'Who should we contact in case of emergency?',
       type: 'text',
       placeholder: 'Emergency contact full name',
-      required: true
+      required: true,
+      icon: <Users className="w-5 h-5" />
     },
     {
       id: 'emergencyContactPhone',
@@ -172,6 +185,7 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
       type: 'tel',
       placeholder: '(555) 123-4567',
       required: true,
+      icon: <Phone className="w-5 h-5" />,
       validation: (value: string) => {
         const digits = value.replace(/\D/g, '');
         if (value && digits.length !== 10) {
@@ -184,39 +198,22 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
 
   const currentStep = steps[currentStepIndex];
 
-  // Phone number formatting function
   const formatPhoneNumber = (value: string) => {
-    // Remove all non-digits
     const digits = value.replace(/\D/g, '');
-    
-    // Don't format if empty or too short
-    if (digits.length === 0) {
-      return '';
-    }
-    
-    // Format as (XXX) XXX-XXXX
-    if (digits.length <= 3) {
-      return digits;
-    } else if (digits.length <= 6) {
-      return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-    } else if (digits.length <= 10) {
-      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-    } else {
-      // Limit to 10 digits
-      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
-    }
+    if (digits.length === 0) return '';
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    if (digits.length <= 10) return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
   };
-
 
   const handleInputChange = (value: string) => {
     let formattedValue = value;
     
-    // Apply formatting based on field type
     if (currentStep.id === 'emergencyContactPhone' || currentStep.id === 'phone') {
       formattedValue = formatPhoneNumber(value);
     }
     
-    // Calculate age if birthDate is being updated
     if (currentStep.id === 'birthDate' && value) {
       const birthDate = new Date(value);
       const today = new Date();
@@ -224,20 +221,13 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
         (today.getMonth() < birthDate.getMonth() || 
          (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate()) ? 1 : 0);
       
-      onChange({
-        ...data,
-        [currentStep.id]: formattedValue,
-        age: calculatedAge
-      });
+      onChange({ ...data, [currentStep.id]: formattedValue, age: calculatedAge });
       setErrors([]);
       return;
     }
     
-    onChange({
-      ...data,
-      [currentStep.id]: formattedValue
-    });
-    setErrors([]); // Clear errors when user types
+    onChange({ ...data, [currentStep.id]: formattedValue });
+    setErrors([]);
   };
 
   const validateCurrentStep = () => {
@@ -245,15 +235,13 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
     const value = data[currentStep.id];
     const effectiveValue = value || currentStep.defaultValue;
 
-    if (currentStep.required && !effectiveValue?.trim()) {
+    if (currentStep.required && !String(effectiveValue || '').trim()) {
       newErrors.push(`${currentStep.question.replace('?', '')} is required`);
     }
 
     if (currentStep.validation && effectiveValue) {
-      const validationError = currentStep.validation(effectiveValue);
-      if (validationError) {
-        newErrors.push(validationError);
-      }
+      const validationError = currentStep.validation(String(effectiveValue));
+      if (validationError) newErrors.push(validationError);
     }
 
     setErrors(newErrors);
@@ -279,132 +267,102 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
     }
   };
 
-  const getProgressPercentage = () => {
-    return Math.round(((currentStepIndex + 1) / steps.length) * 100);
-  };
-
-  const getCompletedSteps = () => {
-    return steps.filter(step => data[step.id]?.trim()).length;
-  };
+  const getProgressPercentage = () => Math.round(((currentStepIndex + 1) / steps.length) * 100);
+  const getCompletedSteps = () => steps.filter(step => String(data[step.id] || '').trim()).length;
+  const currentValue = String(data[currentStep.id] || '');
+  const hasValue = currentValue.trim() !== '';
 
   return (
-    <div className="container-fluid py-5">
-      <div className="row justify-content-center">
-        <div className="col-lg-6">
-          <div className="card shadow-lg border-0">
-            <div className="card-header text-white text-center py-4" style={{ backgroundColor: '#AD6269' }}>
-              <h2 className="h3 mb-0">{currentStep.title}</h2>
-              <p className="mb-0 opacity-75">Step {currentStepIndex + 1} of {steps.length}</p>
-              {isPrePopulated && (
-                <div className="mt-2">
-                  <small className="badge bg-success">
-                    <i className="fas fa-user-check me-1"></i>
-                    Profile information loaded
-                  </small>
-                </div>
+    <div className="min-h-[60vh] flex items-center justify-center px-4 py-8">
+      <Card className="w-full max-w-lg shadow-xl border-0">
+        {/* Header */}
+        <CardHeader className="bg-[#AD6269] text-white rounded-t-lg p-6 text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            {currentStep.icon}
+            <h2 className="text-xl font-semibold">{currentStep.title}</h2>
+          </div>
+          <p className="text-white/80 text-sm">
+            Question {currentStepIndex + 1} of {steps.length}
+          </p>
+          
+          {isPrePopulated && (
+            <div className="mt-3">
+              <span className="inline-flex items-center gap-1.5 bg-green-500/20 text-white px-3 py-1 rounded-full text-xs font-medium">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Profile information loaded
+              </span>
+            </div>
+          )}
+          
+          {/* Progress Bar */}
+          <div className="mt-4">
+            <Progress value={getProgressPercentage()} className="h-2 bg-white/30" />
+            <p className="text-white/70 text-xs mt-2">
+              {getProgressPercentage()}% Complete ({getCompletedSteps()}/{steps.length} fields)
+            </p>
+          </div>
+        </CardHeader>
+        
+        {/* Content */}
+        <CardContent className="p-8">
+          {errors.length > 0 && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+              {errors.map((error, index) => (
+                <p key={index} className="text-sm">{error}</p>
+              ))}
+            </div>
+          )}
+
+          <div className="text-center space-y-6">
+            <h3 className="text-lg font-semibold text-gray-900">{currentStep.question}</h3>
+            
+            {hasValue && (
+              <p className="text-green-600 text-sm flex items-center justify-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4" />
+                Information from your profile - you can edit if needed
+              </p>
+            )}
+            
+            <div className="relative">
+              <Input
+                type={currentStep.type}
+                value={currentValue}
+                onChange={(e) => handleInputChange(e.target.value)}
+                placeholder={currentStep.placeholder}
+                autoFocus
+                onKeyPress={(e) => e.key === 'Enter' && handleNext()}
+                className={`h-14 text-center text-lg ${hasValue ? 'border-green-500 focus:border-green-500' : ''}`}
+              />
+              {hasValue && (
+                <CheckCircle2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
               )}
-              
-              {/* Progress Bar */}
-              <div className="mt-3">
-                <div className="progress" style={{ height: '8px', backgroundColor: 'rgba(255,255,255,0.3)' }}>
-                  <div 
-                    className="progress-bar" 
-                    role="progressbar" 
-                    style={{ width: `${getProgressPercentage()}%`, backgroundColor: '#000000' }}
-                  ></div>
-                </div>
-                <small className="text-white-50 mt-1 d-block">
-                  {getProgressPercentage()}% Complete ({getCompletedSteps()}/{steps.length} fields)
-                </small>
-              </div>
             </div>
             
-            <div className="card-body p-5">
-              {errors.length > 0 && (
-                <div className="alert alert-danger mb-4">
-                  {errors.map((error, index) => (
-                    <div key={index}>{error}</div>
-                  ))}
-                </div>
-              )}
-
-              <div className="text-center mb-4">
-                <h4 className="text-dark fw-bold mb-3">{currentStep.question}</h4>
-                
-                {/* Show pre-populated indicator for current field */}
-                {data[currentStep.id] && data[currentStep.id].trim() !== '' && (
-                  <div className="mb-3">
-                    <small className="text-success">
-                      <i className="fas fa-check-circle me-1"></i>
-                      Information from your profile - you can edit if needed
-                    </small>
-                  </div>
-                )}
-                
-                {currentStep.type === 'select' ? (
-                  <select
-                    className={`form-select form-select-lg ${data[currentStep.id] && data[currentStep.id].trim() !== '' ? 'border-success' : ''}`}
-                    value={data[currentStep.id] || currentStep.defaultValue || ''}
-                    onChange={(e) => handleInputChange(e.target.value)}
-                    autoFocus
-                  >
-                    {currentStep.options?.map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <div className="position-relative">
-                    <input
-                      type={currentStep.type}
-                      className={`form-control form-control-lg text-center ${data[currentStep.id] && data[currentStep.id].trim() !== '' ? 'border-success' : ''}`}
-                      value={data[currentStep.id] || ''}
-                      onChange={(e) => handleInputChange(e.target.value)}
-                      placeholder={currentStep.placeholder}
-                      autoFocus
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          handleNext();
-                        }
-                      }}
-                    />
-                    {data[currentStep.id] && data[currentStep.id].trim() !== '' && (
-                      <i className="fas fa-check-circle text-success position-absolute" 
-                         style={{ right: '15px', top: '50%', transform: 'translateY(-50%)' }}></i>
-                    )}
-                  </div>
-                )}
-                
-                {!currentStep.required && (
-                  <small className="text-muted d-block mt-2">
-                    This field is optional
-                  </small>
-                )}
-              </div>
-            </div>
-
-            <div className="card-footer bg-light d-flex justify-content-between py-3">
-              <button
-                type="button"
-                className="btn btn-outline-secondary px-4"
-                onClick={handlePrevious}
-              >
-                <i className="fas fa-arrow-left me-2"></i>
-                {currentStepIndex === 0 ? 'Back to Calendar' : 'Previous'}
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary px-4"
-                onClick={handleNext}
-              >
-                {currentStepIndex === steps.length - 1 ? 'Continue to Health Form' : 'Next'}
-                <i className="fas fa-arrow-right ms-2"></i>
-              </button>
-            </div>
+            {!currentStep.required && (
+              <p className="text-gray-500 text-sm">This field is optional</p>
+            )}
           </div>
-        </div>
-      </div>
+        </CardContent>
+
+        {/* Footer */}
+        <CardFooter className="bg-gray-50 rounded-b-lg p-4 flex justify-between">
+          <Button
+            variant="outline"
+            onClick={handlePrevious}
+            className="gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {currentStepIndex === 0 ? 'Back to Calendar' : 'Previous'}
+          </Button>
+          <Button
+            onClick={handleNext}
+            className="gap-2 bg-[#AD6269] hover:bg-[#9d5860]"
+          >
+            {currentStepIndex === steps.length - 1 ? 'Continue to Health Form' : 'Next'}
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }
