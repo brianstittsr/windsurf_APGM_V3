@@ -1,3 +1,5 @@
+export type SlideStyleType = 'standard' | 'google-review' | 'certification';
+
 export interface HeroSlide {
   id: string;
   title: string;
@@ -15,6 +17,19 @@ export interface HeroSlide {
   order: number;
   createdAt: Date;
   updatedAt: Date;
+  // New style type field
+  styleType?: SlideStyleType;
+  // Google Review specific fields
+  reviewerName?: string;
+  reviewRating?: number;
+  reviewDate?: string;
+  reviewText?: string;
+  afterPhoto?: string;
+  // Certification specific fields
+  certificationName?: string;
+  certificationOrg?: string;
+  certificationYear?: string;
+  certificationBadge?: string;
 }
 
 export interface HeroSlideFormData {
@@ -31,6 +46,19 @@ export interface HeroSlideFormData {
   overlayOpacity: number;
   isActive: boolean;
   order: number;
+  // Style type
+  styleType: SlideStyleType;
+  // Google Review fields
+  reviewerName: string;
+  reviewRating: number;
+  reviewDate: string;
+  reviewText: string;
+  afterPhoto: string;
+  // Certification fields
+  certificationName: string;
+  certificationOrg: string;
+  certificationYear: string;
+  certificationBadge: string;
 }
 
 export const defaultHeroSlideFormData: HeroSlideFormData = {
@@ -46,5 +74,18 @@ export const defaultHeroSlideFormData: HeroSlideFormData = {
   textAlignment: 'center',
   overlayOpacity: 40,
   isActive: true,
-  order: 0
+  order: 0,
+  // Style type
+  styleType: 'standard',
+  // Google Review fields
+  reviewerName: '',
+  reviewRating: 5,
+  reviewDate: '',
+  reviewText: '',
+  afterPhoto: '',
+  // Certification fields
+  certificationName: '',
+  certificationOrg: '',
+  certificationYear: '',
+  certificationBadge: ''
 };

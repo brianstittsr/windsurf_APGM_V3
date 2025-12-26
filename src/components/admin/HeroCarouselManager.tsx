@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { HeroSlide, HeroSlideFormData, defaultHeroSlideFormData } from '@/types/heroSlide';
+import { HeroSlide, HeroSlideFormData, defaultHeroSlideFormData, SlideStyleType } from '@/types/heroSlide';
 import { HeroSlideService } from '@/services/heroSlideService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,10 +10,11 @@ import { useAlertDialog } from '@/components/ui/alert-dialog';
 
 // Wizard steps configuration
 const WIZARD_STEPS = [
-  { id: 1, title: 'Content', description: 'Add your slide text' },
-  { id: 2, title: 'Media', description: 'Upload background image/video' },
-  { id: 3, title: 'Button & Style', description: 'Configure button and appearance' },
-  { id: 4, title: 'Review', description: 'Preview and publish' }
+  { id: 1, title: 'Style Type', description: 'Choose slide layout' },
+  { id: 2, title: 'Content', description: 'Add your slide text' },
+  { id: 3, title: 'Media', description: 'Upload background image/video' },
+  { id: 4, title: 'Button & Style', description: 'Configure button and appearance' },
+  { id: 5, title: 'Review', description: 'Preview and publish' }
 ];
 
 export default function HeroCarouselManager() {
@@ -142,7 +143,17 @@ export default function HeroCarouselManager() {
       textAlignment: slide.textAlignment || 'center',
       overlayOpacity: slide.overlayOpacity || 40,
       isActive: slide.isActive,
-      order: slide.order
+      order: slide.order,
+      styleType: slide.styleType || 'standard',
+      reviewerName: slide.reviewerName || '',
+      reviewRating: slide.reviewRating || 5,
+      reviewDate: slide.reviewDate || '',
+      reviewText: slide.reviewText || '',
+      afterPhoto: slide.afterPhoto || '',
+      certificationName: slide.certificationName || '',
+      certificationOrg: slide.certificationOrg || '',
+      certificationYear: slide.certificationYear || '',
+      certificationBadge: slide.certificationBadge || ''
     });
     setWizardStep(1);
     setShowModal(true);
@@ -254,7 +265,17 @@ export default function HeroCarouselManager() {
                         textAlignment: slide.textAlignment || 'center',
                         overlayOpacity: slide.overlayOpacity || 40,
                         isActive: slide.isActive,
-                        order: slide.order
+                        order: slide.order,
+                        styleType: slide.styleType || 'standard',
+                        reviewerName: slide.reviewerName || '',
+                        reviewRating: slide.reviewRating || 5,
+                        reviewDate: slide.reviewDate || '',
+                        reviewText: slide.reviewText || '',
+                        afterPhoto: slide.afterPhoto || '',
+                        certificationName: slide.certificationName || '',
+                        certificationOrg: slide.certificationOrg || '',
+                        certificationYear: slide.certificationYear || '',
+                        certificationBadge: slide.certificationBadge || ''
                       })}
                       className="px-3 py-1.5 text-xs font-medium rounded-lg border border-purple-200 text-purple-600 hover:bg-purple-50 transition-colors"
                     >
@@ -357,70 +378,284 @@ export default function HeroCarouselManager() {
 
             {/* Wizard Content */}
             <div className="flex-1 overflow-y-auto p-6">
-              {/* Step 1: Content */}
+              {/* Step 1: Style Type */}
               {wizardStep === 1 && (
+                <div className="space-y-6">
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <i className="fas fa-layer-group text-2xl text-[#AD6269]"></i>
+                    </div>
+                    <h4 className="text-xl font-semibold text-gray-900">Choose Slide Style</h4>
+                    <p className="text-gray-500 text-sm">Select the type of content you want to showcase</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Standard Slide */}
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, styleType: 'standard' })}
+                      className={`p-6 rounded-xl border-2 transition-all text-left ${
+                        formData.styleType === 'standard' 
+                          ? 'border-[#AD6269] bg-[#AD6269]/5 shadow-md' 
+                          : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                      }`}
+                    >
+                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+                        <i className="fas fa-image text-xl text-gray-600"></i>
+                      </div>
+                      <h5 className="font-semibold text-gray-900 mb-1">Standard</h5>
+                      <p className="text-sm text-gray-500">Classic hero slide with title, subtitle, and call-to-action button</p>
+                    </button>
+
+                    {/* Google Review Slide */}
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, styleType: 'google-review' })}
+                      className={`p-6 rounded-xl border-2 transition-all text-left ${
+                        formData.styleType === 'google-review' 
+                          ? 'border-[#AD6269] bg-[#AD6269]/5 shadow-md' 
+                          : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                      }`}
+                    >
+                      <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-4">
+                        <i className="fas fa-star text-xl text-yellow-500"></i>
+                      </div>
+                      <h5 className="font-semibold text-gray-900 mb-1">Google Review</h5>
+                      <p className="text-sm text-gray-500">Showcase a client review with star rating, after photo, and testimonial</p>
+                    </button>
+
+                    {/* Certification Slide */}
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, styleType: 'certification' })}
+                      className={`p-6 rounded-xl border-2 transition-all text-left ${
+                        formData.styleType === 'certification' 
+                          ? 'border-[#AD6269] bg-[#AD6269]/5 shadow-md' 
+                          : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                      }`}
+                    >
+                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                        <i className="fas fa-certificate text-xl text-blue-600"></i>
+                      </div>
+                      <h5 className="font-semibold text-gray-900 mb-1">Certification</h5>
+                      <p className="text-sm text-gray-500">Highlight your PMU certifications and professional credentials</p>
+                    </button>
+                  </div>
+
+                  {/* Style-specific preview hint */}
+                  <div className="bg-gray-50 rounded-lg p-4 mt-6">
+                    <h6 className="font-medium text-gray-700 mb-2">
+                      {formData.styleType === 'standard' && '📷 Standard Slide'}
+                      {formData.styleType === 'google-review' && '⭐ Google Review Slide'}
+                      {formData.styleType === 'certification' && '🏆 Certification Slide'}
+                    </h6>
+                    <p className="text-sm text-gray-500">
+                      {formData.styleType === 'standard' && 'Perfect for promotional content, announcements, or general branding.'}
+                      {formData.styleType === 'google-review' && 'Display a real client review with their before/after photo and star rating to build trust.'}
+                      {formData.styleType === 'certification' && 'Showcase your professional certifications to establish credibility and expertise.'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Content */}
+              {wizardStep === 2 && (
                 <div className="space-y-6">
                   <div className="text-center mb-6">
                     <div className="w-16 h-16 bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-3">
                       <i className="fas fa-heading text-2xl text-[#AD6269]"></i>
                     </div>
-                    <h4 className="text-xl font-semibold text-gray-900">Add Your Content</h4>
-                    <p className="text-gray-500 text-sm">Enter the text that will appear on your hero slide</p>
+                    <h4 className="text-xl font-semibold text-gray-900">
+                      {formData.styleType === 'google-review' ? 'Review Details' : 
+                       formData.styleType === 'certification' ? 'Certification Details' : 
+                       'Add Your Content'}
+                    </h4>
+                    <p className="text-gray-500 text-sm">
+                      {formData.styleType === 'google-review' ? 'Enter the review information' : 
+                       formData.styleType === 'certification' ? 'Enter your certification details' : 
+                       'Enter the text that will appear on your hero slide'}
+                    </p>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="title">Title <span className="text-red-500">*</span></Label>
-                      <Input
-                        id="title"
-                        value={formData.title}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, title: e.target.value })}
-                        placeholder="WAKE UP FLAWLESS EVERY DAY!"
-                        className="text-lg"
-                      />
-                      <p className="text-xs text-gray-400">This is the main headline of your slide</p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
+                  {/* Standard Content Fields */}
+                  {formData.styleType === 'standard' && (
+                    <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="subtitle">Subtitle (colored)</Label>
+                        <Label htmlFor="title">Title <span className="text-red-500">*</span></Label>
                         <Input
-                          id="subtitle"
-                          value={formData.subtitle}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, subtitle: e.target.value })}
-                          placeholder="SOFT NATURAL"
+                          id="title"
+                          value={formData.title}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, title: e.target.value })}
+                          placeholder="WAKE UP FLAWLESS EVERY DAY!"
+                          className="text-lg"
                         />
-                        <p className="text-xs text-gray-400">Appears in brand color above title</p>
+                        <p className="text-xs text-gray-400">This is the main headline of your slide</p>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="highlightText">Highlight Text</Label>
-                        <Input
-                          id="highlightText"
-                          value={formData.highlightText}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, highlightText: e.target.value })}
-                          placeholder="PERMANENT MAKEUP"
-                        />
-                        <p className="text-xs text-gray-400">Appears after subtitle</p>
-                      </div>
-                    </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Description (optional)</Label>
-                      <textarea
-                        id="description"
-                        className="w-full px-3 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent resize-none"
-                        rows={3}
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        placeholder="Add a brief description or tagline..."
-                      />
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="subtitle">Subtitle (colored)</Label>
+                          <Input
+                            id="subtitle"
+                            value={formData.subtitle}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, subtitle: e.target.value })}
+                            placeholder="SOFT NATURAL"
+                          />
+                          <p className="text-xs text-gray-400">Appears in brand color above title</p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="highlightText">Highlight Text</Label>
+                          <Input
+                            id="highlightText"
+                            value={formData.highlightText}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, highlightText: e.target.value })}
+                            placeholder="PERMANENT MAKEUP"
+                          />
+                          <p className="text-xs text-gray-400">Appears after subtitle</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="description">Description (optional)</Label>
+                        <textarea
+                          id="description"
+                          className="w-full px-3 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent resize-none"
+                          rows={3}
+                          value={formData.description}
+                          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                          placeholder="Add a brief description or tagline..."
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {/* Google Review Content Fields */}
+                  {formData.styleType === 'google-review' && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="reviewerName">Reviewer Name <span className="text-red-500">*</span></Label>
+                        <Input
+                          id="reviewerName"
+                          value={formData.reviewerName}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, reviewerName: e.target.value })}
+                          placeholder="Sarah M."
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="reviewRating">Star Rating</Label>
+                          <div className="flex gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                type="button"
+                                onClick={() => setFormData({ ...formData, reviewRating: star })}
+                                className="p-2 transition-colors"
+                              >
+                                <i className={`fas fa-star text-2xl ${star <= formData.reviewRating ? 'text-yellow-400' : 'text-gray-300'}`}></i>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="reviewDate">Review Date</Label>
+                          <Input
+                            id="reviewDate"
+                            type="date"
+                            value={formData.reviewDate}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, reviewDate: e.target.value })}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="reviewText">Review Text <span className="text-red-500">*</span></Label>
+                        <textarea
+                          id="reviewText"
+                          className="w-full px-3 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent resize-none"
+                          rows={4}
+                          value={formData.reviewText}
+                          onChange={(e) => setFormData({ ...formData, reviewText: e.target.value })}
+                          placeholder="Victoria is absolutely amazing! My brows look so natural and I wake up every day feeling confident..."
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="title">Slide Title (optional)</Label>
+                        <Input
+                          id="title"
+                          value={formData.title}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, title: e.target.value })}
+                          placeholder="What Our Clients Say"
+                        />
+                        <p className="text-xs text-gray-400">Optional headline above the review</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Certification Content Fields */}
+                  {formData.styleType === 'certification' && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="certificationName">Certification Name <span className="text-red-500">*</span></Label>
+                        <Input
+                          id="certificationName"
+                          value={formData.certificationName}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, certificationName: e.target.value })}
+                          placeholder="Master PMU Artist Certification"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="certificationOrg">Issuing Organization</Label>
+                          <Input
+                            id="certificationOrg"
+                            value={formData.certificationOrg}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, certificationOrg: e.target.value })}
+                            placeholder="PhiBrows Academy"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="certificationYear">Year Obtained</Label>
+                          <Input
+                            id="certificationYear"
+                            value={formData.certificationYear}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, certificationYear: e.target.value })}
+                            placeholder="2023"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="title">Slide Title</Label>
+                        <Input
+                          id="title"
+                          value={formData.title}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, title: e.target.value })}
+                          placeholder="Certified Excellence"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="description">Description</Label>
+                        <textarea
+                          id="description"
+                          className="w-full px-3 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent resize-none"
+                          rows={3}
+                          value={formData.description}
+                          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                          placeholder="Trained and certified by industry-leading professionals..."
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Step 2: Media */}
-              {wizardStep === 2 && (
+              {/* Step 3: Media */}
+              {wizardStep === 3 && (
                 <div className="space-y-6">
                   <div className="text-center mb-6">
                     <div className="w-16 h-16 bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -457,6 +692,40 @@ export default function HeroCarouselManager() {
                       )}
                     </div>
 
+                    {/* After Photo for Google Review */}
+                    {formData.styleType === 'google-review' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="afterPhoto">After Photo URL <span className="text-red-500">*</span></Label>
+                        <Input
+                          id="afterPhoto"
+                          value={formData.afterPhoto}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, afterPhoto: e.target.value })}
+                          placeholder="/images/reviews/client-after.jpg"
+                        />
+                        <p className="text-xs text-gray-400">The client&apos;s after photo to display with the review</p>
+                        {formData.afterPhoto && (
+                          <div className="mt-3 h-32 w-32 rounded-full bg-cover bg-center border-4 border-white shadow-lg mx-auto" style={{ backgroundImage: `url(${formData.afterPhoto})` }} />
+                        )}
+                      </div>
+                    )}
+
+                    {/* Certification Badge for Certification */}
+                    {formData.styleType === 'certification' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="certificationBadge">Certification Badge/Logo URL</Label>
+                        <Input
+                          id="certificationBadge"
+                          value={formData.certificationBadge}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, certificationBadge: e.target.value })}
+                          placeholder="/images/certifications/badge.png"
+                        />
+                        <p className="text-xs text-gray-400">Optional: Add a certification badge or logo image</p>
+                        {formData.certificationBadge && (
+                          <div className="mt-3 h-24 w-24 rounded-lg bg-contain bg-center bg-no-repeat border border-gray-200 mx-auto" style={{ backgroundImage: `url(${formData.certificationBadge})` }} />
+                        )}
+                      </div>
+                    )}
+
                     <div className="space-y-2">
                       <Label htmlFor="backgroundVideo">Background Video URL (optional)</Label>
                       <Input
@@ -471,8 +740,8 @@ export default function HeroCarouselManager() {
                 </div>
               )}
 
-              {/* Step 3: Button & Style */}
-              {wizardStep === 3 && (
+              {/* Step 4: Button & Style */}
+              {wizardStep === 4 && (
                 <div className="space-y-6">
                   <div className="text-center mb-6">
                     <div className="w-16 h-16 bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -573,8 +842,8 @@ export default function HeroCarouselManager() {
                 </div>
               )}
 
-              {/* Step 4: Review */}
-              {wizardStep === 4 && (
+              {/* Step 5: Review */}
+              {wizardStep === 5 && (
                 <div className="space-y-6">
                   <div className="text-center mb-6">
                     <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -584,38 +853,95 @@ export default function HeroCarouselManager() {
                     <p className="text-gray-500 text-sm">Preview your slide and publish when ready</p>
                   </div>
 
-                  {/* Mini Preview */}
-                  <div 
-                    className="relative h-64 rounded-xl overflow-hidden bg-cover bg-center"
-                    style={{ backgroundImage: `url(${formData.backgroundImage})` }}
-                  >
-                    <div className="absolute inset-0 bg-black" style={{ opacity: formData.overlayOpacity / 100 }} />
-                    <div className={`absolute inset-0 flex items-center p-8 ${
-                      formData.textAlignment === 'left' ? 'justify-start text-left' : 
-                      formData.textAlignment === 'right' ? 'justify-end text-right' : 
-                      'justify-center text-center'
-                    }`}>
-                      <div className="max-w-md">
-                        {formData.subtitle && (
-                          <p className="text-white/80 text-sm mb-1">
-                            <span className="text-[#AD6269]">{formData.subtitle}</span>
-                            {formData.highlightText && ` ${formData.highlightText}`}
-                          </p>
-                        )}
-                        <h3 className="text-white text-2xl font-bold mb-2">{formData.title || 'Your Title Here'}</h3>
-                        {formData.description && <p className="text-white/70 text-sm mb-3">{formData.description}</p>}
-                        <span className={`inline-block px-4 py-1.5 rounded-full text-xs font-medium ${
-                          formData.buttonStyle === 'secondary' 
-                            ? 'bg-white text-gray-900' 
-                            : formData.buttonStyle === 'outline'
-                            ? 'border border-white text-white'
-                            : 'bg-[#AD6269] text-white'
-                        }`}>
-                          {formData.buttonText || 'Book Now'}
-                        </span>
+                  {/* Mini Preview - Standard */}
+                  {formData.styleType === 'standard' && (
+                    <div 
+                      className="relative h-64 rounded-xl overflow-hidden bg-cover bg-center"
+                      style={{ backgroundImage: `url(${formData.backgroundImage})` }}
+                    >
+                      <div className="absolute inset-0 bg-black" style={{ opacity: formData.overlayOpacity / 100 }} />
+                      <div className={`absolute inset-0 flex items-center p-8 ${
+                        formData.textAlignment === 'left' ? 'justify-start text-left' : 
+                        formData.textAlignment === 'right' ? 'justify-end text-right' : 
+                        'justify-center text-center'
+                      }`}>
+                        <div className="max-w-md">
+                          {formData.subtitle && (
+                            <p className="text-white/80 text-sm mb-1">
+                              <span className="text-[#AD6269]">{formData.subtitle}</span>
+                              {formData.highlightText && ` ${formData.highlightText}`}
+                            </p>
+                          )}
+                          <h3 className="text-white text-2xl font-bold mb-2">{formData.title || 'Your Title Here'}</h3>
+                          {formData.description && <p className="text-white/70 text-sm mb-3">{formData.description}</p>}
+                          <span className={`inline-block px-4 py-1.5 rounded-full text-xs font-medium ${
+                            formData.buttonStyle === 'secondary' 
+                              ? 'bg-white text-gray-900' 
+                              : formData.buttonStyle === 'outline'
+                              ? 'border border-white text-white'
+                              : 'bg-[#AD6269] text-white'
+                          }`}>
+                            {formData.buttonText || 'Book Now'}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
+
+                  {/* Mini Preview - Google Review */}
+                  {formData.styleType === 'google-review' && (
+                    <div 
+                      className="relative h-72 rounded-xl overflow-hidden bg-cover bg-center"
+                      style={{ backgroundImage: `url(${formData.backgroundImage})` }}
+                    >
+                      <div className="absolute inset-0 bg-black" style={{ opacity: formData.overlayOpacity / 100 }} />
+                      <div className="absolute inset-0 flex items-center justify-center p-8">
+                        <div className="bg-white/95 rounded-2xl p-6 max-w-lg shadow-xl">
+                          <div className="flex items-start gap-4">
+                            {formData.afterPhoto && (
+                              <div className="w-20 h-20 rounded-full bg-cover bg-center flex-shrink-0 border-4 border-[#AD6269]" style={{ backgroundImage: `url(${formData.afterPhoto})` }} />
+                            )}
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-semibold text-gray-900">{formData.reviewerName || 'Client Name'}</span>
+                                <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
+                              </div>
+                              <div className="flex gap-0.5 mb-2">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <i key={star} className={`fas fa-star text-sm ${star <= formData.reviewRating ? 'text-yellow-400' : 'text-gray-300'}`}></i>
+                                ))}
+                                <span className="text-xs text-gray-500 ml-2">{formData.reviewDate}</span>
+                              </div>
+                              <p className="text-gray-700 text-sm line-clamp-3">&ldquo;{formData.reviewText || 'Review text...'}&rdquo;</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mini Preview - Certification */}
+                  {formData.styleType === 'certification' && (
+                    <div 
+                      className="relative h-72 rounded-xl overflow-hidden bg-cover bg-center"
+                      style={{ backgroundImage: `url(${formData.backgroundImage})` }}
+                    >
+                      <div className="absolute inset-0 bg-black" style={{ opacity: formData.overlayOpacity / 100 }} />
+                      <div className="absolute inset-0 flex items-center justify-center p-8">
+                        <div className="text-center">
+                          {formData.certificationBadge && (
+                            <div className="w-24 h-24 mx-auto mb-4 bg-contain bg-center bg-no-repeat" style={{ backgroundImage: `url(${formData.certificationBadge})` }} />
+                          )}
+                          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                            <i className="fas fa-certificate text-3xl text-[#AD6269] mb-3"></i>
+                            <h3 className="text-white text-xl font-bold mb-1">{formData.certificationName || 'Certification Name'}</h3>
+                            <p className="text-white/80 text-sm">{formData.certificationOrg}</p>
+                            {formData.certificationYear && <p className="text-white/60 text-xs mt-1">Certified {formData.certificationYear}</p>}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <button
                     type="button"
@@ -629,7 +955,7 @@ export default function HeroCarouselManager() {
                   <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                     <h5 className="font-medium text-gray-900 mb-3">Slide Summary</h5>
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div><span className="text-gray-500">Title:</span> <span className="font-medium">{formData.title || '-'}</span></div>
+                      <div><span className="text-gray-500">Style:</span> <span className="font-medium capitalize">{formData.styleType.replace('-', ' ')}</span></div>
                       <div><span className="text-gray-500">Button:</span> <span className="font-medium">{formData.buttonText} → {formData.buttonLink}</span></div>
                       <div><span className="text-gray-500">Alignment:</span> <span className="font-medium capitalize">{formData.textAlignment}</span></div>
                       <div><span className="text-gray-500">Overlay:</span> <span className="font-medium">{formData.overlayOpacity}%</span></div>
@@ -670,17 +996,32 @@ export default function HeroCarouselManager() {
                 <Button type="button" variant="outline" onClick={closeModal}>
                   Cancel
                 </Button>
-                {wizardStep < 4 ? (
+                {wizardStep < 5 ? (
                   <Button 
                     type="button" 
                     className="bg-[#AD6269] hover:bg-[#9d5860]"
                     onClick={() => {
-                      if (wizardStep === 1 && !formData.title) {
-                        showAlert({ title: 'Required Field', description: 'Please enter a title for your slide', variant: 'warning' });
+                      // Validation based on step and style type
+                      if (wizardStep === 2) {
+                        if (formData.styleType === 'standard' && !formData.title) {
+                          showAlert({ title: 'Required Field', description: 'Please enter a title for your slide', variant: 'warning' });
+                          return;
+                        }
+                        if (formData.styleType === 'google-review' && (!formData.reviewerName || !formData.reviewText)) {
+                          showAlert({ title: 'Required Field', description: 'Please enter the reviewer name and review text', variant: 'warning' });
+                          return;
+                        }
+                        if (formData.styleType === 'certification' && !formData.certificationName) {
+                          showAlert({ title: 'Required Field', description: 'Please enter the certification name', variant: 'warning' });
+                          return;
+                        }
+                      }
+                      if (wizardStep === 3 && !formData.backgroundImage) {
+                        showAlert({ title: 'Required Field', description: 'Please enter a background image URL', variant: 'warning' });
                         return;
                       }
-                      if (wizardStep === 2 && !formData.backgroundImage) {
-                        showAlert({ title: 'Required Field', description: 'Please enter a background image URL', variant: 'warning' });
+                      if (wizardStep === 3 && formData.styleType === 'google-review' && !formData.afterPhoto) {
+                        showAlert({ title: 'Required Field', description: 'Please enter an after photo URL for the review', variant: 'warning' });
                         return;
                       }
                       setWizardStep(wizardStep + 1);
