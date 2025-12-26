@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { HeroSlide, HeroSlideFormData, defaultHeroSlideFormData, SlideStyleType } from '@/types/heroSlide';
 import { HeroSlideService } from '@/services/heroSlideService';
+import { GoogleReviewsService, GoogleReview, PlaceDetails } from '@/services/googleReviewsService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,10 +29,41 @@ export default function HeroCarouselManager() {
   const [previewSlide, setPreviewSlide] = useState<HeroSlideFormData | null>(null);
   const [wizardStep, setWizardStep] = useState(1);
   const { showAlert, showConfirm, AlertDialogComponent } = useAlertDialog();
+  
+  // Google Reviews state
+  const [googleReviews, setGoogleReviews] = useState<GoogleReview[]>([]);
+  const [googlePlaceDetails, setGooglePlaceDetails] = useState<PlaceDetails | null>(null);
+  const [loadingGoogleReviews, setLoadingGoogleReviews] = useState(false);
+  const [showGoogleReviewPicker, setShowGoogleReviewPicker] = useState(false);
 
   useEffect(() => {
     loadSlides();
   }, []);
+
+  // Load Google Reviews when selecting google-review style
+  const loadGoogleReviews = async () => {
+    setLoadingGoogleReviews(true);
+    const result = await GoogleReviewsService.getReviews();
+    if (result.success && result.data) {
+      setGooglePlaceDetails(result.data);
+      setGoogleReviews(result.data.reviews || []);
+    }
+    setLoadingGoogleReviews(false);
+  };
+
+  // Handle selecting a Google Review to populate form
+  const handleSelectGoogleReview = (review: GoogleReview) => {
+    setFormData({
+      ...formData,
+      reviewerName: review.author_name,
+      reviewRating: review.rating,
+      reviewDate: new Date(review.time * 1000).toISOString().split('T')[0],
+      reviewText: review.text,
+      afterPhoto: review.profile_photo_url || '',
+      title: 'What Our Clients Say'
+    });
+    setShowGoogleReviewPicker(false);
+  };
 
   const loadSlides = async () => {
     try {
@@ -532,6 +564,122 @@ export default function HeroCarouselManager() {
                   {/* Google Review Content Fields */}
                   {formData.styleType === 'google-review' && (
                     <div className="space-y-4">
+                      {/* Import from Google Button */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <img src="https://www.google.com/favicon.ico" alt="Google" className="w-6 h-6" />
+                            <div>
+                              <p className="font-medium text-gray-900">Import from Google Reviews</p>
+                              <p className="text-sm text-gray-500">Pull in real reviews from your Google Business Profile</p>
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              setShowGoogleReviewPicker(true);
+                              if (googleReviews.length === 0) {
+                                loadGoogleReviews();
+                              }
+                            }}
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            <i className="fab fa-google mr-2"></i>Import Review
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Google Review Picker Modal */}
+                      {showGoogleReviewPicker && (
+                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+                          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+                            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <img src="https://www.google.com/favicon.ico" alt="Google" className="w-6 h-6" />
+                                <h3 className="font-semibold text-gray-900">Select a Google Review</h3>
+                              </div>
+                              <button
+                                onClick={() => setShowGoogleReviewPicker(false)}
+                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                              >
+                                <i className="fas fa-times text-gray-500"></i>
+                              </button>
+                            </div>
+                            
+                            <div className="p-4 overflow-y-auto max-h-[60vh]">
+                              {loadingGoogleReviews ? (
+                                <div className="flex flex-col items-center justify-center py-12">
+                                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
+                                  <p className="text-gray-500">Loading Google Reviews...</p>
+                                </div>
+                              ) : googleReviews.length > 0 ? (
+                                <div className="space-y-3">
+                                  {googlePlaceDetails && (
+                                    <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                                      <p className="font-medium text-gray-900">{googlePlaceDetails.name}</p>
+                                      <div className="flex items-center gap-2 mt-1">
+                                        <div className="flex gap-0.5">
+                                          {[1,2,3,4,5].map(s => (
+                                            <i key={s} className={`fas fa-star text-xs ${s <= googlePlaceDetails.rating ? 'text-yellow-400' : 'text-gray-300'}`}></i>
+                                          ))}
+                                        </div>
+                                        <span className="text-sm text-gray-500">{googlePlaceDetails.rating} ({googlePlaceDetails.user_ratings_total} reviews)</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {googleReviews.filter(r => r.rating >= 4).map((review, idx) => (
+                                    <button
+                                      key={idx}
+                                      type="button"
+                                      onClick={() => handleSelectGoogleReview(review)}
+                                      className="w-full text-left p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all"
+                                    >
+                                      <div className="flex items-start gap-3">
+                                        {review.profile_photo_url ? (
+                                          <img src={review.profile_photo_url} alt="" className="w-10 h-10 rounded-full" />
+                                        ) : (
+                                          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                            <i className="fas fa-user text-gray-400"></i>
+                                          </div>
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <span className="font-medium text-gray-900">{review.author_name}</span>
+                                            <span className="text-xs text-gray-500">{review.relative_time_description}</span>
+                                          </div>
+                                          <div className="flex gap-0.5 mb-2">
+                                            {[1,2,3,4,5].map(s => (
+                                              <i key={s} className={`fas fa-star text-xs ${s <= review.rating ? 'text-yellow-400' : 'text-gray-300'}`}></i>
+                                            ))}
+                                          </div>
+                                          <p className="text-sm text-gray-600 line-clamp-2">{review.text}</p>
+                                        </div>
+                                        <i className="fas fa-chevron-right text-gray-400 mt-3"></i>
+                                      </div>
+                                    </button>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-center py-12">
+                                  <i className="fas fa-exclamation-circle text-4xl text-gray-300 mb-4"></i>
+                                  <p className="text-gray-500 mb-2">No Google Reviews available</p>
+                                  <p className="text-sm text-gray-400">Make sure your Google Places API is configured in .env.local</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-gray-200"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                          <span className="px-3 bg-white text-gray-500">or enter manually</span>
+                        </div>
+                      </div>
+
                       <div className="space-y-2">
                         <Label htmlFor="reviewerName">Reviewer Name <span className="text-red-500">*</span></Label>
                         <Input
