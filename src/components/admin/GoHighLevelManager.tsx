@@ -4,6 +4,31 @@ import { useState, useEffect } from 'react';
 import { DatabaseService } from '@/services/database';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { 
+  Cloud, 
+  Globe, 
+  Bot, 
+  ArrowRight, 
+  ArrowLeftRight, 
+  Key, 
+  MapPin, 
+  Calendar, 
+  Plug, 
+  Save, 
+  Play, 
+  Pause, 
+  RefreshCw, 
+  HelpCircle, 
+  AlertTriangle, 
+  CheckCircle, 
+  X, 
+  Eye, 
+  EyeOff,
+  Info,
+  Users,
+  Workflow,
+  Clock
+} from 'lucide-react';
 
 interface CRMSettings {
   id?: string;
@@ -194,78 +219,63 @@ export default function GoHighLevelManager() {
 
   if (loading) {
     return (
-      <div className="text-center py-5">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-        <p className="mt-3 text-muted">Loading GoHighLevel settings...</p>
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AD6269]"></div>
+        <p className="mt-4 text-gray-500">Loading GoHighLevel settings...</p>
       </div>
     );
   }
 
   return (
-    <div className="container-fluid">
+    <div className="w-full">
       {/* Header */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="card border-0 shadow-sm bg-gradient" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-            <div className="card-body text-white p-4">
-              <h2 className="card-title mb-2 fw-bold">
-                <i className="fas fa-cloud-upload-alt me-3"></i>
-                GoHighLevel Integration
-              </h2>
-              <p className="card-text mb-0 opacity-75">
-                Connect your GoHighLevel CRM account and manage contact synchronization
-              </p>
-            </div>
-          </div>
-        </div>
+      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-6 mb-6 text-white">
+        <h2 className="text-2xl font-bold flex items-center gap-3 mb-2">
+          <Cloud className="w-7 h-7" />
+          GoHighLevel Integration
+        </h2>
+        <p className="text-white/80">
+          Connect your GoHighLevel CRM account and manage contact synchronization
+        </p>
       </div>
 
       {/* BMAD Orchestrator Integration Diagram */}
-      <div className="card mb-4 border-primary">
-        <div className="card-header bg-primary text-white">
-          <h5 className="mb-0"><i className="fas fa-sitemap me-2"></i>BMAD Orchestrator Integration Flow</h5>
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm mb-6 overflow-hidden">
+        <div className="bg-[#AD6269] text-white px-6 py-4">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <Workflow className="w-5 h-5" />
+            BMAD Orchestrator Integration Flow
+          </h3>
         </div>
-        <div className="card-body">
-          <div className="row text-center">
-            <div className="col-md-3">
-              <div className="p-3 border rounded bg-light">
-                <i className="fas fa-globe fa-2x text-primary mb-2"></i>
-                <h6>Your Website</h6>
-                <small>Booking, Forms, Payments</small>
-              </div>
+        <div className="p-6">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-center">
+            <div className="p-4 border border-gray-200 rounded-xl bg-gray-50 w-full md:w-auto">
+              <Globe className="w-8 h-8 text-[#AD6269] mx-auto mb-2" />
+              <h4 className="font-semibold text-gray-900">Your Website</h4>
+              <p className="text-sm text-gray-500">Booking, Forms, Payments</p>
             </div>
-            <div className="col-md-1 d-flex align-items-center justify-content-center">
-              <i className="fas fa-arrow-right fa-2x text-muted"></i>
+            <ArrowRight className="w-6 h-6 text-gray-400 hidden md:block" />
+            <div className="p-4 border border-blue-200 rounded-xl bg-blue-500 text-white w-full md:w-auto">
+              <Bot className="w-8 h-8 mx-auto mb-2" />
+              <h4 className="font-semibold">BMAD Orchestrator</h4>
+              <p className="text-sm text-blue-100">Intelligent Automation</p>
             </div>
-            <div className="col-md-3">
-              <div className="p-3 border rounded bg-info text-white">
-                <i className="fas fa-robot fa-2x mb-2"></i>
-                <h6>BMAD Orchestrator</h6>
-                <small>Intelligent Automation</small>
-              </div>
-            </div>
-            <div className="col-md-1 d-flex align-items-center justify-content-center">
-              <i className="fas fa-exchange-alt fa-2x text-muted"></i>
-            </div>
-            <div className="col-md-3">
-              <div className="p-3 border rounded bg-success text-white">
-                <i className="fas fa-cloud fa-2x mb-2"></i>
-                <h6>GoHighLevel</h6>
-                <small>CRM, Workflows, Automation</small>
-              </div>
+            <ArrowLeftRight className="w-6 h-6 text-gray-400 hidden md:block" />
+            <div className="p-4 border border-green-200 rounded-xl bg-green-500 text-white w-full md:w-auto">
+              <Cloud className="w-8 h-8 mx-auto mb-2" />
+              <h4 className="font-semibold">GoHighLevel</h4>
+              <p className="text-sm text-green-100">CRM, Workflows, Automation</p>
             </div>
           </div>
-          <div className="mt-3">
-            <h6 className="text-primary">What BMAD Orchestrator Does:</h6>
-            <ul className="small">
-              <li><strong>Syncs Contacts:</strong> Automatically creates/updates contacts in GHL when bookings are made</li>
-              <li><strong>Triggers Workflows:</strong> Initiates GHL workflows for follow-ups, reminders, and campaigns</li>
-              <li><strong>Manages Appointments:</strong> Syncs calendar appointments between your site and GHL</li>
-              <li><strong>Handles Invoices:</strong> Creates and sends invoices through GHL</li>
-              <li><strong>Tracks Opportunities:</strong> Updates pipeline stages based on customer actions</li>
-              <li><strong>Sends Messages:</strong> Automated SMS/email through GHL conversations</li>
+          <div className="mt-6">
+            <h4 className="text-[#AD6269] font-semibold mb-3">What BMAD Orchestrator Does:</h4>
+            <ul className="text-sm text-gray-600 space-y-2">
+              <li><span className="font-medium text-gray-900">Syncs Contacts:</span> Automatically creates/updates contacts in GHL when bookings are made</li>
+              <li><span className="font-medium text-gray-900">Triggers Workflows:</span> Initiates GHL workflows for follow-ups, reminders, and campaigns</li>
+              <li><span className="font-medium text-gray-900">Manages Appointments:</span> Syncs calendar appointments between your site and GHL</li>
+              <li><span className="font-medium text-gray-900">Handles Invoices:</span> Creates and sends invoices through GHL</li>
+              <li><span className="font-medium text-gray-900">Tracks Opportunities:</span> Updates pipeline stages based on customer actions</li>
+              <li><span className="font-medium text-gray-900">Sends Messages:</span> Automated SMS/email through GHL conversations</li>
             </ul>
           </div>
         </div>
@@ -273,298 +283,284 @@ export default function GoHighLevelManager() {
 
       {/* Troubleshooting Section */}
       {testResult?.type === 'error' && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
-          <h6 className="alert-heading"><i className="fas fa-exclamation-triangle me-2"></i>Connection Issue Detected</h6>
-          <p className="mb-2">{testResult.message}</p>
-          <hr />
-          <h6>Common Issues & Solutions:</h6>
-          <ol className="small mb-0">
-            <li><strong>Missing Scopes:</strong> Ensure all required scopes are enabled in GHL Private Integration settings</li>
-            <li><strong>Invalid API Key:</strong> Regenerate your API key after enabling scopes</li>
-            <li><strong>Wrong Integration Type:</strong> Use Private Integration, not Agency API</li>
-            <li><strong>Expired Token:</strong> API keys may expire - generate a new one</li>
-          </ol>
-          <button type="button" className="btn-close" onClick={() => setTestResult(null)}></button>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <h4 className="text-red-800 font-semibold flex items-center gap-2 mb-2">
+                <AlertTriangle className="w-5 h-5" />
+                Connection Issue Detected
+              </h4>
+              <p className="text-red-700 mb-3">{testResult.message}</p>
+              <h5 className="text-red-800 font-medium mb-2">Common Issues & Solutions:</h5>
+              <ol className="text-sm text-red-700 space-y-1 list-decimal list-inside">
+                <li><span className="font-medium">Missing Scopes:</span> Ensure all required scopes are enabled in GHL Private Integration settings</li>
+                <li><span className="font-medium">Invalid API Key:</span> Regenerate your API key after enabling scopes</li>
+                <li><span className="font-medium">Wrong Integration Type:</span> Use Private Integration, not Agency API</li>
+                <li><span className="font-medium">Expired Token:</span> API keys may expire - generate a new one</li>
+              </ol>
+            </div>
+            <button onClick={() => setTestResult(null)} className="text-red-500 hover:text-red-700">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       )}
 
       {/* Status Cards */}
-      <div className="row mb-4">
-        <div className="col-md-3">
-          <div className={`card text-white ${settings.isEnabled ? 'bg-success' : 'bg-warning'}`}>
-            <div className="card-body">
-              <h6 className="card-title">Sync Status</h6>
-              <h3>{settings.isEnabled ? 'Enabled' : 'Disabled'}</h3>
-            </div>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className={`rounded-xl p-5 text-white ${settings.isEnabled ? 'bg-green-500' : 'bg-yellow-500'}`}>
+          <p className="text-sm text-white/80 mb-1">Sync Status</p>
+          <h3 className="text-2xl font-bold">{settings.isEnabled ? 'Enabled' : 'Disabled'}</h3>
         </div>
-        <div className="col-md-3">
-          <div className="card bg-info text-white">
-            <div className="card-body">
-              <h6 className="card-title">Synced Contacts</h6>
-              <h3>{settings.syncedContacts}</h3>
-            </div>
+        <div className="bg-blue-500 rounded-xl p-5 text-white">
+          <div className="flex items-center gap-2 text-sm text-white/80 mb-1">
+            <Users className="w-4 h-4" />
+            Synced Contacts
           </div>
+          <h3 className="text-2xl font-bold">{settings.syncedContacts}</h3>
         </div>
-        <div className="col-md-3">
-          <div className="card bg-primary text-white">
-            <div className="card-body">
-              <h6 className="card-title">Synced Workflows</h6>
-              <h3>{settings.syncedWorkflows}</h3>
-            </div>
+        <div className="bg-[#AD6269] rounded-xl p-5 text-white">
+          <div className="flex items-center gap-2 text-sm text-white/80 mb-1">
+            <Workflow className="w-4 h-4" />
+            Synced Workflows
           </div>
+          <h3 className="text-2xl font-bold">{settings.syncedWorkflows}</h3>
         </div>
-        <div className="col-md-3">
-          <div className="card bg-secondary text-white">
-            <div className="card-body">
-              <h6 className="card-title">Last Sync</h6>
-              <h6>
-                {settings.lastSync ? (
-                  new Date(settings.lastSync).toLocaleDateString()
-                ) : (
-                  'Never'
-                )}
-              </h6>
-            </div>
+        <div className="bg-gray-500 rounded-xl p-5 text-white">
+          <div className="flex items-center gap-2 text-sm text-white/80 mb-1">
+            <Clock className="w-4 h-4" />
+            Last Sync
           </div>
+          <h3 className="text-lg font-bold">
+            {settings.lastSync ? new Date(settings.lastSync).toLocaleDateString() : 'Never'}
+          </h3>
         </div>
       </div>
 
       {/* Messages */}
       {message && (
-        <div className="row mb-4">
-          <div className="col-12">
-            <div className={`alert alert-${message.type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`} role="alert">
-              <i className={`fas ${message.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'} me-2`}></i>
-              {message.text}
-              <button type="button" className="btn-close" onClick={() => setMessage(null)}></button>
-            </div>
+        <div className={`flex items-center justify-between px-4 py-3 rounded-lg mb-6 ${
+          message.type === 'success' 
+            ? 'bg-green-50 border border-green-200 text-green-700' 
+            : 'bg-red-50 border border-red-200 text-red-700'
+        }`}>
+          <div className="flex items-center gap-2">
+            {message.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
+            {message.text}
           </div>
+          <button onClick={() => setMessage(null)} className={message.type === 'success' ? 'text-green-500 hover:text-green-700' : 'text-red-500 hover:text-red-700'}>
+            <X className="w-5 h-5" />
+          </button>
         </div>
       )}
 
       {/* Settings Form */}
-      <div className="row">
-        <div className="col-12">
-          <div className="card border-0 shadow-sm">
-            <div className="card-header bg-primary text-white border-0">
-              <h5 className="mb-0 fw-bold">
-                <i className="fas fa-key me-2"></i>
-                API Configuration
-              </h5>
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm mb-6 overflow-hidden">
+        <div className="bg-[#AD6269] text-white px-6 py-4">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <Key className="w-5 h-5" />
+            API Configuration
+          </h3>
+        </div>
+        <div className="p-6">
+          <form onSubmit={handleSave} className="space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <span className="flex items-center gap-1">
+                  <Key className="w-4 h-4 text-red-500" />
+                  GoHighLevel API Key *
+                </span>
+              </label>
+              <div className="flex">
+                <Input
+                  type={showApiKey ? 'text' : 'password'}
+                  value={settings.apiKey}
+                  onChange={(e) => setSettings(prev => ({ ...prev, apiKey: e.target.value }))}
+                  placeholder="Enter your GoHighLevel API Key"
+                  required
+                  className="rounded-r-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                  className="px-4 border border-l-0 border-gray-300 rounded-r-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  {showApiKey ? <EyeOff className="w-4 h-4 text-gray-500" /> : <Eye className="w-4 h-4 text-gray-500" />}
+                </button>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">
+                Get your API Key from GoHighLevel Settings → API Keys
+              </p>
             </div>
-            <div className="card-body p-4">
-              <form onSubmit={handleSave}>
-                <div className="row g-4">
-                  <div className="col-12">
-                    <label className="form-label fw-semibold">
-                      <i className="fas fa-lock me-1 text-danger"></i>
-                      GoHighLevel API Key *
-                    </label>
-                    <div className="input-group">
-                      <input
-                        type={showApiKey ? 'text' : 'password'}
-                        className="form-control form-control-lg border-2"
-                        value={settings.apiKey}
-                        onChange={(e) => setSettings(prev => ({ ...prev, apiKey: e.target.value }))}
-                        placeholder="Enter your GoHighLevel API Key"
-                        required
-                      />
-                      <button
-                        className="btn btn-outline-secondary"
-                        type="button"
-                        onClick={() => setShowApiKey(!showApiKey)}
-                      >
-                        <i className={`fas fa-${showApiKey ? 'eye-slash' : 'eye'}`}></i>
-                      </button>
-                    </div>
-                    <div className="form-text">
-                      Get your API Key from GoHighLevel Settings → API Keys
-                    </div>
-                  </div>
 
-                  <div className="col-12">
-                    <label className="form-label fw-semibold">
-                      <i className="fas fa-map-marker-alt me-1 text-primary"></i>
-                      GoHighLevel Location ID *
-                    </label>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <span className="flex items-center gap-1">
+                  <MapPin className="w-4 h-4 text-[#AD6269]" />
+                  GoHighLevel Location ID *
+                </span>
+              </label>
+              <Input
+                type="text"
+                value={settings.locationId || ''}
+                onChange={(e) => setSettings(prev => ({ ...prev, locationId: e.target.value }))}
+                placeholder="Enter your GoHighLevel Location ID"
+                required
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Get your Location ID from GoHighLevel Settings → Business Profile
+              </p>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <h4 className="font-semibold text-gray-900 flex items-center gap-2 mb-1">
+                    <Calendar className="w-5 h-5 text-blue-500" />
+                    Use GHL Calendar Availability
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    When enabled, booking system will use GHL calendar rules and available slots instead of website's built-in availability system.
+                  </p>
+                </div>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div className="relative">
                     <input
-                      type="text"
-                      className="form-control form-control-lg border-2"
-                      value={settings.locationId || ''}
-                      onChange={(e) => setSettings(prev => ({ ...prev, locationId: e.target.value }))}
-                      placeholder="Enter your GoHighLevel Location ID"
-                      required
+                      type="checkbox"
+                      checked={settings.useGHLAvailability || false}
+                      onChange={(e) => setSettings(prev => ({ ...prev, useGHLAvailability: e.target.checked }))}
+                      className="sr-only"
                     />
-                    <div className="form-text">
-                      Get your Location ID from GoHighLevel Settings → Business Profile
+                    <div className={`w-14 h-7 rounded-full transition-colors ${settings.useGHLAvailability ? 'bg-blue-500' : 'bg-gray-300'}`}>
+                      <div className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${settings.useGHLAvailability ? 'translate-x-7' : ''}`}></div>
                     </div>
                   </div>
-
-                  <div className="col-12">
-                    <div className="card bg-light border-2 border-info">
-                      <div className="card-body">
-                        <div className="d-flex justify-content-between align-items-center">
-                          <div>
-                            <h6 className="mb-1 fw-bold">
-                              <i className="fas fa-calendar-check me-2 text-info"></i>
-                              Use GHL Calendar Availability
-                            </h6>
-                            <p className="mb-0 small text-muted">
-                              When enabled, booking system will use GHL calendar rules and available slots instead of website's built-in availability system.
-                            </p>
-                          </div>
-                          <div className="form-check form-switch ms-3">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              role="switch"
-                              id="useGHLAvailability"
-                              checked={settings.useGHLAvailability || false}
-                              onChange={(e) => setSettings(prev => ({ ...prev, useGHLAvailability: e.target.checked }))}
-                              style={{ width: '3rem', height: '1.5rem' }}
-                            />
-                            <label className="form-check-label ms-2 fw-bold" htmlFor="useGHLAvailability">
-                              {settings.useGHLAvailability ? 'ON' : 'OFF'}
-                            </label>
-                          </div>
-                        </div>
-                        <div className="mt-3">
-                          <small className="text-muted">
-                            <i className="fas fa-info-circle me-1"></i>
-                            <strong>GHL Mode:</strong> Uses calendar booking rules, free slots, and team member availability from GoHighLevel.
-                            <br />
-                            <i className="fas fa-info-circle me-1"></i>
-                            <strong>Website Mode:</strong> Uses artist availability configured in the Artist Availability tab.
-                          </small>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="row g-3 mt-2">
-                  <div className="col-md-6">
-                    <button
-                      type="button"
-                      className="btn btn-outline-info btn-lg w-100"
-                      onClick={handleTestConnection}
-                      disabled={saving || syncing}
-                    >
-                      <i className="fas fa-plug me-2"></i>Test Connection
-                    </button>
-                  </div>
-                  <div className="col-md-6">
-                    <button
-                      type="submit"
-                      className="btn btn-primary btn-lg w-100"
-                      disabled={saving || syncing}
-                    >
-                      {saving ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <i className="fas fa-save me-2"></i>Save API Key
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {testResult && (
-                  <div className={`alert alert-${testResult.type === 'success' ? 'success' : 'danger'} mt-3`}>
-                    {testResult.message}
-                  </div>
-                )}
-              </form>
+                  <span className="font-semibold text-gray-700">{settings.useGHLAvailability ? 'ON' : 'OFF'}</span>
+                </label>
+              </div>
+              <div className="mt-3 text-sm text-gray-600 space-y-1">
+                <p className="flex items-start gap-1">
+                  <Info className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                  <span><strong>GHL Mode:</strong> Uses calendar booking rules, free slots, and team member availability from GoHighLevel.</span>
+                </p>
+                <p className="flex items-start gap-1">
+                  <Info className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                  <span><strong>Website Mode:</strong> Uses artist availability configured in the Artist Availability tab.</span>
+                </p>
+              </div>
             </div>
-          </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleTestConnection}
+                disabled={saving || syncing}
+                className="w-full"
+              >
+                <Plug className="w-4 h-4 mr-2" />
+                Test Connection
+              </Button>
+              <Button
+                type="submit"
+                disabled={saving || syncing}
+                className="w-full bg-[#AD6269] hover:bg-[#9d5860] text-white"
+              >
+                {saving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save API Key
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {testResult && testResult.type === 'success' && (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
+                <CheckCircle className="w-5 h-5" />
+                {testResult.message}
+              </div>
+            )}
+          </form>
         </div>
       </div>
 
       {/* Sync Controls */}
-      <div className="row mt-4">
-        <div className="col-12">
-          <div className="card border-0 shadow-sm">
-            <div className="card-header bg-success text-white border-0">
-              <h5 className="mb-0 fw-bold">
-                <i className="fas fa-sync me-2"></i>
-                Synchronization Controls
-              </h5>
-            </div>
-            <div className="card-body p-4">
-              <div className="row g-3">
-                <div className="col-md-6">
-                  <button
-                    className={`btn btn-${settings.isEnabled ? 'warning' : 'success'} btn-lg w-100`}
-                    onClick={handleToggleSync}
-                    disabled={syncing || !settings.apiKey}
-                  >
-                    {syncing ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                        {settings.isEnabled ? 'Disabling...' : 'Enabling...'}
-                      </>
-                    ) : (
-                      <>
-                        <i className={`fas fa-${settings.isEnabled ? 'pause' : 'play'} me-2`}></i>
-                        {settings.isEnabled ? 'Disable Sync' : 'Enable Sync'}
-                      </>
-                    )}
-                  </button>
-                </div>
-                <div className="col-md-6">
-                  <button
-                    className="btn btn-info btn-lg w-100"
-                    onClick={handleFullSync}
-                    disabled={syncing || !settings.apiKey}
-                  >
-                    {syncing ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                        Syncing...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fas fa-sync-alt me-2"></i>Full Sync Now
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-              <div className="alert alert-info mt-3">
-                <i className="fas fa-info-circle me-2"></i>
-                <strong>Full Sync:</strong> Synchronizes all contacts and workflows from GoHighLevel to your database. This may take a few minutes depending on the amount of data.
-              </div>
-            </div>
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm mb-6 overflow-hidden">
+        <div className="bg-green-500 text-white px-6 py-4">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <RefreshCw className="w-5 h-5" />
+            Synchronization Controls
+          </h3>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Button
+              onClick={handleToggleSync}
+              disabled={syncing || !settings.apiKey}
+              className={`w-full ${settings.isEnabled ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'} text-white`}
+            >
+              {syncing ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  {settings.isEnabled ? 'Disabling...' : 'Enabling...'}
+                </>
+              ) : (
+                <>
+                  {settings.isEnabled ? <Pause className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
+                  {settings.isEnabled ? 'Disable Sync' : 'Enable Sync'}
+                </>
+              )}
+            </Button>
+            <Button
+              onClick={handleFullSync}
+              disabled={syncing || !settings.apiKey}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              {syncing ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Syncing...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Full Sync Now
+                </>
+              )}
+            </Button>
+          </div>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4 flex items-start gap-2">
+            <Info className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-blue-700">
+              <strong>Full Sync:</strong> Synchronizes all contacts and workflows from GoHighLevel to your database. This may take a few minutes depending on the amount of data.
+            </p>
           </div>
         </div>
       </div>
 
       {/* Info Section */}
-      <div className="row mt-4">
-        <div className="col-12">
-          <div className="card border-info border-2">
-            <div className="card-header bg-info bg-opacity-10">
-              <h6 className="mb-0 fw-bold text-info">
-                <i className="fas fa-question-circle me-2"></i>
-                How to Get Your API Key
-              </h6>
-            </div>
-            <div className="card-body">
-              <ol>
-                <li>Log in to your GoHighLevel account</li>
-                <li>Navigate to Settings → API Keys</li>
-                <li>Create a new API Key or copy an existing one</li>
-                <li>Paste the key above and click "Test Connection"</li>
-                <li>Once verified, click "Save API Key"</li>
-                <li>Enable sync and run "Full Sync Now" to import your contacts</li>
-              </ol>
-            </div>
-          </div>
+      <div className="bg-white border border-blue-200 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-blue-50 px-6 py-4 border-b border-blue-200">
+          <h3 className="text-lg font-semibold text-blue-700 flex items-center gap-2">
+            <HelpCircle className="w-5 h-5" />
+            How to Get Your API Key
+          </h3>
+        </div>
+        <div className="p-6">
+          <ol className="list-decimal list-inside space-y-2 text-gray-700">
+            <li>Log in to your GoHighLevel account</li>
+            <li>Navigate to Settings → API Keys</li>
+            <li>Create a new API Key or copy an existing one</li>
+            <li>Paste the key above and click "Test Connection"</li>
+            <li>Once verified, click "Save API Key"</li>
+            <li>Enable sync and run "Full Sync Now" to import your contacts</li>
+          </ol>
         </div>
       </div>
     </div>
