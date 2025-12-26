@@ -884,36 +884,57 @@ function BookNowCustomContent() {
   };
 
   const renderProgressBar = () => {
-    const steps = ['services', 'account-suggestion', 'calendar', 'profile', 'health', 'pre-post-care', 'checkout'];
-    const currentIndex = steps.indexOf(currentStep);
-    const progress = ((currentIndex + 1) / steps.length) * 100;
+    const stepLabels = [
+      { key: 'services', label: 'Service' },
+      { key: 'account-suggestion', label: 'Account' },
+      { key: 'calendar', label: 'Date & Time' },
+      { key: 'profile', label: 'Profile' },
+      { key: 'health', label: 'Health Form' },
+      { key: 'pre-post-care', label: 'Care Instructions' },
+      { key: 'checkout', label: 'Checkout' }
+    ];
+    const currentIndex = stepLabels.findIndex(s => s.key === currentStep);
+    const progress = ((currentIndex + 1) / stepLabels.length) * 100;
 
     return (
-      <div className="container-fluid py-3" style={{ backgroundColor: '#AD6269' }}>
-        <div className="container">
-          <div className="row justify-content-center">
-            <div className="col-lg-8">
-              <div className="flex justify-between items-center mb-2">
-                <small className="text-white">Step {currentIndex + 1} of {steps.length}</small>
-                <small className="text-white">{Math.round(progress)}% Complete</small>
+      <div className="w-full bg-[#AD6269] py-4">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Step counter and progress percentage */}
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-sm text-white font-medium">Step {currentIndex + 1} of {stepLabels.length}</span>
+            <span className="text-sm text-white font-medium">{Math.round(progress)}% Complete</span>
+          </div>
+          
+          {/* Progress bar */}
+          <div className="w-full bg-white/30 rounded-full h-2.5 overflow-hidden mb-4">
+            <div 
+              className="bg-gray-900 h-full rounded-full transition-all duration-300 ease-out" 
+              role="progressbar" 
+              style={{ width: `${progress}%` }}
+              aria-valuenow={progress}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            />
+          </div>
+          
+          {/* Step labels */}
+          <div className="grid grid-cols-7 gap-1">
+            {stepLabels.map((step, index) => (
+              <div 
+                key={step.key}
+                className={`text-center ${
+                  index === currentIndex 
+                    ? 'text-white font-bold' 
+                    : index < currentIndex 
+                      ? 'text-white/90' 
+                      : 'text-white/60'
+                }`}
+              >
+                <span className="text-xs sm:text-sm whitespace-nowrap overflow-hidden text-ellipsis block">
+                  {step.label}
+                </span>
               </div>
-              <div className="w-full bg-white/30 rounded-full h-2 overflow-hidden">
-                <div 
-                  className="bg-black h-full transition-all duration-300" 
-                  role="progressbar" 
-                  style={{ width: `${progress}%` }}
-                ></div>
-              </div>
-              <div className="flex justify-between mt-2">
-                <small className={currentStep === 'services' ? 'text-white font-bold' : 'text-white opacity-75'}>Service</small>
-                <small className={currentStep === 'account-suggestion' ? 'text-white font-bold' : 'text-white opacity-75'}>Account</small>
-                <small className={currentStep === 'calendar' ? 'text-white font-bold' : 'text-white opacity-75'}>Date & Time</small>
-                <small className={currentStep === 'profile' ? 'text-white font-bold' : 'text-white opacity-75'}>Profile</small>
-                <small className={currentStep === 'health' ? 'text-white font-bold' : 'text-white opacity-75'}>Health Form</small>
-                <small className={currentStep === 'pre-post-care' ? 'text-white font-bold' : 'text-white opacity-75'}>Care Instructions</small>
-                <small className={currentStep === 'checkout' ? 'text-white font-bold' : 'text-white opacity-75'}>Checkout</small>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
