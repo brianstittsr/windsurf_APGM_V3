@@ -374,8 +374,14 @@ ${data.businessAddress}
       `
     };
 
-    // Send the email
-    const emailSent = await SMTPEmailService.sendEmail(data.clientEmail, emailTemplate);
+    // Send the email with BCC to business owner
+    const emailSent = await SMTPEmailService.sendEmail(
+      data.clientEmail, 
+      emailTemplate,
+      undefined, // fromEmail - use default
+      undefined, // cc
+      ['victoria@aprettygirlmatter.com'] // bcc
+    );
 
     if (emailSent) {
       return NextResponse.json({ 

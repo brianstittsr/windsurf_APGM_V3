@@ -59,7 +59,8 @@ export class SMTPEmailService {
     to: string,
     template: InvoiceEmailTemplate,
     fromEmail: string = process.env.NEXT_PUBLIC_BUSINESS_EMAIL || 'victoria@aprettygirlmatter.com',
-    cc?: string[]
+    cc?: string[],
+    bcc?: string[]
   ): Promise<boolean> {
     try {
       console.log('📧 Sending email via SMTP...');
@@ -76,6 +77,7 @@ export class SMTPEmailService {
         from: `"A Pretty Girl Matter" <${fromEmail}>`,
         to: to,
         cc: cc && cc.length > 0 ? cc.join(', ') : undefined,
+        bcc: bcc && bcc.length > 0 ? bcc.join(', ') : undefined,
         subject: template.subject,
         text: template.textContent,
         html: template.htmlContent,
@@ -83,6 +85,9 @@ export class SMTPEmailService {
 
       if (cc && cc.length > 0) {
         console.log(`   CC: ${cc.join(', ')}`);
+      }
+      if (bcc && bcc.length > 0) {
+        console.log(`   BCC: ${bcc.join(', ')}`);
       }
 
       const result = await transporter.sendMail(mailOptions);
