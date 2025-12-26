@@ -12,6 +12,9 @@ import { calculateTotalWithStripeFeesSync } from '../lib/stripe-fees-sync';
 import { BusinessSettingsService } from '@/services/businessSettingsService';
 import { CouponCode, GiftCard } from '@/types/database';
 import { ActivityService } from '@/services/activityService';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { CalendarCheck, User, MessageSquare, CreditCard, Gift, FileText, Shield, Clock, CalendarX, Ban, ArrowLeft, CheckCircle, AlertTriangle, Info, Loader2 } from 'lucide-react';
 
 interface ServiceItem {
   id: string;
@@ -369,99 +372,74 @@ export default function CheckoutCart({
   // Show loading state if settings not loaded
   if (!settingsLoaded || !feeCalculation) {
     return (
-      <div className="container py-5">
-        <div className="row justify-content-center">
-          <div className="col-lg-10 col-xl-8">
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-              <p className="mt-3 text-muted">Calculating pricing...</p>
-            </div>
-          </div>
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="flex flex-col items-center justify-center py-12">
+          <Loader2 className="w-10 h-10 text-[#AD6269] animate-spin" />
+          <p className="mt-4 text-gray-500">Calculating pricing...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container py-5">
-      <div className="row justify-content-center">
-        <div className="col-lg-10 col-xl-8">
-          {/* Modern Header Section */}
-          <div className="text-center mb-5">
-            <div className="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle mb-3" style={{width: '80px', height: '80px'}}>
-              <i className="fas fa-calendar-check text-primary" style={{fontSize: '2rem'}}></i>
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      {/* Header Section */}
+      <div className="text-center mb-8">
+        <div className="w-20 h-20 bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <CalendarCheck className="w-10 h-10 text-[#AD6269]" />
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Complete Your Booking</h1>
+        <span className="inline-block bg-[#AD6269]/10 text-[#AD6269] px-4 py-2 rounded-full text-sm font-medium">
+          A Pretty Girl Matter
+        </span>
+      </div>
+
+      {/* Client Card */}
+      <Card className="mb-6 border-0 shadow-md">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-gray-900 flex items-center gap-2">
+              <User className="w-5 h-5 text-[#AD6269]" />
+              Booking Details
+            </h3>
+            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+              <CheckCircle className="w-3.5 h-3.5" />
+              Verified Client
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-[#AD6269]/10 rounded-full flex items-center justify-center">
+              <User className="w-7 h-7 text-[#AD6269]" />
             </div>
-            <h1 className="h2 fw-bold mb-2">Complete Your Booking</h1>
-            <div className="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
-              <i className="fas fa-sparkles me-2"></i>
-              A Pretty Girl Matter
+            <div>
+              <h4 className="font-bold text-gray-900">{clientName}</h4>
+              <p className="text-gray-500 text-sm">Primary Account Holder</p>
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Stripe Mode Indicator - Hidden in production */}
-          {/* <div className="mb-4">
-            <StripeModeIndicator />
-          </div> */}
-
-          {/* Modern Client Card */}
-          <div className="card border-0 shadow-sm mb-4" style={{borderRadius: '16px'}}>
-            <div className="card-body p-4">
-              <div className="d-flex align-items-center justify-content-between mb-3">
-                <h5 className="card-title mb-0 fw-bold">
-                  <i className="fas fa-user-circle text-primary me-2"></i>
-                  Booking Details
-                </h5>
-                <span className="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">
-                  <i className="fas fa-check-circle me-1"></i>
-                  Verified Client
-                </span>
-              </div>
-              <div className="row align-items-center">
-                <div className="col-auto">
-                  <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style={{width: '56px', height: '56px'}}>
-                    <i className="fas fa-user" style={{fontSize: '1.5rem'}}></i>
-                  </div>
-                </div>
-                <div className="col">
-                  <h6 className="mb-1 fw-bold">{clientName}</h6>
-                  <p className="text-muted mb-0 small">Primary Account Holder</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Modern Appointment Details */}
-          <div className="card border-0 shadow-sm mb-4" style={{borderRadius: '16px'}}>
-            <div className="card-body p-4">
-              <h5 className="card-title mb-4 fw-bold">
-                <i className="fas fa-comment-dots text-primary me-2"></i>
-                Special Requests
-              </h5>
-              <div className="form-floating">
-                <textarea
-                  className="form-control"
-                  id="specialRequests"
-                  rows={4}
-                  value={data.specialRequests}
-                  onChange={(e) => handleInputChange('specialRequests', e.target.value)}
-                  placeholder="Share any special requests, ideas, or preferences with your artist..."
-                  style={{minHeight: '120px', borderRadius: '12px'}}
-                />
-                <label htmlFor="specialRequests" className="text-muted">
-                  <i className="fas fa-pencil-alt me-1"></i>
-                  Tell us about your vision (optional)
-                </label>
-              </div>
-              <div className="mt-3">
-                <small className="text-muted">
-                  <i className="fas fa-lightbulb me-1"></i>
-                  This helps your artist prepare and customize your experience
-                </small>
-              </div>
-            </div>
-          </div>
+      {/* Special Requests */}
+      <Card className="mb-6 border-0 shadow-md">
+        <CardContent className="p-6">
+          <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
+            <MessageSquare className="w-5 h-5 text-[#AD6269]" />
+            Special Requests
+          </h3>
+          <textarea
+            id="specialRequests"
+            rows={4}
+            value={data.specialRequests}
+            onChange={(e) => handleInputChange('specialRequests', e.target.value)}
+            placeholder="Share any special requests, ideas, or preferences with your artist..."
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#AD6269] focus:border-[#AD6269] outline-none resize-none"
+          />
+          <p className="text-gray-500 text-sm mt-2 flex items-center gap-1">
+            <Info className="w-4 h-4" />
+            This helps your artist prepare and customize your experience
+          </p>
+        </CardContent>
+      </Card>
 
           {/* Gift Card Section */}
           <GiftCardInput
@@ -746,73 +724,62 @@ export default function CheckoutCart({
             </div>
           )}
 
-          {/* Modern Policy Card */}
-          <div className="card border-0 shadow-sm mb-4" style={{borderRadius: '16px'}}>
-            <div className="card-body p-4">
-              <div className="d-flex align-items-center mb-3">
-                <div className="bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center me-3" style={{width: '48px', height: '48px'}}>
-                  <i className="fas fa-file-contract" style={{fontSize: '1.25rem'}}></i>
-                </div>
-                <div>
-                  <h5 className="card-title mb-1 fw-bold">Important Policies</h5>
-                  <p className="text-muted mb-0 small">Please review before completing payment</p>
-                </div>
+      {/* Policy Card */}
+      <Card className="mb-6 border-0 shadow-md">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <FileText className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900">Important Policies</h3>
+              <p className="text-gray-500 text-sm">Please review before completing payment</p>
+            </div>
+          </div>
+          
+          <div className="bg-gray-50 p-4 rounded-xl space-y-4">
+            <div className="flex items-start gap-3">
+              <Clock className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-gray-900 text-sm">Punctuality</p>
+                <p className="text-gray-500 text-sm">15-minute grace period for appointments over 1 hour</p>
               </div>
-              
-              <div className="bg-light p-3 rounded-3">
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <div className="d-flex align-items-start">
-                      <i className="fas fa-clock text-warning me-2 mt-1"></i>
-                      <div>
-                        <small className="fw-bold d-block">Punctuality</small>
-                        <small className="text-muted">15-minute grace period for appointments over 1 hour</small>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="d-flex align-items-start">
-                      <i className="fas fa-calendar-times text-danger me-2 mt-1"></i>
-                      <div>
-                        <small className="fw-bold d-block">Rescheduling</small>
-                        <small className="text-muted">$50 fee for late arrivals, one reschedule allowed</small>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-12">
-                    <div className="d-flex align-items-start">
-                      <i className="fas fa-ban text-primary me-2 mt-1"></i>
-                      <div>
-                        <small className="fw-bold d-block">Deposit Policy</small>
-                        <small className="text-muted">All deposits are non-refundable and applied to your service</small>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <CalendarX className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-gray-900 text-sm">Rescheduling</p>
+                <p className="text-gray-500 text-sm">$50 fee for late arrivals, one reschedule allowed</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Ban className="w-5 h-5 text-[#AD6269] mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-gray-900 text-sm">Deposit Policy</p>
+                <p className="text-gray-500 text-sm">All deposits are non-refundable and applied to your service</p>
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Modern Action Buttons */}
-          <div className="d-flex justify-content-between align-items-center mb-5">
-            <button
-              type="button"
-              className="btn btn-outline-secondary px-4 py-2 rounded-pill"
-              onClick={onBack}
-              disabled={paymentLoading}
-              style={{minWidth: '120px'}}
-            >
-              <i className="fas fa-arrow-left me-2"></i>
-              Back
-            </button>
-            <div className="text-muted small">
-              <i className="fas fa-shield-alt text-success me-1"></i>
-              Secure checkout powered by Stripe
-            </div>
-          </div>
-
-        </div>
+      {/* Action Buttons */}
+      <div className="flex justify-between items-center mb-8">
+        <Button
+          variant="outline"
+          onClick={onBack}
+          disabled={paymentLoading}
+          className="gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </Button>
+        <p className="text-gray-500 text-sm flex items-center gap-1">
+          <Shield className="w-4 h-4 text-green-500" />
+          Secure checkout powered by Stripe
+        </p>
       </div>
+
     </div>
   );
 }
