@@ -754,6 +754,41 @@ function BookNowCustomContent() {
         console.error('⚠️ Failed to generate booking PDF (non-critical):', pdfError);
       }
 
+      // Send booking confirmation email with receipt
+      try {
+        console.log('📧 Sending booking confirmation email...');
+        const depositAmount = 200; // Default deposit amount
+        const totalWithTax = selectedService.price * 1.0775;
+        const emailResponse = await fetch('/api/send-booking-confirmation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clientName: profile ? `${profile.firstName} ${profile.lastName}` : 'Valued Customer',
+            clientEmail: profile?.email || '',
+            serviceName: selectedService.name,
+            servicePrice: selectedService.price,
+            depositAmount: depositAmount,
+            remainingBalance: totalWithTax - depositAmount,
+            appointmentDate: selectedDate,
+            appointmentTime: selectedTime,
+            artistName: selectedArtistId || undefined,
+            businessName: 'A Pretty Girl Matter',
+            businessPhone: '(919) 441-0932',
+            businessEmail: 'victoria@aprettygirlmatter.com',
+            businessAddress: '4040 Barrett Drive Suite 3, Raleigh, NC 27609'
+          })
+        });
+        
+        const emailResult = await emailResponse.json();
+        if (emailResult.success) {
+          console.log('✅ Booking confirmation email sent successfully');
+        } else {
+          console.error('⚠️ Failed to send confirmation email:', emailResult.error);
+        }
+      } catch (emailError) {
+        console.error('⚠️ Failed to send confirmation email (non-critical):', emailError);
+      }
+
       console.log('Booking completed successfully:', appointmentId);
       // Form persistence removed - no data to clear
       setCurrentStep('confirmation');
