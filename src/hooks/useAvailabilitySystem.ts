@@ -48,9 +48,9 @@ export function useAvailabilitySystem(selectedDate: string) {
           console.log('[Availability System] Mode: Website (default)');
         }
       } catch (error) {
-        console.error('[Availability System] Error checking mode (using GHL as default):', error);
-        // Default to GHL if Firestore permissions error
-        setUseGHL(true);
+        console.error('[Availability System] Error checking mode (using Website as default):', error);
+        // Default to Website if Firestore permissions error - more reliable fallback
+        setUseGHL(false);
       }
     };
 
@@ -72,20 +72,36 @@ export function useAvailabilitySystem(selectedDate: string) {
         if (useGHL) {
           // Fetch from GHL
           console.log('[Availability System] Fetching from GHL for:', selectedDate);
-          const response = await fetch(`/api/availability/ghl?date=${selectedDate}`);
-          
-          if (!response.ok) {
-            throw new Error('Failed to fetch GHL availability');
+          try {
+            const response = await fetch(`/api/availability/ghl?date=${selectedDate}`);
+            
+            if (!response.ok) {
+              console.warn('[Availability System] GHL API returned error, falling back to website');
+              // Fall through to website mode
+            } else {
+              const data = await response.json();
+              
+              // Check if GHL returned valid data
+              if (data.timeSlots && data.timeSlots.length > 0) {
+                setAvailability({
+                  hasAvailability: data.hasAvailability,
+                  timeSlots: data.timeSlots,
+                  source: 'ghl'
+                });
+                console.log('[Availability System] GHL slots:', data.timeSlots.length);
+                return; // Success - exit early
+              } else {
+                console.log('[Availability System] GHL returned no slots, falling back to website');
+              }
+            }
+          } catch (ghlError) {
+            console.warn('[Availability System] GHL fetch failed, falling back to website:', ghlError);
           }
-
-          const data = await response.json();
-          setAvailability({
-            hasAvailability: data.hasAvailability,
-            timeSlots: data.timeSlots,
-            source: 'ghl'
-          });
-          console.log('[Availability System] GHL slots:', data.timeSlots.length);
-        } else {
+          
+          // Fall through to website mode if GHL fails or returns no data
+        }
+        
+        {
           // Fetch from website's built-in system
           console.log('[Availability System] Fetching from website for:', selectedDate);
           const { useTimeSlots } = await import('./useTimeSlots');

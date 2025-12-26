@@ -243,5 +243,37 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
+
+    // Blocked time slots collection - for booking system
+    match /blockedTimeSlots/{slotId} {
+      allow read: if true; // Public read for availability checking
+      allow write: if isAuthenticated(); // Any authenticated user can book
+    }
+
+    // Document templates collection - Admin only
+    match /documentTemplates/{templateId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Signed documents collection - Users can access their own, admins can manage all
+    match /signedDocuments/{docId} {
+      allow read: if isAuthenticated() &&
+        (resource.data.clientId == request.auth.uid || isAdminOrArtist());
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    // Hero slides collection - Public read, admin manage
+    match /heroSlides/{slideId} {
+      allow read: if true; // Public read for homepage
+      allow write: if isAdmin();
+    }
+
+    // QR codes collection - Admin manage
+    match /qr-codes/{qrCodeId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
   }
 }
