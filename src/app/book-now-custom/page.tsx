@@ -1166,46 +1166,80 @@ function BookNowCustomContent() {
   );
 
   const renderConfirmation = () => (
-    <div className="container-fluid py-5">
-      <div className="row justify-content-center">
-        <div className="col-lg-8">
-          <div className="card shadow-lg border-0">
-            <div className="card-header bg-success text-white text-center py-4">
-              <i className="fas fa-check-circle fa-3x mb-3"></i>
-              <h2 className="h3 mb-0">Booking Confirmed!</h2>
-              <p className="mb-0 opacity-75">Your appointment has been successfully scheduled</p>
-            </div>
-            
-            <div className="card-body p-4 text-center">
-              <div className="alert alert-success">
-                <h5 className="fw-bold mb-3">Appointment Details</h5>
-                <p className="mb-2"><strong>Service:</strong> {selectedService?.name}</p>
-                <p className="mb-2"><strong>Date:</strong> {new Date(selectedDate).toLocaleDateString()}</p>
-                <p className="mb-2"><strong>Time:</strong> {selectedTime}</p>
-                <p className="mb-0"><strong>Client:</strong> {userProfile?.profile ? `${userProfile.profile.firstName} ${userProfile.profile.lastName}` : 'Unknown Client'}</p>
+    <div className="max-w-2xl mx-auto px-4 py-12">
+      <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+        {/* Success Header */}
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white text-center py-10 px-6">
+          <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-3xl font-bold mb-2">Booking Confirmed!</h2>
+          <p className="text-white/80">Your appointment has been successfully scheduled</p>
+        </div>
+        
+        {/* Appointment Details */}
+        <div className="p-8">
+          <div className="bg-green-50 border border-green-200 rounded-xl p-6 mb-6">
+            <h3 className="font-bold text-green-800 text-lg mb-4 text-center">Appointment Details</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center py-2 border-b border-green-200">
+                <span className="text-gray-600 font-medium">Service</span>
+                <span className="text-gray-900 font-semibold">{selectedService?.name}</span>
               </div>
-              
-              <p className="text-muted mb-4">
-                A confirmation email has been sent to {userProfile?.profile?.email || 'your email'}. 
+              <div className="flex justify-between items-center py-2 border-b border-green-200">
+                <span className="text-gray-600 font-medium">Date</span>
+                <span className="text-gray-900 font-semibold">{new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-green-200">
+                <span className="text-gray-600 font-medium">Time</span>
+                <span className="text-gray-900 font-semibold">{selectedTime}</span>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <span className="text-gray-600 font-medium">Client</span>
+                <span className="text-gray-900 font-semibold">{userProfile?.profile ? `${userProfile.profile.firstName} ${userProfile.profile.lastName}` : 'Guest'}</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Email Notice */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-blue-800 font-medium">Confirmation email sent!</p>
+              <p className="text-blue-600 text-sm">
+                A confirmation has been sent to {userProfile?.profile?.email || 'your email'}. 
                 Please arrive 15 minutes early for your appointment.
               </p>
-              
-              <div className="d-flex gap-3 justify-content-center">
-                <Button
-                  className="bg-[#AD6269] hover:bg-[#9d5860] px-4"
-                  onClick={() => window.location.href = '/'}
-                >
-                  Return to Home
-                </Button>
-                <Button
-                  variant="outline"
-                  className="px-4"
-                  onClick={() => window.location.href = '/contact'}
-                >
-                  Contact Us
-                </Button>
-              </div>
             </div>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button
+              className="bg-[#AD6269] hover:bg-[#9d5860] px-8 py-6 text-lg gap-2"
+              onClick={() => window.location.href = '/'}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              Return to Home
+            </Button>
+            <Button
+              variant="outline"
+              className="px-8 py-6 text-lg border-[#AD6269] text-[#AD6269] hover:bg-[#AD6269]/10 gap-2"
+              onClick={() => window.location.href = '/contact'}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+              Contact Us
+            </Button>
           </div>
         </div>
       </div>
