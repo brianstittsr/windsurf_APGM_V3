@@ -3,6 +3,10 @@
 import { useState } from 'react';
 import { CouponCode } from '@/types/database';
 import { CouponService } from '@/services/couponService';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tag, CheckCircle, AlertTriangle, Gift, Loader2, X } from 'lucide-react';
 
 interface CouponInputProps {
   serviceId?: string;
@@ -68,55 +72,52 @@ export default function CouponInput({ serviceId, orderAmount, onCouponApplied, a
   };
 
   return (
-    <div className="card border-0 shadow-lg mb-4" style={{borderRadius: '16px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
-      <div className="card-body p-4">
-        <div className="d-flex align-items-center mb-3">
-          <div className="bg-white bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center me-3" style={{width: '48px', height: '48px'}}>
-            <i className="fas fa-tags text-white" style={{fontSize: '1.25rem'}}></i>
+    <Card className="mb-6 border-0 shadow-md overflow-hidden bg-gradient-to-br from-purple-500 to-purple-700">
+      <CardContent className="p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 bg-white/25 rounded-full flex items-center justify-center">
+            <Tag className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h5 className="card-title mb-0 fw-bold text-white">
-              Have a Coupon Code?
-            </h5>
-            <p className="text-white text-opacity-75 mb-0 small">Save money on your booking!</p>
+            <h3 className="font-bold text-white">Have a Coupon Code?</h3>
+            <p className="text-white/75 text-sm">Save money on your booking!</p>
           </div>
         </div>
 
         {appliedCoupon ? (
-          <div className="d-flex align-items-center justify-content-between p-3 bg-white rounded-3 shadow-sm">
+          <div className="flex items-center justify-between p-4 bg-white rounded-xl shadow-sm">
             <div>
-              <div className="d-flex align-items-center">
-                <i className="fas fa-check-circle text-success me-2" style={{fontSize: '1.25rem'}}></i>
-                <strong className="text-success" style={{fontSize: '1.1rem'}}>Coupon Applied: {appliedCoupon.code}</strong>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <span className="font-bold text-green-600">Coupon Applied: {appliedCoupon.code}</span>
               </div>
-              <small className="text-dark">{appliedCoupon.description}</small>
-              <div className="mt-1">
-                <small className="text-success">
-                  {appliedCoupon.type === 'percentage' 
-                    ? `${appliedCoupon.value}% discount`
-                    : appliedCoupon.type === 'exact_amount' && appliedCoupon.exactAmount
-                    ? `Service price set to $${appliedCoupon.exactAmount}`
-                    : appliedCoupon.type === 'free_service'
-                    ? 'Free service'
-                    : `$${appliedCoupon.value} discount`
-                  }
-                </small>
-              </div>
+              <p className="text-gray-700 text-sm mt-1">{appliedCoupon.description}</p>
+              <p className="text-green-600 text-sm mt-1">
+                {appliedCoupon.type === 'percentage' 
+                  ? `${appliedCoupon.value}% discount`
+                  : appliedCoupon.type === 'exact_amount' && appliedCoupon.exactAmount
+                  ? `Service price set to $${appliedCoupon.exactAmount}`
+                  : appliedCoupon.type === 'free_service'
+                  ? 'Free service'
+                  : `$${appliedCoupon.value} discount`
+                }
+              </p>
             </div>
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-danger"
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleRemoveCoupon}
+              className="text-red-600 border-red-600 hover:bg-red-50"
             >
+              <X className="w-4 h-4 mr-1" />
               Remove
-            </button>
+            </Button>
           </div>
         ) : (
           <>
-            <div className="input-group mb-2">
-              <input
+            <div className="flex gap-2 mb-3">
+              <Input
                 type="text"
-                className={`form-control form-control-lg ${error ? 'is-invalid' : success ? 'is-valid' : ''}`}
                 placeholder="Enter coupon code"
                 value={couponCode}
                 onChange={(e) => {
@@ -126,49 +127,47 @@ export default function CouponInput({ serviceId, orderAmount, onCouponApplied, a
                 }}
                 onKeyPress={handleKeyPress}
                 disabled={loading}
-                style={{borderRadius: '12px 0 0 12px', fontSize: '1.1rem', fontWeight: '600'}}
+                className="h-12 text-lg font-semibold bg-white"
               />
-              <button
-                type="button"
-                className="btn btn-warning btn-lg fw-bold"
+              <Button
                 onClick={handleApplyCoupon}
                 disabled={loading || !couponCode.trim()}
-                style={{borderRadius: '0 12px 12px 0', minWidth: '120px'}}
+                className="h-12 px-6 bg-amber-500 hover:bg-amber-600 text-white font-bold"
               >
                 {loading ? (
                   <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Applying...
                   </>
                 ) : (
                   'Apply'
                 )}
-              </button>
+              </Button>
             </div>
 
             {error && (
-              <div className="alert alert-danger alert-sm mb-0" role="alert">
-                <i className="fas fa-exclamation-triangle me-2"></i>
+              <div className="bg-red-100 text-red-700 px-4 py-2 rounded-lg flex items-center gap-2 mb-2">
+                <AlertTriangle className="w-4 h-4" />
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="alert alert-success alert-sm mb-0" role="alert">
-                <i className="fas fa-check-circle me-2"></i>
+              <div className="bg-green-100 text-green-700 px-4 py-2 rounded-lg flex items-center gap-2 mb-2">
+                <CheckCircle className="w-4 h-4" />
                 {success}
               </div>
             )}
           </>
         )}
 
-        <div className="mt-3 p-3 bg-white bg-opacity-10 rounded-3">
-          <small className="text-white d-flex align-items-center">
-            <i className="fas fa-gift me-2" style={{fontSize: '1rem'}}></i>
-            <span>Enter your coupon code above to unlock special savings and discounts!</span>
-          </small>
+        <div className="mt-4 p-3 bg-white/10 rounded-xl">
+          <p className="text-white text-sm flex items-center gap-2">
+            <Gift className="w-4 h-4" />
+            Enter your coupon code above to unlock special savings and discounts!
+          </p>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

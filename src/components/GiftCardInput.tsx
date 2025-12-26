@@ -3,6 +3,10 @@
 import React, { useState } from 'react';
 import { GiftCard } from '@/types/database';
 import { GiftCardService } from '@/services/giftCardService';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { Gift, CheckCircle, AlertTriangle, Info, Loader2, X } from 'lucide-react';
 
 interface GiftCardInputProps {
   orderAmount: number;
@@ -45,7 +49,6 @@ export default function GiftCardInput({
       }
 
       if (validation.giftCard) {
-        // remainingAmount is in cents, orderAmount is in dollars
         const availableAmountInDollars = validation.giftCard.remainingAmount / 100;
         const appliedAmount = Math.min(availableAmountInDollars, orderAmount);
         onGiftCardApplied(validation.giftCard, appliedAmount);
@@ -74,45 +77,42 @@ export default function GiftCardInput({
   };
 
   return (
-    <div className="card mb-3">
-      <div className="card-body">
-        <h6 className="card-title mb-3">
-          <i className="fas fa-gift me-2"></i>
+    <Card className="mb-6 border-0 shadow-md">
+      <CardContent className="p-6">
+        <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
+          <Gift className="w-5 h-5 text-[#AD6269]" />
           Gift Card
-        </h6>
+        </h3>
 
         {appliedGiftCard ? (
-          <div className="d-flex align-items-center justify-content-between p-3 bg-success bg-opacity-10 rounded">
+          <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl">
             <div>
-              <div className="d-flex align-items-center">
-                <i className="fas fa-check-circle text-success me-2"></i>
-                <strong className="text-success">Gift Card Applied: {appliedGiftCard.code}</strong>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <span className="font-bold text-green-600">Gift Card Applied: {appliedGiftCard.code}</span>
               </div>
-              <div className="mt-1">
-                <small className="text-success">
-                  Credit Applied: ${appliedAmount.toFixed(2)}
-                </small>
-              </div>
-              <div className="mt-1">
-                <small className="text-muted">
-                  Remaining Balance: ${((appliedGiftCard.remainingAmount - (appliedAmount * 100)) / 100).toFixed(2)}
-                </small>
-              </div>
+              <p className="text-green-600 text-sm mt-1">
+                Credit Applied: ${appliedAmount.toFixed(2)}
+              </p>
+              <p className="text-gray-500 text-sm mt-1">
+                Remaining Balance: ${((appliedGiftCard.remainingAmount - (appliedAmount * 100)) / 100).toFixed(2)}
+              </p>
             </div>
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-danger"
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleRemoveGiftCard}
+              className="text-red-600 border-red-600 hover:bg-red-50"
             >
+              <X className="w-4 h-4 mr-1" />
               Remove
-            </button>
+            </Button>
           </div>
         ) : (
           <>
-            <div className="input-group mb-2">
-              <input
+            <div className="flex gap-2 mb-3">
+              <Input
                 type="text"
-                className={`form-control ${error ? 'is-invalid' : success ? 'is-valid' : ''}`}
                 placeholder="Enter gift card code"
                 value={giftCardCode}
                 onChange={(e) => {
@@ -122,47 +122,46 @@ export default function GiftCardInput({
                 }}
                 onKeyPress={handleKeyPress}
                 disabled={loading}
+                className="h-11"
               />
-              <button
-                type="button"
-                className="btn btn-outline-primary"
+              <Button
+                variant="outline"
                 onClick={handleApplyGiftCard}
                 disabled={loading || !giftCardCode.trim()}
+                className="h-11 px-6 border-[#AD6269] text-[#AD6269] hover:bg-[#AD6269]/10"
               >
                 {loading ? (
                   <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Applying...
                   </>
                 ) : (
                   'Apply'
                 )}
-              </button>
+              </Button>
             </div>
 
             {error && (
-              <div className="alert alert-danger alert-sm mb-0" role="alert">
-                <i className="fas fa-exclamation-triangle me-2"></i>
+              <div className="bg-red-50 text-red-700 px-4 py-2 rounded-lg flex items-center gap-2 mb-2">
+                <AlertTriangle className="w-4 h-4" />
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="alert alert-success alert-sm mb-0" role="alert">
-                <i className="fas fa-check-circle me-2"></i>
+              <div className="bg-green-50 text-green-700 px-4 py-2 rounded-lg flex items-center gap-2 mb-2">
+                <CheckCircle className="w-4 h-4" />
                 {success}
               </div>
             )}
           </>
         )}
 
-        <div className="mt-2">
-          <small className="text-muted">
-            <i className="fas fa-info-circle me-1"></i>
-            Have a gift card? Enter the code above to apply your balance.
-          </small>
-        </div>
-      </div>
-    </div>
+        <p className="text-gray-500 text-sm mt-3 flex items-center gap-1">
+          <Info className="w-4 h-4" />
+          Have a gift card? Enter the code above to apply your balance.
+        </p>
+      </CardContent>
+    </Card>
   );
 }
