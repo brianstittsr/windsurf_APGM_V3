@@ -8,6 +8,7 @@ import { GiftCard, CouponCode } from '../../types/coupons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAlertDialog } from '@/components/ui/alert-dialog';
+import { Tag, Gift, Plus, Pencil, Trash2, X, CheckCircle } from 'lucide-react';
 
 // Helper function to safely format dates from various sources
 const safeFormatDate = (date: any, format: 'localDate' | 'isoDate' = 'localDate'): string => {
@@ -409,584 +410,558 @@ export default function CouponsGiftCardsManager() {
 
   if (loading) {
     return (
-      <div className="text-center py-5">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-        <p className="mt-3 text-muted">Loading coupons and gift cards...</p>
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AD6269]"></div>
+        <p className="mt-4 text-gray-500">Loading coupons and gift cards...</p>
       </div>
     );
   }
 
   return (
-    <div className="container-fluid">
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="d-flex justify-content-between align-items-center">
-            <h4>Coupons & Gift Cards Management</h4>
-          </div>
-        </div>
+    <div className="w-full">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">Coupons & Gift Cards Management</h2>
       </div>
 
       {/* Tab Navigation */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <ul className="nav nav-tabs" role="tablist">
-            <li className="nav-item" role="presentation">
-              <button
-                className={`nav-link ${activeTab === 'coupons' ? 'active' : ''}`}
-                onClick={() => setActiveTab('coupons')}
-              >
-                <i className="fas fa-tags me-2"></i>Coupons ({coupons.length})
-              </button>
-            </li>
-            <li className="nav-item" role="presentation">
-              <button
-                className={`nav-link ${activeTab === 'giftcards' ? 'active' : ''}`}
-                onClick={() => setActiveTab('giftcards')}
-              >
-                <i className="fas fa-gift me-2"></i>Gift Cards ({giftCards.length})
-              </button>
-            </li>
-          </ul>
-        </div>
+      <div className="flex gap-2 mb-6">
+        <button
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            activeTab === 'coupons'
+              ? 'bg-[#AD6269] text-white'
+              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          }`}
+          onClick={() => setActiveTab('coupons')}
+        >
+          <Tag className="w-4 h-4" />
+          Coupons ({coupons.length})
+        </button>
+        <button
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            activeTab === 'giftcards'
+              ? 'bg-[#AD6269] text-white'
+              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          }`}
+          onClick={() => setActiveTab('giftcards')}
+        >
+          <Gift className="w-4 h-4" />
+          Gift Cards ({giftCards.length})
+        </button>
       </div>
 
       {/* Coupons Tab */}
       {activeTab === 'coupons' && (
-        <div className="row">
-          <div className="col-12">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h5>Coupon Codes</h5>
-              <button
-                className="btn btn-primary"
-                onClick={openCreateCouponModal}
-              >
-                <i className="fas fa-plus me-2"></i>Add Coupon
-              </button>
-            </div>
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Coupon Codes</h3>
+            <Button 
+              onClick={openCreateCouponModal}
+              className="bg-[#AD6269] hover:bg-[#9d5860] text-white"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Coupon
+            </Button>
+          </div>
 
-            <div className="card">
-              <div className="card-body">
-                {coupons.length === 0 ? (
-                  <div className="text-center py-5">
-                    <i className="fas fa-tags fa-3x text-muted mb-3"></i>
-                    <p className="text-muted">No coupons found.</p>
-                    <button
-                      className="btn btn-primary"
-                      onClick={openCreateCouponModal}
-                    >
-                      Add First Coupon
-                    </button>
-                  </div>
-                ) : (
-                  <div className="table-responsive">
-                    <table className="table table-hover">
-                      <thead>
-                        <tr>
-                          <th>Code</th>
-                          <th>Description</th>
-                          <th>Type</th>
-                          <th>Value</th>
-                          <th>Usage</th>
-                          <th>Expires</th>
-                          <th>Status</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {coupons.map((coupon) => (
-                          <tr key={coupon.id}>
-                            <td><code>{coupon.code}</code></td>
-                            <td>{coupon.description}</td>
-                            <td>
-                              <span className={getCouponTypeBadge(coupon.type)}>
-                                {coupon.type.replace('_', ' ').toUpperCase()}
-                              </span>
-                            </td>
-                            <td>
-                              {coupon.type === 'percentage' ? `${coupon.value}%` :
-                               coupon.type === 'fixed' ? formatCurrency(coupon.value) :
-                               coupon.type === 'free_service' ? 'FREE SERVICE' :
-                               formatCurrency(coupon.exactAmount || 0)}
-                            </td>
-                            <td>{coupon.usageCount}/{coupon.usageLimit || '∞'}</td>
-                            <td>
-                              {safeFormatDate(coupon.expirationDate)}
-                            </td>
-                            <td>
-                              <span className={`badge ${coupon.isActive ? 'bg-success' : 'bg-warning'}`}>
-                                {coupon.isActive ? 'Active' : 'Inactive'}
-                              </span>
-                            </td>
-                            <td>
-                              <div className="btn-group" role="group">
-                                <button
-                                  className="btn btn-sm btn-outline-primary"
-                                  onClick={() => openEditCouponModal(coupon)}
-                                  title="Edit Coupon"
-                                >
-                                  <i className="fas fa-edit"></i>
-                                </button>
-                                <button
-                                  className="btn btn-sm btn-outline-danger"
-                                  onClick={() => handleDeleteCoupon(coupon.id, coupon.code)}
-                                  title="Delete Coupon"
-                                >
-                                  <i className="fas fa-trash"></i>
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            {coupons.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <Tag className="w-12 h-12 text-gray-300 mb-4" />
+                <p className="text-gray-500 mb-4">No coupons found.</p>
+                <Button 
+                  onClick={openCreateCouponModal}
+                  className="bg-[#AD6269] hover:bg-[#9d5860] text-white"
+                >
+                  Add First Coupon
+                </Button>
               </div>
-            </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Code</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Value</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Usage</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Expires</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {coupons.map((coupon) => (
+                      <tr key={coupon.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3">
+                          <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-[#AD6269]">{coupon.code}</code>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{coupon.description}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getCouponTypeBadge(coupon.type)}`}>
+                            {coupon.type.replace('_', ' ').toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">
+                          {coupon.type === 'percentage' ? `${coupon.value}%` :
+                           coupon.type === 'fixed' ? formatCurrency(coupon.value) :
+                           coupon.type === 'free_service' ? 'FREE SERVICE' :
+                           formatCurrency(coupon.exactAmount || 0)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{coupon.usageCount}/{coupon.usageLimit || '∞'}</td>
+                        <td className="px-4 py-3 text-sm text-gray-700">
+                          {safeFormatDate(coupon.expirationDate)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${coupon.isActive ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                            {coupon.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-1">
+                            <button
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              onClick={() => openEditCouponModal(coupon)}
+                              title="Edit Coupon"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              onClick={() => handleDeleteCoupon(coupon.id, coupon.code)}
+                              title="Delete Coupon"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {/* Gift Cards Tab */}
       {activeTab === 'giftcards' && (
-        <div className="row">
-          <div className="col-12">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h5>Gift Cards</h5>
-              <button
-                className="btn btn-success"
-                onClick={openCreateGiftCardModal}
-              >
-                <i className="fas fa-plus me-2"></i>Add Gift Card
-              </button>
-            </div>
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Gift Cards</h3>
+            <Button 
+              onClick={openCreateGiftCardModal}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Gift Card
+            </Button>
+          </div>
 
-            <div className="card">
-              <div className="card-body">
-                {giftCards.length === 0 ? (
-                  <div className="text-center py-5">
-                    <i className="fas fa-gift fa-3x text-muted mb-3"></i>
-                    <p className="text-muted">No gift cards found.</p>
-                    <button
-                      className="btn btn-success"
-                      onClick={openCreateGiftCardModal}
-                    >
-                      Add First Gift Card
-                    </button>
-                  </div>
-                ) : (
-                  <div className="table-responsive">
-                    <table className="table table-hover">
-                      <thead>
-                        <tr>
-                          <th>Code</th>
-                          <th>Recipient</th>
-                          <th>Initial Amount</th>
-                          <th>Remaining</th>
-                          <th>Expires</th>
-                          <th>Status</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {giftCards.map((giftCard) => (
-                          <tr key={giftCard.id}>
-                            <td><code>{giftCard.code}</code></td>
-                            <td>
-                              <div>
-                                <strong>{giftCard.recipientName}</strong><br />
-                                <small className="text-muted">{giftCard.recipientEmail}</small>
-                              </div>
-                            </td>
-                            <td>{formatCurrency(giftCard.initialAmount)}</td>
-                            <td>{formatCurrency(giftCard.remainingAmount)}</td>
-                            <td>
-                              {safeFormatDate(giftCard.expirationDate)}
-                            </td>
-                            <td>
-                              <span className={`badge ${giftCard.isRedeemed ? 'bg-warning' : giftCard.isActive ? 'bg-success' : 'bg-danger'}`}>
-                                {giftCard.isRedeemed ? 'Redeemed' : giftCard.isActive ? 'Active' : 'Inactive'}
-                              </span>
-                            </td>
-                            <td>
-                              <div className="btn-group" role="group">
-                                <button
-                                  className="btn btn-sm btn-outline-primary"
-                                  onClick={() => openEditGiftCardModal(giftCard)}
-                                  title="Edit Gift Card"
-                                >
-                                  <i className="fas fa-edit"></i>
-                                </button>
-                                <button
-                                  className="btn btn-sm btn-outline-danger"
-                                  onClick={() => handleDeleteGiftCard(giftCard.id, giftCard.code)}
-                                  title="Delete Gift Card"
-                                >
-                                  <i className="fas fa-trash"></i>
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            {giftCards.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <Gift className="w-12 h-12 text-gray-300 mb-4" />
+                <p className="text-gray-500 mb-4">No gift cards found.</p>
+                <Button 
+                  onClick={openCreateGiftCardModal}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Add First Gift Card
+                </Button>
               </div>
-            </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Code</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Recipient</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Initial Amount</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Remaining</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Expires</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {giftCards.map((giftCard) => (
+                      <tr key={giftCard.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3">
+                          <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-green-600">{giftCard.code}</code>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div>
+                            <p className="font-medium text-gray-900">{giftCard.recipientName}</p>
+                            <p className="text-sm text-gray-500">{giftCard.recipientEmail}</p>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{formatCurrency(giftCard.initialAmount)}</td>
+                        <td className="px-4 py-3 text-sm text-gray-700">{formatCurrency(giftCard.remainingAmount)}</td>
+                        <td className="px-4 py-3 text-sm text-gray-700">
+                          {safeFormatDate(giftCard.expirationDate)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                            giftCard.isRedeemed 
+                              ? 'bg-yellow-100 text-yellow-800' 
+                              : giftCard.isActive 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                          }`}>
+                            {giftCard.isRedeemed ? 'Redeemed' : giftCard.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-1">
+                            <button
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              onClick={() => openEditGiftCardModal(giftCard)}
+                              title="Edit Gift Card"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              onClick={() => handleDeleteGiftCard(giftCard.id, giftCard.code)}
+                              title="Delete Gift Card"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {/* Coupon Modal */}
       {showCouponModal && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {editingCoupon ? 'Edit Coupon' : 'Create New Coupon'}
-                </h5>
-                <button type="button" className="btn-close" onClick={closeCouponModal}></button>
-              </div>
-              <form onSubmit={editingCoupon ? handleEditCoupon : handleCreateCoupon}>
-                <div className="modal-body">
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label htmlFor="couponCode" className="form-label">
-                          Code <span className="text-danger">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="couponCode"
-                          value={couponFormData.code}
-                          onChange={(e) => setCouponFormData({ ...couponFormData, code: e.target.value.toUpperCase() })}
-                          required
-                          disabled={!!editingCoupon}
-                          placeholder="SUMMER2024"
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label htmlFor="couponType" className="form-label">Type</label>
-                        <select
-                          className="form-select"
-                          id="couponType"
-                          value={couponFormData.type}
-                          onChange={(e) => setCouponFormData({ ...couponFormData, type: e.target.value as any })}
-                        >
-                          <option value="percentage">Percentage Discount</option>
-                          <option value="fixed">Fixed Amount</option>
-                          <option value="free_service">Free Service</option>
-                          <option value="exact_amount">Exact Amount</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <label htmlFor="couponDescription" className="form-label">
-                      Description <span className="text-danger">*</span>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <Tag className="w-5 h-5 text-[#AD6269]" />
+                {editingCoupon ? 'Edit Coupon' : 'Create New Coupon'}
+              </h3>
+              <button 
+                onClick={closeCouponModal}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <form onSubmit={editingCoupon ? handleEditCoupon : handleCreateCoupon}>
+              <div className="p-6 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Code <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <Input
                       type="text"
-                      className="form-control"
-                      id="couponDescription"
-                      value={couponFormData.description}
-                      onChange={(e) => setCouponFormData({ ...couponFormData, description: e.target.value })}
+                      value={couponFormData.code}
+                      onChange={(e) => setCouponFormData({ ...couponFormData, code: e.target.value.toUpperCase() })}
                       required
-                      placeholder="Summer sale discount"
+                      disabled={!!editingCoupon}
+                      placeholder="SUMMER2024"
+                      className="w-full"
                     />
                   </div>
-
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label htmlFor="couponValue" className="form-label">
-                          {couponFormData.type === 'percentage' ? 'Percentage (%)' : 'Amount ($)'}
-                        </label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          id="couponValue"
-                          value={couponFormData.value}
-                          onChange={(e) => setCouponFormData({ ...couponFormData, value: parseFloat(e.target.value) || 0 })}
-                          disabled={couponFormData.type === 'free_service'}
-                          min="0"
-                          step={couponFormData.type === 'percentage' ? '1' : '0.01'}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label htmlFor="expirationDate" className="form-label">
-                          Expiration Date <span className="text-danger">*</span>
-                        </label>
-                        <input
-                          type="date"
-                          className="form-control"
-                          id="expirationDate"
-                          value={couponFormData.expirationDate}
-                          onChange={(e) => setCouponFormData({ ...couponFormData, expirationDate: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <select
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                      value={couponFormData.type}
+                      onChange={(e) => setCouponFormData({ ...couponFormData, type: e.target.value as any })}
+                    >
+                      <option value="percentage">Percentage Discount</option>
+                      <option value="fixed">Fixed Amount</option>
+                      <option value="free_service">Free Service</option>
+                      <option value="exact_amount">Exact Amount</option>
+                    </select>
                   </div>
+                </div>
 
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label htmlFor="usageLimit" className="form-label">Usage Limit</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          id="usageLimit"
-                          value={couponFormData.usageLimit}
-                          onChange={(e) => setCouponFormData({ ...couponFormData, usageLimit: parseInt(e.target.value) || 0 })}
-                          min="0"
-                          placeholder="Leave empty for unlimited"
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label htmlFor="minOrderAmount" className="form-label">Minimum Order Amount ($)</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          id="minOrderAmount"
-                          value={couponFormData.minOrderAmount}
-                          onChange={(e) => setCouponFormData({ ...couponFormData, minOrderAmount: parseFloat(e.target.value) || 0 })}
-                          min="0"
-                          step="0.01"
-                        />
-                      </div>
-                    </div>
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="text"
+                    value={couponFormData.description}
+                    onChange={(e) => setCouponFormData({ ...couponFormData, description: e.target.value })}
+                    required
+                    placeholder="Summer sale discount"
+                    className="w-full"
+                  />
+                </div>
 
-                  <div className="mb-3">
-                    <label htmlFor="applicableServices" className="form-label">
-                      Applicable Services (comma-separated)
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {couponFormData.type === 'percentage' ? 'Percentage (%)' : 'Amount ($)'}
                     </label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="applicableServices"
-                      value={couponFormData.applicableServices}
-                      onChange={(e) => setCouponFormData({ ...couponFormData, applicableServices: e.target.value })}
-                      placeholder="eyeliner, microblading, lips"
+                    <Input
+                      type="number"
+                      value={couponFormData.value}
+                      onChange={(e) => setCouponFormData({ ...couponFormData, value: parseFloat(e.target.value) || 0 })}
+                      disabled={couponFormData.type === 'free_service'}
+                      min="0"
+                      step={couponFormData.type === 'percentage' ? '1' : '0.01'}
+                      className="w-full"
                     />
                   </div>
-
-                  <div className="mb-3">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="isActive"
-                        checked={couponFormData.isActive}
-                        onChange={(e) => setCouponFormData({ ...couponFormData, isActive: e.target.checked })}
-                      />
-                      <label className="form-check-label" htmlFor="isActive">
-                        Active
-                      </label>
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Expiration Date <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      type="date"
+                      value={couponFormData.expirationDate}
+                      onChange={(e) => setCouponFormData({ ...couponFormData, expirationDate: e.target.value })}
+                      required
+                      className="w-full"
+                    />
                   </div>
+                </div>
 
-                  <div className="mb-3">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="removeDepositOption"
-                        checked={couponFormData.removeDepositOption || false}
-                        onChange={(e) => setCouponFormData({ ...couponFormData, removeDepositOption: e.target.checked })}
-                      />
-                      <label className="form-check-label" htmlFor="removeDepositOption">
-                        Remove $50 Deposit Option
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <label htmlFor="depositReduction" className="form-label">Deposit Reduction ($)</label>
-                    <input
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Usage Limit</label>
+                    <Input
                       type="number"
-                      className="form-control"
-                      id="depositReduction"
-                      value={couponFormData.depositReduction || 0}
-                      onChange={(e) => setCouponFormData({ ...couponFormData, depositReduction: parseFloat(e.target.value) || 0 })}
+                      value={couponFormData.usageLimit}
+                      onChange={(e) => setCouponFormData({ ...couponFormData, usageLimit: parseInt(e.target.value) || 0 })}
+                      min="0"
+                      placeholder="Leave empty for unlimited"
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Order Amount ($)</label>
+                    <Input
+                      type="number"
+                      value={couponFormData.minOrderAmount}
+                      onChange={(e) => setCouponFormData({ ...couponFormData, minOrderAmount: parseFloat(e.target.value) || 0 })}
                       min="0"
                       step="0.01"
-                      placeholder="Amount to subtract from deposit"
+                      className="w-full"
                     />
                   </div>
                 </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={closeCouponModal}>
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn btn-primary" disabled={submitting}>
-                    {submitting ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                        {editingCoupon ? 'Updating...' : 'Creating...'}
-                      </>
-                    ) : (
-                      editingCoupon ? 'Update Coupon' : 'Create Coupon'
-                    )}
-                  </button>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Applicable Services (comma-separated)
+                  </label>
+                  <Input
+                    type="text"
+                    value={couponFormData.applicableServices}
+                    onChange={(e) => setCouponFormData({ ...couponFormData, applicableServices: e.target.value })}
+                    placeholder="eyeliner, microblading, lips"
+                    className="w-full"
+                  />
                 </div>
-              </form>
-            </div>
+
+                <div className="flex items-center gap-6">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={couponFormData.isActive}
+                      onChange={(e) => setCouponFormData({ ...couponFormData, isActive: e.target.checked })}
+                      className="w-4 h-4 text-[#AD6269] border-gray-300 rounded focus:ring-[#AD6269]"
+                    />
+                    <span className="text-sm text-gray-700">Active</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={couponFormData.removeDepositOption || false}
+                      onChange={(e) => setCouponFormData({ ...couponFormData, removeDepositOption: e.target.checked })}
+                      className="w-4 h-4 text-[#AD6269] border-gray-300 rounded focus:ring-[#AD6269]"
+                    />
+                    <span className="text-sm text-gray-700">Remove $50 Deposit Option</span>
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Deposit Reduction ($)</label>
+                  <Input
+                    type="number"
+                    value={couponFormData.depositReduction || 0}
+                    onChange={(e) => setCouponFormData({ ...couponFormData, depositReduction: parseFloat(e.target.value) || 0 })}
+                    min="0"
+                    step="0.01"
+                    placeholder="Amount to subtract from deposit"
+                    className="w-full"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+                <Button variant="outline" type="button" onClick={closeCouponModal}>
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={submitting}
+                  className="bg-[#AD6269] hover:bg-[#9d5860] text-white"
+                >
+                  {submitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      {editingCoupon ? 'Updating...' : 'Creating...'}
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      {editingCoupon ? 'Update Coupon' : 'Create Coupon'}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}
 
       {/* Gift Card Modal */}
       {showGiftCardModal && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {editingGiftCard ? 'Edit Gift Card' : 'Create New Gift Card'}
-                </h5>
-                <button type="button" className="btn-close" onClick={closeGiftCardModal}></button>
-              </div>
-              <form onSubmit={editingGiftCard ? handleEditGiftCard : handleCreateGiftCard}>
-                <div className="modal-body">
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label htmlFor="initialAmount" className="form-label">
-                          Initial Amount ($) <span className="text-danger">*</span>
-                        </label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          id="initialAmount"
-                          value={giftCardFormData.initialAmount}
-                          onChange={(e) => setGiftCardFormData({ ...giftCardFormData, initialAmount: parseFloat(e.target.value) || 0 })}
-                          required
-                          min="0"
-                          step="0.01"
-                          disabled={!!editingGiftCard}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label htmlFor="expirationDate" className="form-label">
-                          Expiration Date <span className="text-danger">*</span>
-                        </label>
-                        <input
-                          type="date"
-                          className="form-control"
-                          id="expirationDate"
-                          value={giftCardFormData.expirationDate}
-                          onChange={(e) => setGiftCardFormData({ ...giftCardFormData, expirationDate: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <Gift className="w-5 h-5 text-green-600" />
+                {editingGiftCard ? 'Edit Gift Card' : 'Create New Gift Card'}
+              </h3>
+              <button 
+                onClick={closeGiftCardModal}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <form onSubmit={editingGiftCard ? handleEditGiftCard : handleCreateGiftCard}>
+              <div className="p-6 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Initial Amount ($) <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      type="number"
+                      value={giftCardFormData.initialAmount}
+                      onChange={(e) => setGiftCardFormData({ ...giftCardFormData, initialAmount: parseFloat(e.target.value) || 0 })}
+                      required
+                      min="0"
+                      step="0.01"
+                      disabled={!!editingGiftCard}
+                      className="w-full"
+                    />
                   </div>
-
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label htmlFor="recipientName" className="form-label">
-                          Recipient Name <span className="text-danger">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="recipientName"
-                          value={giftCardFormData.recipientName}
-                          onChange={(e) => setGiftCardFormData({ ...giftCardFormData, recipientName: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label htmlFor="recipientEmail" className="form-label">
-                          Recipient Email <span className="text-danger">*</span>
-                        </label>
-                        <input
-                          type="email"
-                          className="form-control"
-                          id="recipientEmail"
-                          value={giftCardFormData.recipientEmail}
-                          onChange={(e) => setGiftCardFormData({ ...giftCardFormData, recipientEmail: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="row">
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label htmlFor="purchaserName" className="form-label">Purchaser Name</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="purchaserName"
-                          value={giftCardFormData.purchaserName}
-                          onChange={(e) => setGiftCardFormData({ ...giftCardFormData, purchaserName: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label htmlFor="purchaserEmail" className="form-label">Purchaser Email</label>
-                        <input
-                          type="email"
-                          className="form-control"
-                          id="purchaserEmail"
-                          value={giftCardFormData.purchaserEmail}
-                          onChange={(e) => setGiftCardFormData({ ...giftCardFormData, purchaserEmail: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <label htmlFor="message" className="form-label">Personal Message</label>
-                    <textarea
-                      className="form-control"
-                      id="message"
-                      value={giftCardFormData.message}
-                      onChange={(e) => setGiftCardFormData({ ...giftCardFormData, message: e.target.value })}
-                      rows={3}
-                      placeholder="Add a personal message for the recipient..."
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Expiration Date <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      type="date"
+                      value={giftCardFormData.expirationDate}
+                      onChange={(e) => setGiftCardFormData({ ...giftCardFormData, expirationDate: e.target.value })}
+                      required
+                      className="w-full"
                     />
                   </div>
                 </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={closeGiftCardModal}>
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn btn-success" disabled={submitting}>
-                    {submitting ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                        {editingGiftCard ? 'Updating...' : 'Creating...'}
-                      </>
-                    ) : (
-                      editingGiftCard ? 'Update Gift Card' : 'Create Gift Card'
-                    )}
-                  </button>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Recipient Name <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      type="text"
+                      value={giftCardFormData.recipientName}
+                      onChange={(e) => setGiftCardFormData({ ...giftCardFormData, recipientName: e.target.value })}
+                      required
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Recipient Email <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      type="email"
+                      value={giftCardFormData.recipientEmail}
+                      onChange={(e) => setGiftCardFormData({ ...giftCardFormData, recipientEmail: e.target.value })}
+                      required
+                      className="w-full"
+                    />
+                  </div>
                 </div>
-              </form>
-            </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Purchaser Name</label>
+                    <Input
+                      type="text"
+                      value={giftCardFormData.purchaserName}
+                      onChange={(e) => setGiftCardFormData({ ...giftCardFormData, purchaserName: e.target.value })}
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Purchaser Email</label>
+                    <Input
+                      type="email"
+                      value={giftCardFormData.purchaserEmail}
+                      onChange={(e) => setGiftCardFormData({ ...giftCardFormData, purchaserEmail: e.target.value })}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Personal Message</label>
+                  <textarea
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                    value={giftCardFormData.message}
+                    onChange={(e) => setGiftCardFormData({ ...giftCardFormData, message: e.target.value })}
+                    rows={3}
+                    placeholder="Add a personal message for the recipient..."
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+                <Button variant="outline" type="button" onClick={closeGiftCardModal}>
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={submitting}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {submitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      {editingGiftCard ? 'Updating...' : 'Creating...'}
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      {editingGiftCard ? 'Update Gift Card' : 'Create Gift Card'}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}
