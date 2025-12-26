@@ -17,6 +17,8 @@ import { useServices } from '@/hooks/useFirebase';
 import ClientProfileWizard, { ClientProfileData } from '@/components/ClientProfileWizard';
 import HealthFormWizard, { HealthFormData } from '@/components/HealthFormWizard';
 import CheckoutCart from '@/components/CheckoutCart';
+import MonthlyCalendar from '@/components/booking/MonthlyCalendar';
+import TimeSlotSelector from '@/components/booking/TimeSlotSelector';
 
 interface ServiceItem {
   id: string;
@@ -109,6 +111,7 @@ function BookNowCustomContent() {
   }, []);
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [selectedArtistId, setSelectedArtistId] = useState<string>('');
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
 
   const [currentWeekStart, setCurrentWeekStart] = useState<Date | null>(null);
 
@@ -775,554 +778,103 @@ function BookNowCustomContent() {
   };
 
   const renderCalendarSelection = () => {
-    const now = new Date();
-    const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // Normalize to midnight
-    
-    // Don't render calendar if currentWeekStart is not set yet
-    if (!currentWeekStart) {
-      return (
-        <div className="container-fluid py-5">
-          <div className="row justify-content-center">
-            <div className="col-lg-8">
-              <div className="text-center">
-                <div className="spinner-border text-primary" role="status">
-                  <span className="visually-hidden">Loading calendar...</span>
-                </div>
-                <p className="mt-3 text-muted">Finding next available date...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    
-    // Generate week days based on the current week state
-    const weekDays = [];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalize to midnight for comparison
-    
-    // Always generate all 7 days of the week
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(currentWeekStart);
-      day.setDate(currentWeekStart.getDate() + i);
-      day.setHours(0, 0, 0, 0); // Normalize to midnight
-      weekDays.push(day);
-    }
-    
-    // Check if we have any future dates in this week
-    const hasFutureDates = weekDays.some(day => day >= today);
-    
-    // If no valid days in current week, advance to next week
-    if (!hasFutureDates) {
-      const nextWeek = new Date(currentWeekStart);
-      nextWeek.setDate(currentWeekStart.getDate() + 7);
-      setCurrentWeekStart(nextWeek);
-      return (
-        <div className="w-full px-4 py-16">
-          <div className="flex justify-center">
-            <div className="w-full max-w-3xl">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AD6269] mx-auto" role="status">
-                  <span className="sr-only">Advancing calendar...</span>
-                </div>
-                <p className="mt-4 text-gray-500">Moving to next available week...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
+    const handleSlotSelect = (slotId: string, startTime: string) => {
+      setSelectedSlotId(slotId);
+      setSelectedTime(startTime);
+      setSelectedArtistId('victoria'); // Default artist
+    };
 
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    
-    // Get the month and year for the week
-    const firstDay = weekDays[0];
-    const lastDay = weekDays[6];
-    const weekMonth = monthNames[firstDay.getMonth()];
-    const weekYear = firstDay.getFullYear();
-    const lastDayMonth = lastDay.getMonth();
-    const spansMonths = firstDay.getMonth() !== lastDay.getMonth();
-    const isCurrentWeek = weekDays.some(day => day.toDateString() === currentDate.toDateString());
+    const handleDateSelectFromCalendar = (dateString: string) => {
+      setValidatedSelectedDate(dateString);
+      setSelectedSlotId(null);
+      setSelectedTime('');
+      setSelectedArtistId('');
+    };
 
     return (
-      <div className="w-full px-4 py-12">
+      <div className="w-full px-4 py-8">
         <div className="flex justify-center">
-          <div className="w-full max-w-5xl">
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-              {/* Form Recovery Banner removed */}
-              
+          <div className="w-full max-w-4xl">
+            <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
               {/* Header */}
-              <div className="bg-white border-b-0 text-center py-6 px-4">
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">Book Your Appointment</h1>
-                <p className="text-gray-500">Select your preferred date and time</p>
+              <div className="bg-gradient-to-r from-[#AD6269] to-[#c17a80] text-center py-8 px-4">
+                <h1 className="text-2xl md:text-3xl font-bold text-white mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
+                  Book Your Appointment
+                </h1>
+                <p className="text-white/90">Select your preferred date and time</p>
               </div>
 
-              <div className="px-4 md:px-6 pb-6">
-                {/* Step Indicator */}
-                <div className="text-center mb-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-2">
-                    Select a Date
-                  </h2>
-                  <p className="text-gray-500">
-                    Pick an available date from the calendar below
-                  </p>
-                </div>
-
-                {/* Month and Week Header */}
-                <div className="text-center mb-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">
-                    {weekMonth} {weekYear}
-                  </h3>
-                  <div className="text-gray-500 text-sm">
-                    {isCurrentWeek ? 'This Week' : 'Week View'}
+              <div className="p-6 md:p-8">
+                {/* Calendar Section */}
+                <div className="mb-8">
+                  <div className="text-center mb-6">
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">
+                      <i className="fas fa-calendar-alt text-[#AD6269] mr-2"></i>
+                      Select a Date
+                    </h2>
+                    <p className="text-gray-500 text-sm">
+                      Choose an available date from the calendar
+                    </p>
                   </div>
-                  {spansMonths && (
-                    <small className="text-gray-500 block mt-1">
-                      {monthNames[weekDays[0].getMonth()]} {weekDays[0].getDate()} - {monthNames[lastDayMonth]} {weekDays[6].getDate()}
-                    </small>
-                  )}
+
+                  <MonthlyCalendar
+                    selectedDate={selectedDate}
+                    onDateSelect={handleDateSelectFromCalendar}
+                    maxBookingsPerDay={2}
+                  />
                 </div>
 
-                {/* Next Available Date Button */}
-                <div className="text-center mb-4">
-                  <Button 
-                    className="bg-green-600 hover:bg-green-700 px-4 py-2 text-sm"
-                    onClick={advanceToNextAvailable}
-                    title="Find Next Available Date"
-                  >
-                    <i className="fas fa-calendar-plus me-2"></i>
-                    Next Available Date
-                  </Button>
-                  <div className="text-sm text-gray-500 mt-1">
-                    Click to find the next available booking day
-                  </div>
-                </div>
+                {/* Time Slots Section - Shows when date is selected */}
+                {selectedDate && (
+                  <div className="border-t border-gray-200 pt-8">
+                    <TimeSlotSelector
+                      selectedDate={selectedDate}
+                      selectedSlot={selectedSlotId}
+                      onSlotSelect={handleSlotSelect}
+                    />
 
-                {/* Calendar Week View - Desktop */}
-                <div className="hidden md:flex items-center justify-center mb-6">
-                  {/* Previous Week Arrow */}
-                  <Button 
-                    variant="outline"
-                    className="p-2 mr-4"
-                    onClick={goToPreviousWeek}
-                    title="Previous Week"
-                  >
-                    <i className="fas fa-less-than"></i>
-                  </Button>
-
-                  {/* Week Days */}
-                  <div className="flex gap-2">
-                    {weekDays.map((day, index) => {
-                      const normalizedDay = new Date(day.getFullYear(), day.getMonth(), day.getDate());
-                      const isToday = normalizedDay.toDateString() === currentDate.toDateString();
-                      const isPast = normalizedDay < currentDate && !isToday;
-                      const dateString = day.toISOString().split('T')[0];
-                      const isSelectedDate = selectedDate === dateString;
-                      const isNextAvailable = nextAvailable?.date === dateString;
-                      
-                      return (
-                        <div
-                          key={index}
-                          className={`text-center p-3 rounded-lg cursor-pointer relative min-w-[100px] transition-all ${
-                            isPast
-                              ? 'bg-gray-100 text-gray-400 opacity-50 cursor-not-allowed'
-                              : isSelectedDate
-                              ? 'bg-[#AD6269] text-white border-2 border-[#AD6269]'
-                              : isNextAvailable
-                              ? 'bg-green-600 text-white border-2 border-green-600'
-                              : isToday
-                              ? 'bg-yellow-400 text-gray-900 border border-yellow-500'
-                              : 'bg-gray-100 text-gray-900 border border-gray-200 hover:bg-gray-200'
-                          }`}
+                    {/* Continue Button */}
+                    {selectedSlotId && selectedTime && (
+                      <div className="text-center mt-8">
+                        <Button
+                          size="lg"
+                          className="bg-[#AD6269] hover:bg-[#9d5860] px-8 py-3 text-lg"
                           onClick={() => {
-                            if (!isPast) {
-                              console.log('Desktop date clicked:', day.toISOString().split('T')[0]);
-                              handleDateSelect(day);
-                            }
+                            console.log('Continue button clicked');
+                            console.log('selectedDate:', selectedDate);
+                            console.log('selectedTime:', selectedTime);
+                            console.log('selectedSlotId:', selectedSlotId);
+                            
+                            // Update checkout data with selected date and time
+                            setCheckoutData(prev => ({
+                              ...prev,
+                              selectedDate,
+                              selectedTime
+                            }));
+                            
+                            // Go to profile form
+                            setCurrentStep('profile');
                           }}
                         >
-                          <div className="font-semibold text-sm mb-1">
-                            {dayNames[index]}
-                          </div>
-                          <div className="text-xl font-bold">
-                            {day.getDate()}
-                          </div>
-                          {isToday && (
-                            <div className="text-xs mt-1">
-                              Today
-                            </div>
-                          )}
-                          {isNextAvailable && !isSelectedDate && (
-                            <div className="text-xs mt-1">
-                              <i className="fas fa-star text-[10px]"></i>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Next Week Arrow */}
-                  <Button 
-                    variant="outline"
-                    className="p-2 ml-4"
-                    onClick={goToNextWeek}
-                    title="Next Week"
-                  >
-                    <i className="fas fa-greater-than"></i>
-                  </Button>
-                </div>
-
-                {/* Calendar Week View - Mobile/Tablet */}
-                <div className="md:hidden mb-6">
-                  {/* Next Available Date Button - Mobile */}
-                  <div className="text-center mb-4">
-                    <Button 
-                      className="bg-green-600 hover:bg-green-700 px-3 py-2 text-sm"
-                      onClick={advanceToNextAvailable}
-                      title="Find Next Available Date"
-                    >
-                      <i className="fas fa-calendar-plus mr-2"></i>
-                      Next Available
-                    </Button>
-                  </div>
-                  
-                  {/* Week Navigation */}
-                  <div className="flex justify-between items-center mb-4">
-                    <Button 
-                      variant="outline"
-                      size="sm"
-                      onClick={goToPreviousWeek}
-                      title="Previous Week"
-                    >
-                      <i className="fas fa-less-than"></i>
-                    </Button>
-                    <h5 className="font-bold text-lg">
-                      {weekMonth} {weekYear}
-                    </h5>
-                    <Button 
-                      variant="outline"
-                      size="sm"
-                      onClick={goToNextWeek}
-                      title="Next Week"
-                    >
-                      <i className="fas fa-greater-than"></i>
-                    </Button>
-                  </div>
-
-                  {/* Week Days Grid */}
-                  <div className="grid grid-cols-7 gap-1">
-                    {weekDays.map((day, index) => {
-                      const normalizedDay = new Date(day.getFullYear(), day.getMonth(), day.getDate());
-                      const isToday = normalizedDay.toDateString() === currentDate.toDateString();
-                      const isPast = normalizedDay < currentDate && !isToday;
-                      const dateString = day.toISOString().split('T')[0];
-                      const isSelectedDate = selectedDate === dateString;
-                      const isNextAvailable = nextAvailable?.date === dateString;
-                      
-                      return (
-                        <div key={`${dateString}-${index}`}>
-                          <button
-                            type="button"
-                            className={`w-full text-center p-2 rounded-lg relative min-h-[70px] transition-all ${
-                              isPast
-                                ? 'bg-gray-100 text-gray-400 opacity-50 cursor-not-allowed'
-                                : isSelectedDate
-                                ? 'bg-[#AD6269] text-white border-2 border-[#AD6269]'
-                                : isNextAvailable
-                                ? 'bg-green-600 text-white border-2 border-green-600'
-                                : isToday
-                                ? 'bg-yellow-400 text-gray-900 border border-yellow-500'
-                                : 'bg-white border border-gray-300 hover:bg-gray-50'
-                            }`}
-                            onClick={() => {
-                              if (!isPast) {
-                                console.log('Mobile date clicked:', day.toISOString().split('T')[0]);
-                                handleDateSelect(day);
-                              }
-                            }}
-                            disabled={isPast}
-                          >
-                            <div className="font-semibold text-xs mb-1">
-                              {dayNames[index].substring(0, 3)}
-                            </div>
-                            <div className="text-base font-bold">
-                              {day.getDate()}
-                            </div>
-                            {isToday && (
-                              <div className="text-[10px]">
-                                Today
-                              </div>
-                            )}
-                            {isNextAvailable && !isSelectedDate && (
-                              <div className="text-xs mt-1">
-                                <i className="fas fa-star text-[9px]"></i>
-                              </div>
-                            )}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Available Time Slots Section - Shows when date is selected */}
-                {selectedDate && (
-                  <div className="mt-6">
-                    <div className="border-t border-gray-200 pt-6">
-                      <div className="text-center mb-6">
-                        <h4 className="text-lg font-bold text-gray-900 mb-2">
-                          Available Times for {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                        </h4>
-                        <p className="text-gray-500">
-                          Select a 4-hour time slot to continue
-                        </p>
+                          Continue to Profile
+                          <i className="fas fa-arrow-right ml-2"></i>
+                        </Button>
                       </div>
-
-                      {/* Time Slots Loading/Error States */}
-                      {activeLoading && (
-                        <div className="text-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AD6269] mx-auto" role="status">
-                            <span className="sr-only">Loading...</span>
-                          </div>
-                          <p className="mt-4 text-gray-500">Loading available time slots...</p>
-                        </div>
-                      )}
-
-                      {activeError && (
-                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-center">
-                          <i className="fas fa-exclamation-triangle mr-2"></i>
-                          Error loading time slots: {activeError}
-                        </div>
-                      )}
-
-                      {/* Artist Selection Instruction */}
-                      <div className="text-center mb-6">
-                        <div className="inline-flex items-center bg-gray-100 rounded-full px-4 py-2 mb-4">
-                          <i className="fas fa-user-friends text-[#AD6269] mr-2 text-lg"></i>
-                          <span className="font-medium text-gray-900">Choose your preferred artist for this appointment</span>
-                        </div>
-                      </div>
-
-                      {/* Time Slots Display */}
-                      {activeTimeSlots && !activeLoading && (
-                        <>
-                          {/* Show which system is being used */}
-                          {/* GHL Calendar message hidden per user request */}
-                          {activeTimeSlots.hasAvailability ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 justify-items-center">
-                              {activeTimeSlots.timeSlots
-                                .filter(slot => slot.available && slot.artistName !== 'Admin' && (slot.calendarName === 'Service Calendar' || !slot.calendarName))
-                                .map((slot, index) => (
-                                  <div key={index} className="w-full">
-                                    <div
-                                      className={`h-full cursor-pointer rounded-xl shadow-md transition-all duration-300 ${
-                                        selectedTime === slot.time && selectedArtistId === slot.artistId
-                                          ? 'border-2 border-[#AD6269] bg-[#AD6269]/10 scale-105'
-                                          : 'border border-gray-200 hover:border-[#AD6269] hover:shadow-lg hover:-translate-y-1'
-                                      }`}
-                                      onClick={() => handleTimeSlotSelect(slot.time, slot.artistId)}
-                                      onMouseEnter={(e) => {
-                                        if (!(selectedTime === slot.time && selectedArtistId === slot.artistId)) {
-                                          e.currentTarget.style.transform = 'translateY(-3px)';
-                                          e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.15)';
-                                          e.currentTarget.style.borderColor = '#AD6269';
-                                        }
-                                      }}
-                                      onMouseLeave={(e) => {
-                                        if (!(selectedTime === slot.time && selectedArtistId === slot.artistId)) {
-                                          e.currentTarget.style.transform = 'translateY(0)';
-                                          e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-                                          e.currentTarget.style.borderColor = '#e9ecef';
-                                        }
-                                      }}
-                                    >
-                                      <div className="text-center py-4 px-3">
-                                        {/* Time Display */}
-                                        <div className="mb-3">
-                                          <i className={`fas fa-clock mb-2 text-xl ${
-                                            selectedTime === slot.time && selectedArtistId === slot.artistId 
-                                              ? 'text-white' 
-                                              : 'text-[#AD6269]'
-                                          }`}></i>
-                                          <h5 className={`font-bold text-lg ${
-                                            selectedTime === slot.time && selectedArtistId === slot.artistId 
-                                              ? 'text-white' 
-                                              : 'text-[#AD6269]'
-                                          }`}>
-                                            {formatTimeTo12Hour(slot.time)}
-                                          </h5>
-                                        </div>
-                                        
-                                        {/* Artist Info with Avatar */}
-                                        <div className="mb-3">
-                                          {/* Artist Avatar */}
-                                          <div className="mb-3">
-                                            <div className="relative inline-block">
-                                              {(slot.artistName === 'Victoria' || slot.calendarName === 'Service Calendar') ? (
-                                                <Image
-                                                  src="/images/VictoriaEscobar.jpeg"
-                                                  alt="Victoria - Permanent Makeup Artist"
-                                                  width={60}
-                                                  height={60}
-                                                  className="rounded-full border-2"
-                                                  style={{ 
-                                                    objectFit: 'cover',
-                                                    borderColor: selectedTime === slot.time && selectedArtistId === slot.artistId 
-                                                      ? 'white' 
-                                                      : '#AD6269'
-                                                  }}
-                                                />
-                                              ) : slot.artistName === 'Admin' ? (
-                                                <div 
-                                                  className="rounded-full border-2 flex items-center justify-center"
-                                                  style={{ 
-                                                    width: '60px', 
-                                                    height: '60px',
-                                                    backgroundColor: selectedTime === slot.time && selectedArtistId === slot.artistId 
-                                                      ? 'rgba(255,255,255,0.3)' 
-                                                      : 'rgba(173, 98, 105, 0.3)',
-                                                    borderColor: selectedTime === slot.time && selectedArtistId === slot.artistId 
-                                                      ? 'white' 
-                                                      : '#AD6269'
-                                                  }}
-                                                >
-                                                  <i className="fas fa-shield-alt" style={{ 
-                                                    fontSize: '1.6rem',
-                                                    color: selectedTime === slot.time && selectedArtistId === slot.artistId 
-                                                      ? 'white' 
-                                                      : '#AD6269',
-                                                    fontWeight: 'bold'
-                                                  }}></i>
-                                                </div>
-                                              ) : (
-                                                <div 
-                                                  className="rounded-full border-2 flex items-center justify-center"
-                                                  style={{ 
-                                                    width: '60px', 
-                                                    height: '60px',
-                                                    backgroundColor: selectedTime === slot.time && selectedArtistId === slot.artistId 
-                                                      ? 'rgba(255,255,255,0.3)' 
-                                                      : 'rgba(173, 98, 105, 0.2)',
-                                                    borderColor: selectedTime === slot.time && selectedArtistId === slot.artistId 
-                                                      ? 'white' 
-                                                      : '#AD6269'
-                                                  }}
-                                                >
-                                                  <i className={`fas fa-user-tie ${
-                                                    selectedTime === slot.time && selectedArtistId === slot.artistId 
-                                                      ? 'text-white' 
-                                                      : ''
-                                                  }`} style={{ 
-                                                    fontSize: '1.4rem',
-                                                    color: selectedTime === slot.time && selectedArtistId === slot.artistId 
-                                                      ? 'white' 
-                                                      : '#AD6269'
-                                                  }}></i>
-                                                </div>
-                                              )}
-                                            </div>
-                                          </div>
-                                          
-                                          {/* Artist Label and Name */}
-                                          <div className="d-flex align-items-center justify-content-center mb-2">
-                                            <i className={`fas fa-palette me-2 ${
-                                              selectedTime === slot.time && selectedArtistId === slot.artistId 
-                                                ? 'text-white' 
-                                                : 'text-primary'
-                                            }`} style={{ fontSize: '1rem' }}></i>
-                                            <span className={`fw-medium ${
-                                              selectedTime === slot.time && selectedArtistId === slot.artistId 
-                                                ? 'text-white' 
-                                                : 'text-dark'
-                                            }`}>Artist</span>
-                                          </div>
-                                          <p className="card-text mb-0 fw-bold" style={{ 
-                                            color: selectedTime === slot.time && selectedArtistId === slot.artistId 
-                                              ? 'white' 
-                                              : '#AD6269', 
-                                            fontSize: '1rem' 
-                                          }}>
-                                            {slot.artistName}
-                                          </p>
-                                        </div>
-
-                                        {/* Duration Badge */}
-                                        <div className="mb-3">
-                                          <span className="badge rounded-pill px-3 py-2" style={{ backgroundColor: '#AD6269', color: 'white' }}>
-                                            <i className="fas fa-hourglass-half me-1"></i>
-                                            4 Hours
-                                          </span>
-                                        </div>
-
-                                        {/* Selection Indicator */}
-                                        {selectedTime === slot.time && selectedArtistId === slot.artistId ? (
-                                          <div className="mt-3">
-                                            <div className="d-flex align-items-center justify-content-center">
-                                              <i className="fas fa-check-circle text-white me-2 fs-4"></i>
-                                              <span className="fw-bold text-white" style={{ fontSize: '1.1rem' }}>SELECTED</span>
-                                            </div>
-                                          </div>
-                                        ) : (
-                                          <div className="mt-3">
-                                            <small className="text-muted">
-                                              <i className="fas fa-mouse-pointer me-1"></i>
-                                              Click to select
-                                            </small>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))
-                              }
-                            </div>
-                          ) : (
-                            <div className="text-center py-8">
-                              <i className="fas fa-calendar-times text-gray-400 mb-4 text-4xl"></i>
-                              <h5 className="text-gray-500 font-semibold text-lg">No Available Time Slots</h5>
-                              <p className="text-gray-500">
-                                Sorry, there are no available 3-hour time slots on this date.
-                                Please select a different date.
-                              </p>
-                            </div>
-                          )}
-
-                          {/* Continue Button */}
-                          {selectedTime && selectedArtistId && (
-                            <div className="text-center mt-4">
-                              <Button
-                                size="lg"
-                                className="bg-[#AD6269] hover:bg-[#9d5860]"
-                                onClick={() => {
-                                  console.log('Continue button clicked - selectedTime:', selectedTime, 'selectedArtistId:', selectedArtistId);
-                                  console.log('isAuthenticated:', isAuthenticated, 'userProfile:', userProfile);
-                                  console.log('clientProfile:', clientProfile);
-                                  
-                                  // Update checkout data with selected date and time
-                                  setCheckoutData(prev => ({
-                                    ...prev,
-                                    selectedDate,
-                                    selectedTime
-                                  }));
-                                  
-                                  // Always go to profile form to collect all required information
-                                  // (firstName, lastName, email, phone, address, city, state, zip, birthDate, emergencyContact)
-                                  console.log('Going to profile form');
-                                  setCurrentStep('profile');
-                                }}
-                              >
-                                Continue to Profile
-                                <i className="fas fa-arrow-right ms-2"></i>
-                              </Button>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
+                    )}
                   </div>
                 )}
+
+                {/* Back Button */}
+                <div className="text-center mt-6">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentStep('services')}
+                    className="text-gray-600"
+                  >
+                    <i className="fas fa-arrow-left mr-2"></i>
+                    Back to Services
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
