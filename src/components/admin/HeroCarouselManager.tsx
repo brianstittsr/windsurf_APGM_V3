@@ -8,6 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAlertDialog } from '@/components/ui/alert-dialog';
 
+// Wizard steps configuration
+const WIZARD_STEPS = [
+  { id: 1, title: 'Content', description: 'Add your slide text' },
+  { id: 2, title: 'Media', description: 'Upload background image/video' },
+  { id: 3, title: 'Button & Style', description: 'Configure button and appearance' },
+  { id: 4, title: 'Review', description: 'Preview and publish' }
+];
+
 export default function HeroCarouselManager() {
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,6 +25,7 @@ export default function HeroCarouselManager() {
   const [formData, setFormData] = useState<HeroSlideFormData>(defaultHeroSlideFormData);
   const [submitting, setSubmitting] = useState(false);
   const [previewSlide, setPreviewSlide] = useState<HeroSlideFormData | null>(null);
+  const [wizardStep, setWizardStep] = useState(1);
   const { showAlert, showConfirm, AlertDialogComponent } = useAlertDialog();
 
   useEffect(() => {
@@ -114,6 +123,7 @@ export default function HeroCarouselManager() {
   const openCreateModal = () => {
     setEditingSlide(null);
     setFormData({ ...defaultHeroSlideFormData, order: slides.length });
+    setWizardStep(1);
     setShowModal(true);
   };
 
@@ -134,6 +144,7 @@ export default function HeroCarouselManager() {
       isActive: slide.isActive,
       order: slide.order
     });
+    setWizardStep(1);
     setShowModal(true);
   };
 
@@ -294,200 +305,411 @@ export default function HeroCarouselManager() {
         )}
       </div>
 
-      {/* Create/Edit Modal */}
+      {/* Create/Edit Wizard Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overflow-y-auto py-8">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 sticky top-0 bg-white z-10">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
               <h3 className="text-lg font-semibold text-gray-900">
                 {editingSlide ? 'Edit Slide' : 'Create New Slide'}
               </h3>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => openPreview()}
-                  className="px-3 py-1.5 text-sm font-medium rounded-lg bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors"
-                >
-                  <i className="fas fa-eye mr-1"></i>Preview
-                </button>
-                <button
-                  type="button"
-                  className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                  onClick={closeModal}
-                >
-                  <i className="fas fa-times"></i>
-                </button>
+              <button
+                type="button"
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                onClick={closeModal}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+
+            {/* Wizard Progress Bar */}
+            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                {WIZARD_STEPS.map((step, index) => (
+                  <div key={step.id} className="flex items-center flex-1">
+                    <div className="flex flex-col items-center">
+                      <div 
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all ${
+                          wizardStep > step.id 
+                            ? 'bg-green-500 text-white' 
+                            : wizardStep === step.id 
+                            ? 'bg-[#AD6269] text-white' 
+                            : 'bg-gray-200 text-gray-500'
+                        }`}
+                      >
+                        {wizardStep > step.id ? <i className="fas fa-check"></i> : step.id}
+                      </div>
+                      <div className="mt-2 text-center">
+                        <p className={`text-xs font-medium ${wizardStep >= step.id ? 'text-gray-900' : 'text-gray-400'}`}>
+                          {step.title}
+                        </p>
+                        <p className="text-xs text-gray-400 hidden sm:block">{step.description}</p>
+                      </div>
+                    </div>
+                    {index < WIZARD_STEPS.length - 1 && (
+                      <div className={`flex-1 h-1 mx-2 rounded ${wizardStep > step.id ? 'bg-green-500' : 'bg-gray-200'}`} />
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
-            <form onSubmit={handleSubmit}>
-              <div className="p-6 space-y-4">
-                {/* Title */}
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title <span className="text-red-500">*</span></Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="WAKE UP FLAWLESS EVERY DAY!"
-                    required
-                  />
-                </div>
 
-                {/* Subtitle & Highlight */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="subtitle">Subtitle (colored)</Label>
-                    <Input
-                      id="subtitle"
-                      value={formData.subtitle}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, subtitle: e.target.value })}
-                      placeholder="SOFT NATURAL"
+            {/* Wizard Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {/* Step 1: Content */}
+              {wizardStep === 1 && (
+                <div className="space-y-6">
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <i className="fas fa-heading text-2xl text-[#AD6269]"></i>
+                    </div>
+                    <h4 className="text-xl font-semibold text-gray-900">Add Your Content</h4>
+                    <p className="text-gray-500 text-sm">Enter the text that will appear on your hero slide</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Title <span className="text-red-500">*</span></Label>
+                      <Input
+                        id="title"
+                        value={formData.title}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, title: e.target.value })}
+                        placeholder="WAKE UP FLAWLESS EVERY DAY!"
+                        className="text-lg"
+                      />
+                      <p className="text-xs text-gray-400">This is the main headline of your slide</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="subtitle">Subtitle (colored)</Label>
+                        <Input
+                          id="subtitle"
+                          value={formData.subtitle}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, subtitle: e.target.value })}
+                          placeholder="SOFT NATURAL"
+                        />
+                        <p className="text-xs text-gray-400">Appears in brand color above title</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="highlightText">Highlight Text</Label>
+                        <Input
+                          id="highlightText"
+                          value={formData.highlightText}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, highlightText: e.target.value })}
+                          placeholder="PERMANENT MAKEUP"
+                        />
+                        <p className="text-xs text-gray-400">Appears after subtitle</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description (optional)</Label>
+                      <textarea
+                        id="description"
+                        className="w-full px-3 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent resize-none"
+                        rows={3}
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        placeholder="Add a brief description or tagline..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Media */}
+              {wizardStep === 2 && (
+                <div className="space-y-6">
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <i className="fas fa-image text-2xl text-[#AD6269]"></i>
+                    </div>
+                    <h4 className="text-xl font-semibold text-gray-900">Add Background Media</h4>
+                    <p className="text-gray-500 text-sm">Upload an image or video for your slide background</p>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="backgroundImage">Background Image URL <span className="text-red-500">*</span></Label>
+                      <Input
+                        id="backgroundImage"
+                        value={formData.backgroundImage}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, backgroundImage: e.target.value })}
+                        placeholder="/images/hero/your-image.jpg"
+                      />
+                      <p className="text-xs text-gray-400">Enter the path to your image file (e.g., /images/hero/slide1.jpg)</p>
+                      {formData.backgroundImage && (
+                        <div className="mt-3 h-48 rounded-lg bg-cover bg-center border-2 border-dashed border-gray-300 relative overflow-hidden" style={{ backgroundImage: `url(${formData.backgroundImage})` }}>
+                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                            <span className="text-white text-sm font-medium bg-black/50 px-3 py-1 rounded">Preview</span>
+                          </div>
+                        </div>
+                      )}
+                      {!formData.backgroundImage && (
+                        <div className="mt-3 h-48 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50">
+                          <div className="text-center">
+                            <i className="fas fa-image text-4xl text-gray-300 mb-2"></i>
+                            <p className="text-gray-400 text-sm">Image preview will appear here</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="backgroundVideo">Background Video URL (optional)</Label>
+                      <Input
+                        id="backgroundVideo"
+                        value={formData.backgroundVideo}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, backgroundVideo: e.target.value })}
+                        placeholder="/videos/hero-video.mp4"
+                      />
+                      <p className="text-xs text-gray-400">Optional: Add a video that will play behind the content. Image will be used as fallback.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Button & Style */}
+              {wizardStep === 3 && (
+                <div className="space-y-6">
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <i className="fas fa-palette text-2xl text-[#AD6269]"></i>
+                    </div>
+                    <h4 className="text-xl font-semibold text-gray-900">Button & Styling</h4>
+                    <p className="text-gray-500 text-sm">Configure the call-to-action button and visual appearance</p>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="buttonText">Button Text</Label>
+                        <Input
+                          id="buttonText"
+                          value={formData.buttonText}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, buttonText: e.target.value })}
+                          placeholder="Book Now"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="buttonLink">Button Link</Label>
+                        <Input
+                          id="buttonLink"
+                          value={formData.buttonLink}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, buttonLink: e.target.value })}
+                          placeholder="/book-now-custom"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Button Style</Label>
+                      <div className="grid grid-cols-3 gap-3">
+                        {(['primary', 'secondary', 'outline'] as const).map((style) => (
+                          <button
+                            key={style}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, buttonStyle: style })}
+                            className={`p-4 rounded-lg border-2 transition-all ${
+                              formData.buttonStyle === style 
+                                ? 'border-[#AD6269] bg-[#AD6269]/5' 
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <div className={`px-4 py-2 rounded-full text-sm font-medium mx-auto w-fit ${
+                              style === 'primary' 
+                                ? 'bg-[#AD6269] text-white' 
+                                : style === 'secondary'
+                                ? 'bg-white text-gray-900 border border-gray-300'
+                                : 'bg-transparent border-2 border-gray-400 text-gray-600'
+                            }`}>
+                              {style.charAt(0).toUpperCase() + style.slice(1)}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Text Alignment</Label>
+                      <div className="grid grid-cols-3 gap-3">
+                        {(['left', 'center', 'right'] as const).map((align) => (
+                          <button
+                            key={align}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, textAlignment: align })}
+                            className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
+                              formData.textAlignment === align 
+                                ? 'border-[#AD6269] bg-[#AD6269]/5' 
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <i className={`fas fa-align-${align} text-xl ${formData.textAlignment === align ? 'text-[#AD6269]' : 'text-gray-400'}`}></i>
+                            <span className="text-sm font-medium capitalize">{align}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="overlayOpacity">Overlay Darkness: {formData.overlayOpacity}%</Label>
+                      <input
+                        type="range"
+                        id="overlayOpacity"
+                        min="0"
+                        max="100"
+                        value={formData.overlayOpacity}
+                        onChange={(e) => setFormData({ ...formData, overlayOpacity: parseInt(e.target.value) })}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#AD6269]"
+                      />
+                      <div className="flex justify-between text-xs text-gray-400">
+                        <span>No overlay</span>
+                        <span>Full dark</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: Review */}
+              {wizardStep === 4 && (
+                <div className="space-y-6">
+                  <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <i className="fas fa-check-circle text-2xl text-green-600"></i>
+                    </div>
+                    <h4 className="text-xl font-semibold text-gray-900">Review & Publish</h4>
+                    <p className="text-gray-500 text-sm">Preview your slide and publish when ready</p>
+                  </div>
+
+                  {/* Mini Preview */}
+                  <div 
+                    className="relative h-64 rounded-xl overflow-hidden bg-cover bg-center"
+                    style={{ backgroundImage: `url(${formData.backgroundImage})` }}
+                  >
+                    <div className="absolute inset-0 bg-black" style={{ opacity: formData.overlayOpacity / 100 }} />
+                    <div className={`absolute inset-0 flex items-center p-8 ${
+                      formData.textAlignment === 'left' ? 'justify-start text-left' : 
+                      formData.textAlignment === 'right' ? 'justify-end text-right' : 
+                      'justify-center text-center'
+                    }`}>
+                      <div className="max-w-md">
+                        {formData.subtitle && (
+                          <p className="text-white/80 text-sm mb-1">
+                            <span className="text-[#AD6269]">{formData.subtitle}</span>
+                            {formData.highlightText && ` ${formData.highlightText}`}
+                          </p>
+                        )}
+                        <h3 className="text-white text-2xl font-bold mb-2">{formData.title || 'Your Title Here'}</h3>
+                        {formData.description && <p className="text-white/70 text-sm mb-3">{formData.description}</p>}
+                        <span className={`inline-block px-4 py-1.5 rounded-full text-xs font-medium ${
+                          formData.buttonStyle === 'secondary' 
+                            ? 'bg-white text-gray-900' 
+                            : formData.buttonStyle === 'outline'
+                            ? 'border border-white text-white'
+                            : 'bg-[#AD6269] text-white'
+                        }`}>
+                          {formData.buttonText || 'Book Now'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => openPreview()}
+                    className="w-full py-3 rounded-lg border-2 border-purple-200 text-purple-600 font-medium hover:bg-purple-50 transition-colors"
+                  >
+                    <i className="fas fa-expand mr-2"></i>View Full Screen Preview
+                  </button>
+
+                  {/* Summary */}
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <h5 className="font-medium text-gray-900 mb-3">Slide Summary</h5>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div><span className="text-gray-500">Title:</span> <span className="font-medium">{formData.title || '-'}</span></div>
+                      <div><span className="text-gray-500">Button:</span> <span className="font-medium">{formData.buttonText} → {formData.buttonLink}</span></div>
+                      <div><span className="text-gray-500">Alignment:</span> <span className="font-medium capitalize">{formData.textAlignment}</span></div>
+                      <div><span className="text-gray-500">Overlay:</span> <span className="font-medium">{formData.overlayOpacity}%</span></div>
+                    </div>
+                  </div>
+
+                  {/* Active Toggle */}
+                  <label className="flex items-center gap-3 p-4 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
+                    <input
+                      type="checkbox"
+                      className="w-5 h-5 rounded border-gray-300 text-[#AD6269] focus:ring-[#AD6269]"
+                      checked={formData.isActive}
+                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="highlightText">Highlight Text</Label>
-                    <Input
-                      id="highlightText"
-                      value={formData.highlightText}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, highlightText: e.target.value })}
-                      placeholder="PERMANENT MAKEUP"
-                    />
-                  </div>
+                    <div>
+                      <span className="font-medium text-gray-900">Publish slide immediately</span>
+                      <p className="text-sm text-gray-500">When enabled, this slide will be visible on the website</p>
+                    </div>
+                  </label>
                 </div>
+              )}
+            </div>
 
-                {/* Description */}
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <textarea
-                    id="description"
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent resize-none"
-                    rows={2}
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Optional description text"
-                  />
-                </div>
-
-                {/* Background Image */}
-                <div className="space-y-2">
-                  <Label htmlFor="backgroundImage">Background Image URL <span className="text-red-500">*</span></Label>
-                  <Input
-                    id="backgroundImage"
-                    value={formData.backgroundImage}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, backgroundImage: e.target.value })}
-                    placeholder="/images/hero/your-image.jpg"
-                    required
-                  />
-                  {formData.backgroundImage && (
-                    <div className="mt-2 h-32 rounded-lg bg-cover bg-center border border-gray-200" style={{ backgroundImage: `url(${formData.backgroundImage})` }} />
-                  )}
-                </div>
-
-                {/* Background Video */}
-                <div className="space-y-2">
-                  <Label htmlFor="backgroundVideo">Background Video URL (optional)</Label>
-                  <Input
-                    id="backgroundVideo"
-                    value={formData.backgroundVideo}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, backgroundVideo: e.target.value })}
-                    placeholder="/videos/hero-video.mp4"
-                  />
-                </div>
-
-                {/* Button Settings */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="buttonText">Button Text</Label>
-                    <Input
-                      id="buttonText"
-                      value={formData.buttonText}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, buttonText: e.target.value })}
-                      placeholder="Book Now"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="buttonLink">Button Link</Label>
-                    <Input
-                      id="buttonLink"
-                      value={formData.buttonLink}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, buttonLink: e.target.value })}
-                      placeholder="/book-now-custom"
-                    />
-                  </div>
-                </div>
-
-                {/* Style Settings */}
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="buttonStyle">Button Style</Label>
-                    <select
-                      id="buttonStyle"
-                      className="w-full h-10 px-3 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
-                      value={formData.buttonStyle}
-                      onChange={(e) => setFormData({ ...formData, buttonStyle: e.target.value as 'primary' | 'secondary' | 'outline' })}
-                    >
-                      <option value="primary">Primary (Rose)</option>
-                      <option value="secondary">Secondary (White)</option>
-                      <option value="outline">Outline</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="textAlignment">Text Alignment</Label>
-                    <select
-                      id="textAlignment"
-                      className="w-full h-10 px-3 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
-                      value={formData.textAlignment}
-                      onChange={(e) => setFormData({ ...formData, textAlignment: e.target.value as 'left' | 'center' | 'right' })}
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Center</option>
-                      <option value="right">Right</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="overlayOpacity">Overlay Opacity (%)</Label>
-                    <Input
-                      id="overlayOpacity"
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.overlayOpacity}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, overlayOpacity: parseInt(e.target.value) || 0 })}
-                    />
-                  </div>
-                </div>
-
-                {/* Active Toggle */}
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 rounded border-gray-300 text-[#AD6269] focus:ring-[#AD6269]"
-                    checked={formData.isActive}
-                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  />
-                  <span className="text-sm text-gray-700">Active (visible on website)</span>
-                </label>
+            {/* Footer Navigation */}
+            <div className="flex justify-between items-center px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <div>
+                {wizardStep > 1 && (
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setWizardStep(wizardStep - 1)}
+                  >
+                    <i className="fas fa-arrow-left mr-2"></i>Back
+                  </Button>
+                )}
               </div>
-
-              <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl sticky bottom-0">
+              <div className="flex gap-3">
                 <Button type="button" variant="outline" onClick={closeModal}>
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-[#AD6269] hover:bg-[#9d5860]" disabled={submitting}>
-                  {submitting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-save mr-2"></i>
-                      {editingSlide ? 'Update Slide' : 'Create Slide'}
-                    </>
-                  )}
-                </Button>
+                {wizardStep < 4 ? (
+                  <Button 
+                    type="button" 
+                    className="bg-[#AD6269] hover:bg-[#9d5860]"
+                    onClick={() => {
+                      if (wizardStep === 1 && !formData.title) {
+                        showAlert({ title: 'Required Field', description: 'Please enter a title for your slide', variant: 'warning' });
+                        return;
+                      }
+                      if (wizardStep === 2 && !formData.backgroundImage) {
+                        showAlert({ title: 'Required Field', description: 'Please enter a background image URL', variant: 'warning' });
+                        return;
+                      }
+                      setWizardStep(wizardStep + 1);
+                    }}
+                  >
+                    Next<i className="fas fa-arrow-right ml-2"></i>
+                  </Button>
+                ) : (
+                  <Button 
+                    type="button"
+                    className="bg-[#AD6269] hover:bg-[#9d5860]" 
+                    disabled={submitting}
+                    onClick={handleSubmit}
+                  >
+                    {submitting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-check mr-2"></i>
+                        {editingSlide ? 'Update Slide' : 'Create Slide'}
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
