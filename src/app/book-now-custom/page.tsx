@@ -588,7 +588,8 @@ function BookNowCustomContent() {
 
   const handleProfileToHealth = async () => {
     await updateUserProfile();
-    setCurrentStep('health');
+    // Skip health and pre-post-care steps, go directly to checkout
+    setCurrentStep('checkout');
   };
 
   const handleBookingComplete = async () => {
@@ -889,11 +890,11 @@ function BookNowCustomContent() {
       { key: 'account-suggestion', label: 'Account' },
       { key: 'calendar', label: 'Date & Time' },
       { key: 'profile', label: 'Profile' },
-      { key: 'health', label: 'Health Form' },
-      { key: 'pre-post-care', label: 'Care Instructions' },
       { key: 'checkout', label: 'Checkout' }
     ];
-    const currentIndex = stepLabels.findIndex(s => s.key === currentStep);
+    // Map current step to the visible steps (health and pre-post-care map to checkout)
+    const mappedStep = (currentStep === 'health' || currentStep === 'pre-post-care') ? 'checkout' : currentStep;
+    const currentIndex = stepLabels.findIndex(s => s.key === mappedStep);
     const progress = ((currentIndex + 1) / stepLabels.length) * 100;
 
     return (
@@ -918,7 +919,7 @@ function BookNowCustomContent() {
           </div>
           
           {/* Step labels */}
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-5 gap-1">
             {stepLabels.map((step, index) => (
               <div 
                 key={step.key}
@@ -1405,7 +1406,7 @@ function BookNowCustomContent() {
           data={checkoutData}
           onChange={setCheckoutData}
           onNext={handleBookingComplete}
-          onBack={() => setCurrentStep('pre-post-care')}
+          onBack={() => setCurrentStep('profile')}
         />
       )}
       {currentStep === 'confirmation' && renderConfirmation()}
