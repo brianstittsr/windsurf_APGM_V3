@@ -150,205 +150,195 @@ function RegisterForm() {
   return (
     <>
       <Header />
-      <div className="min-vh-100 d-flex align-items-center" style={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)', paddingTop: '140px', paddingBottom: '60px' }}>
-        <div className="container">
-          <div className="row justify-content-center">
-            <div className="col-lg-6 col-md-8 col-sm-10">
-              <div className="card shadow-lg border-0 rounded-4">
-                <div className="card-body p-5">
-                  <div className="text-center mb-5">
-                    <div className="mb-3">
-                      <div className="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10 p-3 mb-3">
-                        <i className="fas fa-user-plus text-primary fs-2"></i>
-                      </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-36 pb-16">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-center">
+            <div className="w-full max-w-lg">
+              <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div className="p-8">
+                  <div className="text-center mb-8">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#AD6269]/10 mb-4">
+                      <i className="fas fa-user-plus text-[#AD6269] text-2xl"></i>
                     </div>
-                    <h1 className="h2 fw-bold text-dark mb-2">Create Your Account</h1>
-                    <p className="text-muted fs-6">Join A Pretty Girl Matter for exclusive access to premium services</p>
+                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Create Your Account</h1>
+                    <p className="text-gray-500">Join A Pretty Girl Matter for exclusive access to premium services</p>
                   </div>
 
                   {error && (
-                    <div className="alert alert-danger border-0 rounded-3 d-flex align-items-center" role="alert">
-                      <i className="fas fa-exclamation-triangle me-2"></i>
+                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center text-red-700">
+                      <i className="fas fa-exclamation-triangle mr-2"></i>
                       {error}
                     </div>
                   )}
 
-                  <form onSubmit={handleSubmit} className="needs-validation" noValidate>
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <div className="form-floating">
-                          <input
-                            type="text"
-                            className="form-control rounded-3"
-                            id="firstName"
-                            name="firstName"
-                            value={formData.firstName}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="First Name"
-                          />
-                          <label htmlFor="firstName" className="text-muted">
-                            <i className="fas fa-user me-2"></i>First Name *
-                          </label>
-                        </div>
+                  <form onSubmit={handleSubmit} noValidate>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                          <i className="fas fa-user mr-2 text-gray-400"></i>First Name *
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent transition-all"
+                          id="firstName"
+                          name="firstName"
+                          value={formData.firstName}
+                          onChange={handleInputChange}
+                          required
+                          placeholder="Enter your first name"
+                        />
                       </div>
-                      <div className="col-md-6">
-                        <div className="form-floating">
-                          <input
-                            type="text"
-                            className="form-control rounded-3"
-                            id="lastName"
-                            name="lastName"
-                            value={formData.lastName}
-                            onChange={handleInputChange}
-                            required
-                            placeholder="Last Name"
-                          />
-                          <label htmlFor="lastName" className="text-muted">
-                            <i className="fas fa-user me-2"></i>Last Name *
-                          </label>
-                        </div>
+                      <div>
+                        <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                          <i className="fas fa-user mr-2 text-gray-400"></i>Last Name *
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent transition-all"
+                          id="lastName"
+                          name="lastName"
+                          value={formData.lastName}
+                          onChange={handleInputChange}
+                          required
+                          placeholder="Enter your last name"
+                        />
                       </div>
                     </div>
 
-                    <div className="form-floating mt-3">
+                    <div className="mb-4">
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                        <i className="fas fa-envelope mr-2 text-gray-400"></i>Email Address *
+                      </label>
                       <input
                         type="email"
-                        className="form-control rounded-3"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent transition-all"
                         id="email"
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
                         required
-                        placeholder="Email Address"
+                        placeholder="Enter your email address"
                       />
-                      <label htmlFor="email" className="text-muted">
-                        <i className="fas fa-envelope me-2"></i>Email Address *
-                      </label>
                     </div>
 
-                    <div className="form-floating mt-3">
+                    <div className="mb-4">
+                      <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                        <i className="fas fa-phone mr-2 text-gray-400"></i>Phone Number *
+                      </label>
                       <input
                         type="tel"
-                        className="form-control rounded-3"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent transition-all"
                         id="phone"
                         name="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
                         required
-                        placeholder="Phone Number"
+                        placeholder="Enter your phone number"
                       />
-                      <label htmlFor="phone" className="text-muted">
-                        <i className="fas fa-phone me-2"></i>Phone Number *
-                      </label>
                     </div>
 
-                    <div className="form-floating mt-3">
+                    <div className="mb-4">
+                      <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                        <i className="fas fa-lock mr-2 text-gray-400"></i>Password (min 6 characters) *
+                      </label>
                       <input
                         type="password"
-                        className="form-control rounded-3"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent transition-all"
                         id="password"
                         name="password"
                         value={formData.password}
                         onChange={handleInputChange}
                         required
-                        placeholder="Password"
+                        placeholder="Create a password"
                         minLength={6}
                       />
-                      <label htmlFor="password" className="text-muted">
-                        <i className="fas fa-lock me-2"></i>Password (min 6 characters) *
-                      </label>
                     </div>
 
-                    <div className="form-floating mt-3">
+                    <div className="mb-4">
+                      <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                        <i className="fas fa-lock mr-2 text-gray-400"></i>Confirm Password *
+                      </label>
                       <input
                         type="password"
-                        className="form-control rounded-3"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent transition-all"
                         id="confirmPassword"
                         name="confirmPassword"
                         value={formData.confirmPassword}
                         onChange={handleInputChange}
                         required
-                        placeholder="Confirm Password"
+                        placeholder="Confirm your password"
                       />
-                      <label htmlFor="confirmPassword" className="text-muted">
-                        <i className="fas fa-lock me-2"></i>Confirm Password *
-                      </label>
                     </div>
 
-                    <div className="mt-4">
-                      <div className="form-check d-flex align-items-start">
+                    <div className="mb-6">
+                      <label className="flex items-start gap-3 cursor-pointer">
                         <input
                           type="checkbox"
-                          className="form-check-input mt-1 me-3 rounded"
+                          className="w-5 h-5 mt-0.5 rounded border-gray-300 text-[#AD6269] focus:ring-[#AD6269]"
                           id="agreeToTerms"
                           name="agreeToTerms"
                           checked={formData.agreeToTerms}
                           onChange={handleInputChange}
                           required
-                          style={{ transform: 'scale(1.2)' }}
                         />
-                        <label className="form-check-label text-muted" htmlFor="agreeToTerms">
+                        <span className="text-sm text-gray-600">
                           I agree to the{' '}
-                          <Link href="/terms-of-service" className="text-primary text-decoration-none fw-medium">
+                          <Link href="/terms-of-service" className="text-[#AD6269] hover:underline font-medium">
                             Terms of Service
                           </Link>{' '}
                           and{' '}
-                          <Link href="/privacy-policy" className="text-primary text-decoration-none fw-medium">
+                          <Link href="/privacy-policy" className="text-[#AD6269] hover:underline font-medium">
                             Privacy Policy
                           </Link>
-                        </label>
-                      </div>
+                        </span>
+                      </label>
                     </div>
 
-                    <div className="d-grid mt-4">
-                      <button
-                        type="submit"
-                        className="btn btn-primary btn-lg rounded-pill py-3 fw-bold"
-                        disabled={isLoading}
-                        style={{ 
-                          background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
-                          border: 'none',
-                          boxShadow: '0 4px 15px rgba(0, 123, 255, 0.3)'
-                        }}
-                      >
-                        {isLoading ? (
-                          <>
-                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            Creating Account...
-                          </>
-                        ) : (
-                          <>
-                            <i className="fas fa-user-plus me-2"></i>
-                            Create Account
-                          </>
-                        )}
-                      </button>
-                    </div>
+                    <button
+                      type="submit"
+                      className="w-full py-3 px-6 bg-[#AD6269] hover:bg-[#9d5860] text-white font-semibold rounded-full transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <span className="flex items-center justify-center">
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Creating Account...
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center">
+                          <i className="fas fa-user-plus mr-2"></i>
+                          Create Account
+                        </span>
+                      )}
+                    </button>
                   </form>
 
-                  <div className="position-relative my-5">
-                    <hr className="border-0" style={{ height: '1px', background: 'linear-gradient(90deg, transparent, #dee2e6, transparent)' }} />
-                    <span className="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small">
-                      OR
-                    </span>
+                  <div className="relative my-8">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center">
+                      <span className="bg-white px-4 text-sm text-gray-500">OR</span>
+                    </div>
                   </div>
 
                   <div className="text-center">
-                    <p className="text-muted mb-3">Already have an account?</p>
+                    <p className="text-gray-500 mb-3">Already have an account?</p>
                     <Link 
                       href="/login" 
-                      className="btn btn-outline-primary rounded-pill px-4 py-2 fw-medium"
-                      style={{ borderWidth: '2px' }}
+                      className="inline-flex items-center px-6 py-2 border-2 border-[#AD6269] text-[#AD6269] font-medium rounded-full hover:bg-[#AD6269] hover:text-white transition-all duration-200"
                     >
-                      <i className="fas fa-sign-in-alt me-2"></i>
+                      <i className="fas fa-sign-in-alt mr-2"></i>
                       Sign In Instead
                     </Link>
                   </div>
 
-                  <div className="text-center mt-4">
-                    <Link href="/" className="text-decoration-none text-muted d-inline-flex align-items-center">
-                      <i className="fas fa-arrow-left me-2"></i>
+                  <div className="text-center mt-6">
+                    <Link href="/" className="inline-flex items-center text-gray-500 hover:text-gray-700 transition-colors">
+                      <i className="fas fa-arrow-left mr-2"></i>
                       Back to Home
                     </Link>
                   </div>
@@ -368,17 +358,13 @@ export default function Register() {
     <Suspense fallback={
       <>
         <Header />
-        <div className="min-vh-100 d-flex align-items-center" style={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)' }}>
-          <div className="container">
-            <div className="row justify-content-center">
-              <div className="col-lg-6 col-md-8">
-                <div className="card shadow-lg border-0 rounded-4">
-                  <div className="card-body p-5 text-center">
-                    <div className="spinner-border text-primary" role="status">
-                      <span className="visually-hidden">Loading...</span>
-                    </div>
-                    <p className="mt-3 text-muted">Loading registration form...</p>
-                  </div>
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-36 pb-16">
+          <div className="container mx-auto px-4">
+            <div className="flex justify-center">
+              <div className="w-full max-w-lg">
+                <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#AD6269] mx-auto"></div>
+                  <p className="mt-4 text-gray-500">Loading registration form...</p>
                 </div>
               </div>
             </div>
