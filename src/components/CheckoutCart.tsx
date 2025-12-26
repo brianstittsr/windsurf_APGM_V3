@@ -457,272 +457,251 @@ export default function CheckoutCart({
             appliedCoupon={appliedCoupon}
           />
 
-          {/* Modern Payment Section */}
-          {!isPayAfterProcedure && !isFreeService && !is100PercentDiscount && (
-          <div className="card border-0 shadow-sm mb-4" style={{borderRadius: '16px'}}>
-            <div className="card-body p-4">
-              <div className="d-flex align-items-center mb-4">
-                <div className="bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center me-3" style={{width: '48px', height: '48px'}}>
-                  <i className="fas fa-credit-card" style={{fontSize: '1.25rem'}}></i>
+      {/* Payment Section */}
+      {!isPayAfterProcedure && !isFreeService && !is100PercentDiscount && (
+        <Card className="mb-6 border-0 shadow-md">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                <CreditCard className="w-6 h-6 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">Secure Payment Required</h3>
+                <p className="text-gray-500 text-sm">Deposit secures your appointment slot</p>
+              </div>
+            </div>
+            
+            <div className="bg-blue-50 p-4 rounded-xl mb-4">
+              <div className="flex items-start gap-3">
+                <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-blue-900 text-sm">Payment Policy</p>
+                  <p className="text-blue-700 text-sm">
+                    A secure deposit is required to confirm your booking. The remaining balance will be due at your appointment.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Payment Success Message */}
+            {paymentSuccess && (
+              <div className="bg-green-50 p-4 rounded-xl flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
                 </div>
                 <div>
-                  <h5 className="card-title mb-1 fw-bold">Secure Payment Required</h5>
-                  <p className="text-muted mb-0 small">Deposit secures your appointment slot</p>
+                  <p className="font-bold text-green-900">Payment Successful!</p>
+                  <p className="text-green-700 text-sm">Redirecting to confirmation...</p>
                 </div>
               </div>
-              
-              <div className="alert alert-info border-0" style={{backgroundColor: '#f8f9fa', borderRadius: '12px'}}>
-                <div className="d-flex align-items-start">
-                  <i className="fas fa-info-circle text-primary me-2 mt-1"></i>
-                  <div>
-                    <small className="fw-medium">Payment Policy</small>
-                    <p className="mb-0 small text-muted">
-                      A secure deposit is required to confirm your booking. The remaining balance will be due at your appointment.
-                    </p>
-                  </div>
+            )}
+            
+            {/* Payment Error Message */}
+            {paymentError && (
+              <div className="bg-red-50 p-4 rounded-xl flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <p className="font-bold text-red-900">Payment Error</p>
+                  <p className="text-red-700 text-sm">{paymentError}</p>
                 </div>
               </div>
-              
-              {/* Payment Success Message */}
-              {paymentSuccess && (
-                <div className="alert alert-success border-0 d-flex align-items-center" style={{borderRadius: '12px'}} role="alert">
-                  <div className="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center me-3" style={{width: '40px', height: '40px'}}>
-                    <i className="fas fa-check" style={{fontSize: '1.1rem'}}></i>
-                  </div>
-                  <div>
-                    <div className="fw-bold">Payment Successful!</div>
-                    <small className="text-muted">Redirecting to confirmation...</small>
-                  </div>
-                </div>
-              )}
-              
-              {/* Payment Error Message */}
-              {paymentError && (
-                <div className="alert alert-danger border-0 d-flex align-items-center" style={{borderRadius: '12px'}} role="alert">
-                  <div className="bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center me-3" style={{width: '40px', height: '40px'}}>
-                    <i className="fas fa-exclamation-triangle" style={{fontSize: '1.1rem'}}></i>
-                  </div>
-                  <div>
-                    <div className="fw-bold">Payment Error</div>
-                    <small className="text-muted">{paymentError}</small>
+            )}
+            
+            {!paymentSuccess && (
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-bold text-gray-900">Choose Payment Method</h4>
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <Shield className="w-4 h-4 text-green-500" />
+                    <span className="text-xs">Secure</span>
                   </div>
                 </div>
-              )}
-              
-              {!paymentSuccess && (
-                <div className="mt-4">
-                  <div className="d-flex align-items-center justify-content-between mb-3">
-                    <h6 className="mb-0 fw-bold">Choose Payment Method</h6>
-                    <div className="d-flex gap-2">
-                      <i className="fab fa-cc-visa text-muted"></i>
-                      <i className="fab fa-cc-mastercard text-muted"></i>
-                      <i className="fab fa-cc-amex text-muted"></i>
-                      <i className="fas fa-lock text-success" title="Secure Payment"></i>
-                    </div>
-                  </div>
-                  <Elements stripe={stripePromise}>
-                    <MultiPaymentForm
-                      amount={chargeAmount}
-                      totalAmount={totalAmount}
-                      onSuccess={handlePaymentSuccess}
-                      onError={handlePaymentError}
-                      loading={paymentLoading}
-                      setLoading={setPaymentLoading}
-                      onPaymentMethodChange={handlePaymentMethodChange}
-                    />
-                  </Elements>
-                </div>
-              )}
-            </div>
-          </div>
-          )}
+                <Elements stripe={stripePromise}>
+                  <MultiPaymentForm
+                    amount={chargeAmount}
+                    totalAmount={totalAmount}
+                    onSuccess={handlePaymentSuccess}
+                    onError={handlePaymentError}
+                    loading={paymentLoading}
+                    setLoading={setPaymentLoading}
+                    onPaymentMethodChange={handlePaymentMethodChange}
+                  />
+                </Elements>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
           
-          {/* Pay After Procedure Message (MODELCALL200) */}
-          {isPayAfterProcedure && (
-            <div className="card border-0 shadow-lg mb-4" style={{borderRadius: '16px', border: '3px solid #28a745'}}>
-              <div className="card-body p-5">
-                <div className="text-center mb-4">
-                  <div className="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 rounded-circle mb-3" style={{width: '80px', height: '80px'}}>
-                    <i className="fas fa-hand-holding-usd text-success" style={{fontSize: '2.5rem'}}></i>
-                  </div>
-                  <h3 className="fw-bold text-success mb-2">Payment After Procedure</h3>
-                  <p className="text-muted lead mb-0">Model Call Program - Special Arrangement</p>
+      {/* Pay After Procedure Message (MODELCALL200) */}
+      {isPayAfterProcedure && (
+        <Card className="mb-6 border-0 shadow-xl border-2 border-green-500">
+          <CardContent className="p-8">
+            <div className="text-center mb-6">
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Gift className="w-10 h-10 text-green-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-green-600 mb-2">Payment After Procedure</h3>
+              <p className="text-gray-500">Model Call Program - Special Arrangement</p>
+            </div>
+            
+            <div className="bg-green-50 p-4 rounded-xl mb-6 text-center">
+              <h4 className="font-bold text-green-700 mb-2 flex items-center justify-center gap-2">
+                <CheckCircle className="w-5 h-5" />
+                No Payment Required Today
+              </h4>
+              <p className="text-green-600 text-sm">You have been approved for our <strong>Model Call Program</strong>.</p>
+              <p className="text-green-600 text-sm">Payment will be collected <strong>after your procedure is completed</strong>.</p>
+            </div>
+            
+            <div className="bg-gray-50 p-4 rounded-xl mb-6 space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-gray-700">Service</span>
+                <span className="text-gray-900">{service.name}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-gray-700">Appointment Date</span>
+                <span className="text-gray-900">{new Date(appointmentDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-gray-700">Appointment Time</span>
+                <span className="text-gray-900">{appointmentTime}</span>
+              </div>
+              <div className="border-t pt-3 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">Original Service Price</span>
+                  <span className="text-gray-500">{formatCurrency(200)}</span>
                 </div>
-                
-                <div className="alert alert-success border-0 mb-4" style={{backgroundColor: '#d1f2eb', borderRadius: '12px'}}>
-                  <div className="text-center">
-                    <h5 className="fw-bold text-success mb-3">
-                      <i className="fas fa-check-circle me-2"></i>
-                      No Payment Required Today
-                    </h5>
-                    <p className="mb-2">You have been approved for our <strong>Model Call Program</strong>.</p>
-                    <p className="mb-0">Payment will be collected <strong>after your procedure is completed</strong>.</p>
-                  </div>
+                <div className="flex justify-between items-center text-green-600">
+                  <span className="flex items-center gap-1">
+                    <CheckCircle className="w-4 h-4" />
+                    Deposit Credited
+                  </span>
+                  <span>-{formatCurrency(50)}</span>
                 </div>
-                
-                <div className="bg-light p-4 rounded-3 mb-4">
-                  <div className="row g-3">
-                    <div className="col-12">
-                      <div className="d-flex justify-content-between align-items-center">
-                        <span className="fw-bold">Service</span>
-                        <span>{service.name}</span>
-                      </div>
-                    </div>
-                    <div className="col-12">
-                      <div className="d-flex justify-content-between align-items-center">
-                        <span className="fw-bold">Appointment Date</span>
-                        <span>{new Date(appointmentDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span>
-                      </div>
-                    </div>
-                    <div className="col-12">
-                      <div className="d-flex justify-content-between align-items-center">
-                        <span className="fw-bold">Appointment Time</span>
-                        <span>{appointmentTime}</span>
-                      </div>
-                    </div>
-                    <div className="col-12 border-top pt-3">
-                      <div className="d-flex justify-content-between align-items-center mb-2">
-                        <span className="text-muted">Original Service Price</span>
-                        <span className="text-muted">{formatCurrency(200)}</span>
-                      </div>
-                      <div className="d-flex justify-content-between align-items-center mb-2">
-                        <span className="text-success">
-                          <i className="fas fa-check-circle me-1"></i>
-                          Deposit Credited
-                        </span>
-                        <span className="text-success">-{formatCurrency(50)}</span>
-                      </div>
-                      <div className="d-flex justify-content-between align-items-center pt-2 border-top">
-                        <span className="fw-bold h5 mb-0 text-success">Amount Due After Procedure</span>
-                        <span className="fw-bold h4 mb-0 text-success">{formatCurrency(150)}</span>
-                      </div>
-                    </div>
-                  </div>
+                <div className="flex justify-between items-center pt-2 border-t">
+                  <span className="font-bold text-green-600">Amount Due After Procedure</span>
+                  <span className="font-bold text-xl text-green-600">{formatCurrency(150)}</span>
                 </div>
-                
-                <div className="alert alert-info border-0 mb-4" style={{borderRadius: '12px'}}>
-                  <div className="d-flex align-items-start">
-                    <i className="fas fa-info-circle text-info me-2 mt-1"></i>
-                    <div>
-                      <p className="mb-2 fw-medium">What happens next?</p>
-                      <ul className="mb-0 small">
-                        <li>Your appointment is confirmed - no payment needed now</li>
-                        <li>A <strong>$50 deposit has been credited</strong> to your account</li>
-                        <li>Attend your scheduled appointment</li>
-                        <li>The remaining <strong>$150 will be collected after the procedure</strong></li>
-                        <li>You'll receive a receipt via email</li>
-                      </ul>
-                    </div>
-                  </div>
+              </div>
+            </div>
+            
+            <div className="bg-blue-50 p-4 rounded-xl mb-6">
+              <div className="flex items-start gap-3">
+                <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-blue-900 mb-2">What happens next?</p>
+                  <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
+                    <li>Your appointment is confirmed - no payment needed now</li>
+                    <li>A <strong>$50 deposit has been credited</strong> to your account</li>
+                    <li>Attend your scheduled appointment</li>
+                    <li>The remaining <strong>$150 will be collected after the procedure</strong></li>
+                    <li>You'll receive a receipt via email</li>
+                  </ul>
                 </div>
+              </div>
+            </div>
+            
+            <Button
+              className="w-full py-6 text-lg bg-green-600 hover:bg-green-700 gap-2"
+              onClick={async () => {
+                console.log('Confirm Booking button clicked');
+                setPaymentSuccess(true);
                 
-                <button
-                  type="button"
-                  className="btn btn-success w-100 py-3 rounded-pill shadow-sm"
-                  style={{fontSize: '1.1rem'}}
-                  onClick={async () => {
-                    console.log('Confirm Booking button clicked');
-                    // Skip payment and go directly to confirmation
-                    setPaymentSuccess(true);
-                    
-                    // Create appointment for pay-after-procedure bookings
-                    try {
-                      console.log('📅 Creating appointment for pay-after-procedure booking...');
-                      
-                      const appointmentData = {
-                        clientId: clientId || 'temp-client-id',
-                        clientName: clientName,
-                        clientEmail: 'brianstittsr@gmail.com',
-                        serviceId: service.id,
-                        serviceName: service.name,
-                        artistId: 'victoria',
-                        scheduledDate: appointmentDate,
-                        scheduledTime: appointmentTime,
-                        status: 'confirmed' as const,
-                        paymentStatus: 'pending' as const,
-                        totalAmount: 150, // $200 - $50 deposit credit
-                        depositAmount: 50, // Credited deposit
-                        remainingAmount: 150,
-                        specialRequests: data.specialRequests || '',
-                        rescheduleCount: 0,
-                        confirmationSent: false,
-                        reminderSent: false
-                      };
+                try {
+                  console.log('📅 Creating appointment for pay-after-procedure booking...');
+                  
+                  const appointmentData = {
+                    clientId: clientId || 'temp-client-id',
+                    clientName: clientName,
+                    clientEmail: 'brianstittsr@gmail.com',
+                    serviceId: service.id,
+                    serviceName: service.name,
+                    artistId: 'victoria',
+                    scheduledDate: appointmentDate,
+                    scheduledTime: appointmentTime,
+                    status: 'confirmed' as const,
+                    paymentStatus: 'pending' as const,
+                    totalAmount: 150,
+                    depositAmount: 50,
+                    remainingAmount: 150,
+                    specialRequests: data.specialRequests || '',
+                    rescheduleCount: 0,
+                    confirmationSent: false,
+                    reminderSent: false
+                  };
 
-                      const { AppointmentService } = await import('@/services/database');
-                      const appointmentId = await AppointmentService.createAppointment(appointmentData);
-                      console.log('✅ Appointment created:', appointmentId);
-                      
-                      // Remove availability for the booked time slot
-                      try {
-                        const { AvailabilityService: NewAvailabilityService } = await import('@/services/availabilityService');
-                        await NewAvailabilityService.bookTimeSlot('victoria', appointmentDate, appointmentTime, appointmentId);
-                        console.log('✅ Time slot marked as unavailable');
-                      } catch (availabilityError) {
-                        console.warn('⚠️ Could not update availability:', availabilityError);
-                      }
-                      
-                    } catch (error) {
-                      console.error('Error creating appointment:', error);
-                    }
-                    
-                    setTimeout(() => {
-                      onNext();
-                    }, 1000);
-                  }}
-                >
-                  <i className="fas fa-check-circle me-2"></i>
-                  Confirm Booking (No Payment Required)
-                </button>
+                  const { AppointmentService } = await import('@/services/database');
+                  const appointmentId = await AppointmentService.createAppointment(appointmentData);
+                  console.log('✅ Appointment created:', appointmentId);
+                  
+                  try {
+                    const { AvailabilityService: NewAvailabilityService } = await import('@/services/availabilityService');
+                    await NewAvailabilityService.bookTimeSlot('victoria', appointmentDate, appointmentTime, appointmentId);
+                    console.log('✅ Time slot marked as unavailable');
+                  } catch (availabilityError) {
+                    console.warn('⚠️ Could not update availability:', availabilityError);
+                  }
+                  
+                } catch (error) {
+                  console.error('Error creating appointment:', error);
+                }
                 
-                <p className="text-center text-muted small mt-3 mb-0">
-                  <i className="fas fa-shield-alt me-1"></i>
-                  Your appointment is secured. Payment will be collected after your procedure.
-                </p>
-              </div>
-            </div>
-          )}
+                setTimeout(() => {
+                  onNext();
+                }, 1000);
+              }}
+            >
+              <CheckCircle className="w-5 h-5" />
+              Confirm Booking (No Payment Required)
+            </Button>
+            
+            <p className="text-center text-gray-500 text-sm mt-4 flex items-center justify-center gap-1">
+              <Shield className="w-4 h-4" />
+              Your appointment is secured. Payment will be collected after your procedure.
+            </p>
+          </CardContent>
+        </Card>
+      )}
           
-          {/* Free Service Message */}
-          {(isFreeService || is100PercentDiscount) && !isPayAfterProcedure && (
-            <div className="card border-0 shadow-sm mb-4" style={{borderRadius: '16px'}}>
-              <div className="card-body p-4">
-                <div className="d-flex align-items-center mb-3">
-                  <div className="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center me-3" style={{width: '56px', height: '56px'}}>
-                    <i className="fas fa-gift" style={{fontSize: '1.5rem'}}></i>
-                  </div>
-                  <div>
-                    <h5 className="card-title mb-1 fw-bold text-success">Free Service!</h5>
-                    <p className="text-muted mb-0">No payment required</p>
-                  </div>
-                </div>
-                
-                <div className="alert alert-success border-0" style={{backgroundColor: '#d1f2eb', borderRadius: '12px'}}>
-                  <div className="d-flex align-items-start">
-                    <i className="fas fa-check-circle text-success me-2 mt-1"></i>
-                    <div>
-                      <p className="mb-0">Your coupon covers the full cost of this service. No payment is required to complete your booking!</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <button
-                  type="button"
-                  className="btn btn-success w-100 py-3 mt-3 rounded-pill"
-                  onClick={() => {
-                    // Skip payment and go directly to confirmation
-                    setPaymentSuccess(true);
-                    setTimeout(() => {
-                      onNext();
-                    }, 1000);
-                  }}
-                >
-                  <i className="fas fa-check-circle me-2"></i>
-                  Confirm Free Booking
-                </button>
+      {/* Free Service Message */}
+      {(isFreeService || is100PercentDiscount) && !isPayAfterProcedure && (
+        <Card className="mb-6 border-0 shadow-md">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center">
+                <Gift className="w-7 h-7 text-green-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-green-600 text-lg">Free Service!</h3>
+                <p className="text-gray-500 text-sm">No payment required</p>
               </div>
             </div>
-          )}
+            
+            <div className="bg-green-50 p-4 rounded-xl mb-4">
+              <div className="flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                <p className="text-green-700">Your coupon covers the full cost of this service. No payment is required to complete your booking!</p>
+              </div>
+            </div>
+            
+            <Button
+              className="w-full py-6 text-lg bg-green-600 hover:bg-green-700 gap-2"
+              onClick={() => {
+                setPaymentSuccess(true);
+                setTimeout(() => {
+                  onNext();
+                }, 1000);
+              }}
+            >
+              <CheckCircle className="w-5 h-5" />
+              Confirm Free Booking
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Policy Card */}
       <Card className="mb-6 border-0 shadow-md">
