@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 // ============================================================================
 // Types
@@ -280,12 +282,12 @@ export default function LoyaltyDashboard() {
 
   const getTierBadgeClass = (tier: string): string => {
     const classes: Record<string, string> = {
-      bronze: 'bg-warning text-dark',
-      silver: 'bg-secondary',
-      gold: 'bg-warning',
-      platinum: 'bg-light text-dark border'
+      bronze: 'bg-amber-100 text-amber-800',
+      silver: 'bg-gray-200 text-gray-800',
+      gold: 'bg-yellow-100 text-yellow-800',
+      platinum: 'bg-slate-100 text-slate-800 border border-slate-300'
     };
-    return classes[tier] || 'bg-secondary';
+    return classes[tier] || 'bg-gray-100 text-gray-800';
   };
 
   // --------------------------------------------------------------------------
