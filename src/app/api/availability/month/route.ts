@@ -1,20 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, Firestore } from 'firebase-admin/firestore';
 
-// Initialize Firebase Admin
-if (!getApps().length) {
-  const serviceAccount = {
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-  };
-  initializeApp({
-    credential: cert(serviceAccount as any),
-  });
+// Initialize Firebase Admin with error handling
+let db: Firestore | null = null;
+let adminInitError: string | null = null;
+
+try {
+  if (!getApps().length) {
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    
+    if (!projectId || !clientEmail || !privateKey) {
+      adminInitError = 'Firebase Admin credentials not configured';
+      console.warn('⚠️ Firebase Admin: Missing credentials for month availability API');
+    } else {
+      initializeApp({
+        credential: cert({ projectId, clientEmail, privateKey }),
+      });
+    }
+  }
+  if (!adminInitError) {
+    db = getFirestore();
+  }
+} catch (error: any) {
+  adminInitError = error.message;
+  console.error('Firebase Admin initialization error:', error);
 }
-
-const db = getFirestore();
 
 /**
  * GET /api/availability/month
@@ -78,24 +91,26 @@ export async function GET(req: NextRequest) {
     }
 
     // Also check local bookings collection
-    try {
-      const bookingsSnapshot = await db.collection('bookings')
-        .where('appointmentDate', '>=', startDate)
-        .where('appointmentDate', '<=', endDate)
-        .get();
+    if (db) {
+      try {
+        const bookingsSnapshot = await db.collection('bookings')
+          .where('appointmentDate', '>=', startDate)
+          .where('appointmentDate', '<=', endDate)
+          .get();
 
       for (const doc of bookingsSnapshot.docs) {
-        const data = doc.data();
-        const aptDate = data.appointmentDate || data.date;
-        if (aptDate && availability[aptDate]) {
-          availability[aptDate].bookingCount++;
-          if (availability[aptDate].bookingCount >= 2) {
-            availability[aptDate].isAvailable = false;
+          const data = doc.data();
+          const aptDate = data.appointmentDate || data.date;
+          if (aptDate && availability[aptDate]) {
+            availability[aptDate].bookingCount++;
+            if (availability[aptDate].bookingCount >= 2) {
+              availability[aptDate].isAvailable = false;
+            }
           }
         }
+      } catch (error) {
+        console.error('Error fetching local bookings:', error);
       }
-    } catch (error) {
-      console.error('Error fetching local bookings:', error);
     }
 
     // Find next available date
@@ -126,13 +141,15 @@ export async function GET(req: NextRequest) {
 
 async function getGHLCredentials() {
   try {
-    const settingsSnapshot = await db.collection('crmSettings').limit(1).get();
-    if (!settingsSnapshot.empty) {
-      const data = settingsSnapshot.docs[0].data();
-      return {
-        apiKey: data?.apiKey || process.env.GHL_API_KEY || '',
-        locationId: data?.locationId || process.env.GHL_LOCATION_ID || '',
-      };
+    if (db) {
+      const settingsSnapshot = await db.collection('crmSettings').limit(1).get();
+      if (!settingsSnapshot.empty) {
+        const data = settingsSnapshot.docs[0].data();
+        return {
+          apiKey: data?.apiKey || process.env.GHL_API_KEY || '',
+          locationId: data?.locationId || process.env.GHL_LOCATION_ID || '',
+        };
+      }
     }
   } catch (error) {
     console.error('Error fetching GHL credentials:', error);
