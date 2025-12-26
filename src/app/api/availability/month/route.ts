@@ -49,57 +49,16 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Check GHL credentials - skip GHL call if not configured
-    const apiKey = process.env.GHL_API_KEY || '';
-    const locationId = process.env.GHL_LOCATION_ID || '';
-    
-    // If no GHL credentials, return immediately with default availability
-    if (!apiKey || !locationId) {
-      return NextResponse.json({
-        availability,
-        nextAvailable,
-        startDate,
-        endDate,
-        source: 'default'
-      });
-    }
-
-    // Try to fetch from GHL with short timeout (3 seconds)
-    try {
-      const appointments = await fetchGHLAppointmentsWithTimeout(apiKey, locationId, startDate, endDate, 3000);
-      
-      // Count bookings per day
-      for (const apt of appointments) {
-        const aptDate = new Date(apt.startTime).toISOString().split('T')[0];
-        if (availability[aptDate]) {
-          availability[aptDate].bookingCount++;
-          // Mark as unavailable if 2 or more bookings
-          if (availability[aptDate].bookingCount >= 2) {
-            availability[aptDate].isAvailable = false;
-          }
-        }
-      }
-      
-      // Recalculate next available after GHL data
-      nextAvailable = null;
-      for (const dateStr of sortedDates) {
-        const dateObj = new Date(dateStr + 'T00:00:00');
-        if (dateObj >= today && availability[dateStr].isAvailable) {
-          nextAvailable = dateStr;
-          break;
-        }
-      }
-    } catch (error) {
-      // GHL failed - continue with default availability (already set)
-      console.warn('GHL fetch failed, using default availability');
-    }
-
+    // Return default availability immediately
+    // The MonthlyCalendar only needs to know which dates are in the past
+    // Actual time slot availability is checked by the TimeSlotSelector via /api/availability/ghl
+    // This avoids the slow GHL events API call that was causing timeouts
     return NextResponse.json({
       availability,
       nextAvailable,
       startDate,
       endDate,
-      source: apiKey ? 'ghl' : 'default'
+      source: 'default'
     });
 
   } catch (error) {
@@ -129,50 +88,5 @@ export async function GET(req: NextRequest) {
       startDate: start.toISOString().split('T')[0],
       endDate: end.toISOString().split('T')[0],
     });
-  }
-}
-
-async function fetchGHLAppointmentsWithTimeout(
-  apiKey: string,
-  locationId: string,
-  startDate: string,
-  endDate: string,
-  timeoutMs: number = 5000
-): Promise<any[]> {
-  const startTime = new Date(startDate + 'T00:00:00').toISOString();
-  const endTime = new Date(endDate + 'T23:59:59').toISOString();
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const response = await fetch(
-      `https://services.leadconnectorhq.com/calendars/events?locationId=${locationId}&startTime=${startTime}&endTime=${endTime}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Version': '2021-07-28',
-        },
-        signal: controller.signal,
-      }
-    );
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      console.warn(`GHL API returned ${response.status}, continuing without GHL data`);
-      return [];
-    }
-
-    const data = await response.json();
-    return data.events || [];
-  } catch (error: any) {
-    clearTimeout(timeoutId);
-    if (error.name === 'AbortError') {
-      console.warn('GHL API request timed out, continuing without GHL data');
-    } else {
-      console.warn('GHL API error:', error.message);
-    }
-    return [];
   }
 }
