@@ -361,7 +361,7 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack, hi
             onClick={handleNext}
             className="gap-2 bg-[#AD6269] hover:bg-[#9d5860]"
           >
-            {currentStepIndex === steps.length - 1 ? 'Continue to Health Form' : 'Next'}
+            {currentStepIndex === steps.length - 1 ? 'Continue to Checkout' : 'Next'}
             <ArrowRight className="w-4 h-4" />
           </Button>
         </CardFooter>
