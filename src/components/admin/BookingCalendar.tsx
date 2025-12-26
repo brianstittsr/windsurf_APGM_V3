@@ -3,6 +3,22 @@
 import { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { getDb } from '../../lib/firebase';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { 
+  Calendar, 
+  ChevronLeft, 
+  ChevronRight, 
+  Plus, 
+  Download, 
+  Upload, 
+  X, 
+  Trash2, 
+  CheckCircle, 
+  Clock, 
+  XCircle, 
+  Link2 
+} from 'lucide-react';
 
 interface Booking {
   id: string;
@@ -487,21 +503,21 @@ export default function BookingCalendar() {
 
   const getStatusColor = (status: Booking['status']) => {
     switch (status) {
-      case 'confirmed': return 'success';
-      case 'pending': return 'warning';
-      case 'completed': return 'info';
-      case 'cancelled': return 'danger';
-      default: return 'secondary';
+      case 'confirmed': return 'bg-green-500';
+      case 'pending': return 'bg-yellow-500';
+      case 'completed': return 'bg-blue-500';
+      case 'cancelled': return 'bg-red-500';
+      default: return 'bg-gray-500';
     }
   };
 
-  const getStatusIcon = (status: Booking['status']) => {
+  const getStatusBadgeColor = (status: Booking['status']) => {
     switch (status) {
-      case 'confirmed': return 'check-circle';
-      case 'pending': return 'clock';
-      case 'completed': return 'check-all';
-      case 'cancelled': return 'x-circle';
-      default: return 'circle';
+      case 'confirmed': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'completed': return 'bg-blue-100 text-blue-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -509,301 +525,312 @@ export default function BookingCalendar() {
     'July', 'August', 'September', 'October', 'November', 'December'];
 
   return (
-    <div className="container-fluid p-0">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2 className="mb-0">
-          <i className="bi bi-calendar3 me-2"></i>
+    <div className="w-full">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <Calendar className="w-6 h-6 text-[#AD6269]" />
           Booking Calendar
         </h2>
-        <div>
-          <button 
-            className="btn btn-info me-2"
+        <div className="flex flex-wrap gap-2">
+          <Button 
             onClick={() => setShowCreateModal(true)}
-            title="Create new appointment in GHL"
+            className="bg-[#AD6269] hover:bg-[#9d5860] text-white"
           >
-            <i className="bi bi-plus-circle me-2"></i>
+            <Plus className="w-4 h-4 mr-2" />
             Create Appointment
-          </button>
-          <button 
-            className="btn btn-success me-2"
+          </Button>
+          <Button 
+            variant="outline"
             onClick={syncFromGHL}
             disabled={syncing}
-            title="Import appointments from GHL to website"
+            className="border-green-500 text-green-600 hover:bg-green-50"
           >
             {syncing ? (
               <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600 mr-2"></div>
                 Syncing...
               </>
             ) : (
               <>
-                <i className="bi bi-download me-2"></i>
+                <Download className="w-4 h-4 mr-2" />
                 Sync FROM GHL
               </>
             )}
-          </button>
-          <button 
-            className="btn btn-primary"
+          </Button>
+          <Button 
+            variant="outline"
             onClick={syncAllBookingsWithGHL}
             disabled={syncing}
-            title="Push website bookings to GHL"
+            className="border-blue-500 text-blue-600 hover:bg-blue-50"
           >
             {syncing ? (
               <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
                 Syncing...
               </>
             ) : (
               <>
-                <i className="bi bi-upload me-2"></i>
+                <Upload className="w-4 h-4 mr-2" />
                 Sync TO GHL
               </>
             )}
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Calendar Controls */}
-      <div className="bg-white border rounded mb-3 p-3">
-        <div className="row align-items-center">
-          <div className="col-auto">
-            <button className="btn btn-outline-secondary btn-sm" onClick={handleToday}>
-              Today
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm mb-6 p-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleToday}
+            className="text-gray-600"
+          >
+            Today
+          </Button>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" onClick={handlePrevious} className="p-2">
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleNext} className="p-2">
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 flex-grow">
+            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+          </h3>
+          <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+            <button 
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                viewMode === 'month' 
+                  ? 'bg-[#AD6269] text-white' 
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
+              onClick={() => setViewMode('month')}
+            >
+              Month
             </button>
-          </div>
-          <div className="col-auto">
-            <div className="btn-group btn-group-sm" role="group">
-              <button className="btn btn-outline-secondary" onClick={handlePrevious}>
-                <i className="bi bi-chevron-left"></i>
-              </button>
-              <button className="btn btn-outline-secondary" onClick={handleNext}>
-                <i className="bi bi-chevron-right"></i>
-              </button>
-            </div>
-          </div>
-          <div className="col">
-            <h4 className="mb-0">
-              {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-            </h4>
-          </div>
-          <div className="col-auto">
-            <div className="btn-group btn-group-sm" role="group">
-              <button 
-                className={`btn ${viewMode === 'month' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                onClick={() => setViewMode('month')}
-              >
-                Month
-              </button>
-              <button 
-                className={`btn ${viewMode === 'week' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                onClick={() => setViewMode('week')}
-              >
-                Week
-              </button>
-              <button 
-                className={`btn ${viewMode === 'day' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                onClick={() => setViewMode('day')}
-              >
-                Day
-              </button>
-            </div>
+            <button 
+              className={`px-4 py-2 text-sm font-medium transition-colors border-l border-gray-200 ${
+                viewMode === 'week' 
+                  ? 'bg-[#AD6269] text-white' 
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
+              onClick={() => setViewMode('week')}
+            >
+              Week
+            </button>
+            <button 
+              className={`px-4 py-2 text-sm font-medium transition-colors border-l border-gray-200 ${
+                viewMode === 'day' 
+                  ? 'bg-[#AD6269] text-white' 
+                  : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
+              onClick={() => setViewMode('day')}
+            >
+              Day
+            </button>
           </div>
         </div>
       </div>
 
       {/* Calendar Grid */}
       {loading ? (
-        <div className="text-center py-5">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AD6269]"></div>
         </div>
       ) : (
-        <div className="bg-white border rounded">
-          <table className="table table-bordered mb-0 calendar-table">
-            <thead>
-              <tr className="bg-light">
-                {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
-                  <th key={day} className="text-center py-3 fw-semibold text-uppercase" style={{ fontSize: '0.875rem', color: '#6c757d' }}>
-                    {day}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {(() => {
-                const days = getDaysInMonth();
-                const weeks = [];
-                for (let i = 0; i < days.length; i += 7) {
-                  weeks.push(days.slice(i, i + 7));
-                }
-                return weeks.map((week, weekIndex) => (
-                  <tr key={weekIndex}>
-                    {week.map((day, dayIndex) => {
-                      const dayBookings = getBookingsForDate(day);
-                      const isToday = day && 
-                        day === new Date().getDate() && 
-                        currentDate.getMonth() === new Date().getMonth() &&
-                        currentDate.getFullYear() === new Date().getFullYear();
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          {/* Calendar Header */}
+          <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+              <div key={day} className="py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                {day}
+              </div>
+            ))}
+          </div>
+          {/* Calendar Body */}
+          <div className="grid grid-cols-7">
+            {(() => {
+              const days = getDaysInMonth();
+              return days.map((day, index) => {
+                const dayBookings = getBookingsForDate(day);
+                const isToday = day && 
+                  day === new Date().getDate() && 
+                  currentDate.getMonth() === new Date().getMonth() &&
+                  currentDate.getFullYear() === new Date().getFullYear();
 
-                      return (
-                        <td 
-                          key={dayIndex} 
-                          className={`calendar-cell ${!day ? 'bg-light' : ''} ${isToday ? 'today-cell' : ''}`}
-                          style={{ 
-                            height: '140px', 
-                            verticalAlign: 'top',
-                            padding: '8px',
-                            position: 'relative'
-                          }}
-                        >
-                          {day && (
-                            <>
-                              <div className={`calendar-date ${isToday ? 'today-date' : ''}`}>
-                                {day}
-                              </div>
-                              <div className="bookings-container" style={{ marginTop: '4px' }}>
-                                {dayBookings.slice(0, 3).map(booking => (
-                                  <div
-                                    key={booking.id}
-                                    className={`booking-pill bg-${getStatusColor(booking.status)}`}
-                                    onClick={() => handleBookingClick(booking)}
-                                    title={`${booking.time} - ${booking.clientName} - ${booking.serviceName}`}
-                                  >
-                                    <span className="booking-time">{booking.time}</span>
-                                    <span className="booking-name">{booking.clientName}</span>
-                                  </div>
-                                ))}
-                                {dayBookings.length > 3 && (
-                                  <div className="more-bookings" onClick={() => {
-                                    const firstBooking = dayBookings[3];
-                                    if (firstBooking) handleBookingClick(firstBooking);
-                                  }}>
-                                    +{dayBookings.length - 3} more
-                                  </div>
-                                )}
-                              </div>
-                            </>
+                return (
+                  <div 
+                    key={index} 
+                    className={`min-h-[120px] border-b border-r border-gray-200 p-2 ${
+                      !day ? 'bg-gray-50' : 'bg-white hover:bg-gray-50'
+                    } ${isToday ? 'bg-blue-50' : ''}`}
+                  >
+                    {day && (
+                      <>
+                        <div className={`text-sm font-medium mb-1 ${
+                          isToday 
+                            ? 'w-7 h-7 flex items-center justify-center rounded-full bg-[#AD6269] text-white' 
+                            : 'text-gray-700'
+                        }`}>
+                          {day}
+                        </div>
+                        <div className="space-y-1">
+                          {dayBookings.slice(0, 3).map(booking => (
+                            <div
+                              key={booking.id}
+                              className={`${getStatusColor(booking.status)} text-white text-xs px-2 py-1 rounded cursor-pointer hover:opacity-90 transition-opacity truncate`}
+                              onClick={() => handleBookingClick(booking)}
+                              title={`${booking.time} - ${booking.clientName} - ${booking.serviceName}`}
+                            >
+                              <span className="font-semibold">{booking.time}</span>
+                              <span className="ml-1">{booking.clientName}</span>
+                            </div>
+                          ))}
+                          {dayBookings.length > 3 && (
+                            <div 
+                              className="text-xs text-gray-500 hover:text-[#AD6269] cursor-pointer text-center"
+                              onClick={() => {
+                                const firstBooking = dayBookings[3];
+                                if (firstBooking) handleBookingClick(firstBooking);
+                              }}
+                            >
+                              +{dayBookings.length - 3} more
+                            </div>
                           )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ));
-              })()}
-            </tbody>
-          </table>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              });
+            })()}
+          </div>
         </div>
       )}
 
       {/* Booking Details Modal */}
       {showModal && selectedBooking && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  <i className="bi bi-calendar-event me-2"></i>
-                  Booking Details
-                </h5>
-                <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
-              </div>
-              <div className="modal-body">
-                <div className="row mb-3">
-                  <div className="col-md-6">
-                    <h6>Client Information</h6>
-                    <p className="mb-1"><strong>Name:</strong> {selectedBooking.clientName}</p>
-                    <p className="mb-1"><strong>Email:</strong> {selectedBooking.clientEmail}</p>
-                    <p className="mb-1"><strong>Phone:</strong> {selectedBooking.clientPhone}</p>
-                  </div>
-                  <div className="col-md-6">
-                    <h6>Appointment Details</h6>
-                    <p className="mb-1"><strong>Service:</strong> {selectedBooking.serviceName}</p>
-                    <p className="mb-1"><strong>Artist:</strong> {selectedBooking.artistName}</p>
-                    <p className="mb-1"><strong>Date:</strong> {selectedBooking.date}</p>
-                    <p className="mb-1"><strong>Time:</strong> {selectedBooking.time}</p>
-                    <p className="mb-1"><strong>Price:</strong> ${selectedBooking.price}</p>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-[#AD6269]" />
+                Booking Details
+              </h3>
+              <button 
+                onClick={() => setShowModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Client Information</h4>
+                  <div className="space-y-2">
+                    <p className="text-gray-900"><span className="font-medium">Name:</span> {selectedBooking.clientName}</p>
+                    <p className="text-gray-900"><span className="font-medium">Email:</span> {selectedBooking.clientEmail}</p>
+                    <p className="text-gray-900"><span className="font-medium">Phone:</span> {selectedBooking.clientPhone}</p>
                   </div>
                 </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Appointment Details</h4>
+                  <div className="space-y-2">
+                    <p className="text-gray-900"><span className="font-medium">Service:</span> {selectedBooking.serviceName}</p>
+                    <p className="text-gray-900"><span className="font-medium">Artist:</span> {selectedBooking.artistName}</p>
+                    <p className="text-gray-900"><span className="font-medium">Date:</span> {selectedBooking.date}</p>
+                    <p className="text-gray-900"><span className="font-medium">Time:</span> {selectedBooking.time}</p>
+                    <p className="text-gray-900"><span className="font-medium">Price:</span> ${selectedBooking.price}</p>
+                  </div>
+                </div>
+              </div>
 
-                <div className="row mb-3">
-                  <div className="col-12">
-                    <h6>Status</h6>
-                    <span className={`badge bg-${getStatusColor(selectedBooking.status)} fs-6`}>
-                      <i className={`bi bi-${getStatusIcon(selectedBooking.status)} me-2`}></i>
-                      {selectedBooking.status.toUpperCase()}
+              <div className="mb-6">
+                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Status</h4>
+                <div className="flex flex-wrap gap-2">
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeColor(selectedBooking.status)}`}>
+                    {selectedBooking.status === 'confirmed' && <CheckCircle className="w-4 h-4 mr-1" />}
+                    {selectedBooking.status === 'pending' && <Clock className="w-4 h-4 mr-1" />}
+                    {selectedBooking.status === 'cancelled' && <XCircle className="w-4 h-4 mr-1" />}
+                    {selectedBooking.status.toUpperCase()}
+                  </span>
+                  {selectedBooking.depositPaid && (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                      <CheckCircle className="w-4 h-4 mr-1" />
+                      Deposit Paid
                     </span>
-                    {selectedBooking.depositPaid && (
-                      <span className="badge bg-success ms-2 fs-6">
-                        <i className="bi bi-cash me-2"></i>
-                        Deposit Paid
-                      </span>
-                    )}
-                  </div>
+                  )}
                 </div>
+              </div>
 
-                {selectedBooking.ghlContactId && (
-                  <div className="alert alert-info">
-                    <i className="bi bi-link-45deg me-2"></i>
-                    Synced with GoHighLevel
+              {selectedBooking.ghlContactId && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                  <div className="flex items-center text-blue-700">
+                    <Link2 className="w-5 h-5 mr-2" />
+                    <span className="font-medium">Synced with GoHighLevel</span>
                     {selectedBooking.ghlAppointmentId && (
-                      <span className="ms-2">
-                        (Appointment ID: {selectedBooking.ghlAppointmentId.substring(0, 8)}...)
+                      <span className="ml-2 text-blue-600">
+                        (ID: {selectedBooking.ghlAppointmentId.substring(0, 8)}...)
                       </span>
                     )}
                   </div>
-                )}
+                </div>
+              )}
 
-                {selectedBooking.notes && (
-                  <div className="mb-3">
-                    <h6>Notes</h6>
-                    <p className="text-muted">{selectedBooking.notes}</p>
-                  </div>
-                )}
+              {selectedBooking.notes && (
+                <div className="mb-6">
+                  <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Notes</h4>
+                  <p className="text-gray-600">{selectedBooking.notes}</p>
+                </div>
+              )}
 
-                <div className="mb-3">
-                  <h6>Update Status</h6>
-                  <div className="btn-group w-100" role="group">
-                    <button
-                      className="btn btn-outline-warning"
-                      onClick={() => handleStatusChange(selectedBooking.id, 'pending')}
-                    >
-                      Pending
-                    </button>
-                    <button
-                      className="btn btn-outline-success"
-                      onClick={() => handleStatusChange(selectedBooking.id, 'confirmed')}
-                    >
-                      Confirmed
-                    </button>
-                    <button
-                      className="btn btn-outline-info"
-                      onClick={() => handleStatusChange(selectedBooking.id, 'completed')}
-                    >
-                      Completed
-                    </button>
-                    <button
-                      className="btn btn-outline-danger"
-                      onClick={() => handleStatusChange(selectedBooking.id, 'cancelled')}
-                    >
-                      Cancelled
-                    </button>
-                  </div>
+              <div className="mb-6">
+                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Update Status</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <button
+                    className="px-4 py-2 border border-yellow-500 text-yellow-600 rounded-lg hover:bg-yellow-50 transition-colors font-medium text-sm"
+                    onClick={() => handleStatusChange(selectedBooking.id, 'pending')}
+                  >
+                    Pending
+                  </button>
+                  <button
+                    className="px-4 py-2 border border-green-500 text-green-600 rounded-lg hover:bg-green-50 transition-colors font-medium text-sm"
+                    onClick={() => handleStatusChange(selectedBooking.id, 'confirmed')}
+                  >
+                    Confirmed
+                  </button>
+                  <button
+                    className="px-4 py-2 border border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors font-medium text-sm"
+                    onClick={() => handleStatusChange(selectedBooking.id, 'completed')}
+                  >
+                    Completed
+                  </button>
+                  <button
+                    className="px-4 py-2 border border-red-500 text-red-600 rounded-lg hover:bg-red-50 transition-colors font-medium text-sm"
+                    onClick={() => handleStatusChange(selectedBooking.id, 'cancelled')}
+                  >
+                    Cancelled
+                  </button>
                 </div>
               </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={() => handleDeleteBooking(selectedBooking.id)}
-                >
-                  <i className="bi bi-trash me-2"></i>
-                  Delete Booking
-                </button>
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
-                  Close
-                </button>
-              </div>
+            </div>
+            <div className="flex justify-between items-center p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+              <Button
+                variant="outline"
+                className="border-red-500 text-red-600 hover:bg-red-50"
+                onClick={() => handleDeleteBooking(selectedBooking.id)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Booking
+              </Button>
+              <Button variant="outline" onClick={() => setShowModal(false)}>
+                Close
+              </Button>
             </div>
           </div>
         </div>
@@ -811,236 +838,146 @@ export default function BookingCalendar() {
 
       {/* Create Appointment Modal */}
       {showCreateModal && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  <i className="bi bi-plus-circle me-2"></i>
-                  Create New Appointment in GHL
-                </h5>
-                <button type="button" className="btn-close" onClick={() => setShowCreateModal(false)}></button>
-              </div>
-              <div className="modal-body">
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <label className="form-label">Client Name *</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={newAppointment.name}
-                      onChange={(e) => setNewAppointment({...newAppointment, name: e.target.value})}
-                      placeholder="John Doe"
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Email *</label>
-                    <input
-                      type="email"
-                      className="form-control"
-                      value={newAppointment.email}
-                      onChange={(e) => setNewAppointment({...newAppointment, email: e.target.value})}
-                      placeholder="john@example.com"
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Phone</label>
-                    <input
-                      type="tel"
-                      className="form-control"
-                      value={newAppointment.phone}
-                      onChange={(e) => setNewAppointment({...newAppointment, phone: e.target.value})}
-                      placeholder="+1 (555) 123-4567"
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Calendar *</label>
-                    <select
-                      className="form-select"
-                      value={newAppointment.calendarId}
-                      onChange={(e) => setNewAppointment({...newAppointment, calendarId: e.target.value})}
-                    >
-                      <option value="">Select Calendar</option>
-                      {calendars.map(cal => (
-                        <option key={cal.id} value={cal.id}>{cal.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="col-md-12">
-                    <label className="form-label">Service Name</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={newAppointment.serviceName}
-                      onChange={(e) => setNewAppointment({...newAppointment, serviceName: e.target.value})}
-                      placeholder="Microblading, Lip Blush, etc."
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label">Date *</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      value={newAppointment.date}
-                      onChange={(e) => setNewAppointment({...newAppointment, date: e.target.value})}
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label">Time *</label>
-                    <input
-                      type="time"
-                      className="form-control"
-                      value={newAppointment.time}
-                      onChange={(e) => setNewAppointment({...newAppointment, time: e.target.value})}
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label">Duration (minutes)</label>
-                    <select
-                      className="form-select"
-                      value={newAppointment.duration}
-                      onChange={(e) => setNewAppointment({...newAppointment, duration: parseInt(e.target.value)})}
-                    >
-                      <option value="60">1 hour</option>
-                      <option value="90">1.5 hours</option>
-                      <option value="120">2 hours</option>
-                      <option value="150">2.5 hours</option>
-                      <option value="180">3 hours</option>
-                      <option value="210">3.5 hours</option>
-                      <option value="240">4 hours</option>
-                    </select>
-                  </div>
-                  <div className="col-md-12">
-                    <label className="form-label">Notes</label>
-                    <textarea
-                      className="form-control"
-                      rows={3}
-                      value={newAppointment.notes}
-                      onChange={(e) => setNewAppointment({...newAppointment, notes: e.target.value})}
-                      placeholder="Any additional notes..."
-                    ></textarea>
-                  </div>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <Plus className="w-5 h-5 text-[#AD6269]" />
+                Create New Appointment in GHL
+              </h3>
+              <button 
+                onClick={() => setShowCreateModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
+                  <Input
+                    type="text"
+                    value={newAppointment.name}
+                    onChange={(e) => setNewAppointment({...newAppointment, name: e.target.value})}
+                    placeholder="John Doe"
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                  <Input
+                    type="email"
+                    value={newAppointment.email}
+                    onChange={(e) => setNewAppointment({...newAppointment, email: e.target.value})}
+                    placeholder="john@example.com"
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                  <Input
+                    type="tel"
+                    value={newAppointment.phone}
+                    onChange={(e) => setNewAppointment({...newAppointment, phone: e.target.value})}
+                    placeholder="+1 (555) 123-4567"
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Calendar *</label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                    value={newAppointment.calendarId}
+                    onChange={(e) => setNewAppointment({...newAppointment, calendarId: e.target.value})}
+                  >
+                    <option value="">Select Calendar</option>
+                    {calendars.map(cal => (
+                      <option key={cal.id} value={cal.id}>{cal.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Service Name</label>
+                  <Input
+                    type="text"
+                    value={newAppointment.serviceName}
+                    onChange={(e) => setNewAppointment({...newAppointment, serviceName: e.target.value})}
+                    placeholder="Microblading, Lip Blush, etc."
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                  <Input
+                    type="date"
+                    value={newAppointment.date}
+                    onChange={(e) => setNewAppointment({...newAppointment, date: e.target.value})}
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Time *</label>
+                  <Input
+                    type="time"
+                    value={newAppointment.time}
+                    onChange={(e) => setNewAppointment({...newAppointment, time: e.target.value})}
+                    className="w-full"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Duration</label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                    value={newAppointment.duration}
+                    onChange={(e) => setNewAppointment({...newAppointment, duration: parseInt(e.target.value)})}
+                  >
+                    <option value="60">1 hour</option>
+                    <option value="90">1.5 hours</option>
+                    <option value="120">2 hours</option>
+                    <option value="150">2.5 hours</option>
+                    <option value="180">3 hours</option>
+                    <option value="210">3.5 hours</option>
+                    <option value="240">4 hours</option>
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                  <textarea
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent resize-none"
+                    rows={3}
+                    value={newAppointment.notes}
+                    onChange={(e) => setNewAppointment({...newAppointment, notes: e.target.value})}
+                    placeholder="Any additional notes..."
+                  ></textarea>
                 </div>
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>
-                  Cancel
-                </button>
-                <button 
-                  type="button" 
-                  className="btn btn-primary"
-                  onClick={createGHLAppointment}
-                  disabled={creating}
-                >
-                  {creating ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                      Creating...
-                    </>
-                  ) : (
-                    <>
-                      <i className="bi bi-check-circle me-2"></i>
-                      Create Appointment
-                    </>
-                  )}
-                </button>
-              </div>
+            </div>
+            <div className="flex justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+              <Button variant="outline" onClick={() => setShowCreateModal(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={createGHLAppointment}
+                disabled={creating}
+                className="bg-[#AD6269] hover:bg-[#9d5860] text-white"
+              >
+                {creating ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Create Appointment
+                  </>
+                )}
+              </Button>
             </div>
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        .calendar-table {
-          table-layout: fixed;
-        }
-        .calendar-table th {
-          border: 1px solid #dee2e6;
-          font-weight: 600;
-        }
-        .calendar-cell {
-          border: 1px solid #dee2e6 !important;
-          background-color: #fff;
-        }
-        .calendar-cell:hover {
-          background-color: #f8f9fa;
-        }
-        .today-cell {
-          background-color: #e3f2fd !important;
-        }
-        .calendar-date {
-          font-size: 0.875rem;
-          font-weight: 600;
-          color: #495057;
-          margin-bottom: 4px;
-        }
-        .today-date {
-          display: inline-block;
-          background-color: #0d6efd;
-          color: white;
-          width: 28px;
-          height: 28px;
-          line-height: 28px;
-          text-align: center;
-          border-radius: 50%;
-        }
-        .bookings-container {
-          display: flex;
-          flex-direction: column;
-          gap: 3px;
-        }
-        .booking-pill {
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-size: 0.75rem;
-          color: white;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          transition: opacity 0.2s;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .booking-pill:hover {
-          opacity: 0.85;
-          transform: translateY(-1px);
-        }
-        .booking-time {
-          font-weight: 600;
-          flex-shrink: 0;
-        }
-        .booking-name {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .more-bookings {
-          font-size: 0.75rem;
-          color: #6c757d;
-          cursor: pointer;
-          padding: 2px 4px;
-          text-align: center;
-          font-weight: 500;
-        }
-        .more-bookings:hover {
-          color: #0d6efd;
-          text-decoration: underline;
-        }
-        .bg-warning {
-          background-color: #ffc107 !important;
-        }
-        .bg-success {
-          background-color: #198754 !important;
-        }
-        .bg-info {
-          background-color: #0dcaf0 !important;
-        }
-        .bg-danger {
-          background-color: #dc3545 !important;
-        }
-      `}</style>
     </div>
   );
 }
