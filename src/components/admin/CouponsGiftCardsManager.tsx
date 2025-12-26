@@ -5,6 +5,9 @@ import { collection, getDocs, doc, deleteDoc, updateDoc, Timestamp } from 'fireb
 import { CouponService } from '../../services/couponService';
 import { GiftCardService } from '../../services/giftCardService';
 import { GiftCard, CouponCode } from '../../types/coupons';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useAlertDialog } from '@/components/ui/alert-dialog';
 
 // Helper function to safely format dates from various sources
 const safeFormatDate = (date: any, format: 'localDate' | 'isoDate' = 'localDate'): string => {
@@ -70,6 +73,7 @@ export default function CouponsGiftCardsManager() {
   const [giftCards, setGiftCards] = useState<GiftCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'coupons' | 'giftcards'>('coupons');
+  const { showAlert, showConfirm, AlertDialogComponent } = useAlertDialog();
 
   // Coupon form states
   const [showCouponModal, setShowCouponModal] = useState(false);
@@ -141,7 +145,7 @@ export default function CouponsGiftCardsManager() {
   const handleCreateCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!couponFormData.code || !couponFormData.description) {
-      alert('Please fill in all required fields.');
+      showAlert({ title: 'Error', description: 'Please fill in all required fields.', variant: 'destructive' });
       return;
     }
 
@@ -163,12 +167,12 @@ export default function CouponsGiftCardsManager() {
       };
 
       await CouponService.createCoupon(couponData);
-      alert('Coupon created successfully!');
+      showAlert({ title: 'Success', description: 'Coupon created successfully!', variant: 'success' });
       closeCouponModal();
       fetchCoupons();
     } catch (error) {
       console.error('Error creating coupon:', error);
-      alert('Error creating coupon. Please try again.');
+      showAlert({ title: 'Error', description: 'Error creating coupon. Please try again.', variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
@@ -195,29 +199,33 @@ export default function CouponsGiftCardsManager() {
       };
 
       await CouponService.updateCoupon(editingCoupon.id, updateData);
-      alert('Coupon updated successfully!');
+      showAlert({ title: 'Success', description: 'Coupon updated successfully!', variant: 'success' });
       closeCouponModal();
       fetchCoupons();
     } catch (error) {
       console.error('Error updating coupon:', error);
-      alert('Error updating coupon. Please try again.');
+      showAlert({ title: 'Error', description: 'Error updating coupon. Please try again.', variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDeleteCoupon = async (couponId: string, couponCode: string) => {
-    if (!confirm(`Are you sure you want to delete the coupon "${couponCode}"? This action cannot be undone.`)) {
-      return;
-    }
+    const confirmed = await showConfirm({
+      title: 'Delete Coupon',
+      description: `Are you sure you want to delete the coupon "${couponCode}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      variant: 'destructive'
+    });
+    if (!confirmed) return;
 
     try {
       await CouponService.deleteCoupon(couponId);
-      alert('Coupon deleted successfully!');
+      showAlert({ title: 'Success', description: 'Coupon deleted successfully!', variant: 'success' });
       fetchCoupons();
     } catch (error) {
       console.error('Error deleting coupon:', error);
-      alert('Error deleting coupon. Please try again.');
+      showAlert({ title: 'Error', description: 'Error deleting coupon. Please try again.', variant: 'destructive' });
     }
   };
 
@@ -225,7 +233,7 @@ export default function CouponsGiftCardsManager() {
   const handleCreateGiftCard = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!giftCardFormData.recipientEmail || !giftCardFormData.recipientName) {
-      alert('Please fill in all required fields.');
+      showAlert({ title: 'Error', description: 'Please fill in all required fields.', variant: 'destructive' });
       return;
     }
 
@@ -245,12 +253,12 @@ export default function CouponsGiftCardsManager() {
       };
 
       await GiftCardService.createGiftCard(giftCardData);
-      alert('Gift card created successfully!');
+      showAlert({ title: 'Success', description: 'Gift card created successfully!', variant: 'success' });
       closeGiftCardModal();
       fetchGiftCards();
     } catch (error) {
       console.error('Error creating gift card:', error);
-      alert('Error creating gift card. Please try again.');
+      showAlert({ title: 'Error', description: 'Error creating gift card. Please try again.', variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
@@ -273,29 +281,33 @@ export default function CouponsGiftCardsManager() {
       };
 
       await GiftCardService.updateGiftCard(editingGiftCard.id, updateData);
-      alert('Gift card updated successfully!');
+      showAlert({ title: 'Success', description: 'Gift card updated successfully!', variant: 'success' });
       closeGiftCardModal();
       fetchGiftCards();
     } catch (error) {
       console.error('Error updating gift card:', error);
-      alert('Error updating gift card. Please try again.');
+      showAlert({ title: 'Error', description: 'Error updating gift card. Please try again.', variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDeleteGiftCard = async (giftCardId: string, giftCardCode: string) => {
-    if (!confirm(`Are you sure you want to delete the gift card "${giftCardCode}"? This action cannot be undone.`)) {
-      return;
-    }
+    const confirmed = await showConfirm({
+      title: 'Delete Gift Card',
+      description: `Are you sure you want to delete the gift card "${giftCardCode}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      variant: 'destructive'
+    });
+    if (!confirmed) return;
 
     try {
       await GiftCardService.deleteGiftCard(giftCardId);
-      alert('Gift card deleted successfully!');
+      showAlert({ title: 'Success', description: 'Gift card deleted successfully!', variant: 'success' });
       fetchGiftCards();
     } catch (error) {
       console.error('Error deleting gift card:', error);
-      alert('Error deleting gift card. Please try again.');
+      showAlert({ title: 'Error', description: 'Error deleting gift card. Please try again.', variant: 'destructive' });
     }
   };
 
@@ -387,11 +399,11 @@ export default function CouponsGiftCardsManager() {
 
   const getCouponTypeBadge = (type: string) => {
     switch (type) {
-      case 'percentage': return 'badge bg-primary';
-      case 'fixed': return 'badge bg-success';
-      case 'free_service': return 'badge bg-warning';
-      case 'exact_amount': return 'badge bg-info';
-      default: return 'badge bg-secondary';
+      case 'percentage': return 'bg-blue-100 text-blue-800';
+      case 'fixed': return 'bg-green-100 text-green-800';
+      case 'free_service': return 'bg-yellow-100 text-yellow-800';
+      case 'exact_amount': return 'bg-cyan-100 text-cyan-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
