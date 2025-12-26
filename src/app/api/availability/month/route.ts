@@ -1,33 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { initializeApp, cert, getApps } from 'firebase-admin/app';
-import { getFirestore, Firestore } from 'firebase-admin/firestore';
 
-// Initialize Firebase Admin with error handling
-let db: Firestore | null = null;
-let adminInitError: string | null = null;
-
-try {
-  if (!getApps().length) {
-    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-    
-    if (!projectId || !clientEmail || !privateKey) {
-      adminInitError = 'Firebase Admin credentials not configured';
-      console.warn('⚠️ Firebase Admin: Missing credentials for month availability API');
-    } else {
-      initializeApp({
-        credential: cert({ projectId, clientEmail, privateKey }),
-      });
-    }
-  }
-  if (!adminInitError) {
-    db = getFirestore();
-  }
-} catch (error: any) {
-  adminInitError = error.message;
-  console.error('Firebase Admin initialization error:', error);
-}
+// No Firebase Admin dependency to avoid Turbopack symlink issues on Windows
 
 /**
  * GET /api/availability/month
@@ -90,28 +63,8 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Also check local bookings collection
-    if (db) {
-      try {
-        const bookingsSnapshot = await db.collection('bookings')
-          .where('appointmentDate', '>=', startDate)
-          .where('appointmentDate', '<=', endDate)
-          .get();
-
-      for (const doc of bookingsSnapshot.docs) {
-          const data = doc.data();
-          const aptDate = data.appointmentDate || data.date;
-          if (aptDate && availability[aptDate]) {
-            availability[aptDate].bookingCount++;
-            if (availability[aptDate].bookingCount >= 2) {
-              availability[aptDate].isAvailable = false;
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching local bookings:', error);
-      }
-    }
+    // Local bookings are checked client-side via Firestore
+    // This avoids Firebase Admin SDK dependency which causes Turbopack symlink issues on Windows
 
     // Find next available date
     const sortedDates = Object.keys(availability).sort();
@@ -140,20 +93,7 @@ export async function GET(req: NextRequest) {
 }
 
 async function getGHLCredentials() {
-  try {
-    if (db) {
-      const settingsSnapshot = await db.collection('crmSettings').limit(1).get();
-      if (!settingsSnapshot.empty) {
-        const data = settingsSnapshot.docs[0].data();
-        return {
-          apiKey: data?.apiKey || process.env.GHL_API_KEY || '',
-          locationId: data?.locationId || process.env.GHL_LOCATION_ID || '',
-        };
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching GHL credentials:', error);
-  }
+  // Use environment variables only - no Firebase Admin SDK
   return {
     apiKey: process.env.GHL_API_KEY || '',
     locationId: process.env.GHL_LOCATION_ID || '',
