@@ -32,6 +32,20 @@ interface ConversationStats {
   failed: number;
 }
 
+interface AIReviewResult {
+  score: number;
+  analysis: {
+    clarity: { score: number; feedback: string };
+    tone: { score: number; feedback: string };
+    callToAction: { score: number; feedback: string };
+    length: { score: number; feedback: string };
+    compliance: { score: number; feedback: string };
+  };
+  suggestions: string[];
+  improvedVersion: string;
+  warnings: string[];
+}
+
 // ============================================================================
 // Component
 // ============================================================================
@@ -58,6 +72,11 @@ export default function WhatsAppDashboard() {
 
   // Messages
   const [messages, setMessages] = useState<WhatsAppMessage[]>([]);
+
+  // AI Review
+  const [aiReview, setAiReview] = useState<AIReviewResult | null>(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [showAiReview, setShowAiReview] = useState(false);
 
   // --------------------------------------------------------------------------
   // Load Data
@@ -102,6 +121,80 @@ export default function WhatsAppDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // --------------------------------------------------------------------------
+  // AI Review
+  // --------------------------------------------------------------------------
+
+  const reviewWithAI = async () => {
+    // Get the message text to review
+    let messageText = '';
+    
+    if (selectedTemplate === 'custom') {
+      messageText = customMessage;
+    } else if (selectedTemplate && pmuTemplates[selectedTemplate]) {
+      const template = pmuTemplates[selectedTemplate];
+      const bodyComponent = template.components?.find((c: any) => c.type === 'BODY');
+      if (bodyComponent) {
+        messageText = bodyComponent.text
+          ?.replace('{{1}}', clientName || '[Client Name]')
+          .replace('{{2}}', serviceName || '[Service]')
+          .replace('{{3}}', appointmentDate || '[Date]')
+          .replace('{{4}}', appointmentTime || '[Time]') || '';
+      }
+    }
+
+    if (!messageText) {
+      setError('Please select a template or enter a custom message to review');
+      return;
+    }
+
+    setReviewLoading(true);
+    setAiReview(null);
+
+    try {
+      const res = await fetch('/api/ai/review-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messageText,
+          messageType: selectedTemplate || 'custom',
+          businessName: 'A Pretty Girl Matter PMU'
+        })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setAiReview(data.review);
+        setShowAiReview(true);
+      } else {
+        throw new Error(data.error || 'Failed to analyze message');
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+  const applyImprovedVersion = () => {
+    if (aiReview?.improvedVersion && selectedTemplate === 'custom') {
+      setCustomMessage(aiReview.improvedVersion);
+      setSuccess('Improved version applied!');
+    }
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-600';
+    if (score >= 60) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const getScoreBgColor = (score: number) => {
+    if (score >= 80) return 'bg-green-100';
+    if (score >= 60) return 'bg-yellow-100';
+    return 'bg-red-100';
   };
 
   // --------------------------------------------------------------------------
@@ -382,7 +475,27 @@ export default function WhatsAppDashboard() {
                   </div>
                 )}
 
-                {/* Send Button */}
+                {/* Action Buttons */}
+                <div className="d-flex gap-2 mb-3">
+                  <button
+                    className="btn btn-outline-primary flex-grow-1"
+                    onClick={reviewWithAI}
+                    disabled={reviewLoading || !selectedTemplate}
+                  >
+                    {reviewLoading ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2"></span>
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-robot me-2"></i>
+                        AI Review & Recommend
+                      </>
+                    )}
+                  </button>
+                </div>
+
                 <button
                   className="btn btn-success btn-lg w-100"
                   onClick={sendMessage}
@@ -404,7 +517,7 @@ export default function WhatsAppDashboard() {
             </div>
           </div>
 
-          {/* Template Preview */}
+          {/* Template Preview & AI Review */}
           <div className="col-md-4">
             <div className="card">
               <div className="card-header">
@@ -454,6 +567,102 @@ export default function WhatsAppDashboard() {
                 )}
               </div>
             </div>
+
+            {/* AI Review Results */}
+            {showAiReview && aiReview && (
+              <div className="card mt-3">
+                <div className="card-header d-flex justify-content-between align-items-center">
+                  <h5 className="mb-0">
+                    <i className="fas fa-robot me-2"></i>
+                    AI Analysis
+                  </h5>
+                  <button 
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={() => setShowAiReview(false)}
+                  >
+                    <i className="fas fa-times"></i>
+                  </button>
+                </div>
+                <div className="card-body">
+                  {/* Overall Score */}
+                  <div className={`text-center p-3 rounded mb-3 ${getScoreBgColor(aiReview.score)}`}>
+                    <h2 className={`mb-0 ${getScoreColor(aiReview.score)}`}>
+                      {aiReview.score}/100
+                    </h2>
+                    <small className="text-muted">Overall Score</small>
+                  </div>
+
+                  {/* Analysis Breakdown */}
+                  <div className="mb-3">
+                    <h6 className="mb-2">Analysis</h6>
+                    {Object.entries(aiReview.analysis).map(([key, value]) => (
+                      <div key={key} className="mb-2">
+                        <div className="d-flex justify-content-between align-items-center">
+                          <span className="text-capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                          <span className={`badge ${value.score >= 80 ? 'bg-success' : value.score >= 60 ? 'bg-warning' : 'bg-danger'}`}>
+                            {value.score}
+                          </span>
+                        </div>
+                        <small className="text-muted d-block">{value.feedback}</small>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Warnings */}
+                  {aiReview.warnings.length > 0 && (
+                    <div className="alert alert-warning mb-3">
+                      <h6 className="alert-heading mb-2">
+                        <i className="fas fa-exclamation-triangle me-2"></i>
+                        Warnings
+                      </h6>
+                      <ul className="mb-0 ps-3">
+                        {aiReview.warnings.map((warning, idx) => (
+                          <li key={idx} className="small">{warning}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Suggestions */}
+                  {aiReview.suggestions.length > 0 && (
+                    <div className="mb-3">
+                      <h6 className="mb-2">
+                        <i className="fas fa-lightbulb me-2 text-warning"></i>
+                        Suggestions
+                      </h6>
+                      <ul className="list-unstyled mb-0">
+                        {aiReview.suggestions.map((suggestion, idx) => (
+                          <li key={idx} className="small mb-1">
+                            <i className="fas fa-check-circle me-2 text-primary"></i>
+                            {suggestion}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Improved Version */}
+                  {aiReview.improvedVersion && selectedTemplate === 'custom' && (
+                    <div className="border-top pt-3">
+                      <h6 className="mb-2">
+                        <i className="fas fa-magic me-2 text-success"></i>
+                        Improved Version
+                      </h6>
+                      <div className="bg-light p-2 rounded mb-2" style={{ whiteSpace: 'pre-line', fontSize: '0.85rem' }}>
+                        {aiReview.improvedVersion}
+                      </div>
+                      <button 
+                        className="btn btn-sm btn-success w-100"
+                        onClick={applyImprovedVersion}
+                      >
+                        <i className="fas fa-check me-2"></i>
+                        Apply Improved Version
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
