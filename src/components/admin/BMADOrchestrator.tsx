@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { DatabaseService } from '@/services/database';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface Message {
   id: string;

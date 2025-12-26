@@ -48,13 +48,12 @@ export default function ArtistManager() {
 
   useEffect(() => {
     fetchArtists();
-  }, []);
+  }, [currentUser]);
 
   const fetchArtists = async () => {
     try {
+      setLoading(true);
       const usersCollection = collection(getDb(), 'users');
-      if (!currentUser) return;
-      const userDoc = await getDoc(doc(getDb(), 'users', currentUser.uid));
       const usersSnapshot = await getDocs(usersCollection);
       const artistsList = usersSnapshot.docs
         .map(doc => {

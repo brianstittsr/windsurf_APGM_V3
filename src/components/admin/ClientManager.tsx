@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { collection, getDocs, doc, deleteDoc, updateDoc, query, where } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+import { getDb } from '../../lib/firebase';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useAlertDialog } from '@/components/ui/alert-dialog';
 
 interface Client {
   id: string;
@@ -30,7 +33,7 @@ export default function ClientManager() {
 
   const fetchClients = async () => {
     try {
-      const usersCollection = collection(db, 'users');
+      const usersCollection = collection(getDb(), 'users');
       const usersSnapshot = await getDocs(usersCollection);
       const clientsList = usersSnapshot.docs
         .map(doc => ({
@@ -54,7 +57,7 @@ export default function ClientManager() {
 
   const handleToggleActive = async (clientId: string, currentStatus: boolean) => {
     try {
-      const clientRef = doc(db, 'users', clientId);
+      const clientRef = doc(getDb(), 'users', clientId);
       await updateDoc(clientRef, {
         isActive: !currentStatus,
         updatedAt: new Date()
@@ -72,7 +75,7 @@ export default function ClientManager() {
     }
 
     try {
-      await deleteDoc(doc(db, 'users', clientId));
+      await deleteDoc(doc(getDb(), 'users', clientId));
       alert('Client deleted successfully!');
       fetchClients();
     } catch (error) {
