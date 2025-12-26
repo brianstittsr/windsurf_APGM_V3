@@ -1251,230 +1251,145 @@ function BookNowCustomContent() {
         />
       )}
       {currentStep === 'pre-post-care' && (
-        <div className="container py-5">
-          <div className="row justify-content-center">
-            <div className="col-lg-8">
-              <div className="card border-0 shadow-lg">
-                <div className="card-header bg-primary text-white text-center py-4">
-                  <h2 className="mb-0">
-                    <i className="fas fa-clipboard-list me-3"></i>
-                    Pre & Post Care Instructions
-                  </h2>
-                  <p className="mb-0 mt-2">Please read and acknowledge these important care instructions</p>
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+            {/* Header */}
+            <div className="bg-[#AD6269] text-white text-center py-6 px-4">
+              <h2 className="text-2xl font-bold mb-2">Pre & Post Care Instructions</h2>
+              <p className="text-white/80">Please read and acknowledge these important care instructions</p>
+            </div>
+            
+            <div className="p-6 md:p-8 space-y-8">
+              {/* Pre Care Instructions */}
+              <div>
+                <h3 className="text-lg font-bold text-[#AD6269] mb-4 flex items-center gap-2">
+                  <span className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
+                    <span className="text-amber-600">⚠</span>
+                  </span>
+                  Pre Care Instructions
+                </h3>
+                <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                  <p className="text-gray-700"><span className="font-semibold">No excessive alcohol consumption</span> 24 hours before your procedure.</p>
+                  <p className="text-gray-700"><span className="font-semibold">Avoid sun and tanning</span> one week prior to the procedure.</p>
+                  <p className="text-gray-700"><span className="font-semibold">Do not take Aspirin, Niacin (Vitamin B3), Vitamin E or Advil/Ibuprofen</span> 24 hours before the procedure.</p>
+                  <p className="text-gray-700"><span className="font-semibold">No brow waxing, tinting, microdermabrasion or chemical peels</span> 1-2 weeks prior.</p>
+                  <p className="text-gray-700"><span className="font-semibold">Discontinue the use of Accutane/Retin-A or any other acne medication</span> at least 6 months prior to the procedure.</p>
+                  <p className="text-gray-700"><span className="font-semibold">No Botox/filler around the brow area or forehead</span> 4 weeks prior.</p>
+                  <p className="text-gray-700"><span className="font-semibold">Discontinue eyelash growth serums</span> 1 week prior to the procedure.</p>
                 </div>
-                <div className="card-body p-5">
-                  {/* Pre Care Instructions */}
-                  <div className="mb-5">
-                    <h4 className="text-primary mb-4">
-                      <i className="fas fa-exclamation-triangle me-2"></i>
-                      Pre Care Instructions
-                    </h4>
-                    <div className="bg-light p-4 rounded">
-                      <ul className="list-unstyled mb-0">
-                        <li className="mb-3">
-                          <i className="fas fa-wine-glass text-danger me-2"></i>
-                          <strong>No excessive alcohol consumption</strong> 24 hours before your procedure.
-                        </li>
-                        <li className="mb-3">
-                          <i className="fas fa-sun text-warning me-2"></i>
-                          <strong>Avoid sun and tanning</strong> one week prior to the procedure.
-                        </li>
-                        <li className="mb-3">
-                          <i className="fas fa-pills text-info me-2"></i>
-                          <strong>Do not take Aspirin, Niacin (Vitamin B3), Vitamin E or Advil/Ibuprofen</strong> 24 hours before the procedure.
-                        </li>
-                        <li className="mb-3">
-                          <i className="fas fa-spa text-success me-2"></i>
-                          <strong>No brow waxing, tinting, microdermabrasion or chemical peels</strong> 1-2 weeks prior.
-                        </li>
-                        <li className="mb-3">
-                          <i className="fas fa-prescription-bottle text-primary me-2"></i>
-                          <strong>Discontinue the use of Accutane/Retin-A or any other acne medication</strong> at least 6 months prior to the procedure.
-                        </li>
-                        <li className="mb-3">
-                          <i className="fas fa-syringe text-secondary me-2"></i>
-                          <strong>No Botox/filler around the brow area or forehead</strong> 4 weeks prior.
-                        </li>
-                        <li className="mb-0">
-                          <i className="fas fa-eye text-dark me-2"></i>
-                          <strong>Discontinue eyelash growth serums</strong> 1 week prior to the procedure.
-                        </li>
-                      </ul>
+              </div>
+
+              {/* Post Care Instructions */}
+              <div>
+                <h3 className="text-lg font-bold text-[#AD6269] mb-4 flex items-center gap-2">
+                  <span className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center">
+                    <span className="text-pink-600">♥</span>
+                  </span>
+                  Post Care Instructions
+                </h3>
+                <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                  <p className="text-gray-700"><span className="font-semibold">No make-up application on the brows.</span></p>
+                  <p className="text-gray-700"><span className="font-semibold">No sun tanning, swimming or excessive sweating.</span></p>
+                  <p className="text-gray-700"><span className="font-semibold">No soap, moisturizer, make-up, creams or sunscreen on the brow area.</span></p>
+                  <p className="text-gray-700"><span className="font-semibold">Do not rub or pick at the dry flaky skin/scab.</span></p>
+                  <p className="text-gray-700"><span className="font-semibold">Do not touch the treated area unless it is for cleansing purposes.</span></p>
+                  <p className="text-gray-700"><span className="font-semibold">Apply a grain size of MicroBlam 2-3 times a day for up to 14 days of recovery.</span></p>
+                  <p className="text-gray-700"><span className="font-semibold">Should an infection occur, please seek medical attention.</span></p>
+                  <p className="text-gray-700"><span className="font-semibold">Wash the eyebrow area very gently during the next 7–10 days as it heals.</span> Do not rub brows to dry them, please gently pat dry with a clean cloth or tissue.</p>
+                </div>
+              </div>
+
+              {/* Healing Process */}
+              <div>
+                <h3 className="text-lg font-bold text-[#AD6269] mb-4 flex items-center gap-2">
+                  <span className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-blue-600">📅</span>
+                  </span>
+                  Eyebrow Healing Process
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="border-2 border-[#AD6269] rounded-lg overflow-hidden">
+                    <div className="bg-[#AD6269] text-white text-center py-2 font-semibold">Day 1-3</div>
+                    <div className="p-3 text-sm space-y-2">
+                      <p>• Brows will look darker and thicker as scabbing starts to form.</p>
+                      <p>• Brows feel tender & sore and may look warm and/or reddish.</p>
                     </div>
                   </div>
-
-                  {/* Post Care Instructions */}
-                  <div className="mb-5">
-                    <h4 className="text-primary mb-4">
-                      <i className="fas fa-heart me-2"></i>
-                      Post Care Instructions
-                    </h4>
-                    <div className="bg-light p-4 rounded">
-                      <ul className="list-unstyled mb-0">
-                        <li className="mb-3">
-                          <i className="fas fa-makeup text-danger me-2"></i>
-                          <strong>No make-up application on the brows.</strong>
-                        </li>
-                        <li className="mb-3">
-                          <i className="fas fa-swimming-pool text-info me-2"></i>
-                          <strong>No sun tanning, swimming or excessive sweating.</strong>
-                        </li>
-                        <li className="mb-3">
-                          <i className="fas fa-soap text-warning me-2"></i>
-                          <strong>No soap, moisturizer, make-up, creams or sunscreen on the brow area.</strong>
-                        </li>
-                        <li className="mb-3">
-                          <i className="fas fa-hand-paper text-danger me-2"></i>
-                          <strong>Do not rub or pick at the dry flaky skin/scab.</strong>
-                        </li>
-                        <li className="mb-3">
-                          <i className="fas fa-hand-sparkles text-success me-2"></i>
-                          <strong>Do not touch the treated area unless it is for cleansing purposes.</strong>
-                        </li>
-                        <li className="mb-3">
-                          <i className="fas fa-prescription-bottle-alt text-primary me-2"></i>
-                          <strong>Apply a grain size of MicroBlam 2-3 times a day for up to 14 days of recovery.</strong>
-                        </li>
-                        <li className="mb-3">
-                          <i className="fas fa-stethoscope text-danger me-2"></i>
-                          <strong>Should an infection occur, please seek medical attention.</strong>
-                        </li>
-                        <li className="mb-0">
-                          <i className="fas fa-water text-info me-2"></i>
-                          <strong>It is very important that you wash the eyebrow area very gently during the next 7–10 days as it heals. Do not rub brows to dry them, please gently pat dry with a clean cloth or tissue.</strong>
-                        </li>
-                      </ul>
+                  <div className="border-2 border-amber-500 rounded-lg overflow-hidden">
+                    <div className="bg-amber-500 text-white text-center py-2 font-semibold">Day 4-5</div>
+                    <div className="p-3 text-sm space-y-2">
+                      <p>• Redness should be reduced.</p>
+                      <p>• Flaking and crusting of the eyebrows may occur.</p>
+                      <p>• Eyebrows may feel dry and itchy.</p>
                     </div>
                   </div>
-
-                  {/* Healing Process */}
-                  <div className="mb-5">
-                    <h4 className="text-primary mb-4">
-                      <i className="fas fa-calendar-alt me-2"></i>
-                      Eyebrow Healing Process
-                    </h4>
-                    <div className="row">
-                      <div className="col-md-4 mb-4">
-                        <div className="card h-100 border-primary">
-                          <div className="card-header bg-primary text-white text-center">
-                            <h6 className="mb-0">Day 1-3</h6>
-                          </div>
-                          <div className="card-body">
-                            <ul className="list-unstyled small mb-0">
-                              <li className="mb-2">• Brows will look darker and thicker as scabbing starts to form.</li>
-                              <li className="mb-0">• Brows feel tender & sore and may look warm and/or reddish.</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-md-4 mb-4">
-                        <div className="card h-100 border-warning">
-                          <div className="card-header bg-warning text-dark text-center">
-                            <h6 className="mb-0">Day 4-5</h6>
-                          </div>
-                          <div className="card-body">
-                            <ul className="list-unstyled small mb-0">
-                              <li className="mb-2">• Redness should be reduced.</li>
-                              <li className="mb-2">• Flaking and crusting of the eyebrows may occur.</li>
-                              <li className="mb-0">• Eyebrows may feel dry and itchy.</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-md-4 mb-4">
-                        <div className="card h-100 border-info">
-                          <div className="card-header bg-info text-white text-center">
-                            <h6 className="mb-0">Day 6-12</h6>
-                          </div>
-                          <div className="card-body">
-                            <ul className="list-unstyled small mb-0">
-                              <li className="mb-2">• Scabs peel off in random pieces and look patchy.</li>
-                              <li className="mb-2">• The areas without the scabs may look lighter in colour.</li>
-                              <li className="mb-2">• Scabs continue to peel off in random pieces.</li>
-                              <li className="mb-0">• 70-100% of scabs should fall off during this time.</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="row justify-content-center">
-                      <div className="col-md-6">
-                        <div className="card border-success">
-                          <div className="card-header bg-success text-white text-center">
-                            <h6 className="mb-0">Day 13-21</h6>
-                          </div>
-                          <div className="card-body">
-                            <ul className="list-unstyled small mb-0">
-                              <li className="mb-2">• Colour looks very light and the shape may look thinner.</li>
-                              <li className="mb-2">• Some areas may have lost more colour compared to other areas.</li>
-                              <li className="mb-2">• Colour can look uneven.</li>
-                              <li className="mb-2">• Brow colour gradually darkens as the skin fully heals.</li>
-                              <li className="mb-0">• The fully healed colour will be 30-50% lighter from the initial appointment and retention can vary according to skin type.</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
+                  <div className="border-2 border-blue-500 rounded-lg overflow-hidden">
+                    <div className="bg-blue-500 text-white text-center py-2 font-semibold">Day 6-12</div>
+                    <div className="p-3 text-sm space-y-2">
+                      <p>• Scabs peel off in random pieces and look patchy.</p>
+                      <p>• Areas without scabs may look lighter in colour.</p>
+                      <p>• 70-100% of scabs should fall off during this time.</p>
                     </div>
                   </div>
-
-                  {/* Signature Section */}
-                  <div className="border-top pt-4">
-                    <div className="row align-items-center">
-                      <div className="col-md-8">
-                        <h5 className="text-primary mb-3">
-                          <i className="fas fa-signature me-2"></i>
-                          Client Acknowledgment
-                        </h5>
-                        <p className="mb-3">
-                          By signing below, I acknowledge that I have read and understand all pre-care and post-care instructions. 
-                          I agree to follow these instructions to ensure the best possible results and healing process.
-                        </p>
-                        <div className="mb-3">
-                          <label htmlFor="prePostCareSignature" className="form-label fw-bold">
-                            Client Signature (Type your full name):
-                          </label>
-                          <input
-                            type="text"
-                            className="form-control form-control-lg"
-                            id="prePostCareSignature"
-                            value={prePostCareSignature}
-                            onChange={(e) => setPrePostCareSignature(e.target.value)}
-                            placeholder="Type your full name here"
-                            required
-                          />
-                        </div>
-                        <p className="small text-muted mb-0">
-                          <i className="fas fa-calendar me-1"></i>
-                          Date: {new Date().toLocaleDateString()}
-                        </p>
-                      </div>
+                  <div className="border-2 border-green-500 rounded-lg overflow-hidden">
+                    <div className="bg-green-500 text-white text-center py-2 font-semibold">Day 13-21</div>
+                    <div className="p-3 text-sm space-y-2">
+                      <p>• Colour looks very light and shape may look thinner.</p>
+                      <p>• Brow colour gradually darkens as skin fully heals.</p>
+                      <p>• Fully healed colour will be 30-50% lighter.</p>
                     </div>
-                  </div>
-
-                  {/* Navigation Buttons */}
-                  <div className="d-flex justify-content-between mt-5">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="lg"
-                      className="px-4"
-                      onClick={() => setCurrentStep('health')}
-                    >
-                      <i className="fas fa-arrow-left me-2"></i>
-                      Back to Health Form
-                    </Button>
-                    <Button
-                      type="button"
-                      size="lg"
-                      className="bg-[#AD6269] hover:bg-[#9d5860] px-4"
-                      onClick={handlePrePostCareComplete}
-                      disabled={!prePostCareSignature.trim()}
-                    >
-                      I Acknowledge & Continue
-                      <i className="fas fa-arrow-right ms-2"></i>
-                    </Button>
                   </div>
                 </div>
+              </div>
+
+              {/* Signature Section */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-bold text-[#AD6269] mb-3">Client Acknowledgment</h3>
+                <p className="text-gray-600 mb-4">
+                  By signing below, I acknowledge that I have read and understand all pre-care and post-care instructions. 
+                  I agree to follow these instructions to ensure the best possible results and healing process.
+                </p>
+                <div className="max-w-md">
+                  <label htmlFor="prePostCareSignature" className="block text-sm font-semibold text-gray-700 mb-2">
+                    Client Signature (Type your full name):
+                  </label>
+                  <input
+                    type="text"
+                    id="prePostCareSignature"
+                    value={prePostCareSignature}
+                    onChange={(e) => setPrePostCareSignature(e.target.value)}
+                    placeholder="Type your full name here"
+                    className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-[#AD6269] outline-none"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-2">
+                    Date: {new Date().toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+
+              {/* Navigation Buttons */}
+              <div className="flex justify-between pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  className="gap-2"
+                  onClick={() => setCurrentStep('health')}
+                >
+                  <span>←</span>
+                  Back to Health Form
+                </Button>
+                <Button
+                  type="button"
+                  size="lg"
+                  className="bg-[#AD6269] hover:bg-[#9d5860] gap-2"
+                  onClick={handlePrePostCareComplete}
+                  disabled={!prePostCareSignature.trim()}
+                >
+                  I Acknowledge & Continue
+                  <span>→</span>
+                </Button>
               </div>
             </div>
           </div>
