@@ -41,6 +41,7 @@ interface CheckoutData {
 import { getServiceImagePath } from '@/utils/serviceImageUtils';
 import { calculateTotalWithStripeFees } from '@/lib/stripe-fees';
 import { useWorkflowTrigger } from '@/hooks/useWorkflowTrigger';
+import { Button } from '@/components/ui/button';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import DatabaseSetup from '../../components/DatabaseSetup';
@@ -117,10 +118,10 @@ function BookNowCustomContent() {
     return (
       <>
         <Header />
-        <div className="container py-5">
-          <div className="row justify-content-center">
-            <div className="col-lg-8">
-              <h1 className="text-center mb-4">Database Setup</h1>
+        <div className="max-w-7xl mx-auto px-4 py-16">
+          <div className="flex justify-center">
+            <div className="w-full max-w-3xl">
+              <h1 className="text-center mb-8 text-3xl font-bold">Database Setup</h1>
               <DatabaseSetup />
             </div>
           </div>
@@ -625,15 +626,10 @@ function BookNowCustomContent() {
         scheduledDate: selectedDate,
         scheduledTime: selectedTime,
         status: 'pending' as const,
-        // Calculate amounts with Stripe fees
-        ...(() => {
-          const feeCalculation = calculateTotalWithStripeFees(selectedService.price, 0.0775, 200);
-          return {
-            totalAmount: feeCalculation.total, // Including tax and Stripe fees
-            depositAmount: feeCalculation.deposit + feeCalculation.stripeFee, // Deposit + Stripe fee
-            remainingAmount: feeCalculation.remaining, // Service + tax - deposit (fee already paid)
-          };
-        })(),
+        // Calculate amounts with Stripe fees (using default values since async not supported in object literal)
+        totalAmount: selectedService.price * 1.0775 + 10, // Price + tax + estimated fee
+        depositAmount: 200 + 10, // Deposit + estimated Stripe fee
+        remainingAmount: selectedService.price * 1.0775 - 200, // Service + tax - deposit
         paymentStatus: 'pending' as const,
         paymentIntentId: '', // Will be set during payment processing
         specialRequests: checkoutData.specialRequests,
@@ -822,14 +818,14 @@ function BookNowCustomContent() {
       nextWeek.setDate(currentWeekStart.getDate() + 7);
       setCurrentWeekStart(nextWeek);
       return (
-        <div className="container-fluid py-5">
-          <div className="row justify-content-center">
-            <div className="col-lg-8">
+        <div className="w-full px-4 py-16">
+          <div className="flex justify-center">
+            <div className="w-full max-w-3xl">
               <div className="text-center">
-                <div className="spinner-border text-primary" role="status">
-                  <span className="visually-hidden">Advancing calendar...</span>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AD6269] mx-auto" role="status">
+                  <span className="sr-only">Advancing calendar...</span>
                 </div>
-                <p className="mt-3 text-muted">Moving to next available week...</p>
+                <p className="mt-4 text-gray-500">Moving to next available week...</p>
               </div>
             </div>
           </div>
@@ -850,39 +846,39 @@ function BookNowCustomContent() {
     const isCurrentWeek = weekDays.some(day => day.toDateString() === currentDate.toDateString());
 
     return (
-      <div className="container-fluid py-5">
-        <div className="row justify-content-center">
-          <div className="col-lg-10">
-            <div className="card border-0 shadow-lg">
+      <div className="w-full px-4 py-12">
+        <div className="flex justify-center">
+          <div className="w-full max-w-5xl">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
               {/* Form Recovery Banner removed */}
               
               {/* Header */}
-              <div className="card-header bg-white border-0 text-center py-4">
-                <h1 className="h2 fw-bold text-dark mb-2">Book Your Appointment</h1>
-                <p className="text-muted mb-0">Select your preferred date and time</p>
+              <div className="bg-white border-b-0 text-center py-6 px-4">
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">Book Your Appointment</h1>
+                <p className="text-gray-500">Select your preferred date and time</p>
               </div>
 
-              <div className="card-body px-3 px-md-4 pb-4">
+              <div className="px-4 md:px-6 pb-6">
                 {/* Step Indicator */}
-                <div className="text-center mb-4">
-                  <h2 className="h4 fw-bold text-dark mb-2">
+                <div className="text-center mb-6">
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">
                     Select a Date
                   </h2>
-                  <p className="text-muted mb-0">
+                  <p className="text-gray-500">
                     Pick an available date from the calendar below
                   </p>
                 </div>
 
                 {/* Month and Week Header */}
-                <div className="text-center mb-4">
-                  <h3 className="h5 fw-bold text-dark mb-1">
+                <div className="text-center mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">
                     {weekMonth} {weekYear}
                   </h3>
-                  <div className="text-muted fs-6">
+                  <div className="text-gray-500 text-sm">
                     {isCurrentWeek ? 'This Week' : 'Week View'}
                   </div>
                   {spansMonths && (
-                    <small className="text-muted d-block mt-1">
+                    <small className="text-gray-500 block mt-1">
                       {monthNames[weekDays[0].getMonth()]} {weekDays[0].getDate()} - {monthNames[lastDayMonth]} {weekDays[6].getDate()}
                     </small>
                   )}
@@ -890,32 +886,33 @@ function BookNowCustomContent() {
 
                 {/* Next Available Date Button */}
                 <div className="text-center mb-4">
-                  <button 
-                    className="btn btn-success btn-sm px-4 py-2"
+                  <Button 
+                    className="bg-green-600 hover:bg-green-700 px-4 py-2 text-sm"
                     onClick={advanceToNextAvailable}
                     title="Find Next Available Date"
                   >
                     <i className="fas fa-calendar-plus me-2"></i>
                     Next Available Date
-                  </button>
-                  <div className="small text-muted mt-1">
+                  </Button>
+                  <div className="text-sm text-gray-500 mt-1">
                     Click to find the next available booking day
                   </div>
                 </div>
 
                 {/* Calendar Week View - Desktop */}
-                <div className="d-none d-md-flex align-items-center justify-content-center mb-4">
+                <div className="hidden md:flex items-center justify-center mb-6">
                   {/* Previous Week Arrow */}
-                  <button 
-                    className="btn btn-outline-primary p-2 me-3"
+                  <Button 
+                    variant="outline"
+                    className="p-2 mr-4"
                     onClick={goToPreviousWeek}
                     title="Previous Week"
                   >
                     <i className="fas fa-less-than"></i>
-                  </button>
+                  </Button>
 
                   {/* Week Days */}
-                  <div className="d-flex gap-2">
+                  <div className="flex gap-2">
                     {weekDays.map((day, index) => {
                       const normalizedDay = new Date(day.getFullYear(), day.getMonth(), day.getDate());
                       const isToday = normalizedDay.toDateString() === currentDate.toDateString();
@@ -927,23 +924,17 @@ function BookNowCustomContent() {
                       return (
                         <div
                           key={index}
-                          className={`text-center p-3 rounded cursor-pointer position-relative ${
+                          className={`text-center p-3 rounded-lg cursor-pointer relative min-w-[100px] transition-all ${
                             isPast
-                              ? 'bg-light text-muted'
+                              ? 'bg-gray-100 text-gray-400 opacity-50 cursor-not-allowed'
                               : isSelectedDate
-                              ? 'bg-primary text-white'
+                              ? 'bg-[#AD6269] text-white border-2 border-[#AD6269]'
                               : isNextAvailable
-                              ? 'bg-success text-white'
+                              ? 'bg-green-600 text-white border-2 border-green-600'
                               : isToday
-                              ? 'bg-warning text-dark'
-                              : 'bg-light text-dark'
+                              ? 'bg-yellow-400 text-gray-900 border border-yellow-500'
+                              : 'bg-gray-100 text-gray-900 border border-gray-200 hover:bg-gray-200'
                           }`}
-                          style={{ 
-                            minWidth: '100px',
-                            cursor: isPast ? 'not-allowed' : 'pointer',
-                            border: isSelectedDate ? '2px solid #0d6efd' : isNextAvailable ? '2px solid #198754' : '1px solid #e9ecef',
-                            opacity: isPast ? 0.5 : 1
-                          }}
                           onClick={() => {
                             if (!isPast) {
                               console.log('Desktop date clicked:', day.toISOString().split('T')[0]);
@@ -951,20 +942,20 @@ function BookNowCustomContent() {
                             }
                           }}
                         >
-                          <div className="fw-semibold small mb-1">
+                          <div className="font-semibold text-sm mb-1">
                             {dayNames[index]}
                           </div>
-                          <div className="h4 fw-bold mb-0">
+                          <div className="text-xl font-bold">
                             {day.getDate()}
                           </div>
                           {isToday && (
-                            <div className="small mt-1">
+                            <div className="text-xs mt-1">
                               Today
                             </div>
                           )}
                           {isNextAvailable && !isSelectedDate && (
-                            <div className="small mt-1">
-                              <i className="fas fa-star" style={{ fontSize: '0.7rem' }}></i>
+                            <div className="text-xs mt-1">
+                              <i className="fas fa-star text-[10px]"></i>
                             </div>
                           )}
                         </div>
@@ -973,52 +964,55 @@ function BookNowCustomContent() {
                   </div>
 
                   {/* Next Week Arrow */}
-                  <button 
-                    className="btn btn-outline-primary p-2 ms-3"
+                  <Button 
+                    variant="outline"
+                    className="p-2 ml-4"
                     onClick={goToNextWeek}
                     title="Next Week"
                   >
                     <i className="fas fa-greater-than"></i>
-                  </button>
+                  </Button>
                 </div>
 
                 {/* Calendar Week View - Mobile/Tablet */}
-                <div className="d-md-none mb-4">
+                <div className="md:hidden mb-6">
                   {/* Next Available Date Button - Mobile */}
-                  <div className="text-center mb-3">
-                    <button 
-                      className="btn btn-success btn-sm px-3 py-2"
+                  <div className="text-center mb-4">
+                    <Button 
+                      className="bg-green-600 hover:bg-green-700 px-3 py-2 text-sm"
                       onClick={advanceToNextAvailable}
                       title="Find Next Available Date"
                     >
-                      <i className="fas fa-calendar-plus me-1"></i>
+                      <i className="fas fa-calendar-plus mr-2"></i>
                       Next Available
-                    </button>
+                    </Button>
                   </div>
                   
                   {/* Week Navigation */}
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <button 
-                      className="btn btn-outline-primary btn-sm"
+                  <div className="flex justify-between items-center mb-4">
+                    <Button 
+                      variant="outline"
+                      size="sm"
                       onClick={goToPreviousWeek}
                       title="Previous Week"
                     >
                       <i className="fas fa-less-than"></i>
-                    </button>
-                    <h5 className="mb-0 fw-bold">
+                    </Button>
+                    <h5 className="font-bold text-lg">
                       {weekMonth} {weekYear}
                     </h5>
-                    <button 
-                      className="btn btn-outline-primary btn-sm"
+                    <Button 
+                      variant="outline"
+                      size="sm"
                       onClick={goToNextWeek}
                       title="Next Week"
                     >
                       <i className="fas fa-greater-than"></i>
-                    </button>
+                    </Button>
                   </div>
 
                   {/* Week Days Grid */}
-                  <div className="row g-2">
+                  <div className="grid grid-cols-7 gap-1">
                     {weekDays.map((day, index) => {
                       const normalizedDay = new Date(day.getFullYear(), day.getMonth(), day.getDate());
                       const isToday = normalizedDay.toDateString() === currentDate.toDateString();
@@ -1028,25 +1022,20 @@ function BookNowCustomContent() {
                       const isNextAvailable = nextAvailable?.date === dateString;
                       
                       return (
-                        <div key={`${dateString}-${index}`} className="col">
+                        <div key={`${dateString}-${index}`}>
                           <button
                             type="button"
-                            className={`btn w-100 text-center p-2 rounded position-relative border ${
+                            className={`w-full text-center p-2 rounded-lg relative min-h-[70px] transition-all ${
                               isPast
-                                ? 'btn-light text-muted border-light'
+                                ? 'bg-gray-100 text-gray-400 opacity-50 cursor-not-allowed'
                                 : isSelectedDate
-                                ? 'btn-primary text-white border-primary'
+                                ? 'bg-[#AD6269] text-white border-2 border-[#AD6269]'
                                 : isNextAvailable
-                                ? 'btn-success text-white border-success'
+                                ? 'bg-green-600 text-white border-2 border-green-600'
                                 : isToday
-                                ? 'btn-warning text-dark border-warning'
-                                : 'btn-outline-secondary'
+                                ? 'bg-yellow-400 text-gray-900 border border-yellow-500'
+                                : 'bg-white border border-gray-300 hover:bg-gray-50'
                             }`}
-                            style={{ 
-                              cursor: isPast ? 'not-allowed' : 'pointer',
-                              opacity: isPast ? 0.5 : 1,
-                              minHeight: '70px'
-                            }}
                             onClick={() => {
                               if (!isPast) {
                                 console.log('Mobile date clicked:', day.toISOString().split('T')[0]);
@@ -1055,20 +1044,20 @@ function BookNowCustomContent() {
                             }}
                             disabled={isPast}
                           >
-                            <div className="fw-semibold small mb-1">
+                            <div className="font-semibold text-xs mb-1">
                               {dayNames[index].substring(0, 3)}
                             </div>
-                            <div className="h6 fw-bold mb-0">
+                            <div className="text-base font-bold">
                               {day.getDate()}
                             </div>
                             {isToday && (
-                              <div className="small" style={{ fontSize: '0.7rem' }}>
+                              <div className="text-[10px]">
                                 Today
                               </div>
                             )}
                             {isNextAvailable && !isSelectedDate && (
-                              <div className="small mt-1">
-                                <i className="fas fa-star" style={{ fontSize: '0.6rem' }}></i>
+                              <div className="text-xs mt-1">
+                                <i className="fas fa-star text-[9px]"></i>
                               </div>
                             )}
                           </button>
@@ -1080,39 +1069,39 @@ function BookNowCustomContent() {
 
                 {/* Available Time Slots Section - Shows when date is selected */}
                 {selectedDate && (
-                  <div className="mt-4">
-                    <div className="border-top pt-4">
-                      <div className="text-center mb-4">
-                        <h4 className="h5 fw-bold text-dark mb-2">
+                  <div className="mt-6">
+                    <div className="border-t border-gray-200 pt-6">
+                      <div className="text-center mb-6">
+                        <h4 className="text-lg font-bold text-gray-900 mb-2">
                           Available Times for {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                         </h4>
-                        <p className="text-muted mb-0">
+                        <p className="text-gray-500">
                           Select a 4-hour time slot to continue
                         </p>
                       </div>
 
                       {/* Time Slots Loading/Error States */}
                       {activeLoading && (
-                        <div className="text-center py-4">
-                          <div className="spinner-border text-primary" role="status">
-                            <span className="visually-hidden">Loading...</span>
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AD6269] mx-auto" role="status">
+                            <span className="sr-only">Loading...</span>
                           </div>
-                          <p className="mt-3 text-muted">Loading available time slots...</p>
+                          <p className="mt-4 text-gray-500">Loading available time slots...</p>
                         </div>
                       )}
 
                       {activeError && (
-                        <div className="alert alert-danger text-center">
-                          <i className="fas fa-exclamation-triangle me-2"></i>
+                        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-center">
+                          <i className="fas fa-exclamation-triangle mr-2"></i>
                           Error loading time slots: {activeError}
                         </div>
                       )}
 
                       {/* Artist Selection Instruction */}
-                      <div className="text-center mb-4">
-                        <div className="d-inline-flex align-items-center bg-light rounded-pill px-4 py-2 mb-3">
-                          <i className="fas fa-user-friends text-primary me-2 fs-5"></i>
-                          <span className="fw-medium text-dark">Choose your preferred artist for this appointment</span>
+                      <div className="text-center mb-6">
+                        <div className="inline-flex items-center bg-gray-100 rounded-full px-4 py-2 mb-4">
+                          <i className="fas fa-user-friends text-[#AD6269] mr-2 text-lg"></i>
+                          <span className="font-medium text-gray-900">Choose your preferred artist for this appointment</span>
                         </div>
                       </div>
 
@@ -1122,21 +1111,17 @@ function BookNowCustomContent() {
                           {/* Show which system is being used */}
                           {/* GHL Calendar message hidden per user request */}
                           {activeTimeSlots.hasAvailability ? (
-                            <div className="row justify-content-center g-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 justify-items-center">
                               {activeTimeSlots.timeSlots
                                 .filter(slot => slot.available && slot.artistName !== 'Admin' && (slot.calendarName === 'Service Calendar' || !slot.calendarName))
                                 .map((slot, index) => (
-                                  <div key={index} className="col-12 col-sm-6 col-md-5 col-lg-4 col-xl-3">
+                                  <div key={index} className="w-full">
                                     <div
-                                      className={`card h-100 cursor-pointer shadow-sm ${
+                                      className={`h-full cursor-pointer rounded-xl shadow-md transition-all duration-300 ${
                                         selectedTime === slot.time && selectedArtistId === slot.artistId
-                                          ? 'border-primary border-3 bg-primary bg-opacity-10'
-                                          : 'border-2 border-light hover-card'
+                                          ? 'border-2 border-[#AD6269] bg-[#AD6269]/10 scale-105'
+                                          : 'border border-gray-200 hover:border-[#AD6269] hover:shadow-lg hover:-translate-y-1'
                                       }`}
-                                      style={{ 
-                                        transition: 'all 0.3s ease',
-                                        transform: selectedTime === slot.time && selectedArtistId === slot.artistId ? 'scale(1.05)' : 'scale(1)'
-                                      }}
                                       onClick={() => handleTimeSlotSelect(slot.time, slot.artistId)}
                                       onMouseEnter={(e) => {
                                         if (!(selectedTime === slot.time && selectedArtistId === slot.artistId)) {
@@ -1153,20 +1138,19 @@ function BookNowCustomContent() {
                                         }
                                       }}
                                     >
-                                      <div className="card-body text-center py-4 px-3">
+                                      <div className="text-center py-4 px-3">
                                         {/* Time Display */}
                                         <div className="mb-3">
-                                          <i className={`fas fa-clock mb-2 fs-4 ${
+                                          <i className={`fas fa-clock mb-2 text-xl ${
                                             selectedTime === slot.time && selectedArtistId === slot.artistId 
                                               ? 'text-white' 
-                                              : 'text-primary'
+                                              : 'text-[#AD6269]'
                                           }`}></i>
-                                          <h5 className="card-title mb-0 fw-bold" style={{ 
-                                            color: selectedTime === slot.time && selectedArtistId === slot.artistId 
-                                              ? 'white' 
-                                              : '#AD6269', 
-                                            fontSize: '1.1rem' 
-                                          }}>
+                                          <h5 className={`font-bold text-lg ${
+                                            selectedTime === slot.time && selectedArtistId === slot.artistId 
+                                              ? 'text-white' 
+                                              : 'text-[#AD6269]'
+                                          }`}>
                                             {formatTimeTo12Hour(slot.time)}
                                           </h5>
                                         </div>
@@ -1175,14 +1159,14 @@ function BookNowCustomContent() {
                                         <div className="mb-3">
                                           {/* Artist Avatar */}
                                           <div className="mb-3">
-                                            <div className="position-relative d-inline-block">
+                                            <div className="relative inline-block">
                                               {(slot.artistName === 'Victoria' || slot.calendarName === 'Service Calendar') ? (
                                                 <Image
                                                   src="/images/VictoriaEscobar.jpeg"
                                                   alt="Victoria - Permanent Makeup Artist"
                                                   width={60}
                                                   height={60}
-                                                  className="rounded-circle border border-3"
+                                                  className="rounded-full border-2"
                                                   style={{ 
                                                     objectFit: 'cover',
                                                     borderColor: selectedTime === slot.time && selectedArtistId === slot.artistId 
@@ -1192,7 +1176,7 @@ function BookNowCustomContent() {
                                                 />
                                               ) : slot.artistName === 'Admin' ? (
                                                 <div 
-                                                  className="rounded-circle border border-3 d-flex align-items-center justify-content-center"
+                                                  className="rounded-full border-2 flex items-center justify-center"
                                                   style={{ 
                                                     width: '60px', 
                                                     height: '60px',
@@ -1214,7 +1198,7 @@ function BookNowCustomContent() {
                                                 </div>
                                               ) : (
                                                 <div 
-                                                  className="rounded-circle border border-3 d-flex align-items-center justify-content-center"
+                                                  className="rounded-full border-2 flex items-center justify-center"
                                                   style={{ 
                                                     width: '60px', 
                                                     height: '60px',
@@ -1295,10 +1279,10 @@ function BookNowCustomContent() {
                               }
                             </div>
                           ) : (
-                            <div className="text-center py-4">
-                              <i className="fas fa-calendar-times text-muted mb-3" style={{ fontSize: '2.5rem' }}></i>
-                              <h5 className="text-muted">No Available Time Slots</h5>
-                              <p className="text-muted mb-0">
+                            <div className="text-center py-8">
+                              <i className="fas fa-calendar-times text-gray-400 mb-4 text-4xl"></i>
+                              <h5 className="text-gray-500 font-semibold text-lg">No Available Time Slots</h5>
+                              <p className="text-gray-500">
                                 Sorry, there are no available 3-hour time slots on this date.
                                 Please select a different date.
                               </p>
@@ -1308,8 +1292,9 @@ function BookNowCustomContent() {
                           {/* Continue Button */}
                           {selectedTime && selectedArtistId && (
                             <div className="text-center mt-4">
-                              <button
-                                className="btn btn-primary btn-lg"
+                              <Button
+                                size="lg"
+                                className="bg-[#AD6269] hover:bg-[#9d5860]"
                                 onClick={() => {
                                   console.log('Continue button clicked - selectedTime:', selectedTime, 'selectedArtistId:', selectedArtistId);
                                   console.log('isAuthenticated:', isAuthenticated, 'userProfile:', userProfile);
@@ -1330,7 +1315,7 @@ function BookNowCustomContent() {
                               >
                                 Continue to Profile
                                 <i className="fas fa-arrow-right ms-2"></i>
-                              </button>
+                              </Button>
                             </div>
                           )}
                         </>
@@ -1356,25 +1341,25 @@ function BookNowCustomContent() {
         <div className="container">
           <div className="row justify-content-center">
             <div className="col-lg-8">
-              <div className="d-flex justify-content-between align-items-center mb-2">
+              <div className="flex justify-between items-center mb-2">
                 <small className="text-white">Step {currentIndex + 1} of {steps.length}</small>
                 <small className="text-white">{Math.round(progress)}% Complete</small>
               </div>
-              <div className="progress" style={{ height: '8px', backgroundColor: 'rgba(255,255,255,0.3)' }}>
+              <div className="w-full bg-white/30 rounded-full h-2 overflow-hidden">
                 <div 
-                  className="progress-bar" 
+                  className="bg-black h-full transition-all duration-300" 
                   role="progressbar" 
-                  style={{ width: `${progress}%`, backgroundColor: '#000000' }}
+                  style={{ width: `${progress}%` }}
                 ></div>
               </div>
-              <div className="d-flex justify-content-between mt-2">
-                <small className={currentStep === 'services' ? 'text-white fw-bold' : 'text-white opacity-75'}>Service</small>
-                <small className={currentStep === 'account-suggestion' ? 'text-white fw-bold' : 'text-white opacity-75'}>Account</small>
-                <small className={currentStep === 'calendar' ? 'text-white fw-bold' : 'text-white opacity-75'}>Date & Time</small>
-                <small className={currentStep === 'profile' ? 'text-white fw-bold' : 'text-white opacity-75'}>Profile</small>
-                <small className={currentStep === 'health' ? 'text-white fw-bold' : 'text-white opacity-75'}>Health Form</small>
-                <small className={currentStep === 'pre-post-care' ? 'text-white fw-bold' : 'text-white opacity-75'}>Care Instructions</small>
-                <small className={currentStep === 'checkout' ? 'text-white fw-bold' : 'text-white opacity-75'}>Checkout</small>
+              <div className="flex justify-between mt-2">
+                <small className={currentStep === 'services' ? 'text-white font-bold' : 'text-white opacity-75'}>Service</small>
+                <small className={currentStep === 'account-suggestion' ? 'text-white font-bold' : 'text-white opacity-75'}>Account</small>
+                <small className={currentStep === 'calendar' ? 'text-white font-bold' : 'text-white opacity-75'}>Date & Time</small>
+                <small className={currentStep === 'profile' ? 'text-white font-bold' : 'text-white opacity-75'}>Profile</small>
+                <small className={currentStep === 'health' ? 'text-white font-bold' : 'text-white opacity-75'}>Health Form</small>
+                <small className={currentStep === 'pre-post-care' ? 'text-white font-bold' : 'text-white opacity-75'}>Care Instructions</small>
+                <small className={currentStep === 'checkout' ? 'text-white font-bold' : 'text-white opacity-75'}>Checkout</small>
               </div>
             </div>
           </div>
@@ -1386,149 +1371,90 @@ function BookNowCustomContent() {
 
 
   const renderServiceSelection = () => (
-    <div className="container-fluid py-5">
-      <div className="row justify-content-center">
-        <div className="col-lg-10">
-          <div className="text-center mb-5">
-            <h1 className="display-4 fw-bold text-primary mb-3">Choose Your Service</h1>
-            <p className="lead text-muted">Select the semi-permanent makeup service you&apos;d like to book</p>
-          </div>
-          
-          {servicesLoading && (
-            <div className="text-center">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading services...</span>
-              </div>
-              <p className="mt-2 text-muted">Loading services...</p>
-            </div>
-          )}
-          
-          {servicesError && (
-            <div className="alert alert-danger">
-              <h4 className="alert-heading">Error Loading Services</h4>
-              <p>{servicesError}</p>
-            </div>
-          )}
-          
-          {!servicesLoading && !servicesError && (
-            <>
-              {/* Row 1: Services 1, 2, 3 */}
-              <div className="row g-4 mb-4">
-                {services.slice(0, 3).map((service: ServiceItem) => (
-                <div key={service.id} className="col-lg-4 col-md-4">
-                <div 
-                  className={`card h-100 shadow-sm service-card ${
-                    selectedService?.id === service.id ? 'border-primary border-2' : 'border-0'
-                  }`}
-                  style={{ 
-                    cursor: 'pointer', 
-                    transition: 'all 0.3s ease',
-                    backgroundColor: selectedService?.id === service.id 
-                      ? 'rgba(173, 98, 105, 0.15)' 
-                      : 'white'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-5px)';
-                    e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
-                    e.currentTarget.style.backgroundColor = 'rgba(173, 98, 105, 0.25)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-                    e.currentTarget.style.backgroundColor = selectedService?.id === service.id 
-                      ? 'rgba(173, 98, 105, 0.15)' 
-                      : 'white';
-                  }}
-                  onClick={() => handleServiceSelect(service)}
-                >
-                  <div className="position-relative" style={{ height: '250px', overflow: 'hidden' }}>
-                    <Image
-                      src={getServiceImagePath(service)}
-                      alt={service.name}
-                      fill
-                      className="card-img-top"
-                      style={{ objectFit: 'contain' }}
-                    />
-                  </div>
-                  <div className="card-body d-flex flex-column">
-                    <h5 className="card-title text-primary fw-bold mb-3">{service.name}</h5>
-                    <div className="mb-3">
-                      <span className="badge bg-primary me-2 fs-6">${service.price}</span>
-                      <span className="badge bg-secondary fs-6">{service.duration}</span>
-                    </div>
-                    <p className="card-text text-muted mb-4 flex-grow-1">{service.description}</p>
-                    <button
-                      className="btn btn-primary w-100 mt-auto"
-                      onClick={() => handleServiceSelect(service)}
-                    >
-                      Select This Service
-                    </button>
-                  </div>
-                </div>
-                </div>
-                ))}
-              </div>
-              
-              {/* Row 2: Services 4, 5, 6 */}
-              <div className="row g-4">
-                {services.slice(3, 6).map((service: ServiceItem) => (
-                <div key={service.id} className="col-lg-4 col-md-4">
-                <div 
-                  className={`card h-100 shadow-sm service-card ${
-                    selectedService?.id === service.id ? 'border-primary border-2' : 'border-0'
-                  }`}
-                  style={{ 
-                    cursor: 'pointer', 
-                    transition: 'all 0.3s ease',
-                    backgroundColor: selectedService?.id === service.id 
-                      ? 'rgba(173, 98, 105, 0.15)' 
-                      : 'white'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-5px)';
-                    e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
-                    e.currentTarget.style.backgroundColor = 'rgba(173, 98, 105, 0.25)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-                    e.currentTarget.style.backgroundColor = selectedService?.id === service.id 
-                      ? 'rgba(173, 98, 105, 0.15)' 
-                      : 'white';
-                  }}
-                  onClick={() => handleServiceSelect(service)}
-                >
-                  <div className="position-relative" style={{ height: '250px', overflow: 'hidden' }}>
-                    <Image
-                      src={getServiceImagePath(service)}
-                      alt={service.name}
-                      fill
-                      className="card-img-top"
-                      style={{ objectFit: 'contain' }}
-                    />
-                  </div>
-                  <div className="card-body d-flex flex-column">
-                    <h5 className="card-title text-primary fw-bold mb-3">{service.name}</h5>
-                    <div className="mb-3">
-                      <span className="badge bg-primary me-2 fs-6">${service.price}</span>
-                      <span className="badge bg-secondary fs-6">{service.duration}</span>
-                    </div>
-                    <p className="card-text text-muted mb-4 flex-grow-1">{service.description}</p>
-                    <button
-                      className="btn btn-primary w-100 mt-auto"
-                      onClick={() => handleServiceSelect(service)}
-                    >
-                      Select This Service
-                    </button>
-                  </div>
-                </div>
-                </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+    <div className="max-w-6xl mx-auto px-4 py-12">
+      <div className="text-center mb-10">
+        <h1 className="text-3xl font-bold text-[#AD6269] mb-3" style={{ fontFamily: 'Playfair Display, serif' }}>Choose Your Service</h1>
+        <p className="text-gray-600 text-lg">Select the permanent makeup service you&apos;d like to book</p>
       </div>
+          
+      {servicesLoading && (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#AD6269] mx-auto" role="status">
+            <span className="sr-only">Loading services...</span>
+          </div>
+          <p className="mt-4 text-gray-500">Loading services...</p>
+        </div>
+      )}
+      
+      {servicesError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg">
+          <h4 className="font-bold text-lg">Error Loading Services</h4>
+          <p>{servicesError}</p>
+        </div>
+      )}
+          
+      {!servicesLoading && !servicesError && (
+        <>
+          {/* Services Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {services.slice(0, 6).map((service: ServiceItem) => (
+              <div 
+                key={service.id}
+                className={`bg-white rounded-xl shadow-md overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
+                  selectedService?.id === service.id 
+                    ? 'ring-2 ring-[#AD6269] bg-[#AD6269]/5' 
+                    : ''
+                }`}
+                onClick={() => handleServiceSelect(service)}
+              >
+                {/* Image Container - Fixed smaller height */}
+                <div className="relative h-[160px] bg-gray-50 overflow-hidden">
+                  <Image
+                    src={getServiceImagePath(service)}
+                    alt={service.name}
+                    fill
+                    className="object-contain p-4"
+                  />
+                </div>
+                
+                {/* Card Content */}
+                <div className="p-5">
+                  <h3 className="text-[#AD6269] font-semibold text-lg mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
+                    {service.name}
+                  </h3>
+                  
+                  {/* Price and Duration Badges */}
+                  <div className="flex gap-2 mb-3">
+                    <span className="inline-block bg-[#AD6269] text-white px-3 py-1 rounded-full text-sm font-medium">
+                      ${service.price}
+                    </span>
+                    <span className="inline-block bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm">
+                      {service.duration}
+                    </span>
+                  </div>
+                  
+                  {/* Description */}
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                    {service.description}
+                  </p>
+                  
+                  {/* Select Button */}
+                  <Button
+                    className="w-full bg-[#AD6269] hover:bg-[#9d5860] text-sm"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleServiceSelect(service);
+                    }}
+                  >
+                    Select This Service
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 
@@ -1623,37 +1549,39 @@ function BookNowCustomContent() {
               
               <div className="text-center mt-4">
                 <div className="d-flex justify-content-center">
-                  <button
-                    className="btn btn-primary btn-lg px-5"
-                    style={{ backgroundColor: '#AD6269', borderColor: '#AD6269' }}
+                  <Button
+                    size="lg"
+                    className="bg-[#AD6269] hover:bg-[#9d5860] px-5"
                     onClick={() => window.location.href = '/register?redirect=/book-now-custom&service=' + selectedService?.id}
                   >
                     <i className="fas fa-user-plus me-2"></i>
                     Create Account & Continue
-                  </button>
+                  </Button>
                 </div>
                 
                 <div className="mt-4">
                   <div className="d-flex align-items-center justify-content-center gap-3">
                     <span className="fs-5 text-dark fw-medium">Already have an account?</span>
-                    <a 
-                      href={`/login?redirect=/book-now-custom&service=${selectedService?.id}`}
-                      className="btn btn-primary rounded-pill px-4"
-                      style={{ backgroundColor: '#AD6269', borderColor: '#AD6269' }}
+                    <Button 
+                      asChild
+                      className="bg-[#AD6269] hover:bg-[#9d5860] rounded-full px-4"
                     >
-                      Sign In
-                    </a>
+                      <a href={`/login?redirect=/book-now-custom&service=${selectedService?.id}`}>
+                        Sign In
+                      </a>
+                    </Button>
                   </div>
                 </div>
                 
                 <div className="mt-4">
-                  <button
-                    className="btn btn-link text-muted"
+                  <Button
+                    variant="ghost"
+                    className="text-gray-500"
                     onClick={() => setCurrentStep('services')}
                   >
                     <i className="fas fa-arrow-left me-2"></i>
-                    Back to Service Selection
-                  </button>
+                    Back to Services
+                  </Button>
                 </div>
               </div>
             </div>
@@ -1689,18 +1617,19 @@ function BookNowCustomContent() {
               </p>
               
               <div className="d-flex gap-3 justify-content-center">
-                <button
-                  className="btn btn-primary px-4"
+                <Button
+                  className="bg-[#AD6269] hover:bg-[#9d5860] px-4"
                   onClick={() => window.location.href = '/'}
                 >
                   Return to Home
-                </button>
-                <button
-                  className="btn btn-outline-primary px-4"
+                </Button>
+                <Button
+                  variant="outline"
+                  className="px-4"
                   onClick={() => window.location.href = '/contact'}
                 >
                   Contact Us
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -1949,23 +1878,26 @@ function BookNowCustomContent() {
 
                   {/* Navigation Buttons */}
                   <div className="d-flex justify-content-between mt-5">
-                    <button
+                    <Button
                       type="button"
-                      className="btn btn-outline-secondary btn-lg px-4"
+                      variant="outline"
+                      size="lg"
+                      className="px-4"
                       onClick={() => setCurrentStep('health')}
                     >
                       <i className="fas fa-arrow-left me-2"></i>
                       Back to Health Form
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
-                      className="btn btn-primary btn-lg px-4"
+                      size="lg"
+                      className="bg-[#AD6269] hover:bg-[#9d5860] px-4"
                       onClick={handlePrePostCareComplete}
                       disabled={!prePostCareSignature.trim()}
                     >
                       I Acknowledge & Continue
                       <i className="fas fa-arrow-right ms-2"></i>
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>

@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, orderBy, query, Timestamp } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface Review {
   id: string;
@@ -156,7 +159,7 @@ export default function ReviewsManager() {
     return Array.from({ length: 5 }, (_, i) => (
       <svg
         key={i}
-        className={`${interactive ? 'cursor-pointer' : ''} ${i < rating ? 'text-warning' : 'text-muted'}`}
+        className={`${interactive ? 'cursor-pointer' : ''} ${i < rating ? 'text-yellow-400' : 'text-gray-300'}`}
         style={{ width: '1.2rem', height: '1.2rem' }}
         fill="currentColor"
         viewBox="0 0 20 20"
@@ -179,133 +182,135 @@ export default function ReviewsManager() {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '300px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AD6269]"></div>
       </div>
     );
   }
 
   return (
-    <div className="container-fluid">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h4 className="text-primary fw-bold mb-1">
-            <i className="fas fa-star me-2"></i>Customer Reviews
-          </h4>
-          <p className="text-muted mb-0">Manage customer reviews and testimonials</p>
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <i className="fas fa-star text-[#AD6269]"></i>Customer Reviews
+          </h2>
+          <p className="text-gray-500 text-sm mt-1">Manage customer reviews and testimonials</p>
         </div>
-        <button
-          className="btn btn-primary rounded-pill px-4"
+        <Button
           onClick={() => {
             resetForm();
             setEditingReview(null);
             setShowModal(true);
           }}
+          className="bg-[#AD6269] hover:bg-[#9d5860]"
         >
-          <i className="fas fa-plus me-2"></i>Add Review
-        </button>
+          <i className="fas fa-plus mr-2"></i>Add Review
+        </Button>
       </div>
 
       {/* Reviews Grid */}
-      <div className="row g-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {reviews.map((review) => (
-          <div key={review.id} className="col-lg-4 col-md-6">
-            <div className="card h-100 border-light rounded-3 shadow-sm position-relative">
-              {/* Status Badges */}
-              <div className="position-absolute top-0 end-0 m-2 d-flex gap-1">
-                {!review.isApproved && (
-                  <span className="badge bg-warning">Pending</span>
-                )}
-                {!review.isVisible && (
-                  <span className="badge bg-secondary">Hidden</span>
-                )}
-                {review.isApproved && review.isVisible && (
-                  <span className="badge bg-success">Live</span>
-                )}
+          <div key={review.id} className="bg-white rounded-xl border border-gray-200 shadow-sm relative overflow-hidden hover:shadow-md transition-shadow">
+            {/* Status Badges */}
+            <div className="absolute top-3 right-3 flex gap-1">
+              {!review.isApproved && (
+                <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+              )}
+              {!review.isVisible && (
+                <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">Hidden</span>
+              )}
+              {review.isApproved && review.isVisible && (
+                <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Live</span>
+              )}
+            </div>
+
+            <div className="p-5">
+              {/* Rating */}
+              <div className="flex justify-center mb-4">
+                {renderStars(review.rating)}
               </div>
 
-              <div className="card-body p-4">
-                {/* Rating */}
-                <div className="d-flex justify-content-center mb-3">
-                  {renderStars(review.rating)}
+              {/* Review Text */}
+              <p className="text-gray-600 text-sm mb-4 min-h-[4rem] line-clamp-3">
+                &ldquo;{review.text}&rdquo;
+              </p>
+
+              {/* Client Info */}
+              <div className="flex items-center mb-4">
+                <img
+                  src={review.image || 'https://via.placeholder.com/48x48?text=👤'}
+                  alt={review.name}
+                  className="w-12 h-12 rounded-full object-cover mr-3"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://via.placeholder.com/48x48?text=👤';
+                  }}
+                />
+                <div>
+                  <div className="font-medium text-gray-900 text-sm">{maskLastName(review.name)}</div>
+                  <div className="text-[#AD6269] text-sm">{review.service}</div>
                 </div>
+              </div>
 
-                {/* Review Text */}
-                <p className="text-muted mb-3 small" style={{ minHeight: '4rem' }}>
-                  "{review.text}"
-                </p>
-
-                {/* Client Info */}
-                <div className="d-flex align-items-center mb-3">
+              {/* Before/After Image */}
+              {review.beforeAfter && (
+                <div className="mb-4">
                   <img
-                    src={review.image || 'https://via.placeholder.com/48x48?text=👤'}
-                    alt={review.name}
-                    className="rounded-circle me-3"
-                    style={{ width: '3rem', height: '3rem', objectFit: 'cover' }}
+                    src={review.beforeAfter}
+                    alt="Before and after results"
+                    className="rounded-lg w-full h-28 object-cover"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://via.placeholder.com/48x48?text=👤';
+                      (e.target as HTMLImageElement).style.display = 'none';
                     }}
                   />
-                  <div>
-                    <div className="fw-semibold text-dark small">{maskLastName(review.name)}</div>
-                    <div className="text-primary small">{review.service}</div>
-                  </div>
                 </div>
+              )}
 
-                {/* Before/After Image */}
-                {review.beforeAfter && (
-                  <div className="mb-3">
-                    <img
-                      src={review.beforeAfter}
-                      alt="Before and after results"
-                      className="rounded w-100"
-                      style={{ height: '120px', objectFit: 'cover' }}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  </div>
-                )}
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-2">
+                <button
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors"
+                  onClick={() => handleEdit(review)}
+                >
+                  <i className="fas fa-edit mr-1"></i>Edit
+                </button>
+                <button
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                    review.isVisible 
+                      ? 'border-gray-200 text-gray-600 hover:bg-gray-50' 
+                      : 'border-green-200 text-green-600 hover:bg-green-50'
+                  }`}
+                  onClick={() => toggleVisibility(review)}
+                >
+                  <i className={`fas ${review.isVisible ? 'fa-eye-slash' : 'fa-eye'} mr-1`}></i>
+                  {review.isVisible ? 'Hide' : 'Show'}
+                </button>
+                <button
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                    review.isApproved 
+                      ? 'border-yellow-200 text-yellow-600 hover:bg-yellow-50' 
+                      : 'border-green-200 text-green-600 hover:bg-green-50'
+                  }`}
+                  onClick={() => toggleApproval(review)}
+                >
+                  <i className={`fas ${review.isApproved ? 'fa-times' : 'fa-check'} mr-1`}></i>
+                  {review.isApproved ? 'Unapprove' : 'Approve'}
+                </button>
+                <button
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                  onClick={() => handleDelete(review.id)}
+                >
+                  <i className="fas fa-trash mr-1"></i>Delete
+                </button>
+              </div>
 
-                {/* Action Buttons */}
-                <div className="d-flex gap-2 flex-wrap">
-                  <button
-                    className="btn btn-outline-primary btn-sm"
-                    onClick={() => handleEdit(review)}
-                  >
-                    <i className="fas fa-edit me-1"></i>Edit
-                  </button>
-                  <button
-                    className={`btn btn-sm ${review.isVisible ? 'btn-outline-secondary' : 'btn-outline-success'}`}
-                    onClick={() => toggleVisibility(review)}
-                  >
-                    <i className={`fas ${review.isVisible ? 'fa-eye-slash' : 'fa-eye'} me-1`}></i>
-                    {review.isVisible ? 'Hide' : 'Show'}
-                  </button>
-                  <button
-                    className={`btn btn-sm ${review.isApproved ? 'btn-outline-warning' : 'btn-outline-success'}`}
-                    onClick={() => toggleApproval(review)}
-                  >
-                    <i className={`fas ${review.isApproved ? 'fa-times' : 'fa-check'} me-1`}></i>
-                    {review.isApproved ? 'Unapprove' : 'Approve'}
-                  </button>
-                  <button
-                    className="btn btn-outline-danger btn-sm"
-                    onClick={() => handleDelete(review.id)}
-                  >
-                    <i className="fas fa-trash me-1"></i>Delete
-                  </button>
-                </div>
-
-                {/* Timestamps */}
-                <div className="mt-2 pt-2 border-top">
-                  <small className="text-muted">
-                    Created: {review.createdAt.toLocaleDateString()}
-                  </small>
-                </div>
+              {/* Timestamps */}
+              <div className="mt-4 pt-3 border-t border-gray-100">
+                <span className="text-xs text-gray-400">
+                  Created: {review.createdAt.toLocaleDateString()}
+                </span>
               </div>
             </div>
           </div>
@@ -313,141 +318,138 @@ export default function ReviewsManager() {
       </div>
 
       {reviews.length === 0 && (
-        <div className="text-center py-5">
-          <i className="fas fa-star fa-3x text-muted mb-3"></i>
-          <h5 className="text-muted">No reviews yet</h5>
-          <p className="text-muted">Add your first customer review to get started.</p>
+        <div className="text-center py-16">
+          <i className="fas fa-star text-5xl text-gray-300 mb-4"></i>
+          <h3 className="text-lg font-medium text-gray-600 mb-2">No reviews yet</h3>
+          <p className="text-gray-500">Add your first customer review to get started.</p>
         </div>
       )}
 
       {/* Add/Edit Review Modal */}
       {showModal && (
-        <div className="modal fade show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  <i className="fas fa-star me-2 text-primary"></i>
-                  {editingReview ? 'Edit Review' : 'Add New Review'}
-                </h5>
-                <button
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <i className="fas fa-star text-[#AD6269]"></i>
+                {editingReview ? 'Edit Review' : 'Add New Review'}
+              </h3>
+              <button
+                type="button"
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                onClick={() => {
+                  setShowModal(false);
+                  setEditingReview(null);
+                  resetForm();
+                }}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <form onSubmit={handleSubmit}>
+              <div className="p-6 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Customer Name</Label>
+                    <Input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Service</Label>
+                    <select
+                      className="w-full h-10 px-3 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                      value={formData.service}
+                      onChange={(e) => setFormData({ ...formData, service: e.target.value })}
+                      required
+                    >
+                      <option value="">Select Service</option>
+                      {services.map((service) => (
+                        <option key={service} value={service}>{service}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Rating</Label>
+                  <div className="flex gap-1">
+                    {renderStars(formData.rating, true, (rating) => 
+                      setFormData({ ...formData, rating })
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Review Text</Label>
+                  <textarea
+                    className="w-full px-3 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent resize-none"
+                    rows={4}
+                    value={formData.text}
+                    onChange={(e) => setFormData({ ...formData, text: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Customer Photo URL</Label>
+                    <Input
+                      type="url"
+                      value={formData.image}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, image: e.target.value })}
+                      placeholder="https://example.com/photo.jpg"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Before/After Photo URL</Label>
+                    <Input
+                      type="url"
+                      value={formData.beforeAfter}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, beforeAfter: e.target.value })}
+                      placeholder="https://example.com/results.jpg"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 rounded border-gray-300 text-[#AD6269] focus:ring-[#AD6269]"
+                      checked={formData.isApproved}
+                      onChange={(e) => setFormData({ ...formData, isApproved: e.target.checked })}
+                    />
+                    <span className="text-sm text-gray-700">Approved</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 rounded border-gray-300 text-[#AD6269] focus:ring-[#AD6269]"
+                      checked={formData.isVisible}
+                      onChange={(e) => setFormData({ ...formData, isVisible: e.target.checked })}
+                    />
+                    <span className="text-sm text-gray-700">Visible on Website</span>
+                  </label>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
+                <Button
                   type="button"
-                  className="btn-close"
+                  variant="outline"
                   onClick={() => {
                     setShowModal(false);
                     setEditingReview(null);
                     resetForm();
                   }}
-                ></button>
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" className="bg-[#AD6269] hover:bg-[#9d5860]">
+                  <i className="fas fa-save mr-2"></i>
+                  {editingReview ? 'Update Review' : 'Add Review'}
+                </Button>
               </div>
-              <form onSubmit={handleSubmit}>
-                <div className="modal-body">
-                  <div className="row g-3">
-                    <div className="col-md-6">
-                      <label className="form-label">Customer Name</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Service</label>
-                      <select
-                        className="form-select"
-                        value={formData.service}
-                        onChange={(e) => setFormData({ ...formData, service: e.target.value })}
-                        required
-                      >
-                        <option value="">Select Service</option>
-                        {services.map((service) => (
-                          <option key={service} value={service}>{service}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="col-12">
-                      <label className="form-label">Rating</label>
-                      <div className="d-flex gap-1 mb-2">
-                        {renderStars(formData.rating, true, (rating) => 
-                          setFormData({ ...formData, rating })
-                        )}
-                      </div>
-                    </div>
-                    <div className="col-12">
-                      <label className="form-label">Review Text</label>
-                      <textarea
-                        className="form-control"
-                        rows={4}
-                        value={formData.text}
-                        onChange={(e) => setFormData({ ...formData, text: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Customer Photo URL</label>
-                      <input
-                        type="url"
-                        className="form-control"
-                        value={formData.image}
-                        onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                        placeholder="https://example.com/photo.jpg"
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label">Before/After Photo URL</label>
-                      <input
-                        type="url"
-                        className="form-control"
-                        value={formData.beforeAfter}
-                        onChange={(e) => setFormData({ ...formData, beforeAfter: e.target.value })}
-                        placeholder="https://example.com/results.jpg"
-                      />
-                    </div>
-                    <div className="col-md-6">
-                      <div className="form-check">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          checked={formData.isApproved}
-                          onChange={(e) => setFormData({ ...formData, isApproved: e.target.checked })}
-                        />
-                        <label className="form-check-label">Approved</label>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="form-check">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          checked={formData.isVisible}
-                          onChange={(e) => setFormData({ ...formData, isVisible: e.target.checked })}
-                        />
-                        <label className="form-check-label">Visible on Website</label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => {
-                      setShowModal(false);
-                      setEditingReview(null);
-                      resetForm();
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn btn-primary">
-                    <i className="fas fa-save me-2"></i>
-                    {editingReview ? 'Update Review' : 'Add Review'}
-                  </button>
-                </div>
-              </form>
-            </div>
+            </form>
           </div>
         </div>
       )}

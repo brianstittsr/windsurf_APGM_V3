@@ -180,7 +180,7 @@ export default function ClientReviews() {
 
 
 
-        {/* Review List with Navigation Dots */}
+        {/* Review Carousel with Navigation Dots */}
         <div className="flex gap-8 max-w-4xl mx-auto">
           {/* Navigation Dots */}
           <div className="flex flex-col gap-3 pt-4">
@@ -196,28 +196,35 @@ export default function ClientReviews() {
             ))}
           </div>
 
-          {/* Reviews List */}
-          <div className="flex-1 space-y-8">
+          {/* Review Carousel */}
+          <div className="flex-1 relative overflow-hidden" style={{ minHeight: '150px' }}>
             {reviews.slice(0, 3).map((review, index) => (
-              <div key={index} className="flex gap-4 items-start">
-                {/* Profile Image */}
-                <div className="flex-shrink-0">
-                  <img
-                    src={review.image}
-                    alt={review.name}
-                    className="rounded-full w-12 h-12 object-cover"
-                  />
-                  <div className="text-center mt-2">
-                    <div className="font-semibold text-gray-900 text-sm">{maskLastName(review.name)}</div>
-                    <div className="text-rose-600 text-xs">{review.service}</div>
+              <div
+                key={index}
+                className={`absolute top-0 left-0 w-full transition-opacity duration-500 ${
+                  index === currentReview ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
+              >
+                <div className="flex gap-4 items-start">
+                  {/* Profile Image */}
+                  <div className="flex-shrink-0">
+                    <img
+                      src={review.image}
+                      alt={review.name}
+                      className="rounded-full w-24 h-24 object-cover"
+                    />
+                    <div className="text-center mt-3">
+                      <div className="font-semibold text-gray-900 text-base">{maskLastName(review.name)}</div>
+                      <div className="text-rose-600 text-sm">{review.service}</div>
+                    </div>
                   </div>
-                </div>
 
-                {/* Review Text */}
-                <div className="flex-1">
-                  <p className="text-gray-900 leading-relaxed">
-                    &quot;{review.text}&quot;
-                  </p>
+                  {/* Review Text */}
+                  <div className="flex-1">
+                    <p className="text-gray-900 leading-relaxed">
+                      &quot;{review.text}&quot;
+                    </p>
+                  </div>
                 </div>
               </div>
             ))}

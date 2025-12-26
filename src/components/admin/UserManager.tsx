@@ -5,6 +5,10 @@ import { collection, getDocs, doc, deleteDoc, setDoc, updateDoc } from 'firebase
 import { getDb } from '../../lib/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { User } from '../../types/user';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAlertDialog } from '@/components/ui/alert-dialog';
 
 interface UserFormData {
   email: string;
@@ -32,6 +36,7 @@ export default function UserManager() {
   const [submitting, setSubmitting] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [passwordResetStatus, setPasswordResetStatus] = useState<{[key: string]: string}>({});
+  const { showAlert, showConfirm, AlertDialogComponent } = useAlertDialog();
 
   useEffect(() => {
     // Only fetch users when auth is ready and user is admin
@@ -66,14 +71,25 @@ export default function UserManager() {
       setUsers(usersList);
     } catch (error) {
       console.error('Error fetching users:', error);
-      alert('Error fetching users.');
+      showAlert({
+        title: 'Error',
+        description: 'Error fetching users.',
+        variant: 'destructive'
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const handlePasswordReset = async (user: User) => {
-    if (!confirm(`Are you sure you want to send a password reset email to ${user.email}?`)) return;
+    const confirmed = await showConfirm({
+      title: 'Send Password Reset',
+      description: `Are you sure you want to send a password reset email to ${user.email}?`,
+      confirmText: 'Send Reset Email',
+      cancelText: 'Cancel',
+      variant: 'warning'
+    });
+    if (!confirmed) return;
 
     setPasswordResetStatus({ ...passwordResetStatus, [user.id]: 'sending' });
     try {
@@ -93,12 +109,20 @@ export default function UserManager() {
       }
 
       setPasswordResetStatus({ ...passwordResetStatus, [user.id]: 'sent' });
-      alert('Password reset email sent successfully!');
+      await showAlert({
+        title: 'Email Sent',
+        description: 'Password reset email sent successfully!',
+        variant: 'success'
+      });
       setTimeout(() => setPasswordResetStatus(prev => ({ ...prev, [user.id]: '' })), 5000);
     } catch (error: any) {
       console.error('Error sending password reset email:', error);
       setPasswordResetStatus({ ...passwordResetStatus, [user.id]: 'error' });
-      alert(`Error: ${error.message}`);
+      await showAlert({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive'
+      });
     }
   };
 
@@ -119,7 +143,11 @@ export default function UserManager() {
 
       if (formData.newPassword) {
         if (formData.newPassword.length < 6) {
-          alert('Password must be at least 6 characters long.');
+          await showAlert({
+            title: 'Invalid Password',
+            description: 'Password must be at least 6 characters long.',
+            variant: 'warning'
+          });
           setSubmitting(false);
           return;
         }
@@ -139,28 +167,51 @@ export default function UserManager() {
         }
       }
 
-      alert('User updated successfully!');
+      await showAlert({
+        title: 'Success',
+        description: 'User updated successfully!',
+        variant: 'success'
+      });
       setShowModal(false);
       setEditingUser(null);
       setFormData({ email: '', displayName: '', role: 'client', phone: '', newPassword: '' });
       fetchUsers();
     } catch (error: any) {
       console.error('Error updating user:', error);
-      alert(`Error updating user: ${error.message}`);
+      await showAlert({
+        title: 'Error',
+        description: `Error updating user: ${error.message}`,
+        variant: 'destructive'
+      });
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDeleteUser = async (userId: string, userEmail: string) => {
-    if (!confirm(`Are you sure you want to delete the user ${userEmail}?`)) return;
+    const confirmed = await showConfirm({
+      title: 'Delete User',
+      description: `Are you sure you want to delete the user ${userEmail}?`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      variant: 'destructive'
+    });
+    if (!confirmed) return;
     try {
       await deleteDoc(doc(getDb(), 'users', userId));
-      alert('User deleted successfully!');
+      await showAlert({
+        title: 'Success',
+        description: 'User deleted successfully!',
+        variant: 'success'
+      });
       fetchUsers();
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert('Error deleting user.');
+      await showAlert({
+        title: 'Error',
+        description: 'Error deleting user.',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -197,9 +248,9 @@ export default function UserManager() {
 
   const getRoleBadgeClass = (role: string) => {
     switch (role) {
-      case 'admin': return 'badge bg-danger';
-      case 'artist': return 'badge bg-primary';
-      default: return 'badge bg-success';
+      case 'admin': return 'bg-red-100 text-red-800';
+      case 'artist': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-green-100 text-green-800';
     }
   };
 
@@ -211,196 +262,201 @@ export default function UserManager() {
   });
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AD6269]"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="container-fluid">
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="d-flex justify-content-between align-items-center">
-            <h4>User Management</h4>
-            <button className="btn btn-primary" onClick={openCreateModal}>
-              <i className="fas fa-plus me-2"></i>Add New User
-            </button>
-          </div>
-        </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h2 className="text-xl font-semibold text-gray-900">User Management</h2>
+        <Button onClick={openCreateModal} className="bg-[#AD6269] hover:bg-[#9d5860]">
+          <i className="fas fa-plus mr-2"></i>Add New User
+        </Button>
       </div>
 
       {/* Search and Filter */}
-      <div className="row mb-4">
-        <div className="col-md-6">
-          <input
-            type="text"
-            className="form-control form-control-lg"
-            placeholder="Search by name or email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="col-md-6">
-          <div className="btn-group w-100" role="group">
-            {(['all', 'client', 'artist', 'admin'] as const).map(role => (
-              <button
-                key={role}
-                type="button"
-                className={`btn ${filterRole === role ? 'btn-primary' : 'btn-outline-primary'}`}
-                onClick={() => setFilterRole(role)}
-              >
-                {role.charAt(0).toUpperCase() + role.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="row">
-        <div className="col-12">
-          <div className="card">
-            <div className="card-header">
-              <h5 className="card-title mb-0">All Users ({filteredUsers.length})</h5>
-            </div>
-            <div className="card-body">
-              {filteredUsers.length === 0 ? (
-                <div className="text-center py-5">
-                  <p>No users found.</p>
-                </div>
-              ) : (
-                <div className="table-responsive">
-                  <table className="table table-hover">
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Phone</th>
-                        <th>Status</th>
-                        <th>Document ID</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredUsers.map((user) => (
-                        <tr key={user.id}>
-                          <td>{user.displayName || 'N/A'}</td>
-                          <td>{user.email || 'N/A'}</td>
-                          <td>
-                            <span className={getRoleBadgeClass(user.role)}>
-                              {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                            </span>
-                          </td>
-                          <td>{user.phone || '-'}</td>
-                          <td>
-                            <span className={`badge ${user.isActive ? 'bg-success' : 'bg-warning'}`}>
-                              {user.isActive ? 'Active' : 'Inactive'}
-                            </span>
-                          </td>
-                          <td>
-                            <div className="d-flex align-items-center">
-                              <span title={user.id} className="me-2">{`${user.id.substring(0, 4)}...${user.id.substring(user.id.length - 4)}`}</span>
-                              <button 
-                                className="btn btn-sm btn-outline-secondary" 
-                                onClick={() => copyToClipboard(user.id)}
-                                title="Copy ID"
-                              >
-                                <i className={`fas ${copiedId === user.id ? 'fa-check' : 'fa-copy'}`}></i>
-                              </button>
-                            </div>
-                          </td>
-                          <td>
-                            <div className="btn-group" role="group">
-                              <button
-                                className="btn btn-sm btn-outline-primary"
-                                onClick={() => openEditModal(user)}
-                                title="Edit User"
-                              >
-                                <i className="fas fa-edit"></i>
-                              </button>
-                              {user.email !== currentUser?.email && (
-                                <button
-                                  className="btn btn-sm btn-outline-danger"
-                                  onClick={() => handleDeleteUser(user.id, user.email)}
-                                  title="Delete User"
-                                >
-                                  <i className="fas fa-trash"></i>
-                                </button>
-                              )}
-                              <button
-                                className="btn btn-sm btn-outline-warning"
-                                onClick={() => handlePasswordReset(user)}
-                                title="Send Password Reset Email"
-                                disabled={passwordResetStatus[user.id] === 'sending' || passwordResetStatus[user.id] === 'sent'}
-                              >
-                                <i className={`fas ${passwordResetStatus[user.id] === 'sent' ? 'fa-check-circle' : 'fa-key'}`}></i>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Input
+          type="text"
+          placeholder="Search by name or email..."
+          value={searchTerm}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+          className="h-11"
+        />
+        <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+          {(['all', 'client', 'artist', 'admin'] as const).map(role => (
+            <button
+              key={role}
+              type="button"
+              className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
+                filterRole === role 
+                  ? 'bg-[#AD6269] text-white' 
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+              onClick={() => setFilterRole(role)}
+            >
+              {role.charAt(0).toUpperCase() + role.slice(1)}
+            </button>
+          ))}
         </div>
       </div>
 
+      {/* Users Table */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="font-semibold text-gray-900">All Users ({filteredUsers.length})</h3>
+        </div>
+        <div className="p-6">
+          {filteredUsers.length === 0 ? (
+            <div className="text-center py-12">
+              <i className="fas fa-users text-4xl text-gray-300 mb-4"></i>
+              <p className="text-gray-500">No users found.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Name</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Email</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Role</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Phone</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Status</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Document ID</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.map((user) => (
+                    <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <td className="py-3 px-4 text-sm text-gray-900">{user.displayName || 'N/A'}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{user.email || 'N/A'}</td>
+                      <td className="py-3 px-4">
+                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${getRoleBadgeClass(user.role)}`}>
+                          {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{user.phone || '-'}</td>
+                      <td className="py-3 px-4">
+                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                          {user.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <span title={user.id} className="text-sm text-gray-500 font-mono">{`${user.id.substring(0, 4)}...${user.id.substring(user.id.length - 4)}`}</span>
+                          <button 
+                            className="p-1 text-gray-400 hover:text-gray-600 transition-colors" 
+                            onClick={() => copyToClipboard(user.id)}
+                            title="Copy ID"
+                          >
+                            <i className={`fas ${copiedId === user.id ? 'fa-check text-green-500' : 'fa-copy'}`}></i>
+                          </button>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-1">
+                          <button
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            onClick={() => openEditModal(user)}
+                            title="Edit User"
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                          {user.email !== currentUser?.email && (
+                            <button
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              onClick={() => handleDeleteUser(user.id, user.email)}
+                              title="Delete User"
+                            >
+                              <i className="fas fa-trash"></i>
+                            </button>
+                          )}
+                          <button
+                            className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors disabled:opacity-50"
+                            onClick={() => handlePasswordReset(user)}
+                            title="Send Password Reset Email"
+                            disabled={passwordResetStatus[user.id] === 'sending' || passwordResetStatus[user.id] === 'sent'}
+                          >
+                            <i className={`fas ${passwordResetStatus[user.id] === 'sent' ? 'fa-check-circle text-green-500' : 'fa-key'}`}></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modal */}
       {showModal && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <form onSubmit={editingUser ? handleEditUser : () => {}}>
-                <div className="modal-header">
-                  <h5 className="modal-title">{editingUser ? 'Edit User' : 'Create New User'}</h5>
-                  <button type="button" className="btn-close" onClick={closeModal}></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+            <form onSubmit={editingUser ? handleEditUser : () => {}}>
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">{editingUser ? 'Edit User' : 'Create New User'}</h3>
+                <button type="button" className="p-2 text-gray-400 hover:text-gray-600 transition-colors" onClick={closeModal}>
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input type="email" id="email" value={formData.email} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, email: e.target.value })} required disabled={!!editingUser} />
                 </div>
-                <div className="modal-body">
-                  <div className="mb-3">
-                    <label htmlFor="email" className="form-label">Email</label>
-                    <input type="email" className="form-control" id="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required disabled={!!editingUser} />
-                  </div>
-                  <div className="mb-3">
-                    <label htmlFor="displayName" className="form-label">Display Name</label>
-                    <input type="text" className="form-control" id="displayName" value={formData.displayName} onChange={(e) => setFormData({ ...formData, displayName: e.target.value })} required />
-                  </div>
-                  <div className="mb-3">
-                    <label htmlFor="role" className="form-label">Role</label>
-                    <select className="form-select" id="role" value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value as 'client' | 'artist' | 'admin' })}>
-                      <option value="client">Client</option>
-                      <option value="artist">Artist</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </div>
-                  <div className="mb-3">
-                    <label htmlFor="phone" className="form-label">Phone</label>
-                    <input type="tel" className="form-control" id="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
-                  </div>
-                  {editingUser && (
-                    <div className="mb-3">
-                      <label htmlFor="newPassword" className="form-label">New Password</label>
-                      <input
-                        type="password"
-                        className="form-control"
-                        id="newPassword"
-                        placeholder="Leave blank to keep current password"
-                        value={formData.newPassword}
-                        onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                      />
-                    </div>
-                  )}
+                <div className="space-y-2">
+                  <Label htmlFor="displayName">Display Name</Label>
+                  <Input type="text" id="displayName" value={formData.displayName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, displayName: e.target.value })} required />
                 </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={closeModal}>Cancel</button>
-                  <button type="submit" className="btn btn-primary" disabled={submitting}>
-                    {submitting ? 'Saving...' : 'Save Changes'}
-                  </button>
+                <div className="space-y-2">
+                  <Label htmlFor="role">Role</Label>
+                  <select 
+                    className="w-full h-10 px-3 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent" 
+                    id="role" 
+                    value={formData.role} 
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value as 'client' | 'artist' | 'admin' })}
+                  >
+                    <option value="client">Client</option>
+                    <option value="artist">Artist</option>
+                    <option value="admin">Admin</option>
+                  </select>
                 </div>
-              </form>
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input type="tel" id="phone" value={formData.phone} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, phone: e.target.value })} />
+                </div>
+                {editingUser && (
+                  <div className="space-y-2">
+                    <Label htmlFor="newPassword">New Password</Label>
+                    <Input
+                      type="password"
+                      id="newPassword"
+                      placeholder="Leave blank to keep current password"
+                      value={formData.newPassword}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, newPassword: e.target.value })}
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
+                <Button type="button" variant="outline" onClick={closeModal}>Cancel</Button>
+                <Button type="submit" className="bg-[#AD6269] hover:bg-[#9d5860]" disabled={submitting}>
+                  {submitting ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}
+      {AlertDialogComponent}
     </div>
   );
 }

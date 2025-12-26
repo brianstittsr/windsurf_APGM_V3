@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, Timestamp } from 'firebase/firestore';
 import { getDb } from '../../lib/firebase';
 import QRCode from 'qrcode';
+import { useAlertDialog } from '@/components/ui/alert-dialog';
 
 interface QRCodeData {
   id: string;
@@ -29,6 +30,7 @@ export default function QRCodeManager() {
     isActive: true
   });
   const [generatingQR, setGeneratingQR] = useState(false);
+  const { showAlert, showConfirm, AlertDialogComponent } = useAlertDialog();
 
   useEffect(() => {
     loadQRCodes();
@@ -50,7 +52,7 @@ export default function QRCodeManager() {
       setQrCodes(qrCodesData);
     } catch (error) {
       console.error('Error loading QR codes:', error);
-      alert('Failed to load QR codes');
+      showAlert({ title: 'Error', description: 'Failed to load QR codes', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -77,7 +79,7 @@ export default function QRCodeManager() {
     e.preventDefault();
     
     if (!formData.name.trim() || !formData.url.trim()) {
-      alert('Please fill in all required fields');
+      await showAlert({ title: 'Missing Information', description: 'Please fill in all required fields', variant: 'warning' });
       return;
     }
 
@@ -113,10 +115,10 @@ export default function QRCodeManager() {
       
       await loadQRCodes();
       handleCloseModal();
-      alert(editingQRCode ? 'QR Code updated successfully!' : 'QR Code created successfully!');
+      await showAlert({ title: 'Success', description: editingQRCode ? 'QR Code updated successfully!' : 'QR Code created successfully!', variant: 'success' });
     } catch (error) {
       console.error('Error saving QR code:', error);
-      alert('Failed to save QR code');
+      await showAlert({ title: 'Error', description: 'Failed to save QR code', variant: 'destructive' });
     } finally {
       setGeneratingQR(false);
     }
@@ -134,16 +136,17 @@ export default function QRCodeManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this QR code?')) return;
+    const confirmed = await showConfirm({ title: 'Delete QR Code', description: 'Are you sure you want to delete this QR code?', confirmText: 'Delete', variant: 'destructive' });
+    if (!confirmed) return;
     
     try {
       const db = getDb();
       await deleteDoc(doc(db, 'qr-codes', id));
       await loadQRCodes();
-      alert('QR Code deleted successfully!');
+      await showAlert({ title: 'Success', description: 'QR Code deleted successfully!', variant: 'success' });
     } catch (error) {
       console.error('Error deleting QR code:', error);
-      alert('Failed to delete QR code');
+      await showAlert({ title: 'Error', description: 'Failed to delete QR code', variant: 'destructive' });
     }
   };
 

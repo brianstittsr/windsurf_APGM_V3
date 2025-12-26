@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore';
+import { getDb } from '@/lib/firebase';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import UserManager from '../../components/admin/UserManager';
 import ReviewsManager from '../../components/admin/ReviewsManager';
@@ -24,15 +27,97 @@ import GoogleReviewsDashboard from '../../components/admin/GoogleReviewsDashboar
 import WhatsAppDashboard from '../../components/admin/WhatsAppDashboard';
 import LoyaltyDashboard from '../../components/admin/LoyaltyDashboard';
 import GeoCompetitorDashboard from '../../components/admin/GeoCompetitorDashboard';
+import HeroCarouselManager from '../../components/admin/HeroCarouselManager';
+import DocumentsManager from '../../components/admin/DocumentsManager';
 import { cn } from '@/lib/utils';
 
-type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'alexa' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation';
+type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'alexa' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation' | 'hero-carousel' | 'documents';
+
+interface BookingMetrics {
+  total: number;
+  pending: number;
+  confirmed: number;
+  completed: number;
+  cancelled: number;
+  todayBookings: number;
+  thisWeekBookings: number;
+  revenue: number;
+}
 
 export default function DashboardPage() {
   const { user, userRole, loading } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [metrics, setMetrics] = useState<BookingMetrics>({
+    total: 0,
+    pending: 0,
+    confirmed: 0,
+    completed: 0,
+    cancelled: 0,
+    todayBookings: 0,
+    thisWeekBookings: 0,
+    revenue: 0
+  });
+  const [metricsLoading, setMetricsLoading] = useState(true);
+
+  // Fetch booking metrics
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        const db = getDb();
+        const bookingsRef = collection(db, 'bookings');
+        const snapshot = await getDocs(bookingsRef);
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - today.getDay());
+        
+        let total = 0;
+        let pending = 0;
+        let confirmed = 0;
+        let completed = 0;
+        let cancelled = 0;
+        let todayBookings = 0;
+        let thisWeekBookings = 0;
+        let revenue = 0;
+        
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          total++;
+          
+          // Count by status
+          switch (data.status) {
+            case 'pending': pending++; break;
+            case 'confirmed': confirmed++; break;
+            case 'completed': completed++; revenue += (data.price || 0); break;
+            case 'cancelled': cancelled++; break;
+          }
+          
+          // Check date for today/this week
+          const bookingDate = data.date ? new Date(data.date) : null;
+          if (bookingDate) {
+            bookingDate.setHours(0, 0, 0, 0);
+            if (bookingDate.getTime() === today.getTime()) {
+              todayBookings++;
+            }
+            if (bookingDate >= weekStart) {
+              thisWeekBookings++;
+            }
+          }
+        });
+        
+        setMetrics({ total, pending, confirmed, completed, cancelled, todayBookings, thisWeekBookings, revenue });
+      } catch (error) {
+        console.error('Error fetching metrics:', error);
+      } finally {
+        setMetricsLoading(false);
+      }
+    };
+    
+    fetchMetrics();
+  }, []);
 
   const getPageTitle = (tab: TabType): string => {
     const titles: Record<TabType, string> = {
@@ -69,6 +154,8 @@ export default function DashboardPage() {
       'ppc-campaigns': 'PPC Campaigns',
       'website-convert': 'Conversion Optimization',
       'marketing-automation': 'Marketing Automation',
+      'hero-carousel': 'Hero Carousel',
+      'documents': 'Documents & Agreements',
     };
     return titles[tab] || 'Dashboard';
   };
@@ -81,12 +168,12 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-vh-100 d-flex align-items-center justify-content-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50" style={{ marginTop: '-100px' }}>
         <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#AD6269] mx-auto" role="status">
+            <span className="sr-only">Loading...</span>
           </div>
-          <p className="mt-3 text-muted">Loading dashboard...</p>
+          <p className="mt-4 text-gray-500">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -100,159 +187,268 @@ export default function DashboardPage() {
     switch (activeTab) {
       case 'overview':
         return (
-          <div className="row">
-            <div className="col-12">
-              <div className="card">
-                <div className="card-header">
-                  <h5 className="card-title mb-0">Dashboard Overview</h5>
+          <div className="space-y-8">
+            {/* Booking Metrics Section */}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Booking Progress</h2>
+              {metricsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AD6269]"></div>
                 </div>
-                <div className="card-body">
-                  <div className="row">
-                    <div className="col-md-3 mb-4">
-                      <div className="card bg-primary text-white">
-                        <div className="card-body">
-                          <h5 className="card-title">Users</h5>
-                          <p className="card-text">Manage user accounts and permissions</p>
-                          <button
-                            className="btn btn-light btn-sm"
-                            onClick={() => setActiveTab('users')}
-                          >
-                            Manage Users
-                          </button>
-                        </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Total Bookings */}
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Total Bookings</p>
+                        <p className="text-3xl font-bold text-gray-900 mt-1">{metrics.total}</p>
+                      </div>
+                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i className="fas fa-calendar-check text-blue-600 text-xl"></i>
                       </div>
                     </div>
-                    <div className="col-md-3 mb-4">
-                      <div className="card bg-success text-white">
-                        <div className="card-body">
-                          <h5 className="card-title">Reviews</h5>
-                          <p className="card-text">Manage customer testimonials</p>
-                          <button
-                            className="btn btn-light btn-sm"
-                            onClick={() => setActiveTab('reviews')}
-                          >
-                            Manage Reviews
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-3 mb-4">
-                      <div className="card bg-info text-white">
-                        <div className="card-body">
-                          <h5 className="card-title">Services</h5>
-                          <p className="card-text">Configure available services</p>
-                          <button
-                            className="btn btn-light btn-sm"
-                            onClick={() => setActiveTab('services')}
-                          >
-                            Manage Services
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-3 mb-4">
-                      <div className="card bg-warning text-white">
-                        <div className="card-body">
-                          <h5 className="card-title">Coupons & Gifts</h5>
-                          <p className="card-text">Manage discounts and gift cards</p>
-                          <button
-                            className="btn btn-light btn-sm"
-                            onClick={() => setActiveTab('coupons')}
-                          >
-                            Manage Coupons
-                          </button>
-                        </div>
-                      </div>
+                    <div className="mt-3 flex items-center text-sm">
+                      <span className="text-blue-600 font-medium">{metrics.thisWeekBookings}</span>
+                      <span className="text-gray-500 ml-1">this week</span>
                     </div>
                   </div>
-                  <div className="row">
-                    <div className="col-md-3 mb-4">
-                      <div className="card bg-secondary text-white">
-                        <div className="card-body">
-                          <h5 className="card-title">Business Settings</h5>
-                          <p className="card-text">Configure business information and settings</p>
-                          <button
-                            className="btn btn-light btn-sm"
-                            onClick={() => setActiveTab('business')}
-                          >
-                            Settings
-                          </button>
-                        </div>
+
+                  {/* Pending */}
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Pending</p>
+                        <p className="text-3xl font-bold text-yellow-600 mt-1">{metrics.pending}</p>
+                      </div>
+                      <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <i className="fas fa-clock text-yellow-600 text-xl"></i>
                       </div>
                     </div>
-                    <div className="col-md-3 mb-4">
-                      <div className="card bg-danger text-white">
-                        <div className="card-body">
-                          <h5 className="card-title">Artists</h5>
-                          <p className="card-text">Manage artist profiles and specialties</p>
-                          <button
-                            className="btn btn-light btn-sm"
-                            onClick={() => setActiveTab('artists')}
-                          >
-                            Manage Artists
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-3 mb-4">
-                      <div className="card bg-dark text-white">
-                        <div className="card-body">
-                          <h5 className="card-title">Bookings</h5>
-                          <p className="card-text">View and manage all appointments</p>
-                          <button
-                            className="btn btn-light btn-sm"
-                            onClick={() => setActiveTab('bookings')}
-                          >
-                            View Calendar
-                          </button>
-                        </div>
-                      </div>
+                    <div className="mt-3 flex items-center text-sm">
+                      <span className="text-yellow-600 font-medium">Awaiting confirmation</span>
                     </div>
                   </div>
-                  <div className="row">
-                    <div className="col-md-3 mb-4">
-                      <div className="card bg-purple text-white" style={{backgroundColor: '#6f42c1'}}>
-                        <div className="card-body">
-                          <h5 className="card-title">Registration Forms</h5>
-                          <p className="card-text">Review client forms</p>
-                          <button
-                            className="btn btn-light btn-sm"
-                            onClick={() => setActiveTab('forms')}
-                          >
-                            View Forms
-                          </button>
-                        </div>
+
+                  {/* Confirmed */}
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Confirmed</p>
+                        <p className="text-3xl font-bold text-green-600 mt-1">{metrics.confirmed}</p>
+                      </div>
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <i className="fas fa-check-circle text-green-600 text-xl"></i>
                       </div>
                     </div>
-                    <div className="col-md-3 mb-4">
-                      <div className="card bg-indigo text-white" style={{backgroundColor: '#667eea'}}>
-                        <div className="card-body">
-                          <h5 className="card-title">GoHighLevel</h5>
-                          <p className="card-text">Manage CRM integration</p>
-                          <button
-                            className="btn btn-light btn-sm"
-                            onClick={() => setActiveTab('gohighlevel')}
-                          >
-                            Configure
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-3 mb-4">
-                      <div className="card text-white" style={{backgroundColor: '#e83e8c'}}>
-                        <div className="card-body">
-                          <h5 className="card-title">QR Codes</h5>
-                          <p className="card-text">Generate and track QR codes</p>
-                          <button
-                            className="btn btn-light btn-sm"
-                            onClick={() => setActiveTab('qrcodes')}
-                          >
-                            Manage QR Codes
-                          </button>
-                        </div>
-                      </div>
+                    <div className="mt-3 flex items-center text-sm">
+                      <span className="text-green-600 font-medium">{metrics.todayBookings}</span>
+                      <span className="text-gray-500 ml-1">scheduled today</span>
                     </div>
                   </div>
+
+                  {/* Completed / Revenue */}
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Completed</p>
+                        <p className="text-3xl font-bold text-[#AD6269] mt-1">{metrics.completed}</p>
+                      </div>
+                      <div className="w-12 h-12 bg-[#AD6269]/10 rounded-full flex items-center justify-center">
+                        <i className="fas fa-dollar-sign text-[#AD6269] text-xl"></i>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-center text-sm">
+                      <span className="text-[#AD6269] font-medium">${metrics.revenue.toLocaleString()}</span>
+                      <span className="text-gray-500 ml-1">revenue</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Actions Section */}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-6">
+                {/* Users */}
+                <div 
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:border-[#AD6269] hover:shadow-lg transition-all cursor-pointer group text-center"
+                  onClick={() => setActiveTab('users')}
+                >
+                  <div className="w-16 h-16 bg-gray-100 group-hover:bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
+                    <i className="fas fa-users text-3xl text-gray-600 group-hover:text-[#AD6269] transition-colors"></i>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Users</h3>
+                  <p className="text-gray-500 text-sm">Manage accounts</p>
+                </div>
+
+                {/* Reviews */}
+                <div 
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:border-[#AD6269] hover:shadow-lg transition-all cursor-pointer group text-center"
+                  onClick={() => setActiveTab('reviews')}
+                >
+                  <div className="w-16 h-16 bg-gray-100 group-hover:bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
+                    <i className="fas fa-star text-3xl text-gray-600 group-hover:text-[#AD6269] transition-colors"></i>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Reviews</h3>
+                  <p className="text-gray-500 text-sm">Testimonials</p>
+                </div>
+
+                {/* Services */}
+                <div 
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:border-[#AD6269] hover:shadow-lg transition-all cursor-pointer group text-center"
+                  onClick={() => setActiveTab('services')}
+                >
+                  <div className="w-16 h-16 bg-gray-100 group-hover:bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
+                    <i className="fas fa-spa text-3xl text-gray-600 group-hover:text-[#AD6269] transition-colors"></i>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Services</h3>
+                  <p className="text-gray-500 text-sm">Configure services</p>
+                </div>
+
+                {/* Coupons */}
+                <div 
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:border-[#AD6269] hover:shadow-lg transition-all cursor-pointer group text-center"
+                  onClick={() => setActiveTab('coupons')}
+                >
+                  <div className="w-16 h-16 bg-gray-100 group-hover:bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
+                    <i className="fas fa-tags text-3xl text-gray-600 group-hover:text-[#AD6269] transition-colors"></i>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Coupons</h3>
+                  <p className="text-gray-500 text-sm">Discounts & gifts</p>
+                </div>
+
+                {/* Settings */}
+                <div 
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:border-[#AD6269] hover:shadow-lg transition-all cursor-pointer group text-center"
+                  onClick={() => setActiveTab('business')}
+                >
+                  <div className="w-16 h-16 bg-gray-100 group-hover:bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
+                    <i className="fas fa-cog text-3xl text-gray-600 group-hover:text-[#AD6269] transition-colors"></i>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Settings</h3>
+                  <p className="text-gray-500 text-sm">Business info</p>
+                </div>
+
+                {/* Artists */}
+                <div 
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:border-[#AD6269] hover:shadow-lg transition-all cursor-pointer group text-center"
+                  onClick={() => setActiveTab('artists')}
+                >
+                  <div className="w-16 h-16 bg-gray-100 group-hover:bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
+                    <i className="fas fa-paint-brush text-3xl text-gray-600 group-hover:text-[#AD6269] transition-colors"></i>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Artists</h3>
+                  <p className="text-gray-500 text-sm">Manage profiles</p>
+                </div>
+
+                {/* Calendar */}
+                <div 
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:border-[#AD6269] hover:shadow-lg transition-all cursor-pointer group text-center"
+                  onClick={() => setActiveTab('calendar')}
+                >
+                  <div className="w-16 h-16 bg-gray-100 group-hover:bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
+                    <i className="fas fa-calendar-alt text-3xl text-gray-600 group-hover:text-[#AD6269] transition-colors"></i>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Calendar</h3>
+                  <p className="text-gray-500 text-sm">Appointments</p>
+                </div>
+
+                {/* Forms */}
+                <div 
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:border-[#AD6269] hover:shadow-lg transition-all cursor-pointer group text-center"
+                  onClick={() => setActiveTab('forms')}
+                >
+                  <div className="w-16 h-16 bg-gray-100 group-hover:bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
+                    <i className="fas fa-file-alt text-3xl text-gray-600 group-hover:text-[#AD6269] transition-colors"></i>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Forms</h3>
+                  <p className="text-gray-500 text-sm">Client forms</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Website Content Section */}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">Website Content</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {/* Hero Carousel */}
+                <div 
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:border-[#AD6269] hover:shadow-lg transition-all cursor-pointer group text-center"
+                  onClick={() => setActiveTab('hero-carousel')}
+                >
+                  <div className="w-16 h-16 bg-gray-100 group-hover:bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
+                    <i className="fas fa-images text-3xl text-gray-600 group-hover:text-[#AD6269] transition-colors"></i>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Hero Carousel</h3>
+                  <p className="text-gray-500 text-sm">Homepage slides</p>
+                </div>
+
+                {/* Documents */}
+                <div 
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:border-[#AD6269] hover:shadow-lg transition-all cursor-pointer group text-center"
+                  onClick={() => setActiveTab('documents')}
+                >
+                  <div className="w-16 h-16 bg-gray-100 group-hover:bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
+                    <i className="fas fa-file-contract text-3xl text-gray-600 group-hover:text-[#AD6269] transition-colors"></i>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Documents</h3>
+                  <p className="text-gray-500 text-sm">Agreements & forms</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Integrations Section */}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">Integrations</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {/* GoHighLevel */}
+                <div 
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:border-[#AD6269] hover:shadow-lg transition-all cursor-pointer group text-center"
+                  onClick={() => setActiveTab('gohighlevel')}
+                >
+                  <div className="w-16 h-16 bg-gray-100 group-hover:bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
+                    <i className="fas fa-plug text-3xl text-gray-600 group-hover:text-[#AD6269] transition-colors"></i>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">GoHighLevel</h3>
+                  <p className="text-gray-500 text-sm">CRM integration</p>
+                </div>
+
+                {/* QR Codes */}
+                <div 
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:border-[#AD6269] hover:shadow-lg transition-all cursor-pointer group text-center"
+                  onClick={() => setActiveTab('qrcodes')}
+                >
+                  <div className="w-16 h-16 bg-gray-100 group-hover:bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
+                    <i className="fas fa-qrcode text-3xl text-gray-600 group-hover:text-[#AD6269] transition-colors"></i>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">QR Codes</h3>
+                  <p className="text-gray-500 text-sm">Generate & track</p>
+                </div>
+
+                {/* Google Reviews */}
+                <div 
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:border-[#AD6269] hover:shadow-lg transition-all cursor-pointer group text-center"
+                  onClick={() => setActiveTab('google-reviews')}
+                >
+                  <div className="w-16 h-16 bg-gray-100 group-hover:bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
+                    <i className="fab fa-google text-3xl text-gray-600 group-hover:text-[#AD6269] transition-colors"></i>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Google Reviews</h3>
+                  <p className="text-gray-500 text-sm">Monitor reviews</p>
+                </div>
+
+                {/* WhatsApp */}
+                <div 
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:border-[#AD6269] hover:shadow-lg transition-all cursor-pointer group text-center"
+                  onClick={() => setActiveTab('whatsapp')}
+                >
+                  <div className="w-16 h-16 bg-gray-100 group-hover:bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
+                    <i className="fab fa-whatsapp text-3xl text-gray-600 group-hover:text-[#AD6269] transition-colors"></i>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">WhatsApp</h3>
+                  <p className="text-gray-500 text-sm">Business messaging</p>
                 </div>
               </div>
             </div>
@@ -320,6 +516,10 @@ export default function DashboardPage() {
         return <MarketingPlaceholder title="Conversion Optimization" description="Attract your ideal customers and make them convert. Design stunning websites that turn your visitors into new customers." features={['A/B Testing', 'Heatmap Analysis', 'Session Recordings', 'Form Optimization', 'CTA Optimization']} />;
       case 'marketing-automation':
         return <MarketingPlaceholder title="Marketing Automation" description="Automate your marketing with proprietary systems and software. Use high-converting strategies to work smarter, not harder." features={['Visual Workflow Builder', 'Trigger-Based Actions', 'Multi-Channel Sequences', 'CRM Automation', 'Performance Reports']} />;
+      case 'hero-carousel':
+        return <HeroCarouselManager />;
+      case 'documents':
+        return <DocumentsManager />;
       default:
         return null;
     }
@@ -363,7 +563,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="flex min-h-screen" style={{ paddingTop: 0 }}>
+    <div className="flex min-h-screen !pt-0" style={{ marginTop: '-100px', paddingTop: 0 }}>
       {/* Sidebar */}
       <AdminSidebar
         activeTab={activeTab}

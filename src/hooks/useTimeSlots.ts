@@ -9,6 +9,8 @@ interface TimeSlot {
   available: boolean;
   artistId: string;
   artistName: string;
+  calendarId?: string;
+  calendarName?: string;
 }
 
 interface TimeSlotsData {

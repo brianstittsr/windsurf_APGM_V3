@@ -46,22 +46,6 @@ export default function Hero() {
         
       </div>
       
-      {/* Online Consultation Button with Black Ribbon - Anchored to Bottom Center */}
-      <div className="absolute bottom-0 left-0 w-full" style={{ zIndex: 1 }}>
-        <div 
-          className="flex justify-center items-center py-3"
-          style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            backdropFilter: 'blur(5px)'
-          }}
-        >
-          <Button asChild size="lg" className="rounded-full px-8 bg-white text-gray-900 hover:bg-gray-100 shadow-sm font-semibold tracking-wide">
-            <Link href="/contact">
-              Online Consultation
-            </Link>
-          </Button>
-        </div>
-      </div>
     </section>
   );
 }
