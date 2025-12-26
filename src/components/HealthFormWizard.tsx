@@ -1,6 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { ArrowLeft, ArrowRight, Check, X, AlertTriangle, Heart } from 'lucide-react';
 
 interface HealthFormData {
   [key: number]: string;
@@ -13,6 +18,7 @@ interface HealthFormWizardProps {
   onBack: () => void;
   clientSignature: string;
   onSignatureChange: (signature: string) => void;
+  hideHeader?: boolean;
 }
 
 interface WizardStep {
@@ -37,7 +43,6 @@ const steps: WizardStep[] = [
   { id: 11, question: "Do you have any metal allergies or sensitivities?", type: 'yesno', category: 'Allergies' },
   { id: 12, question: "Have you consumed alcohol within the last 24 hours?", type: 'yesno', category: 'Pre-Treatment' },
   { id: 14, question: "Are you over 18 years of age?", type: 'yesno', category: 'Legal Requirements' },
-
   { id: 17, question: "Do you understand that results may vary and touch-ups may be needed?", type: 'yesno', category: 'Expectations' },
   { id: 18, question: "Electronic Signature & Consent", type: 'signature', category: 'Final Consent' }
 ];
@@ -48,7 +53,8 @@ export default function HealthFormWizard({
   onNext, 
   onBack, 
   clientSignature, 
-  onSignatureChange 
+  onSignatureChange,
+  hideHeader = false
 }: HealthFormWizardProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [errors, setErrors] = useState<string[]>([]);
@@ -59,12 +65,8 @@ export default function HealthFormWizard({
     if (currentStep.type === 'signature') {
       onSignatureChange(value);
     } else {
-      onChange({
-        ...data,
-        [currentStep.id]: value
-      });
+      onChange({ ...data, [currentStep.id]: value });
       
-      // Auto-advance for Yes/No questions
       if (currentStep.type === 'yesno') {
         setTimeout(() => {
           if (currentStepIndex < steps.length - 1) {
@@ -72,18 +74,17 @@ export default function HealthFormWizard({
           } else {
             onNext();
           }
-        }, 300); // Small delay for visual feedback
+        }, 300);
       }
     }
-    setErrors([]); // Clear errors when user types
+    setErrors([]);
   };
 
   const validateCurrentStep = () => {
     const newErrors: string[] = [];
     
     if (currentStep.type === 'yesno') {
-      const value = data[currentStep.id];
-      if (!value) {
+      if (!data[currentStep.id]) {
         newErrors.push('Please select Yes or No');
       }
     } else if (currentStep.type === 'signature') {
@@ -115,9 +116,7 @@ export default function HealthFormWizard({
     }
   };
 
-  const getProgressPercentage = () => {
-    return Math.round(((currentStepIndex + 1) / steps.length) * 100);
-  };
+  const getProgressPercentage = () => Math.round(((currentStepIndex + 1) / steps.length) * 100);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -127,151 +126,140 @@ export default function HealthFormWizard({
   };
 
   return (
-    <div className="container-fluid py-5">
-      <div className="row justify-content-center">
-        <div className="col-lg-8">
-          <div className="card shadow-lg border-0">
-            <div className="card-header bg-primary text-white text-center py-4">
-              <h2 className="h3 mb-0">Health & Consent Form</h2>
-              <p className="mb-0" style={{ color: 'white' }}>Step {currentStepIndex + 1} of {steps.length}</p>
-              
-              {/* Progress Bar */}
-              <div className="mt-3">
-                <div className="progress" style={{ height: '8px' }}>
-                  <div 
-                    className="progress-bar" 
-                    role="progressbar" 
-                    style={{ 
-                      width: `${getProgressPercentage()}%`,
-                      backgroundColor: 'rgba(173, 98, 105, 0.5)'
-                    }}
-                  ></div>
-                </div>
-                <small className="text-white-50 mt-1 d-block">
-                  {getProgressPercentage()}% Complete
-                </small>
-              </div>
+    <div className={`${hideHeader ? 'py-4' : 'min-h-[60vh]'} flex items-center justify-center px-4`}>
+      <Card className={`w-full max-w-2xl shadow-xl border-0 ${hideHeader ? 'shadow-none' : ''}`}>
+        {/* Header - only show if not embedded */}
+        {!hideHeader && (
+          <CardHeader className="bg-[#AD6269] text-white rounded-t-lg p-6 text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Heart className="w-5 h-5" />
+              <h2 className="text-xl font-semibold">Health & Consent Form</h2>
             </div>
+            <p className="text-white/80 text-sm">
+              Question {currentStepIndex + 1} of {steps.length}
+            </p>
             
-            <div className="card-body p-5" onKeyPress={handleKeyPress}>
-              {errors.length > 0 && (
-                <div className="alert alert-danger mb-4">
-                  <ul className="mb-0">
-                    {errors.map((error, index) => (
-                      <li key={index}>{error}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+            <div className="mt-4">
+              <Progress value={getProgressPercentage()} className="h-2 bg-white/30" />
+              <p className="text-white/70 text-xs mt-2">
+                {getProgressPercentage()}% Complete
+              </p>
+            </div>
+          </CardHeader>
+        )}
+        
+        <CardContent className="p-8" onKeyPress={handleKeyPress}>
+          {errors.length > 0 && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+              {errors.map((error, index) => (
+                <p key={index} className="text-sm">{error}</p>
+              ))}
+            </div>
+          )}
 
-              {/* Current Step */}
-              <div className="text-center mb-4">
-                <div className={`badge bg-light text-dark px-3 py-2 mb-3 ${
-                  currentStep.category === 'Medical Conditions' ? 'fs-4' : ''
-                }`}>
-                  {currentStep.category}
-                </div>
-                <h1 className="text-primary fw-bold mb-4">
-                  {currentStep.question}
-                </h1>
-              </div>
+          {/* Category Badge */}
+          <div className="text-center mb-6">
+            <span className="inline-block bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm font-medium mb-4">
+              {currentStep.category}
+            </span>
+            <h3 className="text-xl font-bold text-[#AD6269]">
+              {currentStep.question}
+            </h3>
+          </div>
 
-              {/* Question Content */}
-              {currentStep.type === 'yesno' ? (
-                <div className="d-flex justify-content-center gap-4 mb-5">
-                  <button
-                    type="button"
-                    className={`btn btn-lg px-5 py-3 ${
-                      data[currentStep.id] === 'yes' 
-                        ? 'btn-success' 
-                        : 'btn-outline-success'
-                    }`}
-                    onClick={() => handleInputChange('yes')}
-                    autoFocus
-                  >
-                    <i className="fas fa-check me-2"></i>
-                    Yes
-                  </button>
-                  <button
-                    type="button"
-                    className={`btn btn-lg px-5 py-3 ${
-                      data[currentStep.id] === 'no' 
-                        ? 'btn-danger' 
-                        : 'btn-outline-danger'
-                    }`}
-                    onClick={() => handleInputChange('no')}
-                  >
-                    <i className="fas fa-times me-2"></i>
-                    No
-                  </button>
-                </div>
-              ) : (
-                <div className="mb-5">
-                  {/* Consent Information */}
-                  <div className="alert alert-warning mb-4">
-                    <h6 className="fw-bold mb-2">
-                      <i className="fas fa-exclamation-triangle me-2"></i>
-                      Acknowledgment & Consent
-                    </h6>
-                    <p className="mb-2 small">
-                      By signing below, I acknowledge that:
-                    </p>
-                    <ul className="small mb-0">
+          {/* Question Content */}
+          {currentStep.type === 'yesno' ? (
+            <div className="flex justify-center gap-6 mb-8">
+              <Button
+                type="button"
+                size="lg"
+                variant={data[currentStep.id] === 'yes' ? 'default' : 'outline'}
+                className={`px-8 py-6 text-lg ${
+                  data[currentStep.id] === 'yes' 
+                    ? 'bg-green-600 hover:bg-green-700' 
+                    : 'border-green-600 text-green-600 hover:bg-green-50'
+                }`}
+                onClick={() => handleInputChange('yes')}
+                autoFocus
+              >
+                <Check className="w-5 h-5 mr-2" />
+                Yes
+              </Button>
+              <Button
+                type="button"
+                size="lg"
+                variant={data[currentStep.id] === 'no' ? 'default' : 'outline'}
+                className={`px-8 py-6 text-lg ${
+                  data[currentStep.id] === 'no' 
+                    ? 'bg-red-600 hover:bg-red-700' 
+                    : 'border-red-600 text-red-600 hover:bg-red-50'
+                }`}
+                onClick={() => handleInputChange('no')}
+              >
+                <X className="w-5 h-5 mr-2" />
+                No
+              </Button>
+            </div>
+          ) : (
+            <div className="mb-8">
+              {/* Consent Information */}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-amber-800 mb-2">Acknowledgment & Consent</h4>
+                    <p className="text-sm text-amber-700 mb-2">By signing below, I acknowledge that:</p>
+                    <ul className="text-sm text-amber-700 space-y-1 list-disc list-inside">
                       <li>I have answered all health questions honestly and completely</li>
-                      <li>I understand the risks and benefits of semi-permanent makeup procedures</li>
-                      <li>I consent to the semi-permanent makeup procedure</li>
+                      <li>I understand the risks and benefits of permanent makeup procedures</li>
+                      <li>I consent to the permanent makeup procedure</li>
                       <li>I understand that results may vary and touch-ups may be needed</li>
                     </ul>
                   </div>
-
-                  <div className="row justify-content-center">
-                    <div className="col-md-8">
-                      <label className="form-label text-dark fw-semibold">Electronic Signature *</label>
-                      <input
-                        type="text"
-                        className="form-control form-control-lg"
-                        value={clientSignature}
-                        onChange={(e) => handleInputChange(e.target.value)}
-                        placeholder="Type your full legal name"
-                        autoFocus
-                      />
-                      <small className="text-muted">
-                        By typing your name, you agree to use electronic records and signatures.
-                      </small>
-                      <div className="mt-3">
-                        <small className="text-muted">
-                          Date & Time: {new Date().toLocaleDateString()} - {new Date().toLocaleTimeString()}
-                        </small>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-              )}
+              </div>
 
-              {/* Navigation Buttons */}
-              <div className="d-flex justify-content-between align-items-center pt-4 border-top">
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary"
-                  onClick={handlePrevious}
-                >
-                  <i className="fas fa-arrow-left me-2"></i>
-                  {currentStepIndex === 0 ? 'Back to Profile' : 'Previous'}
-                </button>
-                
-                <button
-                  type="button"
-                  className="btn btn-primary btn-lg px-4"
-                  onClick={handleNext}
-                >
-                  {currentStepIndex === steps.length - 1 ? 'Complete Form' : 'Next'}
-                  <i className="fas fa-arrow-right ms-2"></i>
-                </button>
+              <div className="max-w-md mx-auto">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Electronic Signature *
+                </label>
+                <Input
+                  type="text"
+                  value={clientSignature}
+                  onChange={(e) => handleInputChange(e.target.value)}
+                  placeholder="Type your full legal name"
+                  className="h-14 text-center text-lg"
+                  autoFocus
+                />
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  By typing your name, you agree to use electronic records and signatures.
+                </p>
+                <p className="text-xs text-gray-400 mt-2 text-center">
+                  Date & Time: {new Date().toLocaleDateString()} - {new Date().toLocaleTimeString()}
+                </p>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
+          )}
+        </CardContent>
+
+        <CardFooter className="bg-gray-50 rounded-b-lg p-4 flex justify-between">
+          <Button
+            variant="outline"
+            onClick={handlePrevious}
+            className="gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {currentStepIndex === 0 ? 'Back to Profile' : 'Previous'}
+          </Button>
+          <Button
+            onClick={handleNext}
+            className="gap-2 bg-[#AD6269] hover:bg-[#9d5860]"
+          >
+            {currentStepIndex === steps.length - 1 ? 'Complete Form' : 'Next'}
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

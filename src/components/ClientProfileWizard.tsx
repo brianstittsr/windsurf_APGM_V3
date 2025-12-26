@@ -28,6 +28,7 @@ interface ClientProfileWizardProps {
   onChange: (data: ClientProfileData) => void;
   onNext: () => void;
   onBack: () => void;
+  hideHeader?: boolean; // Hide the header when embedded in main booking flow
 }
 
 interface WizardStep {
@@ -43,7 +44,7 @@ interface WizardStep {
   validation?: (value: string) => string | null;
 }
 
-export default function ClientProfileWizard({ data, onChange, onNext, onBack }: ClientProfileWizardProps) {
+export default function ClientProfileWizard({ data, onChange, onNext, onBack, hideHeader = false }: ClientProfileWizardProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [errors, setErrors] = useState<string[]>([]);
   const [isPrePopulated, setIsPrePopulated] = useState(false);
@@ -273,35 +274,37 @@ export default function ClientProfileWizard({ data, onChange, onNext, onBack }: 
   const hasValue = currentValue.trim() !== '';
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center px-4 py-8">
-      <Card className="w-full max-w-lg shadow-xl border-0">
-        {/* Header */}
-        <CardHeader className="bg-[#AD6269] text-white rounded-t-lg p-6 text-center">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            {currentStep.icon}
-            <h2 className="text-xl font-semibold">{currentStep.title}</h2>
-          </div>
-          <p className="text-white/80 text-sm">
-            Question {currentStepIndex + 1} of {steps.length}
-          </p>
-          
-          {isPrePopulated && (
-            <div className="mt-3">
-              <span className="inline-flex items-center gap-1.5 bg-green-500/20 text-white px-3 py-1 rounded-full text-xs font-medium">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                Profile information loaded
-              </span>
+    <div className={`${hideHeader ? 'py-4' : 'min-h-[60vh]'} flex items-center justify-center px-4`}>
+      <Card className={`w-full max-w-lg shadow-xl border-0 ${hideHeader ? 'shadow-none' : ''}`}>
+        {/* Header - only show if not embedded */}
+        {!hideHeader && (
+          <CardHeader className="bg-[#AD6269] text-white rounded-t-lg p-6 text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              {currentStep.icon}
+              <h2 className="text-xl font-semibold">{currentStep.title}</h2>
             </div>
-          )}
-          
-          {/* Progress Bar */}
-          <div className="mt-4">
-            <Progress value={getProgressPercentage()} className="h-2 bg-white/30" />
-            <p className="text-white/70 text-xs mt-2">
-              {getProgressPercentage()}% Complete ({getCompletedSteps()}/{steps.length} fields)
+            <p className="text-white/80 text-sm">
+              Question {currentStepIndex + 1} of {steps.length}
             </p>
-          </div>
-        </CardHeader>
+            
+            {isPrePopulated && (
+              <div className="mt-3">
+                <span className="inline-flex items-center gap-1.5 bg-green-500/20 text-white px-3 py-1 rounded-full text-xs font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Profile information loaded
+                </span>
+              </div>
+            )}
+            
+            {/* Progress Bar */}
+            <div className="mt-4">
+              <Progress value={getProgressPercentage()} className="h-2 bg-white/30" />
+              <p className="text-white/70 text-xs mt-2">
+                {getProgressPercentage()}% Complete ({getCompletedSteps()}/{steps.length} fields)
+              </p>
+            </div>
+          </CardHeader>
+        )}
         
         {/* Content */}
         <CardContent className="p-8">

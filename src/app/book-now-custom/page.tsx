@@ -1235,6 +1235,7 @@ function BookNowCustomContent() {
               onChange={setClientProfile}
               onNext={handleProfileToHealth}
               onBack={() => setCurrentStep('calendar')}
+              hideHeader={true}
             />
           )
         )}
@@ -1246,6 +1247,7 @@ function BookNowCustomContent() {
           onBack={() => setCurrentStep('profile')}
           clientSignature={clientSignature}
           onSignatureChange={setClientSignature}
+          hideHeader={true}
         />
       )}
       {currentStep === 'pre-post-care' && (
