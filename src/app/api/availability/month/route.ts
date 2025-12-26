@@ -21,12 +21,11 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const availability: Record<string, { date: string; bookingCount: number; isAvailable: boolean }> = {};
-    let nextAvailable: string | null = null;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Generate all dates in range
+    // Generate all dates in range with default availability
+    const availability: Record<string, { date: string; bookingCount: number; isAvailable: boolean }> = {};
     const start = new Date(startDate + 'T00:00:00');
     const end = new Date(endDate + 'T00:00:00');
     
@@ -39,32 +38,8 @@ export async function GET(req: NextRequest) {
       };
     }
 
-    // Try to fetch from GHL if credentials are available (with timeout)
-    const apiKey = process.env.GHL_API_KEY || '';
-    const locationId = process.env.GHL_LOCATION_ID || '';
-    
-    if (apiKey && locationId) {
-      try {
-        const appointments = await fetchGHLAppointmentsWithTimeout(apiKey, locationId, startDate, endDate, 5000);
-        
-        // Count bookings per day
-        for (const apt of appointments) {
-          const aptDate = new Date(apt.startTime).toISOString().split('T')[0];
-          if (availability[aptDate]) {
-            availability[aptDate].bookingCount++;
-            // Mark as unavailable if 2 or more bookings
-            if (availability[aptDate].bookingCount >= 2) {
-              availability[aptDate].isAvailable = false;
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching GHL appointments (continuing without GHL data):', error);
-        // Continue without GHL data - calendar will still work
-      }
-    }
-
-    // Find next available date
+    // Find next available date (before GHL check for fast response)
+    let nextAvailable: string | null = null;
     const sortedDates = Object.keys(availability).sort();
     for (const dateStr of sortedDates) {
       const dateObj = new Date(dateStr + 'T00:00:00');
@@ -74,11 +49,57 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Check GHL credentials - skip GHL call if not configured
+    const apiKey = process.env.GHL_API_KEY || '';
+    const locationId = process.env.GHL_LOCATION_ID || '';
+    
+    // If no GHL credentials, return immediately with default availability
+    if (!apiKey || !locationId) {
+      return NextResponse.json({
+        availability,
+        nextAvailable,
+        startDate,
+        endDate,
+        source: 'default'
+      });
+    }
+
+    // Try to fetch from GHL with short timeout (3 seconds)
+    try {
+      const appointments = await fetchGHLAppointmentsWithTimeout(apiKey, locationId, startDate, endDate, 3000);
+      
+      // Count bookings per day
+      for (const apt of appointments) {
+        const aptDate = new Date(apt.startTime).toISOString().split('T')[0];
+        if (availability[aptDate]) {
+          availability[aptDate].bookingCount++;
+          // Mark as unavailable if 2 or more bookings
+          if (availability[aptDate].bookingCount >= 2) {
+            availability[aptDate].isAvailable = false;
+          }
+        }
+      }
+      
+      // Recalculate next available after GHL data
+      nextAvailable = null;
+      for (const dateStr of sortedDates) {
+        const dateObj = new Date(dateStr + 'T00:00:00');
+        if (dateObj >= today && availability[dateStr].isAvailable) {
+          nextAvailable = dateStr;
+          break;
+        }
+      }
+    } catch (error) {
+      // GHL failed - continue with default availability (already set)
+      console.warn('GHL fetch failed, using default availability');
+    }
+
     return NextResponse.json({
       availability,
       nextAvailable,
       startDate,
       endDate,
+      source: apiKey ? 'ghl' : 'default'
     });
 
   } catch (error) {
