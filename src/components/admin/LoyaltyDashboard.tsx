@@ -3,6 +3,29 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { 
+  Heart, 
+  RefreshCw, 
+  Download, 
+  PieChart, 
+  Users, 
+  Star, 
+  Settings, 
+  X, 
+  Plus, 
+  Eye, 
+  CreditCard, 
+  Share2,
+  Trophy,
+  Medal,
+  Award,
+  Mail,
+  Phone,
+  Tag,
+  AlertCircle,
+  CheckCircle,
+  Coins
+} from 'lucide-react';
 
 // ============================================================================
 // Types
@@ -295,84 +318,101 @@ export default function LoyaltyDashboard() {
   // --------------------------------------------------------------------------
 
   return (
-    <div className="loyalty-dashboard">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="mb-0">
-          <i className="fas fa-gift me-2 text-primary"></i>
+    <div className="w-full">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <Heart className="w-6 h-6 text-[#AD6269]" />
           Loyalty Program
         </h2>
-        <div>
-          <button 
-            className="btn btn-outline-primary me-2"
+        <div className="flex gap-2">
+          <Button 
+            variant="outline"
             onClick={() => { loadStats(); loadMembers(); }}
           >
-            <i className="fas fa-sync-alt me-2"></i>
+            <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
-          </button>
-          <button 
-            className="btn btn-primary"
+          </Button>
+          <Button 
             onClick={downloadAllCards}
             disabled={loading}
+            className="bg-[#AD6269] hover:bg-[#9d5860] text-white"
           >
-            <i className="fas fa-download me-2"></i>
+            <Download className="w-4 h-4 mr-2" />
             Download All Cards
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Tabs */}
-      <ul className="nav nav-tabs mb-4">
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === 'overview' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('overview'); loadStats(); }}
-          >
-            <i className="fas fa-chart-pie me-2"></i>
-            Overview
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === 'members' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('members'); loadMembers(); }}
-          >
-            <i className="fas fa-users me-2"></i>
-            Members
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === 'rewards' ? 'active' : ''}`}
-            onClick={() => setActiveTab('rewards')}
-          >
-            <i className="fas fa-star me-2"></i>
-            Rewards
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('settings')}
-          >
-            <i className="fas fa-cog me-2"></i>
-            Settings
-          </button>
-        </li>
-      </ul>
+      <div className="flex flex-wrap gap-2 mb-6">
+        <button
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            activeTab === 'overview'
+              ? 'bg-[#AD6269] text-white'
+              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          }`}
+          onClick={() => { setActiveTab('overview'); loadStats(); }}
+        >
+          <PieChart className="w-4 h-4" />
+          Overview
+        </button>
+        <button
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            activeTab === 'members'
+              ? 'bg-[#AD6269] text-white'
+              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          }`}
+          onClick={() => { setActiveTab('members'); loadMembers(); }}
+        >
+          <Users className="w-4 h-4" />
+          Members
+        </button>
+        <button
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            activeTab === 'rewards'
+              ? 'bg-[#AD6269] text-white'
+              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          }`}
+          onClick={() => setActiveTab('rewards')}
+        >
+          <Star className="w-4 h-4" />
+          Rewards
+        </button>
+        <button
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            activeTab === 'settings'
+              ? 'bg-[#AD6269] text-white'
+              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+          }`}
+          onClick={() => setActiveTab('settings')}
+        >
+          <Settings className="w-4 h-4" />
+          Settings
+        </button>
+      </div>
 
       {/* Alerts */}
       {error && (
-        <div className="alert alert-danger alert-dismissible fade show">
-          <i className="fas fa-exclamation-circle me-2"></i>
-          {error}
-          <button type="button" className="btn-close" onClick={() => setError(null)}></button>
+        <div className="flex items-center justify-between bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-5 h-5" />
+            {error}
+          </div>
+          <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">
+            <X className="w-5 h-5" />
+          </button>
         </div>
       )}
       {success && (
-        <div className="alert alert-success alert-dismissible fade show">
-          <i className="fas fa-check-circle me-2"></i>
-          {success}
-          <button type="button" className="btn-close" onClick={() => setSuccess(null)}></button>
+        <div className="flex items-center justify-between bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-5 h-5" />
+            {success}
+          </div>
+          <button onClick={() => setSuccess(null)} className="text-green-500 hover:text-green-700">
+            <X className="w-5 h-5" />
+          </button>
         </div>
       )}
 
@@ -380,157 +420,122 @@ export default function LoyaltyDashboard() {
       {activeTab === 'overview' && (
         <div>
           {loading ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary"></div>
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AD6269]"></div>
             </div>
           ) : stats ? (
             <>
               {/* Stats Cards */}
-              <div className="row mb-4">
-                <div className="col-md-3">
-                  <div className="card bg-primary text-white h-100">
-                    <div className="card-body text-center">
-                      <div className="display-4">{stats.totalMembers}</div>
-                      <p className="mb-0">Total Members</p>
-                    </div>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-[#AD6269] text-white rounded-xl p-6 text-center">
+                  <div className="text-4xl font-bold">{stats.totalMembers}</div>
+                  <p className="text-white/80 mt-1">Total Members</p>
                 </div>
-                <div className="col-md-3">
-                  <div className="card bg-success text-white h-100">
-                    <div className="card-body text-center">
-                      <div className="display-4">{stats.activeMembers}</div>
-                      <p className="mb-0">Active (30 days)</p>
-                    </div>
-                  </div>
+                <div className="bg-green-500 text-white rounded-xl p-6 text-center">
+                  <div className="text-4xl font-bold">{stats.activeMembers}</div>
+                  <p className="text-white/80 mt-1">Active (30 days)</p>
                 </div>
-                <div className="col-md-3">
-                  <div className="card bg-info text-white h-100">
-                    <div className="card-body text-center">
-                      <div className="display-4">{stats.totalPointsIssued.toLocaleString()}</div>
-                      <p className="mb-0">Points Issued</p>
-                    </div>
-                  </div>
+                <div className="bg-blue-500 text-white rounded-xl p-6 text-center">
+                  <div className="text-4xl font-bold">{stats.totalPointsIssued.toLocaleString()}</div>
+                  <p className="text-white/80 mt-1">Points Issued</p>
                 </div>
-                <div className="col-md-3">
-                  <div className="card bg-warning text-dark h-100">
-                    <div className="card-body text-center">
-                      <div className="display-4">{stats.conversionRate.toFixed(1)}%</div>
-                      <p className="mb-0">Referral Conversion</p>
-                    </div>
-                  </div>
+                <div className="bg-yellow-500 text-gray-900 rounded-xl p-6 text-center">
+                  <div className="text-4xl font-bold">{stats.conversionRate.toFixed(1)}%</div>
+                  <p className="text-gray-700 mt-1">Referral Conversion</p>
                 </div>
               </div>
 
-              <div className="row">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 {/* Tier Distribution */}
-                <div className="col-md-6 mb-4">
-                  <div className="card h-100">
-                    <div className="card-header">
-                      <h5 className="mb-0">Tier Distribution</h5>
-                    </div>
-                    <div className="card-body">
-                      {Object.entries(stats.tierDistribution).map(([tier, count]) => (
-                        <div key={tier} className="d-flex align-items-center mb-3">
-                          <span 
-                            className="badge me-3" 
+                <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
+                  <div className="px-6 py-4 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900">Tier Distribution</h3>
+                  </div>
+                  <div className="p-6 space-y-4">
+                    {Object.entries(stats.tierDistribution).map(([tier, count]) => (
+                      <div key={tier} className="flex items-center gap-3">
+                        <span 
+                          className="px-3 py-1 rounded text-white text-xs font-semibold w-20 text-center" 
+                          style={{ backgroundColor: getTierColor(tier) }}
+                        >
+                          {tier.toUpperCase()}
+                        </span>
+                        <div className="flex-grow bg-gray-200 rounded-full h-6 overflow-hidden">
+                          <div
+                            className="h-full flex items-center justify-center text-white text-xs font-medium"
                             style={{ 
-                              backgroundColor: getTierColor(tier),
-                              width: '80px'
+                              width: `${stats.totalMembers > 0 ? Math.max((count / stats.totalMembers) * 100, 15) : 15}%`,
+                              backgroundColor: getTierColor(tier)
                             }}
                           >
-                            {tier.toUpperCase()}
-                          </span>
-                          <div className="progress flex-grow-1" style={{ height: '25px' }}>
-                            <div
-                              className="progress-bar"
-                              style={{ 
-                                width: `${stats.totalMembers > 0 ? (count / stats.totalMembers) * 100 : 0}%`,
-                                backgroundColor: getTierColor(tier)
-                              }}
-                            >
-                              {count} members
-                            </div>
+                            {count} members
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
                 {/* Top Referrers */}
-                <div className="col-md-6 mb-4">
-                  <div className="card h-100">
-                    <div className="card-header">
-                      <h5 className="mb-0">Top Referrers</h5>
-                    </div>
-                    <div className="card-body p-0">
-                      {stats.topReferrers.length > 0 ? (
-                        <table className="table table-hover mb-0">
-                          <thead>
-                            <tr>
-                              <th>#</th>
-                              <th>Name</th>
-                              <th>Referrals</th>
-                              <th>Points</th>
+                <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
+                  <div className="px-6 py-4 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900">Top Referrers</h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    {stats.topReferrers.length > 0 ? (
+                      <table className="w-full">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">#</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Referrals</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Points</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                          {stats.topReferrers.map((referrer, idx) => (
+                            <tr key={idx} className="hover:bg-gray-50">
+                              <td className="px-4 py-3">
+                                {idx === 0 && <Trophy className="w-5 h-5 text-yellow-500" />}
+                                {idx === 1 && <Medal className="w-5 h-5 text-gray-400" />}
+                                {idx === 2 && <Award className="w-5 h-5 text-amber-600" />}
+                                {idx > 2 && <span className="text-gray-500">{idx + 1}</span>}
+                              </td>
+                              <td className="px-4 py-3 text-gray-900">{referrer.name}</td>
+                              <td className="px-4 py-3 text-gray-700">{referrer.referrals}</td>
+                              <td className="px-4 py-3 text-gray-700">{referrer.points.toLocaleString()}</td>
                             </tr>
-                          </thead>
-                          <tbody>
-                            {stats.topReferrers.map((referrer, idx) => (
-                              <tr key={idx}>
-                                <td>
-                                  {idx === 0 && <i className="fas fa-trophy text-warning"></i>}
-                                  {idx === 1 && <i className="fas fa-medal text-secondary"></i>}
-                                  {idx === 2 && <i className="fas fa-award text-warning"></i>}
-                                  {idx > 2 && idx + 1}
-                                </td>
-                                <td>{referrer.name}</td>
-                                <td>{referrer.referrals}</td>
-                                <td>{referrer.points.toLocaleString()}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      ) : (
-                        <p className="text-muted text-center py-4">No referrals yet</p>
-                      )}
-                    </div>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <p className="text-gray-500 text-center py-8">No referrals yet</p>
+                    )}
                   </div>
                 </div>
               </div>
 
               {/* Referral Stats */}
-              <div className="row">
-                <div className="col-md-4">
-                  <div className="card">
-                    <div className="card-body text-center">
-                      <h3>{stats.totalReferrals}</h3>
-                      <p className="text-muted mb-0">Total Referrals</p>
-                    </div>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
+                  <h3 className="text-3xl font-bold text-gray-900">{stats.totalReferrals}</h3>
+                  <p className="text-gray-500 mt-1">Total Referrals</p>
                 </div>
-                <div className="col-md-4">
-                  <div className="card">
-                    <div className="card-body text-center">
-                      <h3>{stats.successfulReferrals}</h3>
-                      <p className="text-muted mb-0">Successful Referrals</p>
-                    </div>
-                  </div>
+                <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
+                  <h3 className="text-3xl font-bold text-gray-900">{stats.successfulReferrals}</h3>
+                  <p className="text-gray-500 mt-1">Successful Referrals</p>
                 </div>
-                <div className="col-md-4">
-                  <div className="card">
-                    <div className="card-body text-center">
-                      <h3>{stats.totalPointsRedeemed.toLocaleString()}</h3>
-                      <p className="text-muted mb-0">Points Redeemed</p>
-                    </div>
-                  </div>
+                <div className="bg-white border border-gray-200 rounded-xl p-6 text-center">
+                  <h3 className="text-3xl font-bold text-gray-900">{stats.totalPointsRedeemed.toLocaleString()}</h3>
+                  <p className="text-gray-500 mt-1">Points Redeemed</p>
                 </div>
               </div>
             </>
           ) : (
-            <div className="text-center py-5">
-              <button className="btn btn-primary" onClick={loadStats}>
+            <div className="flex flex-col items-center justify-center py-12">
+              <Button onClick={loadStats} className="bg-[#AD6269] hover:bg-[#9d5860] text-white">
                 Load Statistics
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -540,141 +545,127 @@ export default function LoyaltyDashboard() {
       {activeTab === 'members' && (
         <div>
           {/* Add Member Form */}
-          <div className="card mb-4">
-            <div className="card-header">
-              <h5 className="mb-0">Add New Member</h5>
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm mb-6">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Add New Member</h3>
             </div>
-            <div className="card-body">
-              <div className="row">
-                <div className="col-md-3">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Name"
-                    value={newMemberForm.clientName}
-                    onChange={(e) => setNewMemberForm({ ...newMemberForm, clientName: e.target.value })}
-                  />
-                </div>
-                <div className="col-md-3">
-                  <input
-                    type="email"
-                    className="form-control"
-                    placeholder="Email"
-                    value={newMemberForm.clientEmail}
-                    onChange={(e) => setNewMemberForm({ ...newMemberForm, clientEmail: e.target.value })}
-                  />
-                </div>
-                <div className="col-md-3">
-                  <input
-                    type="tel"
-                    className="form-control"
-                    placeholder="Phone (optional)"
-                    value={newMemberForm.clientPhone}
-                    onChange={(e) => setNewMemberForm({ ...newMemberForm, clientPhone: e.target.value })}
-                  />
-                </div>
-                <div className="col-md-3">
-                  <button 
-                    className="btn btn-primary w-100"
-                    onClick={createMember}
-                    disabled={loading}
-                  >
-                    <i className="fas fa-plus me-2"></i>
-                    Add Member
-                  </button>
-                </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Input
+                  type="text"
+                  placeholder="Name"
+                  value={newMemberForm.clientName}
+                  onChange={(e) => setNewMemberForm({ ...newMemberForm, clientName: e.target.value })}
+                />
+                <Input
+                  type="email"
+                  placeholder="Email"
+                  value={newMemberForm.clientEmail}
+                  onChange={(e) => setNewMemberForm({ ...newMemberForm, clientEmail: e.target.value })}
+                />
+                <Input
+                  type="tel"
+                  placeholder="Phone (optional)"
+                  value={newMemberForm.clientPhone}
+                  onChange={(e) => setNewMemberForm({ ...newMemberForm, clientPhone: e.target.value })}
+                />
+                <Button 
+                  onClick={createMember}
+                  disabled={loading}
+                  className="bg-[#AD6269] hover:bg-[#9d5860] text-white w-full"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Member
+                </Button>
               </div>
             </div>
           </div>
 
           {/* Members List */}
           {loading ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary"></div>
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AD6269]"></div>
             </div>
           ) : members.length > 0 ? (
-            <div className="card">
-              <div className="card-body p-0">
-                <div className="table-responsive">
-                  <table className="table table-hover mb-0">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Member</th>
-                        <th>Tier</th>
-                        <th>Points</th>
-                        <th>Referral Code</th>
-                        <th>Referrals</th>
-                        <th>Actions</th>
+            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Member</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Tier</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Points</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Referral Code</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Referrals</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {members.map(member => (
+                      <tr key={member.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3">
+                          <p className="font-medium text-gray-900">{member.clientName}</p>
+                          <p className="text-sm text-gray-500">{member.clientEmail}</p>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getTierBadgeClass(member.tier)}`}>
+                            {member.tier.toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="font-semibold text-gray-900">{member.points.toLocaleString()}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-[#AD6269]">{member.referralCode}</code>
+                        </td>
+                        <td className="px-4 py-3 text-gray-700">
+                          {member.successfulReferrals} / {member.totalReferrals}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-1">
+                            <button
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              onClick={() => setSelectedMember(member)}
+                              title="View Details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                              onClick={() => addPoints(member.id, 50)}
+                              title="Add 50 Points"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                            <button
+                              className="p-2 text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors"
+                              onClick={() => downloadCard(member.id, 'loyalty')}
+                              title="Download Loyalty Card"
+                            >
+                              <CreditCard className="w-4 h-4" />
+                            </button>
+                            <button
+                              className="p-2 text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors"
+                              onClick={() => downloadCard(member.id, 'referral')}
+                              title="Download Referral Card"
+                            >
+                              <Share2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {members.map(member => (
-                        <tr key={member.id}>
-                          <td>
-                            <strong>{member.clientName}</strong>
-                            <br />
-                            <small className="text-muted">{member.clientEmail}</small>
-                          </td>
-                          <td>
-                            <span className={`badge ${getTierBadgeClass(member.tier)}`}>
-                              {member.tier.toUpperCase()}
-                            </span>
-                          </td>
-                          <td>
-                            <strong>{member.points.toLocaleString()}</strong>
-                          </td>
-                          <td>
-                            <code>{member.referralCode}</code>
-                          </td>
-                          <td>
-                            {member.successfulReferrals} / {member.totalReferrals}
-                          </td>
-                          <td>
-                            <div className="btn-group btn-group-sm">
-                              <button
-                                className="btn btn-outline-primary"
-                                onClick={() => setSelectedMember(member)}
-                                title="View Details"
-                              >
-                                <i className="fas fa-eye"></i>
-                              </button>
-                              <button
-                                className="btn btn-outline-success"
-                                onClick={() => addPoints(member.id, 50)}
-                                title="Add 50 Points"
-                              >
-                                <i className="fas fa-plus"></i>
-                              </button>
-                              <button
-                                className="btn btn-outline-info"
-                                onClick={() => downloadCard(member.id, 'loyalty')}
-                                title="Download Loyalty Card"
-                              >
-                                <i className="fas fa-id-card"></i>
-                              </button>
-                              <button
-                                className="btn btn-outline-warning"
-                                onClick={() => downloadCard(member.id, 'referral')}
-                                title="Download Referral Card"
-                              >
-                                <i className="fas fa-share-alt"></i>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           ) : (
-            <div className="text-center py-5">
-              <i className="fas fa-users fa-3x text-muted mb-3"></i>
-              <p>No members yet</p>
-              <button className="btn btn-primary" onClick={loadMembers}>
+            <div className="flex flex-col items-center justify-center py-12">
+              <Users className="w-12 h-12 text-gray-300 mb-4" />
+              <p className="text-gray-500 mb-4">No members yet</p>
+              <Button onClick={loadMembers} className="bg-[#AD6269] hover:bg-[#9d5860] text-white">
                 Load Members
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -682,72 +673,74 @@ export default function LoyaltyDashboard() {
 
       {/* Rewards Tab */}
       {activeTab === 'rewards' && (
-        <div>
-          <div className="row">
-            {rewardsCatalog.map((reward, idx) => (
-              <div key={idx} className="col-md-4 mb-4">
-                <div className="card h-100">
-                  <div className="card-body">
-                    <div className="d-flex justify-content-between align-items-start mb-2">
-                      <h5 className="card-title mb-0">{reward.name}</h5>
-                      <span className={`badge bg-${reward.type === 'discount' ? 'success' : reward.type === 'free_service' ? 'primary' : 'info'}`}>
-                        {reward.type.replace('_', ' ')}
-                      </span>
-                    </div>
-                    <p className="card-text text-muted">{reward.description}</p>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span className="text-primary fw-bold">
-                        <i className="fas fa-coins me-1"></i>
-                        {reward.pointsCost} points
-                      </span>
-                      <span className="text-success">
-                        Value: ${reward.value}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {rewardsCatalog.map((reward, idx) => (
+            <div key={idx} className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+              <div className="flex justify-between items-start mb-3">
+                <h3 className="text-lg font-semibold text-gray-900">{reward.name}</h3>
+                <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                  reward.type === 'discount' 
+                    ? 'bg-green-100 text-green-800' 
+                    : reward.type === 'free_service' 
+                      ? 'bg-[#AD6269]/10 text-[#AD6269]' 
+                      : 'bg-blue-100 text-blue-800'
+                }`}>
+                  {reward.type.replace('_', ' ')}
+                </span>
               </div>
-            ))}
-          </div>
+              <p className="text-gray-500 mb-4">{reward.description}</p>
+              <div className="flex justify-between items-center">
+                <span className="text-[#AD6269] font-semibold flex items-center gap-1">
+                  <Coins className="w-4 h-4" />
+                  {reward.pointsCost} points
+                </span>
+                <span className="text-green-600 font-medium">
+                  Value: ${reward.value}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
       {/* Settings Tab */}
       {activeTab === 'settings' && (
-        <div>
+        <div className="space-y-6">
           {/* Tiers */}
-          <div className="card mb-4">
-            <div className="card-header">
-              <h5 className="mb-0">Loyalty Tiers</h5>
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Loyalty Tiers</h3>
             </div>
-            <div className="card-body">
-              <div className="row">
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {tiers.map(tier => (
-                  <div key={tier.name} className="col-md-3 mb-3">
+                  <div 
+                    key={tier.name} 
+                    className="rounded-xl overflow-hidden border-2"
+                    style={{ borderColor: tier.color }}
+                  >
                     <div 
-                      className="card h-100"
-                      style={{ borderColor: tier.color, borderWidth: '2px' }}
+                      className="text-white text-center py-3 font-semibold"
+                      style={{ backgroundColor: tier.color }}
                     >
-                      <div 
-                        className="card-header text-white text-center"
-                        style={{ backgroundColor: tier.color }}
-                      >
-                        <h6 className="mb-0">{tier.name.toUpperCase()}</h6>
-                      </div>
-                      <div className="card-body">
-                        <p className="mb-2">
-                          <strong>Min Points:</strong> {tier.minPoints.toLocaleString()}
-                        </p>
-                        <p className="mb-2">
-                          <strong>Multiplier:</strong> {tier.pointsMultiplier}x
-                        </p>
-                        <p className="mb-1"><strong>Perks:</strong></p>
-                        <ul className="small mb-0">
-                          {tier.perks.map((perk, idx) => (
-                            <li key={idx}>{perk}</li>
-                          ))}
-                        </ul>
-                      </div>
+                      {tier.name.toUpperCase()}
+                    </div>
+                    <div className="p-4 bg-white">
+                      <p className="text-sm text-gray-700 mb-2">
+                        <span className="font-medium">Min Points:</span> {tier.minPoints.toLocaleString()}
+                      </p>
+                      <p className="text-sm text-gray-700 mb-3">
+                        <span className="font-medium">Multiplier:</span> {tier.pointsMultiplier}x
+                      </p>
+                      <p className="text-sm font-medium text-gray-700 mb-1">Perks:</p>
+                      <ul className="text-sm text-gray-600 space-y-1">
+                        {tier.perks.map((perk, idx) => (
+                          <li key={idx} className="flex items-start gap-1">
+                            <span className="text-green-500 mt-0.5">•</span>
+                            {perk}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
                 ))}
@@ -756,29 +749,23 @@ export default function LoyaltyDashboard() {
           </div>
 
           {/* Points Configuration */}
-          <div className="card">
-            <div className="card-header">
-              <h5 className="mb-0">Points Configuration</h5>
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Points Configuration</h3>
             </div>
-            <div className="card-body">
-              <div className="row">
-                <div className="col-md-4">
-                  <div className="border rounded p-3 text-center">
-                    <h4>1 point</h4>
-                    <p className="text-muted mb-0">per $1 spent</p>
-                  </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="border border-gray-200 rounded-xl p-6 text-center">
+                  <h4 className="text-2xl font-bold text-gray-900">1 point</h4>
+                  <p className="text-gray-500 mt-1">per $1 spent</p>
                 </div>
-                <div className="col-md-4">
-                  <div className="border rounded p-3 text-center">
-                    <h4>100 points</h4>
-                    <p className="text-muted mb-0">Referral bonus</p>
-                  </div>
+                <div className="border border-gray-200 rounded-xl p-6 text-center">
+                  <h4 className="text-2xl font-bold text-gray-900">100 points</h4>
+                  <p className="text-gray-500 mt-1">Referral bonus</p>
                 </div>
-                <div className="col-md-4">
-                  <div className="border rounded p-3 text-center">
-                    <h4>50 points</h4>
-                    <p className="text-muted mb-0">First visit bonus</p>
-                  </div>
+                <div className="border border-gray-200 rounded-xl p-6 text-center">
+                  <h4 className="text-2xl font-bold text-gray-900">50 points</h4>
+                  <p className="text-gray-500 mt-1">First visit bonus</p>
                 </div>
               </div>
             </div>
@@ -788,102 +775,104 @@ export default function LoyaltyDashboard() {
 
       {/* Member Details Modal */}
       {selectedMember && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {selectedMember.clientName}
-                  <span className={`badge ms-2 ${getTierBadgeClass(selectedMember.tier)}`}>
-                    {selectedMember.tier.toUpperCase()}
-                  </span>
-                </h5>
-                <button 
-                  type="button" 
-                  className="btn-close" 
-                  onClick={() => setSelectedMember(null)}
-                ></button>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <h3 className="text-xl font-semibold text-gray-900">{selectedMember.clientName}</h3>
+                <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getTierBadgeClass(selectedMember.tier)}`}>
+                  {selectedMember.tier.toUpperCase()}
+                </span>
               </div>
-              <div className="modal-body">
-                <div className="row">
-                  <div className="col-md-6">
-                    <h6>Contact Info</h6>
-                    <p>
-                      <i className="fas fa-envelope me-2"></i>
+              <button 
+                onClick={() => setSelectedMember(null)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Contact Info</h4>
+                  <div className="space-y-2">
+                    <p className="flex items-center gap-2 text-gray-700">
+                      <Mail className="w-4 h-4 text-gray-400" />
                       {selectedMember.clientEmail}
                     </p>
                     {selectedMember.clientPhone && (
-                      <p>
-                        <i className="fas fa-phone me-2"></i>
+                      <p className="flex items-center gap-2 text-gray-700">
+                        <Phone className="w-4 h-4 text-gray-400" />
                         {selectedMember.clientPhone}
                       </p>
                     )}
-                    <p>
-                      <i className="fas fa-tag me-2"></i>
-                      Referral Code: <code>{selectedMember.referralCode}</code>
+                    <p className="flex items-center gap-2 text-gray-700">
+                      <Tag className="w-4 h-4 text-gray-400" />
+                      Referral Code: <code className="bg-gray-100 px-2 py-1 rounded text-[#AD6269]">{selectedMember.referralCode}</code>
                     </p>
                   </div>
-                  <div className="col-md-6">
-                    <h6>Stats</h6>
-                    <p><strong>Points:</strong> {selectedMember.points.toLocaleString()}</p>
-                    <p><strong>Total Spent:</strong> ${selectedMember.totalSpent.toLocaleString()}</p>
-                    <p><strong>Referrals:</strong> {selectedMember.successfulReferrals} / {selectedMember.totalReferrals}</p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Stats</h4>
+                  <div className="space-y-2">
+                    <p className="text-gray-700"><span className="font-medium">Points:</span> {selectedMember.points.toLocaleString()}</p>
+                    <p className="text-gray-700"><span className="font-medium">Total Spent:</span> ${selectedMember.totalSpent.toLocaleString()}</p>
+                    <p className="text-gray-700"><span className="font-medium">Referrals:</span> {selectedMember.successfulReferrals} / {selectedMember.totalReferrals}</p>
                   </div>
                 </div>
-
-                {selectedMember.qrCodeUrl && (
-                  <div className="text-center mt-3">
-                    <img 
-                      src={selectedMember.qrCodeUrl} 
-                      alt="QR Code" 
-                      style={{ width: '150px', height: '150px' }}
-                    />
-                    <p className="text-muted small mt-2">Scan to use referral code</p>
-                  </div>
-                )}
-
-                {selectedMember.rewards.length > 0 && (
-                  <div className="mt-3">
-                    <h6>Rewards</h6>
-                    <ul className="list-group">
-                      {selectedMember.rewards.map(reward => (
-                        <li key={reward.id} className="list-group-item d-flex justify-content-between align-items-center">
-                          <div>
-                            <strong>{reward.name}</strong>
-                            {reward.code && <code className="ms-2">{reward.code}</code>}
-                          </div>
-                          <span className={`badge bg-${reward.redeemed ? 'secondary' : 'success'}`}>
-                            {reward.redeemed ? 'Used' : 'Available'}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
               </div>
-              <div className="modal-footer">
-                <button 
-                  className="btn btn-outline-primary"
-                  onClick={() => downloadCard(selectedMember.id, 'loyalty')}
-                >
-                  <i className="fas fa-download me-2"></i>
-                  Download Loyalty Card
-                </button>
-                <button 
-                  className="btn btn-outline-warning"
-                  onClick={() => downloadCard(selectedMember.id, 'referral')}
-                >
-                  <i className="fas fa-share-alt me-2"></i>
-                  Download Referral Card
-                </button>
-                <button 
-                  type="button" 
-                  className="btn btn-secondary" 
-                  onClick={() => setSelectedMember(null)}
-                >
-                  Close
-                </button>
-              </div>
+
+              {selectedMember.qrCodeUrl && (
+                <div className="text-center mb-6">
+                  <img 
+                    src={selectedMember.qrCodeUrl} 
+                    alt="QR Code" 
+                    className="w-36 h-36 mx-auto"
+                  />
+                  <p className="text-gray-500 text-sm mt-2">Scan to use referral code</p>
+                </div>
+              )}
+
+              {selectedMember.rewards.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Rewards</h4>
+                  <div className="space-y-2">
+                    {selectedMember.rewards.map(reward => (
+                      <div key={reward.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <span className="font-medium text-gray-900">{reward.name}</span>
+                          {reward.code && <code className="ml-2 bg-gray-200 px-2 py-0.5 rounded text-sm">{reward.code}</code>}
+                        </div>
+                        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                          reward.redeemed ? 'bg-gray-200 text-gray-600' : 'bg-green-100 text-green-800'
+                        }`}>
+                          {reward.redeemed ? 'Used' : 'Available'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex flex-wrap justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+              <Button 
+                variant="outline"
+                onClick={() => downloadCard(selectedMember.id, 'loyalty')}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download Loyalty Card
+              </Button>
+              <Button 
+                variant="outline"
+                className="border-yellow-500 text-yellow-600 hover:bg-yellow-50"
+                onClick={() => downloadCard(selectedMember.id, 'referral')}
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Download Referral Card
+              </Button>
+              <Button variant="outline" onClick={() => setSelectedMember(null)}>
+                Close
+              </Button>
             </div>
           </div>
         </div>
