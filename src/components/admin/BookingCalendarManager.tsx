@@ -30,6 +30,12 @@ export default function BookingCalendarManager() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'confirmed' | 'pending' | 'completed' | 'cancelled'>('all');
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const { showAlert, showConfirm, AlertDialogComponent } = useAlertDialog();
+  
+  // Edit appointment modal state
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+  const [editDate, setEditDate] = useState('');
+  const [editTime, setEditTime] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   useEffect(() => {
     fetchAppointments();
@@ -125,6 +131,87 @@ export default function BookingCalendarManager() {
     } catch (error) {
       console.error('Error deleting appointment:', error);
       await showAlert({ title: 'Error', description: 'Error deleting appointment. Please try again.', variant: 'destructive' });
+    }
+  };
+
+  // Open edit modal
+  const handleEditAppointment = (apt: Appointment) => {
+    setEditingAppointment(apt);
+    setEditDate(apt.appointmentDate || apt.date || '');
+    setEditTime(apt.appointmentTime || apt.time || '');
+  };
+
+  // Save edited appointment and send email
+  const handleSaveAppointmentTime = async () => {
+    if (!editingAppointment) return;
+
+    const confirmed = await showConfirm({
+      title: 'Update Appointment Time',
+      description: `Update appointment for ${editingAppointment.clientName} to ${editDate} at ${editTime}? An email notification will be sent to the client.`,
+      confirmText: 'Update & Send Email',
+      variant: 'default'
+    });
+
+    if (!confirmed) return;
+
+    try {
+      setSendingEmail(true);
+
+      // Update in Firestore
+      let appointmentRef = doc(getDb(), 'bookings', editingAppointment.id);
+      try {
+        await updateDoc(appointmentRef, {
+          date: editDate,
+          time: editTime,
+          appointmentDate: editDate,
+          appointmentTime: editTime,
+          updatedAt: new Date()
+        });
+      } catch (e) {
+        appointmentRef = doc(getDb(), 'appointments', editingAppointment.id);
+        await updateDoc(appointmentRef, {
+          appointmentDate: editDate,
+          appointmentTime: editTime,
+          updatedAt: new Date()
+        });
+      }
+
+      // Send email notification
+      const emailResponse = await fetch('/api/bookings/time-change-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientName: editingAppointment.clientName,
+          clientEmail: editingAppointment.clientEmail,
+          serviceName: editingAppointment.serviceName,
+          oldDate: editingAppointment.appointmentDate || editingAppointment.date,
+          oldTime: editingAppointment.appointmentTime || editingAppointment.time,
+          newDate: editDate,
+          newTime: editTime
+        })
+      });
+
+      if (!emailResponse.ok) {
+        console.warn('Email notification may not have been sent');
+      }
+
+      await showAlert({
+        title: 'Success',
+        description: 'Appointment time updated and email notification sent to client!',
+        variant: 'success'
+      });
+
+      setEditingAppointment(null);
+      fetchAppointments();
+    } catch (error) {
+      console.error('Error updating appointment:', error);
+      await showAlert({
+        title: 'Error',
+        description: 'Error updating appointment. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -284,13 +371,22 @@ export default function BookingCalendarManager() {
                         </select>
                       </td>
                       <td className="py-3 px-4">
-                        <button
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          onClick={() => handleDeleteAppointment(apt.id, apt.clientName)}
-                          title="Delete Appointment"
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            onClick={() => handleEditAppointment(apt)}
+                            title="Edit Appointment Time"
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                          <button
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            onClick={() => handleDeleteAppointment(apt.id, apt.clientName)}
+                            title="Delete Appointment"
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -367,6 +463,91 @@ export default function BookingCalendarManager() {
           <p className="text-gray-500">No appointments found.</p>
         </div>
       )}
+
+      {/* Edit Appointment Modal */}
+      {editingAppointment && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4">
+            <div className="px-6 py-4 border-b border-gray-200 bg-[#AD6269] rounded-t-xl">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <i className="fas fa-edit"></i>
+                Edit Appointment Time
+              </h3>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Client</p>
+                <p className="font-semibold text-gray-900">{editingAppointment.clientName}</p>
+                <p className="text-sm text-gray-500">{editingAppointment.clientEmail}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Service</p>
+                <p className="font-semibold text-gray-900">{editingAppointment.serviceName}</p>
+              </div>
+              <div className="border-t border-gray-200 pt-4">
+                <p className="text-sm font-medium text-gray-700 mb-3">New Appointment Time</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Date</label>
+                    <input
+                      type="date"
+                      value={editDate}
+                      onChange={(e) => setEditDate(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Time</label>
+                    <select
+                      value={editTime}
+                      onChange={(e) => setEditTime(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                    >
+                      <option value="">Select time</option>
+                      <option value="10:00">10:00 AM (Morning)</option>
+                      <option value="13:00">1:00 PM (Afternoon)</option>
+                      <option value="16:00">4:00 PM (Evening)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-sm text-blue-800">
+                  <i className="fas fa-envelope mr-2"></i>
+                  An email notification will be sent to the client confirming the time change.
+                </p>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setEditingAppointment(null)}
+                disabled={sendingEmail}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="bg-[#AD6269] hover:bg-[#9d5860]"
+                onClick={handleSaveAppointmentTime}
+                disabled={!editDate || !editTime || sendingEmail}
+              >
+                {sendingEmail ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin mr-2"></i>
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-save mr-2"></i>
+                    Save & Send Email
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {AlertDialogComponent}
     </div>
   );
