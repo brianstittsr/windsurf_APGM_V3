@@ -21,9 +21,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Get GHL credentials
-    const { apiKey, locationId } = await getGHLCredentials();
-
     const availability: Record<string, { date: string; bookingCount: number; isAvailable: boolean }> = {};
     let nextAvailable: string | null = null;
     const today = new Date();
@@ -42,10 +39,13 @@ export async function GET(req: NextRequest) {
       };
     }
 
-    // Try to fetch from GHL if credentials are available
+    // Try to fetch from GHL if credentials are available (with timeout)
+    const apiKey = process.env.GHL_API_KEY || '';
+    const locationId = process.env.GHL_LOCATION_ID || '';
+    
     if (apiKey && locationId) {
       try {
-        const appointments = await fetchGHLAppointments(apiKey, locationId, startDate, endDate);
+        const appointments = await fetchGHLAppointmentsWithTimeout(apiKey, locationId, startDate, endDate, 5000);
         
         // Count bookings per day
         for (const apt of appointments) {
@@ -59,12 +59,10 @@ export async function GET(req: NextRequest) {
           }
         }
       } catch (error) {
-        console.error('Error fetching GHL appointments:', error);
+        console.error('Error fetching GHL appointments (continuing without GHL data):', error);
+        // Continue without GHL data - calendar will still work
       }
     }
-
-    // Local bookings are checked client-side via Firestore
-    // This avoids Firebase Admin SDK dependency which causes Turbopack symlink issues on Windows
 
     // Find next available date
     const sortedDates = Object.keys(availability).sort();
@@ -85,44 +83,75 @@ export async function GET(req: NextRequest) {
 
   } catch (error) {
     console.error('Error fetching month availability:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch availability' },
-      { status: 500 }
-    );
+    
+    // Return empty availability on error so calendar still renders
+    const availability: Record<string, { date: string; bookingCount: number; isAvailable: boolean }> = {};
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Generate default availability for current month
+    const start = new Date(today.getFullYear(), today.getMonth(), 1);
+    const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const dateString = d.toISOString().split('T')[0];
+      availability[dateString] = {
+        date: dateString,
+        bookingCount: 0,
+        isAvailable: d >= today,
+      };
+    }
+    
+    return NextResponse.json({
+      availability,
+      nextAvailable: today.toISOString().split('T')[0],
+      startDate: start.toISOString().split('T')[0],
+      endDate: end.toISOString().split('T')[0],
+    });
   }
 }
 
-async function getGHLCredentials() {
-  // Use environment variables only - no Firebase Admin SDK
-  return {
-    apiKey: process.env.GHL_API_KEY || '',
-    locationId: process.env.GHL_LOCATION_ID || '',
-  };
-}
-
-async function fetchGHLAppointments(
+async function fetchGHLAppointmentsWithTimeout(
   apiKey: string,
   locationId: string,
   startDate: string,
-  endDate: string
+  endDate: string,
+  timeoutMs: number = 5000
 ): Promise<any[]> {
   const startTime = new Date(startDate + 'T00:00:00').toISOString();
   const endTime = new Date(endDate + 'T23:59:59').toISOString();
 
-  const response = await fetch(
-    `https://services.leadconnectorhq.com/calendars/events?locationId=${locationId}&startTime=${startTime}&endTime=${endTime}`,
-    {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Version': '2021-07-28',
-      },
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(
+      `https://services.leadconnectorhq.com/calendars/events?locationId=${locationId}&startTime=${startTime}&endTime=${endTime}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Version': '2021-07-28',
+        },
+        signal: controller.signal,
+      }
+    );
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.warn(`GHL API returned ${response.status}, continuing without GHL data`);
+      return [];
     }
-  );
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch GHL appointments: ${response.status}`);
+    const data = await response.json();
+    return data.events || [];
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      console.warn('GHL API request timed out, continuing without GHL data');
+    } else {
+      console.warn('GHL API error:', error.message);
+    }
+    return [];
   }
-
-  const data = await response.json();
-  return data.events || [];
 }

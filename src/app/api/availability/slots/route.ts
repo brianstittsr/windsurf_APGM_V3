@@ -81,6 +81,9 @@ async function fetchGHLAppointmentsForDate(
   locationId: string,
   date: string
 ): Promise<any[]> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
   try {
     const startTime = new Date(date + 'T00:00:00').toISOString();
     const endTime = new Date(date + 'T23:59:59').toISOString();
@@ -92,17 +95,26 @@ async function fetchGHLAppointmentsForDate(
           'Authorization': `Bearer ${apiKey}`,
           'Version': '2021-07-28',
         },
+        signal: controller.signal,
       }
     );
 
+    clearTimeout(timeoutId);
+
     if (!response.ok) {
-      throw new Error(`Failed to fetch GHL appointments: ${response.status}`);
+      console.warn(`GHL API returned ${response.status}, continuing without GHL data`);
+      return [];
     }
 
     const data = await response.json();
     return data.events || [];
-  } catch (error) {
-    console.error('GHL fetch error:', error);
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      console.warn('GHL API request timed out for slots');
+    } else {
+      console.warn('GHL fetch error:', error.message);
+    }
     return [];
   }
 }
