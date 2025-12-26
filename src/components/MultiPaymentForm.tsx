@@ -10,6 +10,10 @@ import {
   CardCvcElement,
   PaymentElement,
 } from '@stripe/react-stripe-js';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { CreditCard, Loader2, Lock, AlertTriangle, Info, Calendar, Heart, ExternalLink, CheckCircle } from 'lucide-react';
 
 interface MultiPaymentFormProps {
   amount: number;
@@ -542,526 +546,492 @@ export default function MultiPaymentForm({
   if (!stripe) {
     return (
       <div className="text-center py-4">
-        <div className="alert alert-danger" role="alert">
-          <i className="fas fa-exclamation-triangle me-2"></i>
-          <strong>Payment System Error</strong>
-          <p className="mb-0 mt-2">Unable to load payment system. Please check that Stripe keys are configured properly.</p>
-          <small className="text-muted d-block mt-1">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <AlertTriangle className="w-5 h-5" />
+            <strong>Payment System Error</strong>
+          </div>
+          <p className="text-sm">Unable to load payment system. Please check that Stripe keys are configured properly.</p>
+          <p className="text-xs text-red-500 mt-1">
             Check browser console for detailed error information.
-          </small>
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="multi-payment-form">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {/* Payment Method Selection */}
-      <div className="mb-4">
-        <h5 className="mb-3">Choose Payment Method</h5>
-        <div className="row">
-          <div className="col-md-3 mb-2">
-            <div 
-              className={`card payment-method-card ${selectedPaymentMethod === 'card' ? 'border-primary' : ''}`}
-              style={{ cursor: 'pointer' }}
-              onClick={() => handlePaymentMethodChange('card')}
-            >
-              <div className="card-body text-center py-3">
-                <i className="fas fa-credit-card fa-2x mb-2 text-primary"></i>
-                <h6 className="mb-0">Credit/Debit Card</h6>
-                <small className="text-muted">Pay with Visa, Mastercard, etc.</small>
-              </div>
-            </div>
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        {/* Credit/Debit Card */}
+        <div 
+          className={`cursor-pointer rounded-xl border-2 p-4 text-center transition-all hover:shadow-md hover:-translate-y-0.5 ${
+            selectedPaymentMethod === 'card' 
+              ? 'border-[#AD6269] bg-[#AD6269]/5 shadow-md' 
+              : 'border-gray-200 hover:border-gray-300'
+          }`}
+          onClick={() => handlePaymentMethodChange('card')}
+        >
+          <div className="w-12 h-12 mx-auto mb-2 bg-[#AD6269]/10 rounded-full flex items-center justify-center">
+            <CreditCard className="w-6 h-6 text-[#AD6269]" />
           </div>
-          <div className="col-md-3 mb-2">
-            <div 
-              className={`card payment-method-card ${selectedPaymentMethod === 'afterpay' ? 'border-primary' : ''}`}
-              style={{ cursor: 'pointer' }}
-              onClick={() => handlePaymentMethodChange('afterpay')}
-            >
-              <div className="card-body text-center py-3">
-                <div className="d-flex justify-content-center mb-2" style={{ height: '48px' }}>
-                  <img 
-                    src="https://upload.wikimedia.org/wikipedia/commons/0/04/Afterpay_logo.jpg" 
-                    alt="AfterPay Logo" 
-                    style={{ width: '48px', height: '48px', objectFit: 'contain' }}
-                  />
-                </div>
-                <h6 className="mb-0">AfterPay</h6>
-                <small className="text-muted">Pay in 4 interest-free installments</small>
-              </div>
-            </div>
+          <h6 className="font-semibold text-gray-900 text-sm">Credit/Debit</h6>
+          <p className="text-xs text-gray-500 mt-1">Visa, Mastercard, etc.</p>
+        </div>
+
+        {/* AfterPay */}
+        <div 
+          className={`cursor-pointer rounded-xl border-2 p-4 text-center transition-all hover:shadow-md hover:-translate-y-0.5 ${
+            selectedPaymentMethod === 'afterpay' 
+              ? 'border-[#AD6269] bg-[#AD6269]/5 shadow-md' 
+              : 'border-gray-200 hover:border-gray-300'
+          }`}
+          onClick={() => handlePaymentMethodChange('afterpay')}
+        >
+          <div className="w-12 h-12 mx-auto mb-2 bg-teal-100 rounded-full flex items-center justify-center overflow-hidden">
+            <span className="text-teal-600 font-bold text-lg">A</span>
           </div>
-          <div className="col-md-3 mb-2">
-            <div 
-              className={`card payment-method-card ${selectedPaymentMethod === 'klarna' ? 'border-primary' : ''}`}
-              style={{ cursor: 'pointer' }}
-              onClick={() => handlePaymentMethodChange('klarna')}
-            >
-              <div className="card-body text-center py-3">
-                <div className="d-flex justify-content-center mb-2" style={{ height: '48px' }}>
-                  <img 
-                    src="https://logos-world.net/wp-content/uploads/2024/06/Klarna-Symbol.png" 
-                    alt="Klarna Logo" 
-                    style={{ width: '48px', height: '48px', objectFit: 'contain' }}
-                  />
-                </div>
-                <h6 className="mb-0">Klarna</h6>
-                <small className="text-muted">Pay in 4 interest-free installments</small>
-              </div>
-            </div>
+          <h6 className="font-semibold text-gray-900 text-sm">AfterPay</h6>
+          <p className="text-xs text-gray-500 mt-1">4 interest-free payments</p>
+        </div>
+
+        {/* Klarna */}
+        <div 
+          className={`cursor-pointer rounded-xl border-2 p-4 text-center transition-all hover:shadow-md hover:-translate-y-0.5 ${
+            selectedPaymentMethod === 'klarna' 
+              ? 'border-[#AD6269] bg-[#AD6269]/5 shadow-md' 
+              : 'border-gray-200 hover:border-gray-300'
+          }`}
+          onClick={() => handlePaymentMethodChange('klarna')}
+        >
+          <div className="w-12 h-12 mx-auto mb-2 bg-pink-100 rounded-full flex items-center justify-center">
+            <span className="text-pink-600 font-bold text-lg">K</span>
           </div>
-          <div className="col-md-3 mb-2">
-            <div 
-              className={`card payment-method-card ${selectedPaymentMethod === 'affirm' ? 'border-primary' : ''}`}
-              style={{ cursor: 'pointer' }}
-              onClick={() => handlePaymentMethodChange('affirm')}
-            >
-              <div className="card-body text-center py-3">
-                <div className="d-flex justify-content-center mb-2" style={{ height: '48px' }}>
-                  <img 
-                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQASxDA7wX68xJ32zCBksW76SH8skp63-eZw&s" 
-                    alt="Affirm Logo" 
-                    style={{ width: '48px', height: '48px', objectFit: 'contain' }}
-                  />
-                </div>
-                <h6 className="mb-0">Affirm</h6>
-                <small className="text-muted">Monthly payments as low as 0% APR</small>
-              </div>
-            </div>
+          <h6 className="font-semibold text-gray-900 text-sm">Klarna</h6>
+          <p className="text-xs text-gray-500 mt-1">4 interest-free payments</p>
+        </div>
+
+        {/* Affirm */}
+        <div 
+          className={`cursor-pointer rounded-xl border-2 p-4 text-center transition-all hover:shadow-md hover:-translate-y-0.5 ${
+            selectedPaymentMethod === 'affirm' 
+              ? 'border-[#AD6269] bg-[#AD6269]/5 shadow-md' 
+              : 'border-gray-200 hover:border-gray-300'
+          }`}
+          onClick={() => handlePaymentMethodChange('affirm')}
+        >
+          <div className="w-12 h-12 mx-auto mb-2 bg-blue-100 rounded-full flex items-center justify-center">
+            <span className="text-blue-600 font-bold text-sm">affirm</span>
           </div>
-          <div className="col-md-3 mb-2">
-            <div 
-              className={`card payment-method-card ${selectedPaymentMethod === 'cherry' ? 'border-primary' : ''}`}
-              onClick={() => handlePaymentMethodChange('cherry')}
-              style={{ cursor: 'pointer' }}
-            >
-              <div className="card-body text-center py-3">
-                <div className="d-flex justify-content-center mb-2" style={{ height: '48px' }}>
-                  <img 
-                    src="https://cdn.prod.website-files.com/681bf1d6f7dea459fe255c59/68252146834983973a92051f_cherry-logo-primary.svg" 
-                    alt="Cherry Logo" 
-                    style={{ width: '48px', height: '48px', objectFit: 'contain' }}
-                  />
-                </div>
-                <h6 className="mb-0">Cherry</h6>
-                <small className="text-muted">Flexible payment plans</small>
-              </div>
-            </div>
+          <h6 className="font-semibold text-gray-900 text-sm">Affirm</h6>
+          <p className="text-xs text-gray-500 mt-1">Monthly payments 0% APR</p>
+        </div>
+
+        {/* Cherry */}
+        <div 
+          className={`cursor-pointer rounded-xl border-2 p-4 text-center transition-all hover:shadow-md hover:-translate-y-0.5 ${
+            selectedPaymentMethod === 'cherry' 
+              ? 'border-[#AD6269] bg-[#AD6269]/5 shadow-md' 
+              : 'border-gray-200 hover:border-gray-300'
+          }`}
+          onClick={() => handlePaymentMethodChange('cherry')}
+        >
+          <div className="w-12 h-12 mx-auto mb-2 bg-red-100 rounded-full flex items-center justify-center">
+            <Heart className="w-6 h-6 text-red-500" />
           </div>
+          <h6 className="font-semibold text-gray-900 text-sm">Cherry</h6>
+          <p className="text-xs text-gray-500 mt-1">Flexible payment plans</p>
         </div>
       </div>
 
       {/* Card Payment Form */}
       {selectedPaymentMethod === 'card' && (
-        <div className="card-payment-section">
-          <h6 className="mb-3">Card Information</h6>
-          
-          {!elements && (
-            <div className="alert alert-info">
-              <div className="d-flex align-items-center">
-                <div className="spinner-border spinner-border-sm me-2" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
+        <Card className="border-0 shadow-md">
+          <CardContent className="p-6">
+            <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-[#AD6269]" />
+              Card Information
+            </h4>
+            
+            {!elements && (
+              <div className="bg-blue-50 text-blue-700 px-4 py-3 rounded-lg flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
                 Loading card payment form...
               </div>
-            </div>
-          )}
-          
-          {elements && (
-            <div className="row">
-              <div className="col-12 mb-3">
-                <label htmlFor="cardholder-name" className="form-label">
-                  Cardholder Name <span className="text-danger">*</span>
-                </label>
-                <input
-                  id="cardholder-name"
-                  type="text"
-                  className="form-control"
-                  value={cardholderName}
-                  onChange={(e) => setCardholderName(e.target.value)}
-                  placeholder="Full name on card"
-                  required
-                />
-              </div>
+            )}
+            
+            {elements && (
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="cardholder-name" className="block text-sm font-medium text-gray-700 mb-1">
+                    Cardholder Name <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    id="cardholder-name"
+                    type="text"
+                    value={cardholderName}
+                    onChange={(e) => setCardholderName(e.target.value)}
+                    placeholder="Full name on card"
+                    required
+                    className="h-11"
+                  />
+                </div>
 
-              <div className="col-12 mb-3">
-                <label className="form-label">
-                  Card Number <span className="text-danger">*</span>
-                </label>
-                <div className="form-control" style={{ padding: '12px' }}>
-                  <CardNumberElement options={CARD_ELEMENT_OPTIONS} />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Card Number <span className="text-red-500">*</span>
+                  </label>
+                  <div className="border border-gray-200 rounded-lg px-4 py-3 bg-white focus-within:ring-2 focus-within:ring-[#AD6269] focus-within:border-[#AD6269]">
+                    <CardNumberElement options={CARD_ELEMENT_OPTIONS} />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Expiry Date <span className="text-red-500">*</span>
+                    </label>
+                    <div className="border border-gray-200 rounded-lg px-4 py-3 bg-white focus-within:ring-2 focus-within:ring-[#AD6269] focus-within:border-[#AD6269]">
+                      <CardExpiryElement options={CARD_ELEMENT_OPTIONS} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      CVC <span className="text-red-500">*</span>
+                    </label>
+                    <div className="border border-gray-200 rounded-lg px-4 py-3 bg-white focus-within:ring-2 focus-within:ring-[#AD6269] focus-within:border-[#AD6269]">
+                      <CardCvcElement options={CARD_ELEMENT_OPTIONS} />
+                    </div>
+                  </div>
                 </div>
               </div>
-
-              <div className="col-md-6 mb-3">
-                <label className="form-label">
-                  Expiry Date <span className="text-danger">*</span>
-                </label>
-                <div className="form-control" style={{ padding: '12px' }}>
-                  <CardExpiryElement options={CARD_ELEMENT_OPTIONS} />
-                </div>
-              </div>
-
-              <div className="col-md-6 mb-3">
-                <label className="form-label">
-                  CVC <span className="text-danger">*</span>
-                </label>
-                <div className="form-control" style={{ padding: '12px' }}>
-                  <CardCvcElement options={CARD_ELEMENT_OPTIONS} />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {/* Klarna Payment Info */}
       {selectedPaymentMethod === 'klarna' && (
-        <div className="klarna-payment-section">
-          <div className="alert alert-info">
-            <h6><i className="fas fa-info-circle me-2"></i>Pay with Klarna</h6>
-            <p className="mb-0">
-              Split your payment into 4 interest-free installments. You'll be redirected to Klarna to complete your purchase.
-            </p>
-          </div>
+        <div className="bg-pink-50 border border-pink-200 rounded-xl p-4">
+          <h4 className="font-semibold text-pink-700 flex items-center gap-2 mb-2">
+            <Info className="w-5 h-5" />
+            Pay with Klarna
+          </h4>
+          <p className="text-pink-600 text-sm">
+            Split your payment into 4 interest-free installments. You'll be redirected to Klarna to complete your purchase.
+          </p>
         </div>
       )}
 
       {/* Affirm Payment Section */}
       {selectedPaymentMethod === 'affirm' && (
-        <div className="affirm-payment-section">
-          <div className="alert alert-info">
-            <h6><i className="fas fa-calendar-check me-2"></i>Pay with Affirm</h6>
-            <p className="mb-0">
-              Choose flexible monthly payments as low as 0% APR. You'll be redirected to Affirm to complete your purchase.
-            </p>
-          </div>
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <h4 className="font-semibold text-blue-700 flex items-center gap-2 mb-2">
+            <Calendar className="w-5 h-5" />
+            Pay with Affirm
+          </h4>
+          <p className="text-blue-600 text-sm">
+            Choose flexible monthly payments as low as 0% APR. You'll be redirected to Affirm to complete your purchase.
+          </p>
         </div>
       )}
 
       {/* Name field for Klarna and Affirm */}
       {(selectedPaymentMethod === 'klarna' || selectedPaymentMethod === 'affirm') && (
-        <div className="mb-4">
-          <h6 className="mb-3">Customer Information</h6>
-          <div className="row">
-            <div className="col-12 mb-3">
-              <label htmlFor="customer-name" className="form-label">
-                Full Name <span className="text-danger">*</span>
+        <Card className="border-0 shadow-md">
+          <CardContent className="p-6">
+            <h4 className="font-bold text-gray-900 mb-4">Customer Information</h4>
+            <div>
+              <label htmlFor="customer-name" className="block text-sm font-medium text-gray-700 mb-1">
+                Full Name <span className="text-red-500">*</span>
               </label>
-              <input
+              <Input
                 id="customer-name"
                 type="text"
-                className="form-control"
                 value={cardholderName}
                 onChange={(e) => setCardholderName(e.target.value)}
                 placeholder="Full name"
                 required
+                className="h-11"
               />
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Klarna Payment Information */}
       {selectedPaymentMethod === 'klarna' && (
-        <div className="klarna-payment-section">
-          <div className="alert alert-warning">
-            <h6 className="alert-heading">
-              <i className="fas fa-calendar-check me-2" style={{ color: '#FFB800' }}></i>
+        <>
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+            <h4 className="font-semibold text-amber-700 flex items-center gap-2 mb-2">
+              <Calendar className="w-5 h-5" />
               Klarna Full Payment Required
-            </h6>
-            <p className="mb-2">
+            </h4>
+            <p className="text-amber-700 text-sm mb-1">
               <strong>Full Payment:</strong> ${currentPaymentAmount.toFixed(2)} total (no remaining balance)
             </p>
-            <p className="mb-0">
+            <p className="text-amber-600 text-sm">
               Klarna will allow you to pay in 4 interest-free installments, but the full service amount is processed upfront.
             </p>
           </div>
           
           {/* Klarna Pre-approval Check */}
-          <div className="card border-warning mb-3">
-            <div className="card-body">
-              <h6 className="card-title text-warning">
-                <i className="fas fa-exclamation-triangle me-2"></i>
+          <Card className="border-amber-300 border-2">
+            <CardContent className="p-6">
+              <h4 className="font-semibold text-amber-600 flex items-center gap-2 mb-3">
+                <AlertTriangle className="w-5 h-5" />
                 Klarna Pre-approval Required
-              </h6>
-              <p className="card-text mb-3">
+              </h4>
+              <p className="text-gray-700 mb-4">
                 Have you been approved by Klarna for the full amount of <strong>${currentPaymentAmount.toFixed(2)}</strong>?
               </p>
               
-              <div className="mb-3">
-                <div className="form-check">
+              <div className="space-y-2 mb-4">
+                <label className="flex items-center gap-3 cursor-pointer">
                   <input
-                    className="form-check-input"
                     type="radio"
                     name="klarnaApproval"
-                    id="klarnaApprovedYes"
                     checked={klarnaApproved === true}
                     onChange={() => setKlarnaApproved(true)}
+                    className="w-4 h-4 text-[#AD6269] border-gray-300 focus:ring-[#AD6269]"
                   />
-                  <label className="form-check-label" htmlFor="klarnaApprovedYes">
-                    Yes, I have been approved by Klarna for this amount
-                  </label>
-                </div>
-                <div className="form-check">
+                  <span className="text-gray-700">Yes, I have been approved by Klarna for this amount</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
                   <input
-                    className="form-check-input"
                     type="radio"
                     name="klarnaApproval"
-                    id="klarnaApprovedNo"
                     checked={klarnaApproved === false}
                     onChange={() => setKlarnaApproved(false)}
+                    className="w-4 h-4 text-[#AD6269] border-gray-300 focus:ring-[#AD6269]"
                   />
-                  <label className="form-check-label" htmlFor="klarnaApprovedNo">
-                    No, I need to get approved first
-                  </label>
-                </div>
+                  <span className="text-gray-700">No, I need to get approved first</span>
+                </label>
               </div>
               
               {klarnaApproved === false && (
-                <div className="alert alert-warning">
-                  <p className="mb-2">
-                    <strong>You need Klarna approval before proceeding.</strong>
-                  </p>
-                  <p className="mb-2">
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <p className="font-semibold text-amber-700 mb-2">You need Klarna approval before proceeding.</p>
+                  <p className="text-amber-600 text-sm mb-3">
                     Please visit Klarna to create an account and get approved for the full amount:
                   </p>
-                  <a 
-                    href="https://www.klarna.com" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="btn btn-warning btn-sm"
+                  <Button
+                    asChild
+                    className="bg-amber-500 hover:bg-amber-600 text-white gap-2"
                   >
-                    <i className="fas fa-external-link-alt me-2"></i>
-                    Get Approved at Klarna.com
-                  </a>
+                    <a href="https://www.klarna.com" target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="w-4 h-4" />
+                      Get Approved at Klarna.com
+                    </a>
+                  </Button>
                 </div>
               )}
-            </div>
-          </div>
-        </div>
+            </CardContent>
+          </Card>
+        </>
       )}
 
       {/* Affirm Payment Information */}
       {selectedPaymentMethod === 'affirm' && (
-        <div className="affirm-payment-section">
-          <div className="alert alert-info">
-            <h6 className="alert-heading">
-              <i className="fas fa-calendar-check me-2" style={{ color: '#0FA8E6' }}></i>
+        <>
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <h4 className="font-semibold text-blue-700 flex items-center gap-2 mb-2">
+              <Calendar className="w-5 h-5" />
               Affirm Full Payment Required
-            </h6>
-            <p className="mb-2">
+            </h4>
+            <p className="text-blue-700 text-sm mb-1">
               <strong>Full Payment:</strong> ${currentPaymentAmount.toFixed(2)} total (no remaining balance)
             </p>
-            <p className="mb-0">
+            <p className="text-blue-600 text-sm">
               Affirm offers monthly payment plans with rates as low as 0% APR, but the full service amount is processed upfront.
             </p>
           </div>
           
           {/* Affirm Pre-approval Check */}
-          <div className="card border-info mb-3">
-            <div className="card-body">
-              <h6 className="card-title text-info">
-                <i className="fas fa-exclamation-triangle me-2"></i>
+          <Card className="border-blue-300 border-2">
+            <CardContent className="p-6">
+              <h4 className="font-semibold text-blue-600 flex items-center gap-2 mb-3">
+                <AlertTriangle className="w-5 h-5" />
                 Affirm Pre-approval Required
-              </h6>
-              <p className="card-text mb-3">
+              </h4>
+              <p className="text-gray-700 mb-4">
                 Have you been approved by Affirm for the full amount of <strong>${currentPaymentAmount.toFixed(2)}</strong>?
               </p>
               
-              <div className="mb-3">
-                <div className="form-check">
+              <div className="space-y-2 mb-4">
+                <label className="flex items-center gap-3 cursor-pointer">
                   <input
-                    className="form-check-input"
                     type="radio"
                     name="affirmApproval"
-                    id="affirmApprovedYes"
                     checked={affirmApproved === true}
                     onChange={() => setAffirmApproved(true)}
+                    className="w-4 h-4 text-[#AD6269] border-gray-300 focus:ring-[#AD6269]"
                   />
-                  <label className="form-check-label" htmlFor="affirmApprovedYes">
-                    Yes, I have been approved by Affirm for this amount
-                  </label>
-                </div>
-                <div className="form-check">
+                  <span className="text-gray-700">Yes, I have been approved by Affirm for this amount</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
                   <input
-                    className="form-check-input"
                     type="radio"
                     name="affirmApproval"
-                    id="affirmApprovedNo"
                     checked={affirmApproved === false}
                     onChange={() => setAffirmApproved(false)}
+                    className="w-4 h-4 text-[#AD6269] border-gray-300 focus:ring-[#AD6269]"
                   />
-                  <label className="form-check-label" htmlFor="affirmApprovedNo">
-                    No, I need to get approved first
-                  </label>
-                </div>
+                  <span className="text-gray-700">No, I need to get approved first</span>
+                </label>
               </div>
               
               {affirmApproved === false && (
-                <div className="alert alert-info">
-                  <p className="mb-2">
-                    <strong>You need Affirm approval before proceeding.</strong>
-                  </p>
-                  <p className="mb-2">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="font-semibold text-blue-700 mb-2">You need Affirm approval before proceeding.</p>
+                  <p className="text-blue-600 text-sm mb-3">
                     Please visit Affirm to create an account and get approved for the full amount:
                   </p>
-                  <a 
-                    href="https://www.affirm.com" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="btn btn-info btn-sm"
+                  <Button
+                    asChild
+                    className="bg-blue-500 hover:bg-blue-600 text-white gap-2"
                   >
-                    <i className="fas fa-external-link-alt me-2"></i>
-                    Get Approved at Affirm.com
-                  </a>
+                    <a href="https://www.affirm.com" target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="w-4 h-4" />
+                      Get Approved at Affirm.com
+                    </a>
+                  </Button>
                 </div>
               )}
-            </div>
-          </div>
-        </div>
+            </CardContent>
+          </Card>
+        </>
       )}
 
       {/* Cherry Payment Information */}
       {selectedPaymentMethod === 'cherry' && (
-        <div className="cherry-payment-section">
-          <div className="alert alert-info">
-            <h6 className="alert-heading">
-              <i className="fas fa-heart me-2" style={{ color: '#E91E63' }}></i>
+        <Card className="border-0 shadow-md bg-gradient-to-br from-red-50 to-pink-50">
+          <CardContent className="p-6">
+            <h4 className="font-semibold text-red-600 flex items-center gap-2 mb-4">
+              <Heart className="w-5 h-5" />
               Cherry Payment Process
-            </h6>
-            <p className="mb-2">Cherry requires full payment upfront with flexible payment plans. Here's what happens next:</p>
-            <ol className="mb-2">
+            </h4>
+            <p className="text-gray-700 mb-3">Cherry requires full payment upfront with flexible payment plans. Here's what happens next:</p>
+            <ol className="list-decimal list-inside space-y-2 text-gray-700 text-sm mb-4">
               <li><strong>Get Pre-Approved:</strong> Click "Continue with Cherry" to get pre-approved for the full amount</li>
               <li><strong>Book Your Appointment:</strong> Contact us directly to schedule your treatment</li>
               <li><strong>Say "I'm paying with Cherry":</strong> When booking, mention you'll use Cherry financing</li>
               <li><strong>Secure Checkout:</strong> We'll send you a secure checkout link to complete full payment</li>
               <li><strong>Select Payment Plan:</strong> Choose your preferred payment plan and pay the initial down payment</li>
             </ol>
-            <p className="mb-2">
-              <strong>Full Payment Required:</strong> ${currentPaymentAmount.toFixed(2)} total (no remaining balance)
-            </p>
-            <p className="mb-0">
-              <strong>Contact us:</strong> Call or text to book your appointment after Cherry approval.
-            </p>
-          </div>
-        </div>
+            <div className="bg-white/70 rounded-lg p-3 space-y-1">
+              <p className="text-red-600 font-semibold text-sm">
+                Full Payment Required: ${currentPaymentAmount.toFixed(2)} total (no remaining balance)
+              </p>
+              <p className="text-gray-600 text-sm">
+                <strong>Contact us:</strong> Call or text to book your appointment after Cherry approval.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Billing Address (for Card, Klarna and Affirm only) */}
       {selectedPaymentMethod !== 'cherry' && (
-      <div className="billing-address-section">
-        <h6 className="mb-3">Billing Address</h6>
-        
-        <div className="row">
-          <div className="col-12 mb-3">
-            <label htmlFor="address-line1" className="form-label">
-              Address <span className="text-danger">*</span>
-            </label>
-            <input
-              id="address-line1"
-              type="text"
-              className="form-control"
-              value={billingAddress.line1}
-              onChange={(e) => setBillingAddress({ ...billingAddress, line1: e.target.value })}
-              placeholder="Address line 1"
-              required
-            />
-          </div>
+        <Card className="border-0 shadow-md">
+          <CardContent className="p-6">
+            <h4 className="font-bold text-gray-900 mb-4">Billing Address</h4>
+            
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="address-line1" className="block text-sm font-medium text-gray-700 mb-1">
+                  Address <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  id="address-line1"
+                  type="text"
+                  value={billingAddress.line1}
+                  onChange={(e) => setBillingAddress({ ...billingAddress, line1: e.target.value })}
+                  placeholder="Address line 1"
+                  required
+                  className="h-11"
+                />
+              </div>
 
-          <div className="col-md-6 mb-3">
-            <label htmlFor="address-city" className="form-label">
-              City <span className="text-danger">*</span>
-            </label>
-            <input
-              id="address-city"
-              type="text"
-              className="form-control"
-              value={billingAddress.city}
-              onChange={(e) => setBillingAddress({ ...billingAddress, city: e.target.value })}
-              placeholder="City"
-              required
-            />
-          </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="col-span-2">
+                  <label htmlFor="address-city" className="block text-sm font-medium text-gray-700 mb-1">
+                    City <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    id="address-city"
+                    type="text"
+                    value={billingAddress.city}
+                    onChange={(e) => setBillingAddress({ ...billingAddress, city: e.target.value })}
+                    placeholder="City"
+                    required
+                    className="h-11"
+                  />
+                </div>
 
-          <div className="col-md-3 mb-3">
-            <label htmlFor="address-state" className="form-label">
-              State <span className="text-danger">*</span>
-            </label>
-            <input
-              id="address-state"
-              type="text"
-              className="form-control"
-              value={billingAddress.state}
-              onChange={(e) => setBillingAddress({ ...billingAddress, state: e.target.value })}
-              placeholder="NC"
-              maxLength={2}
-              required
-            />
-          </div>
+                <div>
+                  <label htmlFor="address-state" className="block text-sm font-medium text-gray-700 mb-1">
+                    State <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    id="address-state"
+                    type="text"
+                    value={billingAddress.state}
+                    onChange={(e) => setBillingAddress({ ...billingAddress, state: e.target.value })}
+                    placeholder="NC"
+                    maxLength={2}
+                    required
+                    className="h-11"
+                  />
+                </div>
 
-          <div className="col-md-3 mb-3">
-            <label htmlFor="address-zip" className="form-label">
-              ZIP Code <span className="text-danger">*</span>
-            </label>
-            <input
-              id="address-zip"
-              type="text"
-              className="form-control"
-              value={billingAddress.postal_code}
-              onChange={(e) => setBillingAddress({ ...billingAddress, postal_code: e.target.value })}
-              placeholder="12345"
-              required
-            />
-          </div>
-        </div>
-      </div>
+                <div>
+                  <label htmlFor="address-zip" className="block text-sm font-medium text-gray-700 mb-1">
+                    ZIP Code <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    id="address-zip"
+                    type="text"
+                    value={billingAddress.postal_code}
+                    onChange={(e) => setBillingAddress({ ...billingAddress, postal_code: e.target.value })}
+                    placeholder="12345"
+                    required
+                    className="h-11"
+                  />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      <div className="d-grid">
-        <button
-          type="submit"
-          className="btn btn-primary btn-lg"
-          disabled={!stripe || processing || loading || !isFormValid}
-        >
-          {processing || loading ? (
-            <>
-              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-              Processing...
-            </>
-          ) : selectedPaymentMethod === 'klarna' ? (
-            `Pay Full Amount with Klarna - $${currentPaymentAmount.toFixed(2)}`
-          ) : selectedPaymentMethod === 'affirm' ? (
-            `Pay Full Amount with Affirm - $${currentPaymentAmount.toFixed(2)}`
-          ) : selectedPaymentMethod === 'cherry' ? (
-            `Continue with Cherry - Full Payment Required`
-          ) : (
-            `Pay $${currentPaymentAmount.toFixed(2)} Deposit`
-          )}
-        </button>
-      </div>
+      <Button
+        type="submit"
+        disabled={!stripe || processing || loading || !isFormValid}
+        className="w-full py-6 text-lg bg-[#AD6269] hover:bg-[#9d5860] gap-2"
+      >
+        {processing || loading ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            Processing...
+          </>
+        ) : selectedPaymentMethod === 'klarna' ? (
+          `Pay Full Amount with Klarna - $${currentPaymentAmount.toFixed(2)}`
+        ) : selectedPaymentMethod === 'affirm' ? (
+          `Pay Full Amount with Affirm - $${currentPaymentAmount.toFixed(2)}`
+        ) : selectedPaymentMethod === 'cherry' ? (
+          `Continue with Cherry - Full Payment Required`
+        ) : (
+          `Pay $${currentPaymentAmount.toFixed(2)} Deposit`
+        )}
+      </Button>
 
-      <div className="mt-3 text-center">
-        <small className="text-muted">
-          <i className="fas fa-lock me-1"></i>
-          Your payment information is secure and encrypted
-        </small>
-      </div>
-
-      <style jsx>{`
-        .payment-method-card {
-          transition: all 0.2s ease;
-        }
-        .payment-method-card:hover {
-          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-          transform: translateY(-2px);
-        }
-        .payment-method-card.border-primary {
-          border-width: 2px !important;
-          box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-        }
-      `}</style>
+      <p className="text-center text-gray-500 text-sm mt-4 flex items-center justify-center gap-1">
+        <Lock className="w-4 h-4" />
+        Your payment information is secure and encrypted
+      </p>
     </form>
   );
 }
