@@ -35,7 +35,7 @@ export default function MonthlyCalendar({
 
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  // Fetch availability data from GHL for the current month
+  // Fetch availability data for the current month with timeout
   const fetchMonthAvailability = useCallback(async () => {
     setLoading(true);
     try {
@@ -49,23 +49,67 @@ export default function MonthlyCalendar({
       const startDate = firstDay.toISOString().split('T')[0];
       const endDate = lastDay.toISOString().split('T')[0];
 
-      const response = await fetch(`/api/availability/month?startDate=${startDate}&endDate=${endDate}`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        setDateAvailability(data.availability || {});
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+      try {
+        const response = await fetch(
+          `/api/availability/month?startDate=${startDate}&endDate=${endDate}`,
+          { signal: controller.signal }
+        );
+        clearTimeout(timeoutId);
         
-        // Find next available date
-        if (data.nextAvailable) {
-          setNextAvailableDate(data.nextAvailable);
+        if (response.ok) {
+          const data = await response.json();
+          setDateAvailability(data.availability || {});
+          
+          // Find next available date
+          if (data.nextAvailable) {
+            setNextAvailableDate(data.nextAvailable);
+          }
+        } else {
+          // API returned error - use default availability
+          generateDefaultAvailability(firstDay, lastDay);
         }
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          console.warn('Month availability fetch timed out, using defaults');
+        } else {
+          console.error('Error fetching month availability:', fetchError);
+        }
+        // Generate default availability on error
+        generateDefaultAvailability(firstDay, lastDay);
       }
     } catch (error) {
-      console.error('Error fetching month availability:', error);
+      console.error('Error in fetchMonthAvailability:', error);
     } finally {
       setLoading(false);
     }
   }, [currentMonth]);
+
+  // Generate default availability (all future dates available)
+  const generateDefaultAvailability = (firstDay: Date, lastDay: Date) => {
+    const availability: Record<string, DateAvailability> = {};
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+    
+    for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+      const dateString = d.toISOString().split('T')[0];
+      availability[dateString] = {
+        date: dateString,
+        bookingCount: 0,
+        isAvailable: d >= todayDate,
+      };
+    }
+    
+    setDateAvailability(availability);
+    
+    // Set next available to today or first day of month if in future
+    const nextAvail = todayDate >= firstDay ? todayDate.toISOString().split('T')[0] : firstDay.toISOString().split('T')[0];
+    setNextAvailableDate(nextAvail);
+  };
 
   useEffect(() => {
     fetchMonthAvailability();
