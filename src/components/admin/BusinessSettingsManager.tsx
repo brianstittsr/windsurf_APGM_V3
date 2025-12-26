@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { DatabaseService } from '@/services/database';
 import { Timestamp } from 'firebase/firestore';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface BusinessSettings {
   id?: string;
@@ -84,247 +86,177 @@ export default function BusinessSettingsManager() {
 
   if (loading) {
     return (
-      <div className="text-center py-5">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-        <p className="mt-3 text-muted">Loading business settings...</p>
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AD6269]"></div>
       </div>
     );
   }
 
   return (
-    <div className="container-fluid">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="card border-0 shadow-sm bg-gradient" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-            <div className="card-body text-white p-4">
-              <h2 className="card-title mb-2 fw-bold">
-                <i className="fas fa-cogs me-3"></i>
-                Business Settings
-              </h2>
-              <p className="card-text mb-0 opacity-75">
-                Configure deposit percentages, fees, and business information
-              </p>
+      <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+        <i className="fas fa-cogs text-[#AD6269]"></i>Business Settings
+      </h2>
+
+      {message && (
+        <div className={`${message.type === 'success' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'} border px-4 py-3 rounded-lg flex justify-between items-center`}>
+          <span><i className={`fas ${message.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'} mr-2`}></i>{message.text}</span>
+          <button onClick={() => setMessage(null)} className="hover:opacity-70"><i className="fas fa-times"></i></button>
+        </div>
+      )}
+
+      <form onSubmit={handleSave} className="space-y-6">
+        {/* Payment Settings */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 bg-[#AD6269]">
+            <h5 className="font-semibold text-white flex items-center gap-2">
+              <i className="fas fa-credit-card"></i>Payment Settings
+            </h5>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  <i className="fas fa-percentage mr-1 text-green-600"></i>Deposit Percentage *
+                </label>
+                <div className="flex">
+                  <Input
+                    type="number"
+                    value={settings.depositPercentage}
+                    onChange={(e) => setSettings(prev => ({ ...prev, depositPercentage: Number(e.target.value) }))}
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    required
+                    className="rounded-r-none"
+                  />
+                  <span className="inline-flex items-center px-3 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md">%</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Percentage of service price required as deposit</p>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  <i className="fas fa-calculator mr-1 text-blue-600"></i>Tax Rate *
+                </label>
+                <div className="flex">
+                  <Input
+                    type="number"
+                    value={settings.taxRate}
+                    onChange={(e) => setSettings(prev => ({ ...prev, taxRate: Number(e.target.value) }))}
+                    min="0"
+                    max="50"
+                    step="0.01"
+                    required
+                    className="rounded-r-none"
+                  />
+                  <span className="inline-flex items-center px-3 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md">%</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Sales tax rate applied to services</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  <i className="fas fa-dollar-sign mr-1 text-yellow-600"></i>Rebooking Fee
+                </label>
+                <div className="flex">
+                  <span className="inline-flex items-center px-3 bg-gray-100 border border-r-0 border-gray-300 rounded-l-md">$</span>
+                  <Input
+                    type="number"
+                    value={settings.rebookingFee}
+                    onChange={(e) => setSettings(prev => ({ ...prev, rebookingFee: Number(e.target.value) }))}
+                    min="0"
+                    step="0.01"
+                    className="rounded-l-none"
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Fee charged for rescheduling</p>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  <i className="fas fa-calendar-times mr-1 text-red-600"></i>Cancellation Policy
+                </label>
+                <Input
+                  type="text"
+                  value={settings.cancellationPolicy}
+                  onChange={(e) => setSettings(prev => ({ ...prev, cancellationPolicy: e.target.value }))}
+                  placeholder="24 hours notice required"
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Settings Form */}
-      <div className="row">
-        <div className="col-12">
-          <div className="card border-0 shadow-sm">
-            <div className="card-header bg-primary text-white border-0">
-              <h5 className="mb-0 fw-bold">
-                <i className="fas fa-sliders-h me-2"></i>
-                Payment & Business Configuration
-              </h5>
+        {/* Business Information */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 bg-blue-600">
+            <h5 className="font-semibold text-white flex items-center gap-2">
+              <i className="fas fa-building"></i>Business Information
+            </h5>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  <i className="fas fa-store mr-1 text-[#AD6269]"></i>Business Name
+                </label>
+                <Input
+                  type="text"
+                  value={settings.businessName}
+                  onChange={(e) => setSettings(prev => ({ ...prev, businessName: e.target.value }))}
+                  placeholder="A Pretty Girl Matter"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  <i className="fas fa-envelope mr-1 text-green-600"></i>Business Email
+                </label>
+                <Input
+                  type="email"
+                  value={settings.email}
+                  onChange={(e) => setSettings(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="info@aprettygirlmatter.com"
+                />
+              </div>
             </div>
-            <div className="card-body p-4">
-              {message && (
-                <div className={`alert alert-${message.type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`} role="alert">
-                  <i className={`fas ${message.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'} me-2`}></i>
-                  {message.text}
-                  <button type="button" className="btn-close" onClick={() => setMessage(null)}></button>
-                </div>
-              )}
-
-              <form onSubmit={handleSave}>
-                <div className="row g-4">
-                  {/* Payment Settings */}
-                  <div className="col-12">
-                    <div className="card border-primary border-2">
-                      <div className="card-header bg-primary bg-opacity-10">
-                        <h6 className="mb-0 fw-bold text-primary">
-                          <i className="fas fa-credit-card me-2"></i>
-                          Payment Settings
-                        </h6>
-                      </div>
-                      <div className="card-body">
-                        <div className="row g-3">
-                          <div className="col-md-6">
-                            <label className="form-label fw-semibold">
-                              <i className="fas fa-percentage me-1 text-success"></i>
-                              Deposit Percentage *
-                            </label>
-                            <div className="input-group">
-                              <input
-                                type="number"
-                                className="form-control form-control-lg border-2"
-                                value={settings.depositPercentage}
-                                onChange={(e) => setSettings(prev => ({ ...prev, depositPercentage: Number(e.target.value) }))}
-                                min="0"
-                                max="100"
-                                step="0.01"
-                                required
-                              />
-                              <span className="input-group-text">%</span>
-                            </div>
-                            <div className="form-text">
-                              Percentage of service price required as deposit (e.g., 33.33% of $600 = $200)
-                            </div>
-                          </div>
-                          <div className="col-md-6">
-                            <label className="form-label fw-semibold">
-                              <i className="fas fa-calculator me-1 text-info"></i>
-                              Tax Rate *
-                            </label>
-                            <div className="input-group">
-                              <input
-                                type="number"
-                                className="form-control form-control-lg border-2"
-                                value={settings.taxRate}
-                                onChange={(e) => setSettings(prev => ({ ...prev, taxRate: Number(e.target.value) }))}
-                                min="0"
-                                max="50"
-                                step="0.01"
-                                required
-                              />
-                              <span className="input-group-text">%</span>
-                            </div>
-                            <div className="form-text">
-                              Sales tax rate applied to services
-                            </div>
-                          </div>
-                        </div>
-                        <div className="row g-3 mt-2">
-                          <div className="col-md-6">
-                            <label className="form-label fw-semibold">
-                              <i className="fas fa-dollar-sign me-1 text-warning"></i>
-                              Rebooking Fee
-                            </label>
-                            <div className="input-group">
-                              <span className="input-group-text">$</span>
-                              <input
-                                type="number"
-                                className="form-control form-control-lg border-2"
-                                value={settings.rebookingFee}
-                                onChange={(e) => setSettings(prev => ({ ...prev, rebookingFee: Number(e.target.value) }))}
-                                min="0"
-                                step="0.01"
-                              />
-                            </div>
-                            <div className="form-text">
-                              Fee charged for rescheduling appointments
-                            </div>
-                          </div>
-                          <div className="col-md-6">
-                            <label className="form-label fw-semibold">
-                              <i className="fas fa-calendar-times me-1 text-danger"></i>
-                              Cancellation Policy
-                            </label>
-                            <input
-                              type="text"
-                              className="form-control form-control-lg border-2"
-                              value={settings.cancellationPolicy}
-                              onChange={(e) => setSettings(prev => ({ ...prev, cancellationPolicy: e.target.value }))}
-                              placeholder="24 hours notice required"
-                            />
-                            <div className="form-text">
-                              Cancellation policy description
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Business Information */}
-                  <div className="col-12">
-                    <div className="card border-info border-2">
-                      <div className="card-header bg-info bg-opacity-10">
-                        <h6 className="mb-0 fw-bold text-info">
-                          <i className="fas fa-building me-2"></i>
-                          Business Information
-                        </h6>
-                      </div>
-                      <div className="card-body">
-                        <div className="row g-3">
-                          <div className="col-md-6">
-                            <label className="form-label fw-semibold">
-                              <i className="fas fa-store me-1 text-primary"></i>
-                              Business Name
-                            </label>
-                            <input
-                              type="text"
-                              className="form-control form-control-lg border-2"
-                              value={settings.businessName}
-                              onChange={(e) => setSettings(prev => ({ ...prev, businessName: e.target.value }))}
-                              placeholder="A Pretty Girl Matter"
-                            />
-                          </div>
-                          <div className="col-md-6">
-                            <label className="form-label fw-semibold">
-                              <i className="fas fa-envelope me-1 text-success"></i>
-                              Business Email
-                            </label>
-                            <input
-                              type="email"
-                              className="form-control form-control-lg border-2"
-                              value={settings.email}
-                              onChange={(e) => setSettings(prev => ({ ...prev, email: e.target.value }))}
-                              placeholder="info@aprettygirlmatter.com"
-                            />
-                          </div>
-                        </div>
-                        <div className="row g-3 mt-2">
-                          <div className="col-md-6">
-                            <label className="form-label fw-semibold">
-                              <i className="fas fa-phone me-1 text-info"></i>
-                              Phone Number
-                            </label>
-                            <input
-                              type="tel"
-                              className="form-control form-control-lg border-2"
-                              value={settings.phone}
-                              onChange={(e) => setSettings(prev => ({ ...prev, phone: e.target.value }))}
-                              placeholder="(555) 123-4567"
-                            />
-                          </div>
-                          <div className="col-md-6">
-                            <label className="form-label fw-semibold">
-                              <i className="fas fa-map-marker-alt me-1 text-warning"></i>
-                              Business Address
-                            </label>
-                            <input
-                              type="text"
-                              className="form-control form-control-lg border-2"
-                              value={settings.address}
-                              onChange={(e) => setSettings(prev => ({ ...prev, address: e.target.value }))}
-                              placeholder="123 Main St, City, State 12345"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-center mt-4">
-                  <button
-                    type="submit"
-                    className="btn btn-primary btn-lg rounded-pill px-5 shadow"
-                    disabled={saving}
-                  >
-                    {saving ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fas fa-save me-2"></i>Save Settings
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  <i className="fas fa-phone mr-1 text-blue-600"></i>Phone Number
+                </label>
+                <Input
+                  type="tel"
+                  value={settings.phone}
+                  onChange={(e) => setSettings(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="(555) 123-4567"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  <i className="fas fa-map-marker-alt mr-1 text-yellow-600"></i>Business Address
+                </label>
+                <Input
+                  type="text"
+                  value={settings.address}
+                  onChange={(e) => setSettings(prev => ({ ...prev, address: e.target.value }))}
+                  placeholder="123 Main St, City, State 12345"
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
+
+        <div className="text-center">
+          <Button type="submit" className="bg-[#AD6269] hover:bg-[#9d5860] px-8" disabled={saving}>
+            {saving ? (
+              <><i className="fas fa-spinner fa-spin mr-2"></i>Saving...</>
+            ) : (
+              <><i className="fas fa-save mr-2"></i>Save Settings</>
+            )}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }
