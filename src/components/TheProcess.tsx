@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export default function TheProcess() {
   const steps = [
@@ -36,112 +37,110 @@ export default function TheProcess() {
 
   return (
     <section id="process" className="py-section" style={{ backgroundColor: 'rgba(173, 98, 105, 0.3)' }}>
-      <div className="container">
+      <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="text-center mb-5">
-          <h2 className="main-heading fw-bold text-dark mb-4">
+        <div className="text-center mb-12">
+          <h2 className="main-heading font-bold text-gray-900 mb-4">
             The
             <span className="text-rose-600"> Process</span>
           </h2>
-          <p className="paragraph-text text-secondary mx-auto" style={{maxWidth: '48rem'}}>
+          <p className="paragraph-text text-gray-600 mx-auto max-w-3xl">
             Our proven 6-step process ensures you get the most natural, beautiful, and long-lasting results. 
             Every step is designed with your comfort and satisfaction in mind.
           </p>
         </div>
 
         {/* Process Steps - 2 Row, 3 Column Grid */}
-        <div className="row g-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {steps.map((step, index) => (
-            <div key={index} className="col-lg-4 col-md-6 col-12">
-              <div className="card border-0 shadow-custom rounded-custom p-4 h-100 text-center">
+            <div key={index}>
+              <div className="bg-white border-0 shadow-custom rounded-custom p-4 h-full text-center flex flex-col">
                 {/* Step Number */}
-                <div className="mb-4">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-custom mx-auto" style={{width: '4rem', height: '4rem', fontSize: '32px', fontFamily: 'Playfair Display, serif', backgroundColor: '#AD6269', color: 'white'}}>
+                <div className="mb-3">
+                  <div className="rounded-full flex items-center justify-center font-bold shadow-custom mx-auto w-12 h-12 text-xl bg-[#AD6269] text-white" style={{fontFamily: 'Playfair Display, serif'}}>
                     {step.number}
                   </div>
                 </div>
 
                 {/* Step Image */}
                 {index === 0 && (
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <img
                       src="/images/theprocess/Candidacy.png"
                       alt="Candidacy assessment"
-                      className="img-fluid shadow-custom"
-                      style={{height: '300px', width: '100%', objectFit: 'contain', objectPosition: 'center', borderRadius: '0.5rem'}}
+                      className="w-full h-[180px] object-contain shadow-sm rounded-lg"
                     />
                   </div>
                 )}
                 {index === 1 && (
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <img
                       src="/images/theprocess/BookNow.png"
                       alt="Book now for permanent makeup"
-                      className="img-fluid shadow-custom"
-                      style={{height: '300px', width: '100%', objectFit: 'contain', objectPosition: 'center', borderRadius: '0.5rem'}}
+                      className="w-full h-[180px] object-contain shadow-sm rounded-lg"
                     />
                   </div>
                 )}
                 {index === 2 && (
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <img
                       src="/images/theprocess/numbing.jpg"
                       alt="Numbing cream application for permanent makeup"
-                      className="img-fluid shadow-custom"
-                      style={{height: '300px', width: '100%', objectFit: 'contain', objectPosition: 'center', borderRadius: '0.5rem'}}
+                      className="w-full h-[180px] object-contain shadow-sm rounded-lg"
                     />
                   </div>
                 )}
                 {index === 3 && (
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <img
                       src="/images/theprocess/shaping.jpg"
                       alt="Eyebrow shaping and mapping process"
-                      className="img-fluid shadow-custom"
-                      style={{height: '300px', width: '100%', objectFit: 'contain', objectPosition: 'center', borderRadius: '0.5rem'}}
+                      className="w-full h-[180px] object-contain shadow-sm rounded-lg"
                     />
                   </div>
                 )}
                 {index === 4 && (
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <img
                       src="/images/theprocess/color.png"
                       alt="Color selection for permanent makeup"
-                      className="img-fluid shadow-custom"
-                      style={{height: '300px', width: '100%', objectFit: 'contain', objectPosition: 'center', borderRadius: '0.5rem'}}
+                      className="w-full h-[180px] object-contain shadow-sm rounded-lg"
                     />
                   </div>
                 )}
                 {index === 5 && (
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <img
                       src="/images/theprocess/touchup.png"
                       alt="Touch-up session for permanent makeup"
-                      className="img-fluid shadow-custom"
-                      style={{height: '300px', width: '100%', objectFit: 'contain', objectPosition: 'center', borderRadius: '0.5rem'}}
+                      className="w-full h-[180px] object-contain shadow-sm rounded-lg"
                     />
                   </div>
                 )}
 
                 {/* Step Content */}
-                <h3 className="h5 fw-bold text-dark mb-3">{step.title}</h3>
-                <p className="text-black lh-base mb-4">{step.description}</p>
+                <h3 className="text-base font-bold text-gray-900 mb-2">{step.title}</h3>
+                <p className="text-sm text-gray-700 leading-relaxed mb-3 flex-grow">{step.description}</p>
                 
                 {/* Buttons for Candidacy step */}
                 {index === 0 && (
-                  <div className="d-flex flex-column gap-2 mt-auto">
-                    <Link href="/candidate-assessment" className="btn btn-primary rounded-pill px-3 py-2 fw-semibold">
-                      Are You A Good Candidate
-                    </Link>
+                  <div className="flex flex-col gap-2 mt-auto">
+                    <Button asChild size="sm" className="rounded-full px-4 py-1 bg-[#AD6269] hover:bg-[#9d5860] text-xs font-semibold">
+                      <Link href="/candidate-assessment">
+                        Are You A Good Candidate
+                      </Link>
+                    </Button>
                   </div>
                 )}
                 
                 {/* Buttons for Consultation step */}
                 {index === 1 && (
-                  <div className="d-flex flex-column gap-2 mt-auto">
-                    <Link href="/book-now-custom" className="btn btn-primary rounded-pill px-3 py-2 fw-semibold">
-                      Book Now
-                    </Link>
+                  <div className="flex flex-col gap-2 mt-auto">
+                    <Button asChild size="sm" className="rounded-full px-4 py-1 bg-[#AD6269] hover:bg-[#9d5860] text-xs font-semibold">
+                      <Link href="/book-now-custom">
+                        Book Now
+                      </Link>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -150,19 +149,21 @@ export default function TheProcess() {
         </div>
 
         {/* Bottom Section */}
-        <div className="mt-5 text-center">
-          <div className="card border-0 shadow-custom rounded-custom p-5 mx-auto" style={{maxWidth: '64rem'}}>
-            <h3 className="main-heading fw-bold text-dark mb-4">
+        <div className="mt-12 text-center">
+          <div className="bg-white border-0 shadow-custom rounded-custom p-8 mx-auto max-w-4xl">
+            <h3 className="main-heading font-bold text-gray-900 mb-4">
               Ready to Start Your Transformation?
             </h3>
-            <p className="paragraph-text text-black mb-4">
+            <p className="paragraph-text text-gray-900 mb-6">
               The entire process typically takes 2-3 hours for the initial appointment, with a touch-up session 
               scheduled 4-6 weeks later.
             </p>
-            <div className="d-flex justify-content-center">
-              <Link href="/book-now-custom" className="btn btn-primary rounded-pill px-4 fw-semibold book-now-button">
-                Book Now
-              </Link>
+            <div className="flex justify-center">
+              <Button asChild size="lg" className="rounded-full px-8 bg-[#AD6269] hover:bg-[#9d5860] text-base font-semibold">
+                <Link href="/book-now-custom">
+                  Book Now
+                </Link>
+              </Button>
             </div>
           </div>
         </div>

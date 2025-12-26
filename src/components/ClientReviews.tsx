@@ -76,29 +76,39 @@ export default function ClientReviews() {
       try {
         const db = getDb();
         if (!db) {
+          console.log('Firebase not initialized, using fallback reviews');
           setReviews(fallbackReviews);
           setLoading(false);
           return;
         }
 
-        const q = query(
-          collection(getDb(), 'reviews'),
-          where('isApproved', '==', true),
-          where('isVisible', '==', true),
-          orderBy('createdAt', 'desc'),
-          limit(6)
-        );
+        // Try to fetch reviews - use simple query first to avoid index issues
+        const reviewsRef = collection(getDb(), 'reviews');
+        const querySnapshot = await getDocs(reviewsRef);
         
-        const querySnapshot = await getDocs(q);
-        const reviewsData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Review[];
+        // Filter and sort client-side to avoid index requirements
+        const reviewsData = querySnapshot.docs
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }))
+          .filter((review: any) => review.isApproved === true && review.isVisible === true)
+          .sort((a: any, b: any) => {
+            const aTime = a.createdAt?.toMillis?.() || 0;
+            const bTime = b.createdAt?.toMillis?.() || 0;
+            return bTime - aTime;
+          })
+          .slice(0, 6) as Review[];
 
         // Use database reviews if available, otherwise fallback
         setReviews(reviewsData.length > 0 ? reviewsData : fallbackReviews);
-      } catch (error) {
-        console.error('Error loading reviews:', error);
+      } catch (error: any) {
+        // Silently handle permissions errors and use fallback reviews
+        if (error?.code === 'permission-denied' || error?.message?.includes('permission')) {
+          console.log('Using fallback reviews due to permissions');
+        } else {
+          console.error('Error loading reviews:', error);
+        }
         setReviews(fallbackReviews);
       } finally {
         setLoading(false);
@@ -155,14 +165,14 @@ export default function ClientReviews() {
 
   return (
     <section id="reviews" className="py-section bg-white">
-      <div className="container">
+      <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="text-center mb-5">
-          <h2 className="main-heading fw-bold text-dark mb-4">
+        <div className="text-center mb-12">
+          <h2 className="main-heading font-bold text-gray-900 mb-4">
             Client
             <span className="text-rose-600"> Reviews</span>
           </h2>
-          <p className="paragraph-text text-secondary mx-auto" style={{maxWidth: '48rem'}}>
+          <p className="paragraph-text text-gray-600 mx-auto max-w-3xl">
             Don&apos;t just take our word for it. Here&apos;s what our amazing clients have to say about their 
             permanent makeup experience with Victoria.
           </p>
@@ -170,137 +180,62 @@ export default function ClientReviews() {
 
 
 
-        {/* Main Review Carousel - HIDDEN */}
-        {/*
-        <div className="position-relative rounded-3 p-4 p-md-5 mb-5" style={{ backgroundColor: 'rgba(173, 98, 105, 0.3)' }}>
-          <div className="position-relative" style={{ minHeight: '20rem' }}>
-            {reviews.map((review, index) => (
-              <div
-                key={index}
-                className="position-absolute top-0 start-0 w-100"
-                style={{
-                  opacity: index === currentReview ? 1 : 0,
-                  transition: 'opacity 0.8s ease-in-out',
-                  pointerEvents: index === currentReview ? 'auto' : 'none'
-                }}
-              >
-                <div className="row g-4 align-items-center">
-                  <div className="col-lg-6">
-                    <div className="d-flex align-items-center mb-3">
-                      {renderStars(review.rating)}
-                    </div>
-                    
-                    <blockquote className="fs-5 text-muted mb-4 lh-base">
-                      &quot;{review.text}&quot;
-                    </blockquote>
-                    
-                    <div className="d-flex align-items-center">
-                      <img
-                        src={review.image}
-                        alt={review.name}
-                        className="rounded-circle me-3"
-                        style={{width: '4rem', height: '4rem', objectFit: 'cover'}}
-                      />
-                      <div>
-                        <div className="fw-semibold text-dark">{maskLastName(review.name)}</div>
-                        <div className="text-primary">{review.service}</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="col-lg-6">
-                    <div className="position-relative">
-                      <img
-                        src={review.beforeAfter}
-                        alt="Before and after results"
-                        className="rounded-3 shadow w-100"
-                        style={{height: '16rem', objectFit: 'cover'}}
-                      />
-                      <div className="position-absolute top-0 start-0 m-3 bg-white px-3 py-1 rounded-pill small fw-semibold text-muted">
-                        Results
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <button
-            onClick={prevReview}
-            className="position-absolute start-0 top-50 translate-middle-y ms-3 btn btn-light rounded-circle p-2 shadow"
-          >
-            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          
-          <button
-            onClick={nextReview}
-            className="position-absolute end-0 top-50 translate-middle-y me-3 btn btn-light rounded-circle p-2 shadow"
-          >
-            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-
-          <div className="d-flex justify-content-center gap-2 mt-4">
-            {reviews.map((_, index) => (
+        {/* Review List with Navigation Dots */}
+        <div className="flex gap-8 max-w-4xl mx-auto">
+          {/* Navigation Dots */}
+          <div className="flex flex-col gap-3 pt-4">
+            {reviews.slice(0, 3).map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentReview(index)}
-                className={`btn rounded-circle p-0 ${
-                  index === currentReview ? 'bg-primary' : 'bg-secondary'
+                className={`w-2 h-2 rounded-full transition-colors ${
+                  index === currentReview ? 'bg-gray-800' : 'bg-gray-300'
                 }`}
-                style={{width: '0.75rem', height: '0.75rem'}}
+                aria-label={`View review ${index + 1}`}
               />
             ))}
           </div>
-        </div>
-        */}
 
-        {/* Review Grid */}
-        <div className="row g-4">
-          {reviews.slice(0, 3).map((review, index) => (
-            <div key={index} className="col-md-4">
-              <div className="card h-100 border-light rounded-3 p-4 shadow-sm">
-                <div className="d-flex justify-content-center mb-3">
-                  {renderStars(review.rating)}
-                </div>
-              
-                <p className="text-muted mb-3">
-                  &quot;{review.text}&quot;
-                </p>
-                
-                <div className="d-flex align-items-center">
+          {/* Reviews List */}
+          <div className="flex-1 space-y-8">
+            {reviews.slice(0, 3).map((review, index) => (
+              <div key={index} className="flex gap-4 items-start">
+                {/* Profile Image */}
+                <div className="flex-shrink-0">
                   <img
                     src={review.image}
                     alt={review.name}
-                    className="rounded-circle me-3"
-                    style={{width: '3rem', height: '3rem', objectFit: 'cover'}}
+                    className="rounded-full w-12 h-12 object-cover"
                   />
-                  <div>
-                    <div className="fw-semibold text-dark small">{maskLastName(review.name)}</div>
-                    <div className="text-primary small">{review.service}</div>
+                  <div className="text-center mt-2">
+                    <div className="font-semibold text-gray-900 text-sm">{maskLastName(review.name)}</div>
+                    <div className="text-rose-600 text-xs">{review.service}</div>
                   </div>
                 </div>
+
+                {/* Review Text */}
+                <div className="flex-1">
+                  <p className="text-gray-900 leading-relaxed">
+                    &quot;{review.text}&quot;
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* CTA Section */}
-        <div className="text-center mt-5">
-          <div className="bg-primary rounded-3 p-5 text-white mx-auto" style={{maxWidth: '64rem'}}>
-            <h3 className="main-heading fw-bold text-white mb-4">
+        <div className="text-center mt-16">
+          <div className="bg-[#AD6269] rounded-xl p-8 text-white mx-auto max-w-4xl">
+            <h3 className="main-heading font-bold text-white mb-4">
               Book Now
             </h3>
-            <p className="paragraph-text text-white mb-4">
+            <p className="paragraph-text text-white mb-6">
               Experience the confidence and convenience of permanent makeup. 
               Book your free consultation today and start your transformation journey.
             </p>
-            <div className="d-flex justify-content-center">
-              <Link href="/book-now-custom" className="btn btn-light text-primary rounded-pill px-4 fw-semibold book-now-button">
+            <div className="flex justify-center">
+              <Link href="/book-now-custom" className="inline-block bg-white text-[#AD6269] rounded-full px-8 py-3 font-semibold hover:bg-gray-100 transition-colors">
                 Book Now
               </Link>
             </div>

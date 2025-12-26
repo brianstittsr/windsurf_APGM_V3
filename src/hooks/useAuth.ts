@@ -126,11 +126,10 @@ export function useAuth() {
                 });
               }
             } catch (error: any) {
-              console.error('❌ Error fetching user profile:', error);
-              
-              // Handle Firebase permission errors gracefully
+              // Handle Firebase permission errors gracefully (expected for unauthenticated users)
               if (error?.code === 'permission-denied' || error?.message?.includes('permission')) {
-                console.log('⚠️ Permission denied - user may not have a profile yet');
+                // Silently handle - this is expected for unauthenticated users
+                console.log('ℹ️ User profile access requires authentication');
                 
                 // Check if this is an admin email that should have access
                 const adminEmails = ['victoria@aprettygirlmatter.com', 'admin@atlantaglamourpmu.com'];

@@ -31,12 +31,6 @@ service cloud.firestore {
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
 
-    // BROAD DIAGNOSTIC RULE: Allow any authenticated user to read anything.
-    // This is temporary to isolate the problem.
-    match /{document=**} {
-      allow read: if isAuthenticated();
-    }
-
     // Users collection - CRITICAL: Admin can manage all users, users can read/update their own
     match /users/{userId} {
       allow read: if isAuthenticated(); // Allow any logged-in user to read user profiles (needed for booking)
@@ -248,11 +242,6 @@ service cloud.firestore {
     match /couponCodes/{couponId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
-    }
-
-    // Default deny all other access
-    match /{document=**} {
-      allow read, write: if false;
     }
   }
 }
