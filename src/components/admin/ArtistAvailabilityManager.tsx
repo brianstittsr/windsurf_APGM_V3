@@ -6,6 +6,9 @@ import { getDb } from '../../lib/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import OutlookCalendarSetup from './OutlookCalendarSetup';
 import FirestorePermissionTest from './FirestorePermissionTest';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useAlertDialog } from '@/components/ui/alert-dialog';
 
 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -18,6 +21,7 @@ export default function ArtistAvailabilityManager() {
   const [breakTime, setBreakTime] = useState<number>(15);
   const [loading, setLoading] = useState(true);
   const [showOutlookModal, setShowOutlookModal] = useState(false);
+  const { showAlert, AlertDialogComponent } = useAlertDialog();
 
   useEffect(() => {
     const fetchArtists = async () => {
@@ -158,7 +162,7 @@ export default function ArtistAvailabilityManager() {
         setBreakTime(15);
         
         // Show error alert
-        alert(`Error loading availability data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        showAlert({ title: 'Error', description: `Error loading availability data: ${error instanceof Error ? error.message : 'Unknown error'}`, variant: 'destructive' });
       } finally {
         setLoading(false);
       }
@@ -259,7 +263,7 @@ export default function ArtistAvailabilityManager() {
   const handleSave = async () => {
     if (!selectedArtist) {
       console.error('❌ No artist selected');
-      alert('Please select an artist before saving.');
+      showAlert({ title: 'Error', description: 'Please select an artist before saving.', variant: 'destructive' });
       return;
     }
     
@@ -272,7 +276,7 @@ export default function ArtistAvailabilityManager() {
     // Check for potential circular references
     if (isCircular(availability)) {
       console.error('❌ Circular reference detected in availability data');
-      alert('Invalid data structure detected. Please refresh the page and try again.');
+      showAlert({ title: 'Error', description: 'Invalid data structure detected. Please refresh the page and try again.', variant: 'destructive' });
       return;
     }
     
@@ -280,7 +284,7 @@ export default function ArtistAvailabilityManager() {
     const { valid, data, error } = prepareAvailabilityData();
     if (!valid) {
       console.error('❌ Failed to prepare availability data:', error);
-      alert('Failed to prepare availability data. Please try again.');
+      showAlert({ title: 'Error', description: 'Failed to prepare availability data. Please try again.', variant: 'destructive' });
       return;
     }
     
@@ -302,7 +306,7 @@ export default function ArtistAvailabilityManager() {
       });
       
       console.log('✅ Availability saved successfully!');
-      alert('Availability saved successfully!');
+      showAlert({ title: 'Success', description: 'Availability saved successfully!', variant: 'success' });
     } catch (error) {
       console.error('❌ Error saving availability:', error);
       // More detailed error information
@@ -311,23 +315,29 @@ export default function ArtistAvailabilityManager() {
         console.error('Error message:', error.message);
         console.error('Error stack:', error.stack);
       }
-      alert(`Error saving availability. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      showAlert({ title: 'Error', description: `Error saving availability. Error: ${error instanceof Error ? error.message : 'Unknown error'}`, variant: 'destructive' });
     }
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AD6269]"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="container-fluid">
-      {/* Add Firestore Permission Test component for diagnostics */}
+    <div className="space-y-6">
       <FirestorePermissionTest />
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h4>Artist Availability</h4>
-        <div style={{width: '250px'}}>
+      
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+          <i className="fas fa-calendar-check text-[#AD6269]"></i>Artist Availability
+        </h2>
+        <div className="w-64">
           <select 
-            className="form-select" 
+            className="w-full h-10 px-3 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
             value={selectedArtist} 
             onChange={(e) => {
               console.log('Selected artist changed to:', e.target.value);
@@ -346,69 +356,108 @@ export default function ArtistAvailabilityManager() {
           </select>
         </div>
       </div>
-      <div className="card mb-4">
-        <div className="card-body">
-          <h5 className="card-title">Settings</h5>
-          <div className="mb-3">
-            <label htmlFor="breakTime" className="form-label">Break Time (minutes)</label>
-            <input type="number" id="breakTime" className="form-control" style={{width: '150px'}} value={breakTime} onChange={(e) => setBreakTime(parseInt(e.target.value, 10))} />
-          </div>
+
+      {/* Settings Card */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+          <h5 className="font-semibold text-gray-900">Settings</h5>
+        </div>
+        <div className="p-6 space-y-4">
           <div>
-            <a href="/api/auth/google" className="btn btn-outline-primary me-2">
-              <i className="bi bi-google me-2"></i>
+            <label htmlFor="breakTime" className="block text-sm font-medium text-gray-700 mb-1">Break Time (minutes)</label>
+            <Input 
+              type="number" 
+              id="breakTime" 
+              className="w-36" 
+              value={breakTime} 
+              onChange={(e) => setBreakTime(parseInt(e.target.value, 10))} 
+            />
+          </div>
+          <div className="flex gap-3">
+            <a href="/api/auth/google" className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+              <i className="fab fa-google mr-2 text-red-500"></i>
               Connect to Google Calendar
             </a>
-            <button 
-              type="button"
-              className="btn btn-outline-secondary" 
+            <Button 
+              variant="outline"
               onClick={() => setShowOutlookModal(true)}
             >
-              <i className="bi bi-microsoft me-2"></i>
+              <i className="fab fa-microsoft mr-2 text-blue-500"></i>
               Connect to Outlook Calendar
-            </button>
+            </Button>
           </div>
         </div>
       </div>
-      <div className="card">
-        <div className="card-body">
+
+      {/* Availability Card */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+          <h5 className="font-semibold text-gray-900">Weekly Schedule</h5>
+        </div>
+        <div className="p-6 space-y-4">
           {daysOfWeek.map(day => (
-            <div key={day} className="mb-3">
-              <div className="form-check">
+            <div key={day} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+              <label className="flex items-center gap-3 cursor-pointer">
                 <input
-                  className="form-check-input"
                   type="checkbox"
                   checked={!!availability[day]}
                   onChange={() => handleDayToggle(day)}
-                  id={`check-${day}`}
+                  className="w-5 h-5 rounded border-gray-300 text-[#AD6269] focus:ring-[#AD6269]"
                 />
-                <label className="form-check-label" htmlFor={`check-${day}`}>
-                  {day}
-                </label>
-              </div>
+                <span className="font-medium text-gray-900">{day}</span>
+              </label>
               {availability[day] && (
-                <div className="ps-4 mt-2">
+                <div className="ml-8 mt-3 space-y-2">
                   {availability[day].slots.map((slot: any, index: number) => (
-                    <div key={index} className="d-flex align-items-center mb-2">
-                      <input type="time" className="form-control me-2" style={{width: '120px'}} value={slot.start} onChange={(e) => handleTimeSlotChange(day, index, 'start', e.target.value)} />
-                      <span>-</span>
-                      <input type="time" className="form-control ms-2 me-2" style={{width: '120px'}} value={slot.end} onChange={(e) => handleTimeSlotChange(day, index, 'end', e.target.value)} />
-                      <select className="form-select ms-2 me-2" style={{width: '150px'}} value={slot.service} onChange={(e) => handleTimeSlotChange(day, index, 'service', e.target.value)}>
+                    <div key={index} className="flex items-center gap-2 flex-wrap">
+                      <Input 
+                        type="time" 
+                        className="w-32" 
+                        value={slot.start} 
+                        onChange={(e) => handleTimeSlotChange(day, index, 'start', e.target.value)} 
+                      />
+                      <span className="text-gray-500">-</span>
+                      <Input 
+                        type="time" 
+                        className="w-32" 
+                        value={slot.end} 
+                        onChange={(e) => handleTimeSlotChange(day, index, 'end', e.target.value)} 
+                      />
+                      <select 
+                        className="h-10 px-3 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                        value={slot.service} 
+                        onChange={(e) => handleTimeSlotChange(day, index, 'service', e.target.value)}
+                      >
                         <option value="">All Services</option>
                         {services.map(service => (
                           <option key={service.id} value={service.id}>{service.name}</option>
                         ))}
                       </select>
-                      <button className="btn btn-sm btn-outline-danger" onClick={() => removeTimeSlot(day, index)}>X</button>
+                      <button 
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        onClick={() => removeTimeSlot(day, index)}
+                      >
+                        <i className="fas fa-times"></i>
+                      </button>
                     </div>
                   ))}
-                  <button className="btn btn-sm btn-outline-primary mt-2" onClick={() => addTimeSlot(day)}>+ Add Time Slot</button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => addTimeSlot(day)}
+                    className="mt-2"
+                  >
+                    <i className="fas fa-plus mr-1"></i>Add Time Slot
+                  </Button>
                 </div>
               )}
             </div>
           ))}
         </div>
-        <div className="card-footer">
-          <button className="btn btn-primary" onClick={handleSave}>Save Changes</button>
+        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <Button className="bg-[#AD6269] hover:bg-[#9d5860]" onClick={handleSave}>
+            <i className="fas fa-save mr-2"></i>Save Changes
+          </Button>
         </div>
       </div>
 
@@ -419,6 +468,7 @@ export default function ArtistAvailabilityManager() {
         artistId={selectedArtist}
         artistName={artists.find(a => a.id === selectedArtist)?.displayName || 'Selected Artist'}
       />
+      {AlertDialogComponent}
     </div>
   );
 }

@@ -5,6 +5,9 @@ import { ServiceService } from '@/services/database';
 import { Service } from '@/types/database';
 import { storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useAlertDialog } from '@/components/ui/alert-dialog';
 
 interface ServiceFormData {
   name: string;
@@ -34,29 +37,6 @@ const defaultFormData: ServiceFormData = {
 };
 
 export default function ServicesManager() {
-  // Custom CSS for save button animation and highlighting
-  const saveButtonStyle = {
-    transition: 'all 0.3s ease',
-    animation: 'pulse 1.5s infinite',
-  };
-  
-  // Add custom pulse animation
-  useEffect(() => {
-    // Add pulse animation style to document head
-    const styleEl = document.createElement('style');
-    styleEl.innerHTML = `
-      @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-      }
-    `;
-    document.head.appendChild(styleEl);
-    
-    return () => {
-      document.head.removeChild(styleEl);
-    };
-  }, []);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +47,7 @@ export default function ServicesManager() {
   const [uploading, setUploading] = useState(false);
   const [newRequirement, setNewRequirement] = useState('');
   const [newContraindication, setNewContraindication] = useState('');
+  const { showAlert, showConfirm, AlertDialogComponent } = useAlertDialog();
 
   useEffect(() => {
     loadServices();
@@ -163,9 +144,14 @@ export default function ServicesManager() {
   };
 
   const handleDelete = async (service: Service) => {
-    if (!confirm(`Are you sure you want to delete "${service.name}"?`)) {
-      return;
-    }
+    const confirmed = await showConfirm({
+      title: 'Delete Service',
+      description: `Are you sure you want to delete "${service.name}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      variant: 'destructive'
+    });
+    
+    if (!confirmed) return;
 
     try {
       await ServiceService.deleteService(service.id);
@@ -180,9 +166,10 @@ export default function ServicesManager() {
         }
       }
 
+      await showAlert({ title: 'Success', description: 'Service deleted successfully!', variant: 'success' });
       await loadServices();
     } catch (err) {
-      setError('Failed to delete service');
+      await showAlert({ title: 'Error', description: 'Failed to delete service', variant: 'destructive' });
       console.error('Error deleting service:', err);
     }
   };
@@ -231,428 +218,361 @@ export default function ServicesManager() {
 
   if (loading) {
     return (
-      <div className="text-center py-5">
-        <div className="spinner-border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AD6269]"></div>
       </div>
     );
   }
 
   return (
-    <div className="container-fluid py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Services Management</h2>
-        <button
-          className="btn btn-primary"
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+          <i className="fas fa-cogs text-[#AD6269]"></i>Services Management
+        </h2>
+        <Button
+          className="bg-[#AD6269] hover:bg-[#9d5860]"
           onClick={() => {
             resetForm();
             setShowForm(true);
           }}
         >
-          <i className="fas fa-plus me-2"></i>Add New Service
-        </button>
+          <i className="fas fa-plus mr-2"></i>Add New Service
+        </Button>
       </div>
 
       {error && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
-          {error}
-          <button type="button" className="btn-close" onClick={() => setError(null)}></button>
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex justify-between items-center">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">
+            <i className="fas fa-times"></i>
+          </button>
         </div>
       )}
 
       {/* Services Table */}
-      <div className="card">
-        <div className="card-header">
-          <h5 className="mb-0">Current Services ({services.length})</h5>
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+          <h5 className="font-semibold text-gray-900">Current Services ({services.length})</h5>
         </div>
-        <div className="card-body p-0">
-          <div className="table-responsive">
-            <table className="table table-hover mb-0">
-              <thead className="table-light">
-                <tr>
-                  <th>Order</th>
-                  <th>Image</th>
-                  <th>Name</th>
-                  <th>Price</th>
-                  <th>Duration</th>
-                  <th>Category</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Order</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Image</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Name</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Price</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Duration</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Category</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Status</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {services.map((service) => (
+                <tr key={service.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                  <td className="py-3 px-4">
+                    <span className="inline-flex px-2 py-1 text-xs font-medium rounded bg-gray-200 text-gray-700">
+                      {(service as any).order ?? 'N/A'}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4">
+                    {service.image && (
+                      <img
+                        src={service.image}
+                        alt={service.name}
+                        className="w-12 h-12 rounded object-cover"
+                      />
+                    )}
+                  </td>
+                  <td className="py-3 px-4">
+                    <div>
+                      <p className="font-semibold text-gray-900">{service.name}</p>
+                      <p className="text-sm text-gray-500">
+                        {service.description.substring(0, 60)}...
+                      </p>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className="font-semibold text-green-600">${service.price}</span>
+                  </td>
+                  <td className="py-3 px-4 text-gray-700">{service.duration}</td>
+                  <td className="py-3 px-4">
+                    <span className="inline-flex px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 capitalize">
+                      {service.category}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full ${service.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                      {service.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="flex gap-2">
+                      <button
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        onClick={() => handleEdit(service)}
+                        title="Edit"
+                      >
+                        <i className="fas fa-edit"></i>
+                      </button>
+                      <button
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        onClick={() => handleDelete(service)}
+                        title="Delete"
+                      >
+                        <i className="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {services.map((service) => (
-                  <tr key={service.id}>
-                    <td>
-                      <span className="badge bg-secondary">
-                        {(service as any).order ?? 'N/A'}
-                      </span>
-                    </td>
-                    <td>
-                      {service.image && (
-                        <img
-                          src={service.image}
-                          alt={service.name}
-                          className="rounded"
-                          style={{ width: '50px', height: '50px', objectFit: 'cover' }}
-                        />
-                      )}
-                    </td>
-                    <td>
-                      <div>
-                        <strong>{service.name}</strong>
-                        <br />
-                        <small className="text-muted">
-                          {service.description.substring(0, 60)}...
-                        </small>
-                      </div>
-                    </td>
-                    <td>
-                      <strong>${service.price}</strong>
-                    </td>
-                    <td>{service.duration}</td>
-                    <td>
-                      <span className="badge bg-info text-capitalize">
-                        {service.category}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`badge ${service.isActive ? 'bg-success' : 'bg-secondary'}`}>
-                        {service.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="btn-group btn-group-sm">
-                        <button
-                          className="btn btn-outline-primary"
-                          onClick={() => handleEdit(service)}
-                          title="Edit"
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        <button
-                          className="btn btn-outline-danger"
-                          onClick={() => handleDelete(service)}
-                          title="Delete"
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
       {/* Service Form Modal */}
       {showForm && (
-        <div className="modal show d-block" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
-          <div className="modal-dialog modal-lg modal-dialog-scrollable">
-            <div className="modal-content border-0 shadow-lg">
-              <div className="modal-header bg-primary text-white border-0">
-                <h4 className="modal-title fw-bold d-flex align-items-center">
-                  <i className="fas fa-cogs me-2"></i>
-                  {editingService ? 'Edit Service' : 'Add New Service'}
-                </h4>
-                <button
-                  type="button"
-                  className="btn-close btn-close-white"
-                  onClick={() => setShowForm(false)}
-                ></button>
-              </div>
-              <form onSubmit={handleSubmit}>
-                <div className="modal-body bg-light">
-                  <p className="alert alert-info d-flex align-items-center">
-                    <i className="fas fa-info-circle me-2 fs-4"></i>
-                    <span>Fill out the form below and click <strong>Save Service</strong> at the bottom when you're done.</span>
-                  </p>
-                  <div className="row g-4">
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label fw-semibold text-dark">
-                          <i className="fas fa-tag me-1 text-primary"></i>
-                          Service Name *
-                        </label>
-                        <input
-                          type="text"
-                          className={`form-control form-control-lg border-2 ${!formData.name && 'is-invalid'}`}
-                          value={formData.name}
-                          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                          placeholder="Enter service name"
-                          required
-                        />
-                        {!formData.name && <div className="invalid-feedback">Service name is required</div>}
-                      </div>
-                    </div>
-                    <div className="col-md-3">
-                      <div className="mb-3">
-                        <label className="form-label fw-semibold text-dark">
-                          <i className="fas fa-dollar-sign me-1 text-success"></i>
-                          Price *
-                        </label>
-                        <div className="input-group input-group-lg">
-                          <span className="input-group-text bg-success text-white border-success">$</span>
-                          <input
-                            type="number"
-                            className={`form-control border-2 ${!formData.price && 'is-invalid'}`}
-                            value={formData.price}
-                            onChange={(e) => setFormData(prev => ({ ...prev, price: Number(e.target.value) }))}
-                            placeholder="0.00"
-                            required
-                            min="0"
-                            step="0.01"
-                          />
-                          {!formData.price && <div className="invalid-feedback">Price is required</div>}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-3">
-                      <div className="mb-3">
-                        <label className="form-label fw-semibold text-dark">
-                          <i className="fas fa-sort-numeric-up me-1 text-info"></i>
-                          Order
-                        </label>
-                        <input
-                          type="number"
-                          className="form-control form-control-lg border-2"
-                          value={formData.order}
-                          onChange={(e) => setFormData(prev => ({ ...prev, order: Number(e.target.value) }))}
-                          placeholder="0"
-                          min="0"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="row g-4">
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label fw-semibold text-dark">
-                          <i className="fas fa-clock me-1 text-warning"></i>
-                          Duration *
-                        </label>
-                        <input
-                          type="text"
-                          className={`form-control form-control-lg border-2 ${!formData.duration && 'is-invalid'}`}
-                          value={formData.duration}
-                          onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
-                          placeholder="e.g., 2-3 hours"
-                          required
-                        />
-                        {!formData.duration && <div className="invalid-feedback">Duration is required</div>}
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="mb-3">
-                        <label className="form-label fw-semibold text-dark">
-                          <i className="fas fa-list me-1 text-secondary"></i>
-                          Category *
-                        </label>
-                        <select
-                          className="form-select form-select-lg border-2"
-                          value={formData.category}
-                          onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value as 'eyebrows' | 'eyeliner' | 'lips' | 'correction' }))}
-                          required
-                        >
-                          <option value="eyebrows">✨ Eyebrows</option>
-                          <option value="lips">💋 Lips</option>
-                          <option value="eyeliner">👁️ Eyeliner</option>
-                          <option value="correction">🔧 Correction</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="form-label fw-semibold text-dark">
-                      <i className="fas fa-align-left me-1 text-primary"></i>
-                      Description *
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-gray-200 bg-[#AD6269] flex justify-between items-center">
+              <h4 className="text-lg font-bold text-white flex items-center gap-2">
+                <i className="fas fa-cogs"></i>
+                {editingService ? 'Edit Service' : 'Add New Service'}
+              </h4>
+              <button
+                type="button"
+                className="text-white hover:text-gray-200"
+                onClick={() => setShowForm(false)}
+              >
+                <i className="fas fa-times text-xl"></i>
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+              <div className="p-6 space-y-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-3">
+                  <i className="fas fa-info-circle text-blue-600 text-xl"></i>
+                  <span className="text-blue-800">Fill out the form below and click <strong>Save Service</strong> at the bottom when you're done.</span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                  <div className="md:col-span-3">
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      <i className="fas fa-tag mr-1 text-[#AD6269]"></i>Service Name *
                     </label>
-                    <textarea
-                      className="form-control form-control-lg border-2"
-                      rows={4}
-                      value={formData.description}
-                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Describe the service in detail..."
+                    <Input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Enter service name"
+                      required
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      <i className="fas fa-dollar-sign mr-1 text-green-600"></i>Price *
+                    </label>
+                    <div className="flex">
+                      <span className="inline-flex items-center px-3 bg-green-600 text-white rounded-l-md border border-r-0 border-green-600">$</span>
+                      <Input
+                        type="number"
+                        value={formData.price}
+                        onChange={(e) => setFormData(prev => ({ ...prev, price: Number(e.target.value) }))}
+                        placeholder="0.00"
+                        required
+                        min="0"
+                        step="0.01"
+                        className="rounded-l-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="md:col-span-1">
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      <i className="fas fa-sort-numeric-up mr-1 text-blue-600"></i>Order
+                    </label>
+                    <Input
+                      type="number"
+                      value={formData.order}
+                      onChange={(e) => setFormData(prev => ({ ...prev, order: Number(e.target.value) }))}
+                      placeholder="0"
+                      min="0"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      <i className="fas fa-clock mr-1 text-yellow-600"></i>Duration *
+                    </label>
+                    <Input
+                      type="text"
+                      value={formData.duration}
+                      onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
+                      placeholder="e.g., 2-3 hours"
                       required
                     />
                   </div>
-
-                  <div className="mb-4">
-                    <label className="form-label fw-semibold text-dark">
-                      <i className="fas fa-image me-1 text-info"></i>
-                      Service Image
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      <i className="fas fa-list mr-1 text-gray-600"></i>Category *
                     </label>
-                    <div className="border-2 border-dashed border-info rounded p-3 bg-white">
-                      <input
-                        type="file"
-                        className="form-control form-control-lg border-0"
-                        accept="image/*"
-                        onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                      />
-                      {formData.image && (
-                        <div className="mt-3 text-center">
-                          <img
-                            src={formData.image}
-                            alt="Current image"
-                            className="img-thumbnail border-2 border-primary shadow-sm"
-                            style={{ maxWidth: '200px', maxHeight: '200px' }}
-                          />
-                          <p className="small text-muted mt-2">Current service image</p>
-                        </div>
-                      )}
-                    </div>
+                    <select
+                      className="w-full h-10 px-3 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                      value={formData.category}
+                      onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value as 'eyebrows' | 'eyeliner' | 'lips' | 'correction' }))}
+                      required
+                    >
+                      <option value="eyebrows">✨ Eyebrows</option>
+                      <option value="lips">💋 Lips</option>
+                      <option value="eyeliner">👁️ Eyeliner</option>
+                      <option value="correction">🔧 Correction</option>
+                    </select>
                   </div>
+                </div>
 
-                  {/* Requirements */}
-                  <div className="mb-4">
-                    <label className="form-label fw-semibold text-dark">
-                      <i className="fas fa-check-circle me-1 text-success"></i>
-                      Requirements
-                    </label>
-                    <div className="card border-success border-2">
-                      <div className="card-body bg-success bg-opacity-10">
-                        <div className="input-group mb-3">
-                          <input
-                            type="text"
-                            className="form-control form-control-lg border-2"
-                            value={newRequirement}
-                            onChange={(e) => setNewRequirement(e.target.value)}
-                            placeholder="Add a requirement"
-                          />
-                          <button
-                            type="button"
-                            className="btn btn-success btn-lg"
-                            onClick={addRequirement}
-                          >
-                            <i className="fas fa-plus me-1"></i>Add
-                          </button>
-                        </div>
-                        {formData.requirements.map((req, index) => (
-                          <div key={index} className="d-flex align-items-center mb-2 p-2 bg-white rounded border">
-                            <i className="fas fa-check text-success me-2"></i>
-                            <span className="flex-grow-1">{req}</span>
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-danger rounded-pill"
-                              onClick={() => removeRequirement(index)}
-                            >
-                              <i className="fas fa-times"></i>
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    <i className="fas fa-align-left mr-1 text-[#AD6269]"></i>Description *
+                  </label>
+                  <textarea
+                    className="w-full px-3 py-2 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                    rows={4}
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Describe the service in detail..."
+                    required
+                  />
+                </div>
 
-                  {/* Contraindications */}
-                  <div className="mb-4">
-                    <label className="form-label fw-semibold text-dark">
-                      <i className="fas fa-exclamation-triangle me-1 text-warning"></i>
-                      Contraindications
-                    </label>
-                    <div className="card border-warning border-2">
-                      <div className="card-body bg-warning bg-opacity-10">
-                        <div className="input-group mb-3">
-                          <input
-                            type="text"
-                            className="form-control form-control-lg border-2"
-                            value={newContraindication}
-                            onChange={(e) => setNewContraindication(e.target.value)}
-                            placeholder="Add a contraindication"
-                          />
-                          <button
-                            type="button"
-                            className="btn btn-warning btn-lg"
-                            onClick={addContraindication}
-                          >
-                            <i className="fas fa-plus me-1"></i>Add
-                          </button>
-                        </div>
-                        {formData.contraindications.map((contra, index) => (
-                          <div key={index} className="d-flex align-items-center mb-2 p-2 bg-white rounded border">
-                            <i className="fas fa-exclamation-triangle text-warning me-2"></i>
-                            <span className="flex-grow-1">{contra}</span>
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-danger rounded-pill"
-                              onClick={() => removeContraindication(index)}
-                            >
-                              <i className="fas fa-times"></i>
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="card border-primary border-2 mb-4">
-                    <div className="card-body bg-primary bg-opacity-10">
-                      <div className="form-check form-switch">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          role="switch"
-                          checked={formData.isActive}
-                          onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                          style={{ transform: 'scale(1.5)' }}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    <i className="fas fa-image mr-1 text-blue-600"></i>Service Image
+                  </label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50">
+                    <input
+                      type="file"
+                      className="w-full text-sm"
+                      accept="image/*"
+                      onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                    />
+                    {formData.image && (
+                      <div className="mt-3 text-center">
+                        <img
+                          src={formData.image}
+                          alt="Current image"
+                          className="inline-block rounded-lg border-2 border-[#AD6269] shadow-sm max-w-[200px] max-h-[200px]"
                         />
-                        <label className="form-check-label fw-semibold text-dark ms-2">
-                          <i className="fas fa-eye me-1 text-primary"></i>
-                          Active (visible to customers)
-                        </label>
+                        <p className="text-sm text-gray-500 mt-2">Current service image</p>
                       </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Requirements */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    <i className="fas fa-check-circle mr-1 text-green-600"></i>Requirements
+                  </label>
+                  <div className="border-2 border-green-200 rounded-lg p-4 bg-green-50">
+                    <div className="flex gap-2 mb-3">
+                      <Input
+                        type="text"
+                        value={newRequirement}
+                        onChange={(e) => setNewRequirement(e.target.value)}
+                        placeholder="Add a requirement"
+                        className="flex-1"
+                      />
+                      <Button type="button" className="bg-green-600 hover:bg-green-700" onClick={addRequirement}>
+                        <i className="fas fa-plus mr-1"></i>Add
+                      </Button>
                     </div>
+                    {formData.requirements.map((req, index) => (
+                      <div key={index} className="flex items-center gap-2 mb-2 p-2 bg-white rounded border border-gray-200">
+                        <i className="fas fa-check text-green-600"></i>
+                        <span className="flex-1">{req}</span>
+                        <button type="button" className="text-red-500 hover:text-red-700" onClick={() => removeRequirement(index)}>
+                          <i className="fas fa-times"></i>
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <div className="modal-footer bg-light border-0 p-4 d-flex justify-content-between">
-                  <div className="text-danger">
-                    {formData.name && formData.price && formData.duration ? (
-                      <span className="text-success"><i className="fas fa-check-circle me-1"></i>Ready to save</span>
-                    ) : (
-                      <span><i className="fas fa-exclamation-triangle me-1"></i>Please fill required fields</span>
-                    )}
+
+                {/* Contraindications */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    <i className="fas fa-exclamation-triangle mr-1 text-yellow-600"></i>Contraindications
+                  </label>
+                  <div className="border-2 border-yellow-200 rounded-lg p-4 bg-yellow-50">
+                    <div className="flex gap-2 mb-3">
+                      <Input
+                        type="text"
+                        value={newContraindication}
+                        onChange={(e) => setNewContraindication(e.target.value)}
+                        placeholder="Add a contraindication"
+                        className="flex-1"
+                      />
+                      <Button type="button" className="bg-yellow-600 hover:bg-yellow-700" onClick={addContraindication}>
+                        <i className="fas fa-plus mr-1"></i>Add
+                      </Button>
+                    </div>
+                    {formData.contraindications.map((contra, index) => (
+                      <div key={index} className="flex items-center gap-2 mb-2 p-2 bg-white rounded border border-gray-200">
+                        <i className="fas fa-exclamation-triangle text-yellow-600"></i>
+                        <span className="flex-1">{contra}</span>
+                        <button type="button" className="text-red-500 hover:text-red-700" onClick={() => removeContraindication(index)}>
+                          <i className="fas fa-times"></i>
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary btn-lg rounded-pill px-4 me-3"
-                    onClick={() => setShowForm(false)}
-                  >
-                    <i className="fas fa-times me-2"></i>Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-success btn-lg rounded-pill px-5 py-2 shadow fw-bold position-relative"
-                    style={!uploading ? saveButtonStyle : {}}
-                    disabled={uploading}
-                    id="saveServiceButton"
-                    onClick={(e) => {
-                      console.log('Save button clicked');
-                      // The form's onSubmit will handle submission
-                    }}
-                  >
+                </div>
+
+                <div className="border-2 border-[#AD6269]/30 rounded-lg p-4 bg-[#AD6269]/5">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.isActive}
+                      onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                      className="w-5 h-5 rounded border-gray-300 text-[#AD6269] focus:ring-[#AD6269]"
+                    />
+                    <span className="font-semibold text-gray-700">
+                      <i className="fas fa-eye mr-1 text-[#AD6269]"></i>Active (visible to customers)
+                    </span>
+                  </label>
+                </div>
+              </div>
+              
+              <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
+                <div>
+                  {formData.name && formData.price && formData.duration ? (
+                    <span className="text-green-600"><i className="fas fa-check-circle mr-1"></i>Ready to save</span>
+                  ) : (
+                    <span className="text-red-500"><i className="fas fa-exclamation-triangle mr-1"></i>Please fill required fields</span>
+                  )}
+                </div>
+                <div className="flex gap-3">
+                  <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+                    <i className="fas fa-times mr-2"></i>Cancel
+                  </Button>
+                  <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={uploading}>
                     {uploading ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2"></span>
-                        <i className="fas fa-save me-1"></i>Saving...
-                      </>
+                      <><i className="fas fa-spinner fa-spin mr-2"></i>Saving...</>
                     ) : (
-                      <>
-                        <i className={`fas fa-save me-2`}></i>
-                        {editingService ? 'Save Changes' : 'Save Service'}
-                      </>
+                      <><i className="fas fa-save mr-2"></i>{editingService ? 'Save Changes' : 'Save Service'}</>
                     )}
-                  </button>
+                  </Button>
                 </div>
-              </form>
-            </div>
+              </div>
+            </form>
           </div>
         </div>
       )}
+      {AlertDialogComponent}
     </div>
   );
 }
