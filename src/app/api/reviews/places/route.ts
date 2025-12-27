@@ -1,10 +1,12 @@
 /**
  * Google Places API Endpoint
  * Fetches business reviews using the Google Places API
+ * Stores reviews in Firebase for persistence
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createGooglePlacesService, GooglePlacesService } from '@/services/google-places';
+import { db } from '@/lib/firebase-admin';
 
 let placesService: GooglePlacesService | null = null;
 
@@ -17,6 +19,62 @@ function getService(): GooglePlacesService {
 
 function isServiceConfigured(): boolean {
   return !!process.env.GOOGLE_PLACES_API_KEY;
+}
+
+/**
+ * Store reviews in Firebase for persistence
+ */
+async function storeReviewsInFirebase(placeId: string, details: any) {
+  try {
+    if (!db) {
+      console.warn('Firebase not initialized, skipping review storage');
+      return;
+    }
+
+    const reviewsRef = db.collection('google-reviews');
+    const batch = db.batch();
+    const timestamp = new Date().toISOString();
+
+    // Store place details
+    const placeDocRef = reviewsRef.doc(placeId);
+    batch.set(placeDocRef, {
+      placeId,
+      name: details.name,
+      rating: details.rating,
+      userRatingsTotal: details.userRatingsTotal,
+      formattedAddress: details.formattedAddress,
+      formattedPhoneNumber: details.formattedPhoneNumber,
+      website: details.website,
+      url: details.url,
+      lastUpdated: timestamp
+    }, { merge: true });
+
+    // Store individual reviews
+    if (details.reviews && details.reviews.length > 0) {
+      for (const review of details.reviews) {
+        // Create a unique ID for each review based on author and time
+        const reviewId = `${placeId}_${review.authorName?.replace(/\s+/g, '_')}_${review.time}`;
+        const reviewDocRef = reviewsRef.doc(placeId).collection('reviews').doc(reviewId);
+        
+        batch.set(reviewDocRef, {
+          authorName: review.authorName,
+          authorPhotoUrl: review.authorPhotoUrl,
+          rating: review.rating,
+          text: review.text,
+          relativeTimeDescription: review.relativeTimeDescription,
+          time: review.time,
+          language: review.language,
+          lastUpdated: timestamp
+        }, { merge: true });
+      }
+    }
+
+    await batch.commit();
+    console.log(`Stored ${details.reviews?.length || 0} reviews for place ${placeId}`);
+  } catch (error) {
+    console.error('Error storing reviews in Firebase:', error);
+    // Don't throw - we still want to return the reviews even if storage fails
+  }
 }
 
 // ============================================================================
@@ -68,6 +126,10 @@ export async function POST(request: NextRequest) {
           );
         }
         const details = await service.getPlaceDetails(placeId);
+        
+        // Store reviews in Firebase
+        await storeReviewsInFirebase(placeId, details);
+        
         return NextResponse.json({ 
           success: true, 
           details 
@@ -82,10 +144,14 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        const reviews = await service.getReviews(placeId);
+        const details = await service.getPlaceDetails(placeId);
+        
+        // Store reviews in Firebase
+        await storeReviewsInFirebase(placeId, details);
+        
         return NextResponse.json({ 
           success: true, 
-          reviews 
+          reviews: details.reviews 
         });
       }
 

@@ -39,7 +39,7 @@ export class GoogleReviewsService {
       // Try to get saved placeId from localStorage (set by GooglePlacesReviews component)
       let placeId: string | null = null;
       if (typeof window !== 'undefined') {
-        placeId = localStorage.getItem('googlePlacesSelectedId');
+        placeId = localStorage.getItem('google_places_place_id');
       }
 
       // If no saved placeId, fall back to the old endpoint
