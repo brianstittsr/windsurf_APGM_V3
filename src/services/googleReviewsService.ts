@@ -31,13 +31,58 @@ export interface PlaceCandidate {
 
 export class GoogleReviewsService {
   /**
-   * Fetch reviews for the configured place
+   * Fetch reviews for the configured place using the Places API
+   * First tries to get the saved placeId from localStorage, then fetches reviews
    */
   static async getReviews(): Promise<{ success: boolean; data?: PlaceDetails; error?: string; setup?: any }> {
     try {
-      const response = await fetch('/api/google-reviews');
+      // Try to get saved placeId from localStorage (set by GooglePlacesReviews component)
+      let placeId: string | null = null;
+      if (typeof window !== 'undefined') {
+        placeId = localStorage.getItem('googlePlacesSelectedId');
+      }
+
+      // If no saved placeId, fall back to the old endpoint
+      if (!placeId) {
+        const response = await fetch('/api/google-reviews');
+        const result = await response.json();
+        return result;
+      }
+
+      // Fetch reviews using the Places API endpoint
+      const response = await fetch('/api/reviews/places', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'details', placeId })
+      });
       const result = await response.json();
-      return result;
+
+      if (result.success && result.details) {
+        // Transform to expected format
+        return {
+          success: true,
+          data: {
+            name: result.details.name,
+            rating: result.details.rating,
+            user_ratings_total: result.details.userRatingsTotal,
+            reviews: (result.details.reviews || []).map((r: any) => ({
+              author_name: r.authorName,
+              author_url: r.authorUrl,
+              profile_photo_url: r.authorPhotoUrl,
+              rating: r.rating,
+              relative_time_description: r.relativeTimeDescription,
+              text: r.text,
+              time: r.time
+            })),
+            formatted_address: result.details.formattedAddress,
+            formatted_phone_number: result.details.formattedPhoneNumber,
+            website: result.details.website,
+            url: result.details.url
+          }
+        };
+      }
+
+      return { success: false, error: result.error || 'Failed to fetch reviews' };
     } catch (error) {
       console.error('Error fetching Google reviews:', error);
       return { success: false, error: 'Failed to fetch reviews' };
