@@ -30,13 +30,15 @@ export async function GET(request: NextRequest) {
     const apiKey = process.env.GOOGLE_PLACES_API_KEY;
     const placeId = process.env.GOOGLE_PLACE_ID;
 
-    if (!apiKey) {
+    // Return setup instructions if not configured (200 status to avoid error in UI)
+    if (!apiKey || !placeId) {
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Google Places API key not configured',
+          error: !apiKey ? 'Google Places API key not configured' : 'Google Place ID not configured',
+          notConfigured: true,
           setup: {
-            message: 'To enable Google Reviews, add these to your .env.local:',
+            message: 'To enable Google Reviews, add these environment variables:',
             variables: [
               'GOOGLE_PLACES_API_KEY=your_api_key',
               'GOOGLE_PLACE_ID=your_place_id'
@@ -46,25 +48,12 @@ export async function GET(request: NextRequest) {
               '2. Create a new project or select existing',
               '3. Enable "Places API" in APIs & Services',
               '4. Create an API key in Credentials',
-              '5. Find your Place ID at: https://developers.google.com/maps/documentation/places/web-service/place-id'
+              '5. Find your Place ID at: https://developers.google.com/maps/documentation/places/web-service/place-id',
+              '6. Add both variables to Vercel Environment Variables for production'
             ]
           }
         },
-        { status: 400 }
-      );
-    }
-
-    if (!placeId) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Google Place ID not configured',
-          setup: {
-            message: 'Add GOOGLE_PLACE_ID to your .env.local',
-            findPlaceId: 'https://developers.google.com/maps/documentation/places/web-service/place-id'
-          }
-        },
-        { status: 400 }
+        { status: 200 } // Return 200 so UI can show setup instructions gracefully
       );
     }
 
@@ -72,6 +61,19 @@ export async function GET(request: NextRequest) {
     const url = `${GOOGLE_PLACES_API_BASE}/details/json?place_id=${placeId}&fields=name,rating,user_ratings_total,reviews,formatted_address,formatted_phone_number,website,url&key=${apiKey}`;
     
     const response = await fetch(url);
+    
+    if (!response.ok) {
+      console.error('Google Places API HTTP error:', response.status);
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Google API HTTP error: ${response.status}`,
+          notConfigured: false
+        },
+        { status: 200 }
+      );
+    }
+    
     const data = await response.json();
 
     if (data.status !== 'OK') {
@@ -80,21 +82,22 @@ export async function GET(request: NextRequest) {
         { 
           success: false, 
           error: `Google API error: ${data.status}`,
-          details: data.error_message || 'Unknown error'
+          details: data.error_message || 'Unknown error',
+          notConfigured: false
         },
-        { status: 500 }
+        { status: 200 }
       );
     }
 
     const placeDetails: PlaceDetails = {
-      name: data.result.name,
-      rating: data.result.rating,
-      user_ratings_total: data.result.user_ratings_total,
-      reviews: data.result.reviews || [],
-      formatted_address: data.result.formatted_address,
-      formatted_phone_number: data.result.formatted_phone_number,
-      website: data.result.website,
-      url: data.result.url
+      name: data.result?.name || 'Unknown',
+      rating: data.result?.rating || 0,
+      user_ratings_total: data.result?.user_ratings_total || 0,
+      reviews: data.result?.reviews || [],
+      formatted_address: data.result?.formatted_address,
+      formatted_phone_number: data.result?.formatted_phone_number,
+      website: data.result?.website,
+      url: data.result?.url
     };
 
     return NextResponse.json({
@@ -105,8 +108,13 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching Google reviews:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch Google reviews' },
-      { status: 500 }
+      { 
+        success: false, 
+        error: 'Failed to fetch Google reviews',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        notConfigured: false
+      },
+      { status: 200 } // Return 200 so UI handles gracefully
     );
   }
 }
@@ -118,8 +126,8 @@ export async function POST(request: NextRequest) {
     
     if (!apiKey) {
       return NextResponse.json(
-        { success: false, error: 'Google Places API key not configured' },
-        { status: 400 }
+        { success: false, error: 'Google Places API key not configured', notConfigured: true },
+        { status: 200 }
       );
     }
 
@@ -128,7 +136,7 @@ export async function POST(request: NextRequest) {
     if (!query) {
       return NextResponse.json(
         { success: false, error: 'Search query is required' },
-        { status: 400 }
+        { status: 200 }
       );
     }
 
@@ -141,7 +149,7 @@ export async function POST(request: NextRequest) {
     if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
       return NextResponse.json(
         { success: false, error: `Google API error: ${data.status}` },
-        { status: 500 }
+        { status: 200 }
       );
     }
 
@@ -153,8 +161,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error searching for place:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to search for place' },
-      { status: 500 }
+      { success: false, error: 'Failed to search for place', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 200 }
     );
   }
 }
