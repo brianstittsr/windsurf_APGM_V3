@@ -230,6 +230,28 @@ a, button, .btn {
   margin-right: 0.3em;
 }
 
+/* Glow text animation */
+@keyframes textGlow {
+  0%, 100% {
+    text-shadow: 
+      0 0 5px rgba(255, 255, 255, 0.4),
+      0 0 10px rgba(173, 98, 105, 0.4),
+      0 0 20px rgba(173, 98, 105, 0.3);
+  }
+  50% {
+    text-shadow: 
+      0 0 10px rgba(255, 255, 255, 0.8),
+      0 0 20px rgba(173, 98, 105, 1),
+      0 0 40px rgba(173, 98, 105, 0.8),
+      0 0 60px rgba(173, 98, 105, 0.6),
+      0 0 80px rgba(173, 98, 105, 0.4);
+  }
+}
+
+.animate-glow-text {
+  animation: textGlow 2s ease-in-out infinite;
+}
+
 /* Video crossfade animations */
 @keyframes videoFadeIn {
   0% { opacity: 0; }

@@ -24,7 +24,6 @@ import QRCodeManager from '../../components/admin/QRCodeManager';
 import CompetitorAnalysis from '../../components/admin/CompetitorAnalysis';
 import PageSpeedDashboard from '../../components/admin/PageSpeedDashboard';
 import GoogleReviewsDashboard from '../../components/admin/GoogleReviewsDashboard';
-import GoogleReviewsManager from '../../components/admin/GoogleReviewsManager';
 import WhatsAppDashboard from '../../components/admin/WhatsAppDashboard';
 import LoyaltyDashboard from '../../components/admin/LoyaltyDashboard';
 import GeoCompetitorDashboard from '../../components/admin/GeoCompetitorDashboard';
@@ -521,8 +520,6 @@ export default function DashboardPage() {
         return <HeroCarouselManager />;
       case 'documents':
         return <DocumentsManager />;
-      case 'google-reviews':
-        return <GoogleReviewsManager />;
       default:
         return null;
     }
