@@ -4,6 +4,10 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function FinancingPage() {
   const [purchaseAmount, setPurchaseAmount] = useState('');
@@ -83,7 +87,6 @@ export default function FinancingPage() {
 
   const calculateMonthlyPayment = (amount: number) => {
     if (amount < 100) return 0;
-    // Simple calculation for demonstration - actual rates vary
     return Math.round((amount / 12) * 100) / 100;
   };
 
@@ -94,185 +97,169 @@ export default function FinancingPage() {
   return (
     <>
       <Header />
-      <main className="min-vh-100" style={{ paddingTop: '140px' }}>
-      {/* Header Section */}
-      <section className="py-5 bg-light">
-        <div className="container">
-          <div className="row justify-content-center text-center">
-            <div className="col-lg-8">
-              <h1 className="main-heading fw-bold mb-3" style={{color: '#AD6269'}}>PAY YOUR WAY</h1>
-              <p className="sub-heading text-secondary mb-4">Payment options that make it easy.</p>
-              <p className="paragraph-text text-muted">
+      <main className="min-h-screen pt-[140px]">
+        {/* Header Section */}
+        <section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto text-center">
+              <h1 className="text-4xl md:text-5xl font-bold mb-4 text-[#AD6269]">PAY YOUR WAY</h1>
+              <p className="text-xl text-gray-600 mb-4">Payment options that make it easy.</p>
+              <p className="text-gray-500">
                 Everyone should be able to get their dream brows. A Pretty Girl Matter offers several ways to pay so that payment doesn&apos;t get in the way!
               </p>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Payment Options */}
-      <section className="py-5">
-        <div className="container">
-          <div className="row g-4">
-            {/* Pay Direct */}
-            <div className="col-lg-6">
-              <div className="card h-100 border-0 shadow-sm">
-                <div className="card-body p-4">
-                  <div className="d-flex align-items-center mb-3">
-                    <div className="bg-primary rounded-circle p-3 me-3">
-                      <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
+        {/* Payment Options */}
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Pay Direct */}
+              <Card className="shadow-md border-0">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-14 h-14 rounded-full bg-[#AD6269] flex items-center justify-center">
+                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                       </svg>
                     </div>
-                    <h3 className="h4 fw-bold mb-0">Pay Direct</h3>
+                    <h3 className="text-xl font-bold text-gray-900">Pay Direct</h3>
                   </div>
-                  <p className="text-muted">
+                  <p className="text-gray-500">
                     When booking your appointment, you have the option to pay in full or pay a $250 deposit and the remainder is due at the time of service.
                   </p>
-                </div>
-              </div>
-            </div>
+                </CardContent>
+              </Card>
 
-            {/* Pay with Cherry */}
-            <div className="col-lg-6">
-              <div className="card h-100 border-0 shadow-sm">
-                <div className="card-body p-4">
-                  <div className="d-flex align-items-center mb-3">
-                    <div className="d-flex align-items-center justify-content-center me-3" style={{width: '60px', height: '60px', backgroundColor: 'white', borderRadius: '50%'}}>
+              {/* Pay with Cherry */}
+              <Card className="shadow-md border-0">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-14 h-14 rounded-full bg-white border border-gray-200 flex items-center justify-center">
                       <img 
                         src="https://cdn.prod.website-files.com/681bf1d6f7dea459fe255c59/68252146834983973a92051f_cherry-logo-primary.svg" 
                         alt="Cherry Logo" 
-                        style={{width: '40px', height: '40px'}}
+                        className="w-10 h-10"
                       />
                     </div>
-                    <h3 className="h4 fw-bold mb-0">Pay with Cherry</h3>
+                    <h3 className="text-xl font-bold text-gray-900">Pay with Cherry</h3>
                   </div>
-                  <p className="text-muted mb-3">
+                  <p className="text-gray-500">
                     Choose from a range of monthly payment plans, with qualifying 0% APR options. Applying is simple and does not impact your credit score. If you&apos;re approved for financing, you can use your funds immediately.
                   </p>
-                </div>
-              </div>
-            </div>
+                </CardContent>
+              </Card>
 
-            {/* Pay with Klarna */}
-            <div className="col-lg-6">
-              <div className="card h-100 border-0 shadow-sm">
-                <div className="card-body p-4">
-                  <div className="d-flex align-items-center mb-3">
-                    <div className="d-flex align-items-center justify-content-center me-3" style={{width: '60px', height: '60px', backgroundColor: 'white', borderRadius: '50%'}}>
+              {/* Pay with Klarna */}
+              <Card className="shadow-md border-0">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-14 h-14 rounded-full bg-white border border-gray-200 flex items-center justify-center">
                       <img 
                         src="https://logos-world.net/wp-content/uploads/2024/06/Klarna-Symbol.png" 
                         alt="Klarna Logo" 
-                        style={{width: '40px', height: '40px'}}
+                        className="w-10 h-10"
                       />
                     </div>
-                    <h3 className="h4 fw-bold mb-0">Pay with Klarna</h3>
+                    <h3 className="text-xl font-bold text-gray-900">Pay with Klarna</h3>
                   </div>
-                  <p className="text-muted mb-3">
+                  <p className="text-gray-500">
                     A Pretty Girl Matter has partnered with Klarna as a quick and easy financing option! Please submit the form below to request to pay with Klarna. You will receive a payment link via email.
                   </p>
-                </div>
-              </div>
-            </div>
+                </CardContent>
+              </Card>
 
-            {/* Pay with Affirm */}
-            <div className="col-lg-6">
-              <div className="card h-100 border-0 shadow-sm">
-                <div className="card-body p-4">
-                  <div className="d-flex align-items-center mb-3">
-                    <div className="d-flex align-items-center justify-content-center me-3" style={{width: '60px', height: '60px', backgroundColor: 'white', borderRadius: '50%'}}>
+              {/* Pay with Affirm */}
+              <Card className="shadow-md border-0">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-14 h-14 rounded-full bg-white border border-gray-200 flex items-center justify-center">
                       <img 
                         src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQASxDA7wX68xJ32zCBksW76SH8skp63-eZw&s" 
                         alt="Affirm Logo" 
-                        style={{width: '40px', height: '40px'}}
+                        className="w-10 h-10"
                       />
                     </div>
-                    <h3 className="h4 fw-bold mb-0">Pay with Affirm</h3>
+                    <h3 className="text-xl font-bold text-gray-900">Pay with Affirm</h3>
                   </div>
-                  <p className="text-muted mb-3">
+                  <p className="text-gray-500">
                     Buy now, pay later with Affirm. Choose from flexible monthly payment plans with transparent terms and no hidden fees. Get instant approval and pay over time.
                   </p>
-                </div>
-              </div>
-            </div>
+                </CardContent>
+              </Card>
 
-            {/* Pay with PayPal Credit */}
-            <div className="col-lg-6">
-              <div className="card h-100 border-0 shadow-sm">
-                <div className="card-body p-4">
-                  <div className="d-flex align-items-center mb-3">
-                    <div className="d-flex align-items-center justify-content-center me-3" style={{width: '60px', height: '60px', backgroundColor: 'white', borderRadius: '50%'}}>
+              {/* Pay with PayPal Credit */}
+              <Card className="shadow-md border-0 lg:col-span-2 lg:max-w-[calc(50%-12px)]">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-14 h-14 rounded-full bg-white border border-gray-200 flex items-center justify-center">
                       <img 
                         src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png" 
                         alt="PayPal Logo" 
-                        style={{width: '40px', height: '40px'}}
+                        className="w-10 h-10"
                       />
                     </div>
-                    <h3 className="h4 fw-bold mb-0">Pay with PayPal Credit</h3>
+                    <h3 className="text-xl font-bold text-gray-900">Pay with PayPal Credit</h3>
                   </div>
-                  <p className="text-muted">
+                  <p className="text-gray-500">
                     Shop with PayPal Credit&apos;s digital, reusable credit line to get No Interest if paid in full in 6 months on purchases of $99 or more. Select PayPal as method of payment when booking your appointment.
                   </p>
-                </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* Cherry Promotion Section */}
+        <section className="py-16 bg-[#AD6269] text-white">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+              <div className="lg:w-2/3">
+                <h2 className="text-3xl font-bold mb-3">Get Care Now, Pay Later</h2>
+                <p className="text-white/90 mb-3">with Cherry & A Pretty Girl Matter</p>
+                <p className="text-white/80">
+                  Let your money go further and take better control of your cash flow when you pay over time in smaller installments with Cherry.
+                </p>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-
-      {/* Cherry Promotion Section */}
-      <section className="py-5 text-white" style={{backgroundColor: '#AD6269'}}>
-        <div className="container">
-          <div className="row align-items-center">
-            <div className="col-lg-8">
-              <h2 className="sub-heading fw-bold mb-3">Get Care Now, Pay Later</h2>
-              <p className="mb-3">with Cherry & A Pretty Girl Matter</p>
-              <p className="mb-4">
-                Let your money go further and take better control of your cash flow when you pay over time in smaller installments with Cherry.
-              </p>
-            </div>
-            <div className="col-lg-4 text-lg-end">
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Payment Calculator */}
-      <section className="py-5 bg-light">
-        <div className="container">
-          <div className="row justify-content-center">
-            <div className="col-lg-8">
-              <div className="text-center mb-5">
-                <h2 className="sub-heading fw-bold mb-3" style={{color: '#AD6269'}}>Flexible Payments For Any Budget</h2>
-                <p className="paragraph-text text-muted">Use the payment calculator to simulate what your monthly payments could look like.</p>
+        {/* Payment Calculator */}
+        <section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="max-w-2xl mx-auto">
+              <div className="text-center mb-10">
+                <h2 className="text-3xl font-bold mb-3 text-[#AD6269]">Flexible Payments For Any Budget</h2>
+                <p className="text-gray-500">Use the payment calculator to simulate what your monthly payments could look like.</p>
               </div>
               
-              <div className="card border-0 shadow-sm">
-                <div className="card-body p-5">
-                  <div className="mb-4">
-                    <label htmlFor="purchaseAmount" className="form-label fw-semibold">Purchase Amount</label>
-                    <div className="input-group input-group-lg">
-                      <span className="input-group-text">$</span>
-                      <input
+              <Card className="shadow-lg border-0">
+                <CardContent className="p-8">
+                  <div className="mb-6">
+                    <Label htmlFor="purchaseAmount" className="text-base font-semibold mb-2 block">Purchase Amount</Label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg">$</span>
+                      <Input
                         type="number"
-                        className="form-control"
                         id="purchaseAmount"
                         placeholder="Enter amount"
                         value={purchaseAmount}
                         onChange={(e) => setPurchaseAmount(e.target.value)}
+                        className="pl-8 h-12 text-lg"
                       />
                     </div>
                   </div>
                   
-                  <div className="text-center">
-                    <div className="display-6 fw-bold text-primary mb-2">
+                  <div className="text-center py-6">
+                    <div className="text-4xl font-bold text-[#AD6269] mb-2">
                       {purchaseAmount && parseFloat(purchaseAmount) >= 100 
                         ? `$${calculateMonthlyPayment(parseFloat(purchaseAmount)).toFixed(2)} / month`
                         : '$--.-- / month'
                       }
                     </div>
-                    <p className="text-muted small mb-4">
+                    <p className="text-gray-500 text-sm">
                       {purchaseAmount && parseFloat(purchaseAmount) >= 100 
                         ? 'Estimated monthly payment'
                         : 'Enter a purchase amount to see estimated payments'
@@ -280,129 +267,124 @@ export default function FinancingPage() {
                     </p>
                   </div>
                   
-                  <p className="small text-muted mt-4">
+                  <p className="text-xs text-gray-400 mt-4">
                     These are examples only. 0% APR and other promotional rates subject to eligibility. Exact terms and APR depend on credit score and other factors.
                   </p>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* How It Works */}
-      <section className="py-5">
-        <div className="container">
-          <div className="row justify-content-center">
-            <div className="col-lg-8 text-center">
-              <h2 className="sub-heading fw-bold mb-4">How It Works</h2>
-              <p className="text-muted lead">
+        {/* How It Works */}
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto text-center">
+              <h2 className="text-3xl font-bold mb-6">How It Works</h2>
+              <p className="text-gray-500 text-lg">
                 Choose from a range of monthly payment plans, with qualifying 0% APR options. Applying is simple and does not impact your credit score. If you&apos;re approved for financing, you can use your funds immediately. Manage your payment options using Cherry&apos;s self-serve consumer portal.
               </p>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Testimonials */}
-      <section className="py-5 bg-light">
-        <div className="container">
-          <div className="text-center mb-5">
-            <h2 className="sub-heading fw-bold mb-3" style={{color: '#AD6269'}}>Testimonials</h2>
-            <p className="paragraph-text text-muted">Don&apos;t just take our word for it! Here&apos;s what other consumers have to say about Cherry…</p>
-          </div>
-          
-          <div className="row g-4">
-            {testimonials.map((testimonial, index) => (
-              <div key={index} className="col-lg-4 col-md-6">
-                <div className="card border-0 shadow-sm h-100">
-                  <div className="card-body p-4">
-                    <div className="d-flex align-items-center mb-3">
-                      <div className="me-3" style={{width: '50px', height: '50px'}}>
+        {/* Testimonials */}
+        <section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold mb-3 text-[#AD6269]">Testimonials</h2>
+              <p className="text-gray-500">Don&apos;t just take our word for it! Here&apos;s what other consumers have to say about Cherry…</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {testimonials.map((testimonial, index) => (
+                <Card key={index} className="shadow-md border-0">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 relative">
                         <Image
                           src={testimonial.image}
                           alt={`${testimonial.name} testimonial photo`}
-                          width={50}
-                          height={50}
-                          className="rounded-circle"
-                          style={{objectFit: 'cover'}}
+                          width={48}
+                          height={48}
+                          className="rounded-full object-cover"
                         />
                       </div>
-                      <h5 className="fw-bold mb-0">{testimonial.name}</h5>
+                      <h5 className="font-bold text-gray-900">{testimonial.name}</h5>
                     </div>
-                    <p className="text-muted mb-0">&quot;{testimonial.text}&quot;</p>
-                  </div>
-                </div>
-              </div>
-            ))}
+                    <p className="text-gray-500 italic">&quot;{testimonial.text}&quot;</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* FAQ Section */}
-      <section className="py-5">
-        <div className="container">
-          <div className="row justify-content-center">
-            <div className="col-lg-8">
-              <div className="text-center mb-5">
-                <h2 className="sub-heading fw-bold">Frequently Asked Questions</h2>
+        {/* FAQ Section */}
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <div className="max-w-2xl mx-auto">
+              <div className="text-center mb-10">
+                <h2 className="text-3xl font-bold">Frequently Asked Questions</h2>
               </div>
               
-              <div className="accordion" id="faqAccordion">
+              <div className="space-y-3">
                 {faqs.map((faq, index) => (
-                  <div key={index} className="accordion-item border-0 mb-3">
-                    <h3 className="accordion-header">
-                      <button
-                        className={`accordion-button ${expandedFAQ === index ? '' : 'collapsed'} shadow-none`}
-                        type="button"
-                        onClick={() => toggleFAQ(index)}
-                        style={{backgroundColor: expandedFAQ === index ? '#f8f9fa' : 'white'}}
+                  <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
+                    <button
+                      className={`w-full px-6 py-4 text-left font-medium flex items-center justify-between transition-colors ${
+                        expandedFAQ === index ? 'bg-gray-50' : 'bg-white hover:bg-gray-50'
+                      }`}
+                      onClick={() => toggleFAQ(index)}
+                    >
+                      <span>{faq.question}</span>
+                      <svg 
+                        className={`w-5 h-5 text-gray-500 transition-transform ${expandedFAQ === index ? 'rotate-180' : ''}`} 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
                       >
-                        {faq.question}
-                      </button>
-                    </h3>
-                    <div className={`accordion-collapse collapse ${expandedFAQ === index ? 'show' : ''}`}>
-                      <div className="accordion-body">
-                        {faq.answer}
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {expandedFAQ === index && (
+                      <div className="px-6 py-4 bg-white border-t border-gray-100">
+                        <p className="text-gray-500">{faq.answer}</p>
                       </div>
-                    </div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Manage Plan Section */}
-      <section className="py-5 bg-light">
-        <div className="container">
-          <div className="row justify-content-center text-center">
-            <div className="col-lg-6">
-              <h2 className="sub-heading fw-bold mb-3" style={{color: '#AD6269'}}>Manage My Plan</h2>
-              <p className="paragraph-text text-muted mb-4">Manage your payment plans inside the Cherry Consumer Portal.</p>
+        {/* Manage Plan Section */}
+        <section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="max-w-xl mx-auto text-center">
+              <h2 className="text-3xl font-bold mb-3 text-[#AD6269]">Manage My Plan</h2>
+              <p className="text-gray-500">Manage your payment plans inside the Cherry Consumer Portal.</p>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-
-      {/* Footer Disclaimer */}
-      <section className="py-4">
-        <div className="container">
-          <div className="text-center">
-            <p className="small mb-2">
-              Payment options through Cherry Technologies, Inc. are issued by the following lending partners: withcherry.com/lending-partners. See withcherry.com/terms for details.
-            </p>
-            <p className="small mb-2">
-              Iowa only: Borrowers are subject to Iowa state specific underwriting criteria. APR for all Iowa borrowers is capped at 20.99%.
-            </p>
-            <p className="small mb-0">
-              Copyright © 2020-2025 Cherry Technologies Inc. NMLS #2061234, 2 Embarcadero Center, 8th Floor, San Francisco, CA 94111.
-            </p>
+        {/* Footer Disclaimer */}
+        <section className="py-8">
+          <div className="container mx-auto px-4">
+            <div className="text-center text-xs text-gray-400 space-y-2">
+              <p>
+                Payment options through Cherry Technologies, Inc. are issued by the following lending partners: withcherry.com/lending-partners. See withcherry.com/terms for details.
+              </p>
+              <p>
+                Iowa only: Borrowers are subject to Iowa state specific underwriting criteria. APR for all Iowa borrowers is capped at 20.99%.
+              </p>
+              <p>
+                Copyright © 2020-2025 Cherry Technologies Inc. NMLS #2061234, 2 Embarcadero Center, 8th Floor, San Francisco, CA 94111.
+              </p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
       </main>
       <Footer />
     </>
