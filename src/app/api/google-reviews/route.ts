@@ -1,14 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase-admin';
 
 // Google Places API (New) endpoint
 const GOOGLE_PLACES_API_NEW = 'https://places.googleapis.com/v1';
+
+// Lazy load Firebase Admin to prevent initialization errors
+async function getFirebaseDb() {
+  try {
+    const { db } = await import('@/lib/firebase-admin');
+    return db;
+  } catch (error) {
+    console.warn('Firebase Admin not available:', error);
+    return null;
+  }
+}
 
 /**
  * Store reviews in Firebase for persistence
  */
 async function storeReviewsInFirebase(placeId: string, placeDetails: PlaceDetails) {
   try {
+    const db = await getFirebaseDb();
     if (!db) {
       console.warn('Firebase not initialized, skipping review storage');
       return;

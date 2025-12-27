@@ -6,9 +6,19 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createGooglePlacesService, GooglePlacesService } from '@/services/google-places';
-import { db } from '@/lib/firebase-admin';
 
 let placesService: GooglePlacesService | null = null;
+
+// Lazy load Firebase Admin to prevent initialization errors
+async function getFirebaseDb() {
+  try {
+    const { db } = await import('@/lib/firebase-admin');
+    return db;
+  } catch (error) {
+    console.warn('Firebase Admin not available:', error);
+    return null;
+  }
+}
 
 function getService(): GooglePlacesService {
   if (!placesService) {
@@ -26,6 +36,7 @@ function isServiceConfigured(): boolean {
  */
 async function storeReviewsInFirebase(placeId: string, details: any) {
   try {
+    const db = await getFirebaseDb();
     if (!db) {
       console.warn('Firebase not initialized, skipping review storage');
       return;
