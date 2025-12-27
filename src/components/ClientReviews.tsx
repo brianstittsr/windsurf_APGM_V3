@@ -237,7 +237,7 @@ export default function ClientReviews() {
             <h3 className="main-heading font-bold text-white mb-4">
               Book Now
             </h3>
-            <p className="paragraph-text text-white mb-6">
+            <p className="paragraph-text mb-6" style={{ color: 'white' }}>
               Experience the confidence and convenience of permanent makeup. 
               Book your free consultation today and start your transformation journey.
             </p>
