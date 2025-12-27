@@ -128,7 +128,7 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
             >
               <source src={slide.backgroundVideo} type="video/mp4" />
             </video>
-          ) : (
+          ) : slide.backgroundImage ? (
             <div
               className="absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
               style={{
@@ -136,12 +136,26 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
                 zIndex: -2
               }}
             />
+          ) : (
+            /* Fallback gradient for slides without background image (e.g., google-review) */
+            <div
+              className="absolute top-0 left-0 w-full h-full"
+              style={{
+                background: slide.styleType === 'google-review' 
+                  ? 'linear-gradient(135deg, #AD6269 0%, #8B4D52 50%, #6B3A3E 100%)'
+                  : 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+                zIndex: -2
+              }}
+            />
           )}
           
-          {/* Overlay */}
+          {/* Overlay - reduced for gradient backgrounds */}
           <div 
             className="absolute top-0 left-0 w-full h-full bg-black" 
-            style={{ opacity: (slide.overlayOpacity || 40) / 100, zIndex: -1 }}
+            style={{ 
+              opacity: slide.backgroundImage ? (slide.overlayOpacity || 40) / 100 : 0.1, 
+              zIndex: -1 
+            }}
           />
         </div>
       ))}
