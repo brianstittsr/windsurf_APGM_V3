@@ -23,7 +23,7 @@ import BookingCalendar from '../../components/admin/BookingCalendar';
 import QRCodeManager from '../../components/admin/QRCodeManager';
 import CompetitorAnalysis from '../../components/admin/CompetitorAnalysis';
 import PageSpeedDashboard from '../../components/admin/PageSpeedDashboard';
-import GoogleReviewsDashboard from '../../components/admin/GoogleReviewsDashboard';
+import GooglePlacesReviews from '../../components/admin/GooglePlacesReviews';
 import WhatsAppDashboard from '../../components/admin/WhatsAppDashboard';
 import LoyaltyDashboard from '../../components/admin/LoyaltyDashboard';
 import GeoCompetitorDashboard from '../../components/admin/GeoCompetitorDashboard';
@@ -487,7 +487,7 @@ export default function DashboardPage() {
       case 'seo-pagespeed':
         return <PageSpeedDashboard />;
       case 'google-reviews':
-        return <GoogleReviewsDashboard />;
+        return <GooglePlacesReviews />;
       case 'whatsapp':
         return <WhatsAppDashboard />;
       case 'loyalty':
