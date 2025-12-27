@@ -11,12 +11,25 @@ import {
 
 // Initialize service lazily
 let reviewsService: GoogleReviewsService | null = null;
+let serviceError: string | null = null;
 
 function getService(): GoogleReviewsService {
+  if (serviceError) {
+    throw new Error(serviceError);
+  }
   if (!reviewsService) {
-    reviewsService = createGoogleReviewsService();
+    try {
+      reviewsService = createGoogleReviewsService();
+    } catch (err: any) {
+      serviceError = err.message;
+      throw err;
+    }
   }
   return reviewsService;
+}
+
+function isServiceConfigured(): boolean {
+  return !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
 }
 
 // ============================================================================
@@ -35,6 +48,19 @@ export async function POST(request: NextRequest) {
       pageSize = 50,
       pageToken
     } = body;
+
+    // Check if service is configured before trying to use it
+    if (!isServiceConfigured()) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Google Reviews not configured',
+          message: 'Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables',
+          configured: false
+        },
+        { status: 503 }
+      );
+    }
 
     const service = getService();
 
@@ -241,6 +267,19 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    // Check if service is configured
+    if (!isServiceConfigured()) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Google Reviews not configured',
+          message: 'Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables',
+          configured: false
+        },
+        { status: 503 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const accountId = searchParams.get('accountId');
     const locationId = searchParams.get('locationId');
