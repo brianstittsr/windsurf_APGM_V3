@@ -79,8 +79,24 @@ export default function HeroCarouselManager() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.backgroundImage) {
-      await showAlert({ title: 'Missing Information', description: 'Please fill in required fields (Title and Background Image)', variant: 'warning' });
+    
+    // For google-review style, background image is optional (can use solid color)
+    // For other styles, background image is required
+    const requiresBackgroundImage = formData.styleType !== 'google-review';
+    
+    if (!formData.title && formData.styleType !== 'google-review') {
+      await showAlert({ title: 'Missing Information', description: 'Please fill in the title field', variant: 'warning' });
+      return;
+    }
+    
+    if (requiresBackgroundImage && !formData.backgroundImage) {
+      await showAlert({ title: 'Missing Information', description: 'Please enter a background image URL', variant: 'warning' });
+      return;
+    }
+    
+    // For google-review, require reviewer name and review text
+    if (formData.styleType === 'google-review' && (!formData.reviewerName || !formData.reviewText)) {
+      await showAlert({ title: 'Missing Information', description: 'Please fill in reviewer name and review text', variant: 'warning' });
       return;
     }
 
@@ -815,14 +831,21 @@ export default function HeroCarouselManager() {
 
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <Label htmlFor="backgroundImage">Background Image URL <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="backgroundImage">
+                        Background Image URL {formData.styleType !== 'google-review' && <span className="text-red-500">*</span>}
+                        {formData.styleType === 'google-review' && <span className="text-gray-400 text-xs ml-1">(optional)</span>}
+                      </Label>
                       <Input
                         id="backgroundImage"
                         value={formData.backgroundImage}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, backgroundImage: e.target.value })}
-                        placeholder="/images/hero/your-image.jpg"
+                        placeholder={formData.styleType === 'google-review' ? "Optional - leave blank for solid color background" : "/images/hero/your-image.jpg"}
                       />
-                      <p className="text-xs text-gray-400">Enter the path to your image file (e.g., /images/hero/slide1.jpg)</p>
+                      <p className="text-xs text-gray-400">
+                        {formData.styleType === 'google-review' 
+                          ? "Optional: Leave blank to use a solid gradient background for the review slide"
+                          : "Enter the path to your image file (e.g., /images/hero/slide1.jpg)"}
+                      </p>
                       {formData.backgroundImage && (
                         <div className="mt-3 h-48 rounded-lg bg-cover bg-center border-2 border-dashed border-gray-300 relative overflow-hidden" style={{ backgroundImage: `url(${formData.backgroundImage})` }}>
                           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
@@ -1164,14 +1187,13 @@ export default function HeroCarouselManager() {
                           return;
                         }
                       }
-                      if (wizardStep === 3 && !formData.backgroundImage) {
+                      // Background image is required for standard and certification, optional for google-review
+                      if (wizardStep === 3 && formData.styleType !== 'google-review' && !formData.backgroundImage) {
                         showAlert({ title: 'Required Field', description: 'Please enter a background image URL', variant: 'warning' });
                         return;
                       }
-                      if (wizardStep === 3 && formData.styleType === 'google-review' && !formData.afterPhoto) {
-                        showAlert({ title: 'Required Field', description: 'Please enter an after photo URL for the review', variant: 'warning' });
-                        return;
-                      }
+                      // After photo is optional for google-review (they can use profile photo from Google or skip)
+                      // No validation needed for afterPhoto
                       setWizardStep(wizardStep + 1);
                     }}
                   >
