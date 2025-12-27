@@ -152,9 +152,9 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
           <div className="w-full lg:w-2/3 mx-auto">
             <div className="mb-4">
               {currentSlide.subtitle && (
-                <p className="paragraph-text text-white mb-4 fade-in-1">
-                  <span className="text-[#AD6269]">{currentSlide.subtitle}</span>
-                  {currentSlide.highlightText && ` ${currentSlide.highlightText}`}
+                <p className="paragraph-text text-white mb-4 fade-in-1 tracking-[0.3em] uppercase font-medium" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5)' }}>
+                  <span className="text-[#AD6269] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{currentSlide.subtitle}</span>
+                  {currentSlide.highlightText && <span className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"> {currentSlide.highlightText}</span>}
                 </p>
               )}
               <h1 className="main-heading font-bold text-white leading-tight">
