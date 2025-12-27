@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Google Places API endpoint
-const GOOGLE_PLACES_API_BASE = 'https://maps.googleapis.com/maps/api/place';
+// Google Places API (New) endpoint
+const GOOGLE_PLACES_API_NEW = 'https://places.googleapis.com/v1';
 
 export interface GoogleReview {
   author_name: string;
@@ -46,9 +46,9 @@ export async function GET(request: NextRequest) {
             instructions: [
               '1. Go to Google Cloud Console (console.cloud.google.com)',
               '2. Create a new project or select existing',
-              '3. Enable "Places API" in APIs & Services',
+              '3. Enable "Places API (New)" in APIs & Services',
               '4. Create an API key in Credentials',
-              '5. Find your Place ID at: https://developers.google.com/maps/documentation/places/web-service/place-id',
+              '5. Find your Place ID using the search feature in the Google Reviews dashboard',
               '6. Add both variables to Vercel Environment Variables for production'
             ]
           }
@@ -57,47 +57,50 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch place details including reviews
-    const url = `${GOOGLE_PLACES_API_BASE}/details/json?place_id=${placeId}&fields=name,rating,user_ratings_total,reviews,formatted_address,formatted_phone_number,website,url&key=${apiKey}`;
+    // Fetch place details including reviews using Places API (New)
+    const url = `${GOOGLE_PLACES_API_NEW}/places/${placeId}`;
     
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      console.error('Google Places API HTTP error:', response.status);
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: `Google API HTTP error: ${response.status}`,
-          notConfigured: false
-        },
-        { status: 200 }
-      );
-    }
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'X-Goog-Api-Key': apiKey,
+        'X-Goog-FieldMask': 'id,displayName,formattedAddress,rating,userRatingCount,reviews,googleMapsUri,websiteUri,nationalPhoneNumber'
+      }
+    });
     
     const data = await response.json();
 
-    if (data.status !== 'OK') {
-      console.error('Google Places API error:', data);
+    if (data.error) {
+      console.error('Google Places API error:', data.error);
       return NextResponse.json(
         { 
           success: false, 
-          error: `Google API error: ${data.status}`,
-          details: data.error_message || 'Unknown error',
+          error: `Google API error: ${data.error.code}`,
+          details: data.error.message || 'Unknown error',
           notConfigured: false
         },
         { status: 200 }
       );
     }
 
+    // Transform new API response to legacy format for compatibility
     const placeDetails: PlaceDetails = {
-      name: data.result?.name || 'Unknown',
-      rating: data.result?.rating || 0,
-      user_ratings_total: data.result?.user_ratings_total || 0,
-      reviews: data.result?.reviews || [],
-      formatted_address: data.result?.formatted_address,
-      formatted_phone_number: data.result?.formatted_phone_number,
-      website: data.result?.website,
-      url: data.result?.url
+      name: data.displayName?.text || 'Unknown',
+      rating: data.rating || 0,
+      user_ratings_total: data.userRatingCount || 0,
+      reviews: (data.reviews || []).map((review: any) => ({
+        author_name: review.authorAttribution?.displayName || 'Anonymous',
+        author_url: review.authorAttribution?.uri,
+        profile_photo_url: review.authorAttribution?.photoUri,
+        rating: review.rating,
+        relative_time_description: review.relativePublishTimeDescription || '',
+        text: review.text?.text || '',
+        time: review.publishTime ? Math.floor(new Date(review.publishTime).getTime() / 1000) : 0
+      })),
+      formatted_address: data.formattedAddress,
+      formatted_phone_number: data.nationalPhoneNumber,
+      website: data.websiteUri,
+      url: data.googleMapsUri
     };
 
     return NextResponse.json({
@@ -140,22 +143,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Search for the place
-    const searchUrl = `${GOOGLE_PLACES_API_BASE}/findplacefromtext/json?input=${encodeURIComponent(query)}&inputtype=textquery&fields=place_id,name,formatted_address,rating,user_ratings_total&key=${apiKey}`;
+    // Search for the place using Places API (New)
+    const url = `${GOOGLE_PLACES_API_NEW}/places:searchText`;
     
-    const response = await fetch(searchUrl);
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': apiKey,
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount'
+      },
+      body: JSON.stringify({
+        textQuery: query
+      })
+    });
+    
     const data = await response.json();
 
-    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+    if (data.error) {
       return NextResponse.json(
-        { success: false, error: `Google API error: ${data.status}` },
+        { success: false, error: `Google API error: ${data.error.code} - ${data.error.message}` },
         { status: 200 }
       );
     }
 
+    // Transform to legacy format for compatibility
+    const candidates = (data.places || []).map((place: any) => ({
+      place_id: place.id,
+      name: place.displayName?.text || '',
+      formatted_address: place.formattedAddress || '',
+      rating: place.rating,
+      user_ratings_total: place.userRatingCount
+    }));
+
     return NextResponse.json({
       success: true,
-      candidates: data.candidates || []
+      candidates
     });
 
   } catch (error) {
