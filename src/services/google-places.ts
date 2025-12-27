@@ -36,7 +36,7 @@ export interface PlaceSearchResult {
 
 export class GooglePlacesService {
   private apiKey: string;
-  private baseUrl = 'https://maps.googleapis.com/maps/api/place';
+  private newApiUrl = 'https://places.googleapis.com/v1';
 
   constructor(apiKey: string) {
     if (!apiKey) {
@@ -46,73 +46,77 @@ export class GooglePlacesService {
   }
 
   /**
-   * Search for a place by name and get its Place ID
+   * Search for a place by name and get its Place ID (New API)
    */
   async searchPlace(query: string): Promise<PlaceSearchResult[]> {
-    const url = `${this.baseUrl}/textsearch/json?query=${encodeURIComponent(query)}&key=${this.apiKey}`;
+    const url = `${this.newApiUrl}/places:searchText`;
     
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': this.apiKey,
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount'
+      },
+      body: JSON.stringify({
+        textQuery: query
+      })
+    });
+    
     const data = await response.json();
 
-    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-      throw new Error(`Places API error: ${data.status} - ${data.error_message || 'Unknown error'}`);
+    if (data.error) {
+      throw new Error(`Places API error: ${data.error.code} - ${data.error.message}`);
     }
 
-    return (data.results || []).map((place: any) => ({
-      placeId: place.place_id,
-      name: place.name,
-      formattedAddress: place.formatted_address,
+    return (data.places || []).map((place: any) => ({
+      placeId: place.id,
+      name: place.displayName?.text || '',
+      formattedAddress: place.formattedAddress || '',
       rating: place.rating,
-      userRatingsTotal: place.user_ratings_total
+      userRatingsTotal: place.userRatingCount
     }));
   }
 
   /**
-   * Get place details including reviews
+   * Get place details including reviews (New API)
    * Note: Free tier only returns up to 5 reviews
    */
   async getPlaceDetails(placeId: string): Promise<PlaceDetails> {
-    const fields = [
-      'place_id',
-      'name',
-      'formatted_address',
-      'rating',
-      'user_ratings_total',
-      'reviews',
-      'url',
-      'website',
-      'formatted_phone_number'
-    ].join(',');
-
-    const url = `${this.baseUrl}/details/json?place_id=${placeId}&fields=${fields}&key=${this.apiKey}`;
+    const url = `${this.newApiUrl}/places/${placeId}`;
     
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'X-Goog-Api-Key': this.apiKey,
+        'X-Goog-FieldMask': 'id,displayName,formattedAddress,rating,userRatingCount,reviews,googleMapsUri,websiteUri,nationalPhoneNumber'
+      }
+    });
+    
     const data = await response.json();
 
-    if (data.status !== 'OK') {
-      throw new Error(`Places API error: ${data.status} - ${data.error_message || 'Unknown error'}`);
+    if (data.error) {
+      throw new Error(`Places API error: ${data.error.code} - ${data.error.message}`);
     }
-
-    const result = data.result;
     
     return {
-      placeId: result.place_id,
-      name: result.name,
-      formattedAddress: result.formatted_address,
-      rating: result.rating || 0,
-      userRatingsTotal: result.user_ratings_total || 0,
-      reviews: (result.reviews || []).map((review: any) => ({
-        authorName: review.author_name,
-        authorPhotoUrl: review.profile_photo_url,
+      placeId: data.id,
+      name: data.displayName?.text || '',
+      formattedAddress: data.formattedAddress || '',
+      rating: data.rating || 0,
+      userRatingsTotal: data.userRatingCount || 0,
+      reviews: (data.reviews || []).map((review: any) => ({
+        authorName: review.authorAttribution?.displayName || 'Anonymous',
+        authorPhotoUrl: review.authorAttribution?.photoUri,
         rating: review.rating,
-        text: review.text,
-        relativeTimeDescription: review.relative_time_description,
-        time: review.time,
-        language: review.language
+        text: review.text?.text || '',
+        relativeTimeDescription: review.relativePublishTimeDescription || '',
+        time: review.publishTime ? new Date(review.publishTime).getTime() / 1000 : 0,
+        language: review.text?.languageCode
       })),
-      url: result.url,
-      website: result.website,
-      formattedPhoneNumber: result.formatted_phone_number
+      url: data.googleMapsUri,
+      website: data.websiteUri,
+      formattedPhoneNumber: data.nationalPhoneNumber
     };
   }
 
