@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// No Firebase Admin dependency to avoid Turbopack symlink issues on Windows
+// Lazy load Firebase Admin to prevent Turbopack symlink errors on Windows
+async function getFirebaseDb() {
+  try {
+    const { db } = await import('@/lib/firebase-admin');
+    return db;
+  } catch (error) {
+    console.warn('Firebase Admin not available:', error);
+    return null;
+  }
+}
 
 /**
  * GET /api/availability/ghl
@@ -19,6 +28,10 @@ export async function GET(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Fetch local Firestore bookings for this date to prevent double bookings
+    const localBookings = await fetchLocalBookings(date);
+    console.log(`[Availability API] Found ${localBookings.length} local Firestore bookings for ${date}`);
 
     // Get GHL credentials
     const { apiKey, locationId } = await getGHLCredentials();
@@ -81,7 +94,8 @@ export async function GET(req: NextRequest) {
         console.log(`[GHL API] Calendar "${calendar.name}": ${existingAppointments.length} existing appointments`);
 
         // Generate time slots based on calendar availability settings
-        const slots = generateTimeSlots(calendarDetails, date, existingAppointments, 3);
+        // Pass both GHL appointments AND local Firestore bookings to prevent double bookings
+        const slots = generateTimeSlots(calendarDetails, date, existingAppointments, localBookings, 3);
         
         console.log(`[GHL API] Calendar "${calendar.name}": ${slots.length} generated slots`);
 
@@ -193,10 +207,41 @@ async function fetchCalendarAppointments(
   return data.events || [];
 }
 
+// Fetch local Firestore bookings to prevent double bookings
+async function fetchLocalBookings(date: string): Promise<any[]> {
+  try {
+    const db = await getFirebaseDb();
+    if (!db) {
+      console.warn('[Availability API] Firebase Admin not available, skipping local booking check');
+      return [];
+    }
+    
+    const bookingsRef = db.collection('bookings');
+    const snapshot = await bookingsRef.where('date', '==', date).get();
+    
+    const bookings = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        date: data.date,
+        time: data.time,
+        status: data.status
+      };
+    });
+    
+    // Filter out cancelled bookings
+    return bookings.filter(b => b.status !== 'cancelled');
+  } catch (error) {
+    console.error('[Availability API] Error fetching local bookings:', error);
+    return [];
+  }
+}
+
 function generateTimeSlots(
   calendar: any,
   date: string,
   existingAppointments: any[],
+  localBookings: any[],
   appointmentDuration: number = 3
 ): any[] {
   const slots: any[] = [];
@@ -245,11 +290,29 @@ function generateTimeSlots(
       const slotStart = new Date(`${date}T${startTime}:00`);
       const slotEnd = new Date(`${date}T${endTime}:00`);
       
-      const isAvailable = !existingAppointments.some(apt => {
+      // Check GHL appointments for conflicts
+      const hasGHLConflict = existingAppointments.some(apt => {
         const aptStart = new Date(apt.startTime);
         const aptEnd = new Date(apt.endTime);
         return (slotStart < aptEnd && slotEnd > aptStart);
       });
+      
+      // Check local Firestore bookings for conflicts
+      const hasLocalConflict = localBookings.some(booking => {
+        // Parse the booking time (HH:MM format)
+        const bookingHour = parseInt(booking.time.split(':')[0]);
+        const bookingMinute = parseInt(booking.time.split(':')[1] || '0');
+        const bookingStart = new Date(`${date}T${booking.time}:00`);
+        // Assume 3-hour appointments
+        const bookingEnd = new Date(bookingStart.getTime() + (3 * 60 * 60 * 1000));
+        return (slotStart < bookingEnd && slotEnd > bookingStart);
+      });
+      
+      const isAvailable = !hasGHLConflict && !hasLocalConflict;
+      
+      if (hasLocalConflict) {
+        console.log(`[GHL API] Slot ${startTime} blocked by local Firestore booking`);
+      }
 
       slots.push({
         time: startTime,

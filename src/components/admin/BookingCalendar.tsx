@@ -651,7 +651,7 @@ export default function BookingCalendar() {
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AD6269]"></div>
         </div>
-      ) : (
+      ) : viewMode === 'month' ? (
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           {/* Calendar Header */}
           <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
@@ -717,6 +717,103 @@ export default function BookingCalendar() {
                   </div>
                 );
               });
+            })()}
+          </div>
+        </div>
+      ) : viewMode === 'week' ? (
+        /* Week View */
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
+            {(() => {
+              const weekStart = new Date(currentDate);
+              weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+              return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => {
+                const date = new Date(weekStart);
+                date.setDate(date.getDate() + i);
+                const isToday = date.toDateString() === new Date().toDateString();
+                return (
+                  <div key={day} className={`py-3 text-center ${isToday ? 'bg-blue-100' : ''}`}>
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{day}</div>
+                    <div className={`text-lg font-bold ${isToday ? 'text-[#AD6269]' : 'text-gray-700'}`}>{date.getDate()}</div>
+                  </div>
+                );
+              });
+            })()}
+          </div>
+          <div className="grid grid-cols-7 min-h-[400px]">
+            {(() => {
+              const weekStart = new Date(currentDate);
+              weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+              return [0, 1, 2, 3, 4, 5, 6].map(i => {
+                const date = new Date(weekStart);
+                date.setDate(date.getDate() + i);
+                const dateStr = date.toISOString().split('T')[0];
+                const dayBookings = bookings.filter(b => b.date === dateStr);
+                const isToday = date.toDateString() === new Date().toDateString();
+                return (
+                  <div key={i} className={`border-r border-gray-200 p-2 ${isToday ? 'bg-blue-50' : ''}`}>
+                    <div className="space-y-2">
+                      {dayBookings.map(booking => (
+                        <div
+                          key={booking.id}
+                          className={`${getStatusColor(booking.status)} text-white text-xs px-2 py-2 rounded cursor-pointer hover:opacity-90 transition-opacity`}
+                          onClick={() => handleBookingClick(booking)}
+                        >
+                          <div className="font-semibold">{booking.time}</div>
+                          <div className="truncate">{booking.clientName}</div>
+                          <div className="truncate text-white/80">{booking.serviceName}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        </div>
+      ) : (
+        /* Day View */
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <div className="bg-gray-50 border-b border-gray-200 p-4 text-center">
+            <div className="text-lg font-bold text-gray-900">
+              {currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+            </div>
+          </div>
+          <div className="p-4">
+            {(() => {
+              const dateStr = currentDate.toISOString().split('T')[0];
+              const dayBookings = bookings.filter(b => b.date === dateStr);
+              if (dayBookings.length === 0) {
+                return (
+                  <div className="text-center py-12 text-gray-500">
+                    <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p>No bookings for this day</p>
+                  </div>
+                );
+              }
+              return (
+                <div className="space-y-3">
+                  {dayBookings.sort((a, b) => a.time.localeCompare(b.time)).map(booking => (
+                    <div
+                      key={booking.id}
+                      className={`${getStatusColor(booking.status)} text-white p-4 rounded-lg cursor-pointer hover:opacity-90 transition-opacity`}
+                      onClick={() => handleBookingClick(booking)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="text-lg font-bold">{booking.time}</div>
+                          <div className="text-xl font-semibold">{booking.clientName}</div>
+                          <div className="text-white/80">{booking.serviceName}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm uppercase font-medium bg-white/20 px-2 py-1 rounded">{booking.status}</div>
+                          {booking.depositPaid && <div className="text-xs mt-1">Deposit Paid</div>}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
             })()}
           </div>
         </div>
