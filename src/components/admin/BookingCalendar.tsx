@@ -551,13 +551,6 @@ export default function BookingCalendar() {
         </h2>
         <div className="flex flex-wrap gap-2">
           <Button 
-            onClick={() => setShowCreateModal(true)}
-            className="bg-[#AD6269] hover:bg-[#9d5860] text-white"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Appointment
-          </Button>
-          <Button 
             variant="outline"
             onClick={syncFromGHL}
             disabled={syncing}
