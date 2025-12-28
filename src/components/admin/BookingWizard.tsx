@@ -250,6 +250,10 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
     setSelectedSlot(null);
     
     try {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const todayStr = now.toISOString().split('T')[0];
+      
       let searchDate = new Date();
       const maxDaysToSearch = 60; // Search up to 60 days ahead
       let daysSearched = 0;
@@ -276,7 +280,16 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
           
           if (data.timeSlots && data.timeSlots.length > 0) {
             // Filter for available slots only
-            const available = data.timeSlots.filter((slot: TimeSlot) => slot.available);
+            let available = data.timeSlots.filter((slot: TimeSlot) => slot.available);
+            
+            // If searching today, filter out past time slots
+            if (dateStr === todayStr) {
+              available = available.filter((slot: TimeSlot) => {
+                const slotHour = parseInt(slot.time.split(':')[0]);
+                // Only show slots that are at least 1 hour in the future
+                return slotHour > currentHour;
+              });
+            }
             
             if (available.length > 0) {
               foundSlots = available.map((slot: TimeSlot) => ({
