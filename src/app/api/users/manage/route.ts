@@ -90,7 +90,7 @@ export async function POST(req: Request) {
     console.log(`✅ User ${requesterUid} verified as admin: ${isAdmin}`);
     
     // Proceed with the requested action
-    const { action, uid, email, newPassword, displayName, role, phone } = await req.json();
+    const { action, uid, email, newPassword, displayName, role, phone, firstName, lastName } = await req.json();
     console.log(`🔄 Processing action: ${action} for uid: ${uid || 'new user'}`);
 
     if (!action) {
@@ -122,6 +122,8 @@ export async function POST(req: Request) {
           await adminDb.collection('users').doc(newUser.uid).set({
             email,
             displayName,
+            firstName: firstName || '',
+            lastName: lastName || '',
             role: role || 'client',
             phone: phone || '',
             isActive: true,

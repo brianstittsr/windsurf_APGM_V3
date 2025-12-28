@@ -13,9 +13,12 @@ import { useAlertDialog } from '@/components/ui/alert-dialog';
 interface UserFormData {
   email: string;
   displayName: string;
+  firstName: string;
+  lastName: string;
   role: 'client' | 'artist' | 'admin';
-  phone?: string;
-  newPassword?: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
 }
 
 export default function UserManager() {
@@ -29,9 +32,12 @@ export default function UserManager() {
   const [formData, setFormData] = useState<UserFormData>({
     email: '',
     displayName: '',
+    firstName: '',
+    lastName: '',
     role: 'client',
     phone: '',
-    newPassword: '',
+    password: '',
+    confirmPassword: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -143,8 +149,8 @@ export default function UserManager() {
         updatedBy: currentUser?.uid,
       });
 
-      if (formData.newPassword) {
-        if (formData.newPassword.length < 6) {
+      if (formData.password) {
+        if (formData.password.length < 6) {
           await showAlert({
             title: 'Invalid Password',
             description: 'Password must be at least 6 characters long.',
@@ -160,7 +166,7 @@ export default function UserManager() {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${idToken}`,
           },
-          body: JSON.stringify({ action: 'update_password', uid: editingUser.id, newPassword: formData.newPassword }),
+          body: JSON.stringify({ action: 'update_password', uid: editingUser.id, newPassword: formData.password }),
         });
 
         if (!passwordResponse.ok) {
@@ -176,7 +182,7 @@ export default function UserManager() {
       });
       setShowModal(false);
       setEditingUser(null);
-      setFormData({ email: '', displayName: '', role: 'client', phone: '', newPassword: '' });
+      setFormData({ email: '', displayName: '', firstName: '', lastName: '', role: 'client', phone: '', password: '', confirmPassword: '' });
       fetchUsers();
     } catch (error: any) {
       console.error('Error updating user:', error);
@@ -192,18 +198,41 @@ export default function UserManager() {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.email || !formData.displayName) {
-      await showAlert({
-        title: 'Missing Information',
-        description: 'Email and display name are required.',
-        variant: 'warning'
-      });
+    
+    // Validation matching registration form
+    if (!formData.firstName.trim()) {
+      await showAlert({ title: 'Missing Information', description: 'First name is required.', variant: 'warning' });
+      return;
+    }
+    if (!formData.lastName.trim()) {
+      await showAlert({ title: 'Missing Information', description: 'Last name is required.', variant: 'warning' });
+      return;
+    }
+    if (!formData.email.trim()) {
+      await showAlert({ title: 'Missing Information', description: 'Email is required.', variant: 'warning' });
+      return;
+    }
+    if (!formData.phone.trim()) {
+      await showAlert({ title: 'Missing Information', description: 'Phone number is required.', variant: 'warning' });
+      return;
+    }
+    if (!formData.password) {
+      await showAlert({ title: 'Missing Information', description: 'Password is required.', variant: 'warning' });
+      return;
+    }
+    if (formData.password.length < 6) {
+      await showAlert({ title: 'Invalid Password', description: 'Password must be at least 6 characters.', variant: 'warning' });
+      return;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      await showAlert({ title: 'Password Mismatch', description: 'Passwords do not match.', variant: 'warning' });
       return;
     }
 
     setSubmitting(true);
     try {
       const idToken = await currentUser?.getIdToken();
+      const displayName = `${formData.firstName} ${formData.lastName}`;
       const response = await fetch('/api/users/manage', {
         method: 'POST',
         headers: {
@@ -213,10 +242,12 @@ export default function UserManager() {
         body: JSON.stringify({
           action: 'create_user',
           email: formData.email,
-          displayName: formData.displayName,
+          displayName,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
           role: formData.role,
           phone: formData.phone,
-          newPassword: formData.newPassword || undefined,
+          newPassword: formData.password,
         }),
       });
 
@@ -228,13 +259,11 @@ export default function UserManager() {
 
       await showAlert({
         title: 'Success',
-        description: data.passwordResetSent 
-          ? 'User created successfully! A password reset email has been sent.'
-          : 'User created successfully!',
+        description: 'User created successfully!',
         variant: 'success'
       });
       setShowModal(false);
-      setFormData({ email: '', displayName: '', role: 'client', phone: '', newPassword: '' });
+      setFormData({ email: '', displayName: '', firstName: '', lastName: '', role: 'client', phone: '', password: '', confirmPassword: '' });
       fetchUsers();
     } catch (error: any) {
       console.error('Error creating user:', error);
@@ -277,18 +306,25 @@ export default function UserManager() {
 
   const openCreateModal = () => {
     setEditingUser(null);
-    setFormData({ email: '', displayName: '', role: 'client', phone: '', newPassword: '' });
+    setFormData({ email: '', displayName: '', firstName: '', lastName: '', role: 'client', phone: '', password: '', confirmPassword: '' });
     setShowModal(true);
   };
 
   const openEditModal = (user: User) => {
     setEditingUser(user);
+    // Parse displayName into first/last name if possible
+    const nameParts = (user.displayName || '').split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
     setFormData({
       email: user.email,
       displayName: user.displayName,
+      firstName,
+      lastName,
       role: user.role,
       phone: user.phone || '',
-      newPassword: '',
+      password: '',
+      confirmPassword: '',
     });
     setShowModal(true);
   };
@@ -296,7 +332,7 @@ export default function UserManager() {
   const closeModal = () => {
     setShowModal(false);
     setEditingUser(null);
-    setFormData({ email: '', displayName: '', role: 'client', phone: '', newPassword: '' });
+    setFormData({ email: '', displayName: '', firstName: '', lastName: '', role: 'client', phone: '', password: '', confirmPassword: '' });
   };
 
   const copyToClipboard = (id: string) => {
@@ -469,30 +505,105 @@ export default function UserManager() {
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Modal - Registration Style */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
-            <form onSubmit={editingUser ? handleEditUser : handleCreateUser}>
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">{editingUser ? 'Edit User' : 'Create New User'}</h3>
-                <button type="button" className="p-2 text-gray-400 hover:text-gray-600 transition-colors" onClick={closeModal}>
-                  <i className="fas fa-times"></i>
-                </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overflow-y-auto py-8">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4">
+            <form onSubmit={editingUser ? handleEditUser : handleCreateUser} noValidate>
+              {/* Header */}
+              <div className="p-6 pb-0">
+                <div className="flex justify-between items-start">
+                  <div className="text-center flex-1">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#AD6269]/10 mb-4">
+                      <i className="fas fa-user-plus text-[#AD6269] text-2xl"></i>
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                      {editingUser ? 'Edit User' : 'Create Your Account'}
+                    </h3>
+                    <p className="text-gray-500">
+                      {editingUser ? 'Update user information' : 'Join A Pretty Girl Matter for exclusive access to premium services'}
+                    </p>
+                  </div>
+                  <button type="button" className="p-2 text-gray-400 hover:text-gray-600 transition-colors" onClick={closeModal}>
+                    <i className="fas fa-times"></i>
+                  </button>
+                </div>
               </div>
+
+              {/* Form Fields */}
               <div className="p-6 space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input type="email" id="email" value={formData.email} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, email: e.target.value })} required disabled={!!editingUser} />
+                {/* First Name / Last Name Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                      <i className="fas fa-user mr-2 text-gray-400"></i>First Name *
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent transition-all"
+                      id="firstName"
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                      required
+                      placeholder="Enter your first name"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                      <i className="fas fa-user mr-2 text-gray-400"></i>Last Name *
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent transition-all"
+                      id="lastName"
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                      required
+                      placeholder="Enter your last name"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="displayName">Display Name</Label>
-                  <Input type="text" id="displayName" value={formData.displayName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, displayName: e.target.value })} required />
+
+                {/* Email */}
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    <i className="fas fa-envelope mr-2 text-gray-400"></i>Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent transition-all disabled:bg-gray-100"
+                    id="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                    disabled={!!editingUser}
+                    placeholder="Enter your email address"
+                  />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
+
+                {/* Phone */}
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                    <i className="fas fa-phone mr-2 text-gray-400"></i>Phone Number *
+                  </label>
+                  <input
+                    type="tel"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent transition-all"
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    required
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+
+                {/* Role Selection */}
+                <div>
+                  <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+                    <i className="fas fa-user-tag mr-2 text-gray-400"></i>Role
+                  </label>
                   <select 
-                    className="w-full h-10 px-3 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent" 
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent transition-all" 
                     id="role" 
                     value={formData.role} 
                     onChange={(e) => setFormData({ ...formData, role: e.target.value as 'client' | 'artist' | 'admin' })}
@@ -502,29 +613,66 @@ export default function UserManager() {
                     <option value="admin">Admin</option>
                   </select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input type="tel" id="phone" value={formData.phone} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, phone: e.target.value })} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">{editingUser ? 'New Password' : 'Password (Optional)'}</Label>
-                  <Input
+
+                {/* Password */}
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                    <i className="fas fa-lock mr-2 text-gray-400"></i>
+                    {editingUser ? 'New Password' : 'Password (min 6 characters) *'}
+                  </label>
+                  <input
                     type="password"
-                    id="newPassword"
-                    placeholder={editingUser ? 'Leave blank to keep current password' : 'Leave blank to send password reset email'}
-                    value={formData.newPassword}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, newPassword: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent transition-all"
+                    id="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    required={!editingUser}
+                    placeholder={editingUser ? 'Leave blank to keep current password' : 'Create a password'}
+                    minLength={6}
                   />
-                  {!editingUser && (
-                    <p className="text-xs text-gray-500">If left blank, the user will receive an email to set their password.</p>
-                  )}
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                    <i className="fas fa-lock mr-2 text-gray-400"></i>
+                    {editingUser ? 'Confirm New Password' : 'Confirm Password *'}
+                  </label>
+                  <input
+                    type="password"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent transition-all"
+                    id="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    required={!editingUser}
+                    placeholder={editingUser ? 'Confirm new password' : 'Confirm your password'}
+                  />
                 </div>
               </div>
-              <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
+
+              {/* Footer */}
+              <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
                 <Button type="button" variant="outline" onClick={closeModal}>Cancel</Button>
-                <Button type="submit" className="bg-[#AD6269] hover:bg-[#9d5860]" disabled={submitting}>
-                  {submitting ? (editingUser ? 'Saving...' : 'Creating...') : (editingUser ? 'Save Changes' : 'Create User')}
-                </Button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-[#AD6269] hover:bg-[#9d5860] text-white font-semibold rounded-full transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      {editingUser ? 'Saving...' : 'Creating...'}
+                    </>
+                  ) : (
+                    <>
+                      <i className={`fas ${editingUser ? 'fa-save' : 'fa-user-plus'} mr-2`}></i>
+                      {editingUser ? 'Save Changes' : 'Create Account'}
+                    </>
+                  )}
+                </button>
               </div>
             </form>
           </div>
