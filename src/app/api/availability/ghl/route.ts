@@ -108,14 +108,33 @@ export async function GET(req: NextRequest) {
 
     // Sort by time
     allTimeSlots.sort((a, b) => a.time.localeCompare(b.time));
+    
+    // Deduplicate time slots - keep only one slot per start time
+    // If any calendar shows the slot as unavailable, mark it unavailable
+    const deduplicatedSlots = new Map<string, any>();
+    for (const slot of allTimeSlots) {
+      const existingSlot = deduplicatedSlots.get(slot.time);
+      if (!existingSlot) {
+        deduplicatedSlots.set(slot.time, slot);
+      } else {
+        // If either slot is unavailable, mark as unavailable
+        if (!slot.available) {
+          existingSlot.available = false;
+        }
+      }
+    }
+    
+    const uniqueSlots = Array.from(deduplicatedSlots.values());
+    console.log(`[GHL API] Deduplicated ${allTimeSlots.length} slots to ${uniqueSlots.length} unique time slots`);
 
     return NextResponse.json({
-      hasAvailability: allTimeSlots.length > 0,
-      timeSlots: allTimeSlots,
+      hasAvailability: uniqueSlots.some(s => s.available),
+      timeSlots: uniqueSlots,
       debug: {
         calendarsChecked: calendars.length,
         date,
-        totalSlots: allTimeSlots.length
+        totalSlots: uniqueSlots.length,
+        beforeDedup: allTimeSlots.length
       }
     });
 
