@@ -1,9 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase-admin';
+
+// Lazy load Firebase Admin to prevent Turbopack symlink errors on Windows
+async function getFirebaseDb() {
+  try {
+    const { db } = await import('@/lib/firebase-admin');
+    return db;
+  } catch (error) {
+    console.warn('Firebase Admin not available:', error);
+    return null;
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
     console.log('[sync-all-ghl] Starting sync process...');
+    
+    const db = await getFirebaseDb();
+    if (!db) {
+      return NextResponse.json({ error: 'Firebase not available' }, { status: 503 });
+    }
     
     console.log('[sync-all-ghl] Fetching bookings...');
     const snapshot = await db.collection('bookings').get();

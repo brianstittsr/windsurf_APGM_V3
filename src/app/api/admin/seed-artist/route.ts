@@ -1,9 +1,34 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
+
+// Lazy load Firebase Admin to prevent Turbopack symlink errors on Windows
+async function getFirebaseDb() {
+  try {
+    const { db } = await import('@/lib/firebase-admin');
+    return db;
+  } catch (error) {
+    console.warn('Firebase Admin not available:', error);
+    return null;
+  }
+}
+
+async function getFieldValue() {
+  try {
+    const { FieldValue } = await import('firebase-admin/firestore');
+    return FieldValue;
+  } catch (error) {
+    return null;
+  }
+}
 
 export async function GET() {
   try {
+    const db = await getFirebaseDb();
+    const FieldValue = await getFieldValue();
+    
+    if (!db || !FieldValue) {
+      return NextResponse.json({ error: 'Firebase not available' }, { status: 503 });
+    }
+    
     const artistData = {
       displayName: 'Victoria Escobar',
       email: 'victoria@aprettygirlmatter.com',

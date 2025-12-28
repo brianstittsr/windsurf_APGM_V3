@@ -10,7 +10,17 @@ import {
   WebhookPayload,
   WhatsAppMessage
 } from '@/services/whatsapp-business';
-import { db } from '@/lib/firebase-admin';
+
+// Lazy load Firebase Admin to prevent Turbopack symlink errors on Windows
+async function getFirebaseDb() {
+  try {
+    const { db } = await import('@/lib/firebase-admin');
+    return db;
+  } catch (error) {
+    console.warn('Firebase Admin not available:', error);
+    return null;
+  }
+}
 
 // ============================================================================
 // POST - Receive webhook events
@@ -97,6 +107,7 @@ async function handleIncomingMessage(
   console.log(`[WhatsApp] Message from ${senderName} (${senderPhone}):`, message);
 
   // Store message in Firestore
+  const db = await getFirebaseDb();
   if (db) {
     try {
       await db.collection('whatsapp-messages').add({
@@ -258,6 +269,7 @@ async function handleStatusUpdate(status: { id: string; status: string; recipien
   console.log(`[WhatsApp] Message ${status.id} to ${status.recipientId}: ${status.status}`);
 
   // Update message status in Firestore
+  const db = await getFirebaseDb();
   if (db) {
     try {
       const messagesRef = db.collection('whatsapp-messages');
@@ -283,6 +295,7 @@ async function syncToGHL(name: string, phone: string, message: string) {
   try {
     // Get GHL settings
     let ghlSettings: any = null;
+    const db = await getFirebaseDb();
     
     if (db) {
       const settingsDoc = await db.collection('crmSettings').doc('gohighlevel').get();

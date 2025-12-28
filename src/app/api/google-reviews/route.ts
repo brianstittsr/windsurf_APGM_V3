@@ -3,74 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 // Google Places API (New) endpoint
 const GOOGLE_PLACES_API_NEW = 'https://places.googleapis.com/v1';
 
-// Lazy load Firebase Admin to prevent initialization errors
-async function getFirebaseDb() {
-  try {
-    const { db } = await import('@/lib/firebase-admin');
-    return db;
-  } catch (error) {
-    console.warn('Firebase Admin not available:', error);
-    return null;
-  }
-}
-
-/**
- * Store reviews in Firebase for persistence
- */
-async function storeReviewsInFirebase(placeId: string, placeDetails: PlaceDetails) {
-  try {
-    const db = await getFirebaseDb();
-    if (!db) {
-      console.warn('Firebase not initialized, skipping review storage');
-      return;
-    }
-
-    const reviewsRef = db.collection('google-reviews');
-    const batch = db.batch();
-    const timestamp = new Date().toISOString();
-
-    // Store place details
-    const placeDocRef = reviewsRef.doc(placeId);
-    batch.set(placeDocRef, {
-      placeId,
-      name: placeDetails.name,
-      rating: placeDetails.rating,
-      userRatingsTotal: placeDetails.user_ratings_total,
-      formattedAddress: placeDetails.formatted_address,
-      formattedPhoneNumber: placeDetails.formatted_phone_number,
-      website: placeDetails.website,
-      url: placeDetails.url,
-      lastUpdated: timestamp
-    }, { merge: true });
-
-    // Store individual reviews
-    if (placeDetails.reviews && placeDetails.reviews.length > 0) {
-      for (const review of placeDetails.reviews) {
-        // Create a unique ID for each review based on author and time
-        const reviewId = `${review.author_name?.replace(/\s+/g, '_')}_${review.time}`;
-        const reviewDocRef = reviewsRef.doc(placeId).collection('reviews').doc(reviewId);
-        
-        batch.set(reviewDocRef, {
-          authorName: review.author_name,
-          authorUrl: review.author_url,
-          authorPhotoUrl: review.profile_photo_url,
-          rating: review.rating,
-          text: review.text,
-          relativeTimeDescription: review.relative_time_description,
-          time: review.time,
-          lastUpdated: timestamp
-        }, { merge: true });
-      }
-    }
-
-    await batch.commit();
-    console.log(`Stored ${placeDetails.reviews?.length || 0} reviews for place ${placeId}`);
-  } catch (error) {
-    console.error('Error storing reviews in Firebase:', error);
-    // Don't throw - we still want to return the reviews even if storage fails
-  }
-}
-
 export interface GoogleReview {
   author_name: string;
   author_url?: string;
@@ -170,9 +102,6 @@ export async function GET(request: NextRequest) {
       website: data.websiteUri,
       url: data.googleMapsUri
     };
-
-    // Store reviews in Firebase
-    await storeReviewsInFirebase(placeId, placeDetails);
 
     return NextResponse.json({
       success: true,

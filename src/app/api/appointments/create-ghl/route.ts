@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase-admin';
+
+// Lazy load Firebase Admin to prevent Turbopack symlink errors on Windows
+async function getFirebaseDb() {
+  try {
+    const { db } = await import('@/lib/firebase-admin');
+    return db;
+  } catch (error) {
+    console.warn('Firebase Admin not available:', error);
+    return null;
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -141,7 +151,10 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date()
     };
 
-    await db.collection('bookings').add(bookingData);
+    const db = await getFirebaseDb();
+    if (db) {
+      await db.collection('bookings').add(bookingData);
+    }
 
     return NextResponse.json({
       success: true,
@@ -161,24 +174,27 @@ export async function POST(request: NextRequest) {
 
 async function getGHLCredentials() {
   try {
-    // First try to get from the collection (any document)
-    const settingsSnapshot = await db.collection('crmSettings').limit(1).get();
-    if (!settingsSnapshot.empty) {
-      const data = settingsSnapshot.docs[0].data();
-      return {
-        apiKey: data?.apiKey || process.env.GHL_API_KEY || '',
-        locationId: data?.locationId || process.env.GHL_LOCATION_ID || ''
-      };
-    }
-    
-    // Fallback: try specific document ID for backwards compatibility
-    const settingsDoc = await db.collection('crmSettings').doc('gohighlevel').get();
-    if (settingsDoc.exists) {
-      const data = settingsDoc.data();
-      return {
-        apiKey: data?.apiKey || process.env.GHL_API_KEY || '',
-        locationId: data?.locationId || process.env.GHL_LOCATION_ID || ''
-      };
+    const db = await getFirebaseDb();
+    if (db) {
+      // First try to get from the collection (any document)
+      const settingsSnapshot = await db.collection('crmSettings').limit(1).get();
+      if (!settingsSnapshot.empty) {
+        const data = settingsSnapshot.docs[0].data();
+        return {
+          apiKey: data?.apiKey || process.env.GHL_API_KEY || '',
+          locationId: data?.locationId || process.env.GHL_LOCATION_ID || ''
+        };
+      }
+      
+      // Fallback: try specific document ID for backwards compatibility
+      const settingsDoc = await db.collection('crmSettings').doc('gohighlevel').get();
+      if (settingsDoc.exists) {
+        const data = settingsDoc.data();
+        return {
+          apiKey: data?.apiKey || process.env.GHL_API_KEY || '',
+          locationId: data?.locationId || process.env.GHL_LOCATION_ID || ''
+        };
+      }
     }
   } catch (error) {
     console.error('Error fetching GHL credentials:', error);

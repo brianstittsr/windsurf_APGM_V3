@@ -5,7 +5,17 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase-admin';
+
+// Lazy load Firebase Admin to prevent Turbopack symlink errors on Windows
+async function getFirebaseDb() {
+  try {
+    const { db } = await import('@/lib/firebase-admin');
+    return db;
+  } catch (error) {
+    console.warn('Firebase Admin not available:', error);
+    return null;
+  }
+}
 
 // ============================================================================
 // Types
@@ -140,6 +150,7 @@ function parseLeadData(data: GoogleLeadFormData): ParsedLead {
 
 async function storeLead(lead: ParsedLead): Promise<void> {
   try {
+    const db = await getFirebaseDb();
     if (!db) {
       console.warn('Firebase not initialized, skipping lead storage');
       return;
@@ -165,9 +176,10 @@ async function sendToGHL(lead: ParsedLead): Promise<{ contactId: string } | null
   try {
     // Get GHL settings from Firestore
     let ghlSettings: any = null;
+    const db = await getFirebaseDb();
     
     if (db) {
-      const settingsDoc = await db.collection('crmSettings').doc('gohighlevel').get();
+      const settingsDoc = await db.collection('crmSettings').doc('gohighlevel').get()
       if (settingsDoc.exists) {
         ghlSettings = settingsDoc.data();
       }
@@ -256,6 +268,7 @@ async function triggerInstantResponse(lead: ParsedLead): Promise<void> {
   try {
     // Get GHL settings
     let ghlSettings: any = null;
+    const db = await getFirebaseDb();
     
     if (db) {
       const settingsDoc = await db.collection('crmSettings').doc('gohighlevel').get();
