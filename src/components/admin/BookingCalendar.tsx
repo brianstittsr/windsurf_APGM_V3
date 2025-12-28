@@ -5,6 +5,7 @@ import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, Timestamp
 import { getDb } from '../../lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAlertDialog } from '@/components/ui/alert-dialog';
 import { 
   Calendar, 
   ChevronLeft, 
@@ -52,6 +53,7 @@ export default function BookingCalendar() {
   const [creating, setCreating] = useState(false);
   const [calendars, setCalendars] = useState<Array<{id: string, name: string}>>([]);
   const [loadingCalendars, setLoadingCalendars] = useState(false);
+  const { showAlert, showConfirm, AlertDialogComponent } = useAlertDialog();
   const [newAppointment, setNewAppointment] = useState({
     name: '',
     email: '',
@@ -315,10 +317,18 @@ export default function BookingCalendar() {
     const hasGHLAppointment = booking?.ghlAppointmentId;
     
     const confirmMessage = hasGHLAppointment 
-      ? 'Are you sure you want to delete this booking? This will also delete it from GoHighLevel.'
-      : 'Are you sure you want to delete this booking?';
+      ? 'This will permanently delete the booking from both the website and GoHighLevel. This action cannot be undone.'
+      : 'This will permanently delete the booking. This action cannot be undone.';
     
-    if (!confirm(confirmMessage)) return;
+    const confirmed = await showConfirm({
+      title: 'Delete Booking',
+      description: confirmMessage,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      variant: 'destructive'
+    });
+    
+    if (!confirmed) return;
 
     try {
       // Delete from GHL first if it exists
@@ -326,7 +336,13 @@ export default function BookingCalendar() {
         console.log('Deleting from GHL:', booking.ghlAppointmentId);
         const ghlDeleted = await deleteGHLAppointment(booking.ghlAppointmentId);
         if (!ghlDeleted) {
-          const continueAnyway = confirm('Failed to delete from GoHighLevel. Continue deleting from website?');
+          const continueAnyway = await showConfirm({
+            title: 'GHL Deletion Failed',
+            description: 'Failed to delete from GoHighLevel. Do you want to continue deleting from the website?',
+            confirmText: 'Continue',
+            cancelText: 'Cancel',
+            variant: 'warning'
+          });
           if (!continueAnyway) return;
         }
       }
@@ -335,12 +351,22 @@ export default function BookingCalendar() {
       console.log('Deleting from website database:', bookingId);
       await deleteDoc(doc(getDb(), 'bookings', bookingId));
       
-      alert('Booking deleted successfully!');
+      await showAlert({
+        title: 'Booking Deleted',
+        description: 'The booking has been successfully deleted.',
+        confirmText: 'OK',
+        variant: 'success'
+      });
       fetchBookings();
       setShowModal(false);
     } catch (error) {
       console.error('Error deleting booking:', error);
-      alert(`Failed to delete booking: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      await showAlert({
+        title: 'Error',
+        description: `Failed to delete booking: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        confirmText: 'OK',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -950,6 +976,9 @@ export default function BookingCalendar() {
         onBookingCreated={fetchBookings}
         calendars={calendars}
       />
+      
+      {/* Alert Dialog */}
+      {AlertDialogComponent}
     </div>
   );
 }
