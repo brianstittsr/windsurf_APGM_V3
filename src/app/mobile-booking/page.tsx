@@ -177,6 +177,39 @@ export default function MobileBookingPage() {
     );
   }
 
+  // Require admin login
+  if (!currentUser || userRole !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#AD6269]/10 to-white flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#AD6269]/10 mb-6">
+            <User className="w-10 h-10 text-[#AD6269]" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Admin Access Required</h1>
+          <p className="text-gray-500 mb-6">
+            {!currentUser 
+              ? 'Please log in with your admin account to access the mobile booking system.'
+              : 'You need admin privileges to access this page.'}
+          </p>
+          <Link 
+            href="/login?redirect=/mobile-booking"
+            className="inline-flex items-center justify-center w-full h-14 bg-[#AD6269] hover:bg-[#9d5860] text-white font-semibold rounded-xl transition-colors"
+          >
+            {!currentUser ? 'Log In' : 'Switch Account'}
+            <ChevronRight className="w-5 h-5 ml-2" />
+          </Link>
+          <Link 
+            href="/"
+            className="inline-flex items-center justify-center w-full mt-3 py-3 text-gray-500 hover:text-gray-700 text-sm"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   // Debug log for auth state
   console.log('Mobile Booking Auth:', { currentUser: currentUser?.email, userRole, authLoading });
 
