@@ -37,6 +37,7 @@ import OnlineOffersDashboard from '../../components/admin/OnlineOffersDashboard'
 import VideoMarketingDashboard from '../../components/admin/VideoMarketingDashboard';
 import PaidTrafficDashboard from '../../components/admin/PaidTrafficDashboard';
 import RetargetingDashboard from '../../components/admin/RetargetingDashboard';
+import PPCCampaignsDashboard from '../../components/admin/PPCCampaignsDashboard';
 import { cn } from '@/lib/utils';
 
 type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'alexa' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation' | 'hero-carousel' | 'documents';
@@ -519,7 +520,7 @@ export default function DashboardPage() {
       case 'online-offers':
         return <OnlineOffersDashboard />;
       case 'ppc-campaigns':
-        return <MarketingPlaceholder title="PPC Campaigns" description="Bring more new customers to your site every day with advanced PPC strategies. Find more customers without spending more." features={['Google Ads Management', 'Keyword Research', 'Quality Score Optimization', 'Bid Management', 'Landing Page Optimization']} />;
+        return <PPCCampaignsDashboard />;
       case 'website-convert':
         return <MarketingPlaceholder title="Conversion Optimization" description="Attract your ideal customers and make them convert. Design stunning websites that turn your visitors into new customers." features={['A/B Testing', 'Heatmap Analysis', 'Session Recordings', 'Form Optimization', 'CTA Optimization']} />;
       case 'marketing-automation':
