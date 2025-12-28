@@ -49,7 +49,7 @@ type WizardStep = 'client-type' | 'client-selection' | 'new-client' | 'date-sele
 type DateSelectionMode = 'next-available' | 'weekend' | 'calendar-override';
 
 export default function MobileBookingPage() {
-  const { currentUser } = useAuth();
+  const { currentUser, loading: authLoading, userRole } = useAuth();
   const { showAlert, AlertDialogComponent } = useAlertDialog();
   
   // Wizard state
@@ -98,15 +98,24 @@ export default function MobileBookingPage() {
   const [creatingBooking, setCreatingBooking] = useState(false);
   const [bookingCreated, setBookingCreated] = useState(false);
 
+  // Redirect to login if not authenticated
   useEffect(() => {
-    fetchCalendars();
-  }, []);
+    if (!authLoading && !currentUser) {
+      window.location.href = '/login?redirect=/mobile-booking';
+    }
+  }, [authLoading, currentUser]);
 
   useEffect(() => {
-    if (currentStep === 'client-selection') {
+    if (currentUser) {
+      fetchCalendars();
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (currentStep === 'client-selection' && currentUser) {
       fetchClients();
     }
-  }, [currentStep]);
+  }, [currentStep, currentUser]);
 
   useEffect(() => {
     if (clientSearch.trim() === '') {
@@ -120,6 +129,41 @@ export default function MobileBookingPage() {
       ));
     }
   }, [clientSearch, clients]);
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#AD6269]/10 to-white flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 animate-spin text-[#AD6269] mx-auto mb-4" />
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show access denied if not admin
+  if (!authLoading && currentUser && userRole !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#AD6269]/10 to-white flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+            <User className="w-8 h-8 text-red-600" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
+          <p className="text-gray-500 mb-4">You need admin access to use this feature.</p>
+          <Link href="/">
+            <Button className="bg-[#AD6269] hover:bg-[#9d5860]">Go Home</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!currentUser) {
+    return null;
+  }
 
   const fetchCalendars = async () => {
     try {
