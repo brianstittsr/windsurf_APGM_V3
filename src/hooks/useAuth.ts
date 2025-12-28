@@ -142,7 +142,7 @@ export function useAuth() {
                 console.log('ℹ️ User profile access requires authentication');
                 
                 // Check if this is an admin email that should have access
-                const adminEmails = ['victoria@aprettygirlmatter.com', 'admin@atlantaglamourpmu.com'];
+                const adminEmails = ['victoria@aprettygirlmatter.com', 'admin@atlantaglamourpmu.com', 'brianstittsr@gmail.com'];
                 if (firebaseUser.email && adminEmails.includes(firebaseUser.email)) {
                   console.log('🔧 Admin email detected, granting admin access...');
                   setAuthState({

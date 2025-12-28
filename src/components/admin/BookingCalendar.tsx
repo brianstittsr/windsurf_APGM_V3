@@ -50,6 +50,7 @@ export default function BookingCalendar() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [calendars, setCalendars] = useState<Array<{id: string, name: string}>>([]);
+  const [loadingCalendars, setLoadingCalendars] = useState(false);
   const [newAppointment, setNewAppointment] = useState({
     name: '',
     email: '',
@@ -68,8 +69,17 @@ export default function BookingCalendar() {
     fetchGHLCalendars();
   }, [currentDate, viewMode]);
 
+  // Also fetch calendars when create modal opens
+  useEffect(() => {
+    if (showCreateModal && calendars.length === 0) {
+      fetchGHLCalendars();
+    }
+  }, [showCreateModal]);
+
   const fetchGHLCalendars = async () => {
+    setLoadingCalendars(true);
     try {
+      console.log('Fetching GHL calendars...');
       const response = await fetch('/api/calendars/list', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
@@ -77,14 +87,20 @@ export default function BookingCalendar() {
 
       if (response.ok) {
         const data = await response.json();
-        if (data.calendars) {
+        console.log('GHL calendars response:', data);
+        if (data.calendars && data.calendars.length > 0) {
+          console.log('Setting calendars:', data.calendars);
           setCalendars(data.calendars);
+        } else {
+          console.warn('No calendars returned from API');
         }
       } else {
         console.error('Failed to fetch calendars:', response.status);
       }
     } catch (error) {
       console.error('Error fetching GHL calendars:', error);
+    } finally {
+      setLoadingCalendars(false);
     }
   };
 
@@ -890,12 +906,16 @@ export default function BookingCalendar() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
                     value={newAppointment.calendarId}
                     onChange={(e) => setNewAppointment({...newAppointment, calendarId: e.target.value})}
+                    disabled={loadingCalendars}
                   >
-                    <option value="">Select Calendar</option>
+                    <option value="">{loadingCalendars ? 'Loading calendars...' : 'Select Calendar'}</option>
                     {calendars.map(cal => (
                       <option key={cal.id} value={cal.id}>{cal.name}</option>
                     ))}
                   </select>
+                  {calendars.length === 0 && !loadingCalendars && (
+                    <p className="text-xs text-red-500 mt-1">No calendars available. Check GHL configuration.</p>
+                  )}
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Service Name</label>
