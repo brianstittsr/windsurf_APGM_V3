@@ -21,7 +21,8 @@ import {
   Loader2,
   CalendarDays,
   CalendarRange,
-  CalendarClock
+  CalendarClock,
+  DollarSign
 } from 'lucide-react';
 
 interface Client {
@@ -90,11 +91,12 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
   const [notes, setNotes] = useState('');
   
   // Payment state
-  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'zelle' | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'zelle' | 'external' | null>(null);
   const [depositAmount, setDepositAmount] = useState(50);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [zelleConfirmed, setZelleConfirmed] = useState(false);
+  const [externalPaymentNote, setExternalPaymentNote] = useState('');
   
   // Final booking state
   const [creatingBooking, setCreatingBooking] = useState(false);
@@ -460,7 +462,11 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
         title: serviceName || 'PMU Appointment',
         startTime: startDateTime.toISOString(),
         endTime: endDateTime.toISOString(),
-        notes: notes + (paymentMethod === 'zelle' ? '\n[Deposit: Zelle - Pending Confirmation]' : '\n[Deposit: Stripe - Paid]'),
+        notes: notes + (paymentMethod === 'zelle' 
+          ? '\n[Deposit: Zelle - Pending Confirmation]' 
+          : paymentMethod === 'external' 
+          ? `\n[Deposit: External Payment${externalPaymentNote ? ' - ' + externalPaymentNote : ''}]`
+          : '\n[Deposit: Stripe - Paid]'),
         status: 'new'
       };
 
@@ -493,7 +499,8 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
         depositPaid: paymentComplete,
         depositMethod: paymentMethod,
         depositAmount: depositAmount,
-        notes: notes,
+        notes: notes + (externalPaymentNote ? ` | Payment Note: ${externalPaymentNote}` : ''),
+        externalPaymentNote: paymentMethod === 'external' ? externalPaymentNote : null,
         ghlContactId: ghlResult.contactId,
         ghlAppointmentId: ghlResult.appointmentId,
         createdAt: new Date(),
@@ -1051,7 +1058,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                   <div className="space-y-4">
                     <h4 className="font-medium text-gray-900">Select Payment Method</h4>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <button
                         onClick={() => setPaymentMethod('stripe')}
                         className={`p-4 border-2 rounded-xl transition-all ${
@@ -1089,6 +1096,23 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                         </div>
                         <h4 className="font-semibold text-gray-900">Pay with Zelle</h4>
                         <p className="text-xs text-gray-500 mt-1">Bank Transfer</p>
+                      </button>
+
+                      <button
+                        onClick={() => setPaymentMethod('external')}
+                        className={`p-4 border-2 rounded-xl transition-all ${
+                          paymentMethod === 'external'
+                            ? 'border-[#AD6269] bg-[#AD6269]/10'
+                            : 'border-gray-200 hover:border-[#AD6269]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-center mb-2">
+                          <div className="w-12 h-8 bg-gray-600 rounded flex items-center justify-center">
+                            <DollarSign className="w-6 h-6 text-white" />
+                          </div>
+                        </div>
+                        <h4 className="font-semibold text-gray-900">External Payment</h4>
+                        <p className="text-xs text-gray-500 mt-1">Cash, Check, Other</p>
                       </button>
                     </div>
 
@@ -1144,6 +1168,38 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                         </Button>
                       </div>
                     )}
+
+                    {/* External Payment */}
+                    {paymentMethod === 'external' && (
+                      <div className="space-y-4">
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                          <h4 className="font-semibold text-gray-900 mb-2">External Payment</h4>
+                          <p className="text-gray-700 text-sm">
+                            Payment will be collected externally (cash, check, or other method). 
+                            The booking will be created and added to the GHL calendar.
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Payment Note (optional)</label>
+                          <textarea
+                            value={externalPaymentNote}
+                            onChange={(e) => setExternalPaymentNote(e.target.value)}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] resize-none"
+                            rows={2}
+                            placeholder="e.g., Cash deposit collected, Check #1234, etc."
+                          />
+                        </div>
+                        <Button 
+                          onClick={() => {
+                            setPaymentComplete(true);
+                          }}
+                          className="w-full bg-gray-600 hover:bg-gray-700 text-white"
+                        >
+                          <DollarSign className="w-4 h-4 mr-2" />
+                          Confirm External Payment
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1151,12 +1207,21 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                 {paymentComplete && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
                     <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-2" />
-                    <h4 className="font-semibold text-green-900">Payment {paymentMethod === 'zelle' ? 'Pending' : 'Complete'}</h4>
+                    <h4 className="font-semibold text-green-900">
+                      {paymentMethod === 'zelle' ? 'Payment Pending' : paymentMethod === 'external' ? 'External Payment Confirmed' : 'Payment Complete'}
+                    </h4>
                     <p className="text-green-700 text-sm">
                       {paymentMethod === 'zelle' 
                         ? 'Zelle payment will be verified before appointment.'
+                        : paymentMethod === 'external'
+                        ? 'External payment noted. Booking will be created.'
                         : 'Stripe payment has been processed.'}
                     </p>
+                    {paymentMethod === 'external' && externalPaymentNote && (
+                      <p className="text-green-600 text-xs mt-2">
+                        Note: {externalPaymentNote}
+                      </p>
+                    )}
                   </div>
                 )}
 
