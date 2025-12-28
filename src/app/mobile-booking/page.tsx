@@ -562,6 +562,7 @@ export default function MobileBookingPage() {
               <ChevronRight className="w-6 h-6 text-gray-400" />
             </button>
 
+            {userRole === 'admin' && (
             <button
               onClick={() => {
                 setClientType('new');
@@ -578,6 +579,7 @@ export default function MobileBookingPage() {
               </div>
               <ChevronRight className="w-6 h-6 text-gray-400" />
             </button>
+            )}
           </div>
         )}
 
@@ -630,13 +632,15 @@ export default function MobileBookingPage() {
                 {filteredClients.length === 0 && (
                   <div className="text-center py-8">
                     <p className="text-gray-500">No clients found</p>
-                    <Button 
-                      onClick={() => setCurrentStep('new-client')}
-                      className="mt-4 bg-[#AD6269] hover:bg-[#9d5860]"
-                    >
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      Add New Client
-                    </Button>
+                    {userRole === 'admin' && (
+                      <Button 
+                        onClick={() => setCurrentStep('new-client')}
+                        className="mt-4 bg-[#AD6269] hover:bg-[#9d5860]"
+                      >
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Add New Client
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
@@ -752,15 +756,26 @@ export default function MobileBookingPage() {
               </div>
             </div>
 
-            {/* Service Name */}
+            {/* Service Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Service</label>
-              <Input
+              <select
                 value={serviceName}
                 onChange={(e) => setServiceName(e.target.value)}
-                placeholder="e.g., Microblading, Lip Blush"
-                className="h-12"
-              />
+                className="w-full h-12 px-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent bg-white text-gray-900"
+              >
+                <option value="">Select a service...</option>
+                <option value="Microblading">Microblading</option>
+                <option value="Powder Brows">Powder Brows</option>
+                <option value="Combo Brows">Combo Brows</option>
+                <option value="Lip Blush">Lip Blush</option>
+                <option value="Eyeliner">Eyeliner</option>
+                <option value="Lash Enhancement">Lash Enhancement</option>
+                <option value="Microblading Touch-Up">Microblading Touch-Up</option>
+                <option value="Powder Brows Touch-Up">Powder Brows Touch-Up</option>
+                <option value="Lip Blush Touch-Up">Lip Blush Touch-Up</option>
+                <option value="Consultation">Consultation</option>
+              </select>
             </div>
 
             {/* Date Selection Mode */}
