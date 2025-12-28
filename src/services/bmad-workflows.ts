@@ -32,12 +32,18 @@ export interface Workflow {
 
 export class BMADWorkflowEngine {
   private ghlOrchestrator: GHLOrchestrator | null = null;
+  private ghlInitialized: boolean = false;
 
   constructor() {
-    this.initializeGHL();
+    // Don't initialize GHL in constructor - do it lazily when needed
+    // This prevents Firebase permission errors before user is authenticated
   }
 
   private async initializeGHL() {
+    // Only initialize once
+    if (this.ghlInitialized) return;
+    this.ghlInitialized = true;
+    
     try {
       const settingsList = await DatabaseService.getAll('crmSettings');
       const settings = settingsList.length > 0 ? settingsList[0] : null;
@@ -48,8 +54,13 @@ export class BMADWorkflowEngine {
           locationId: (settings as any).locationId
         });
       }
-    } catch (error) {
-      console.error('Failed to initialize GHL for workflows:', error);
+    } catch (error: any) {
+      // Silently handle permission errors - user may not be authenticated yet
+      if (error?.code === 'permission-denied' || error?.message?.includes('permission')) {
+        console.log('GHL initialization deferred - user not authenticated');
+      } else {
+        console.error('Failed to initialize GHL for workflows:', error);
+      }
     }
   }
 
@@ -57,6 +68,9 @@ export class BMADWorkflowEngine {
    * Execute workflow based on trigger
    */
   async executeWorkflow(trigger: WorkflowTrigger) {
+    // Initialize GHL lazily when workflow is executed
+    await this.initializeGHL();
+    
     console.log('🔄 Executing workflow for trigger:', trigger.type);
 
     switch (trigger.type) {
