@@ -400,6 +400,9 @@ export default function MobileBookingPage() {
 
       const ghlResult = await ghlResponse.json();
 
+      // Extract appointment ID from GHL response - it can be in different places
+      const ghlAppointmentId = ghlResult.appointment?.id || ghlResult.appointmentId || ghlResult.appointment?.event?.id || null;
+
       const bookingData = {
         clientName: selectedClient.displayName,
         clientEmail: selectedClient.email,
@@ -417,10 +420,10 @@ export default function MobileBookingPage() {
         depositAmount: depositAmount,
         notes: notes + (externalPaymentNote ? ` | Payment Note: ${externalPaymentNote}` : ''),
         externalPaymentNote: paymentMethod === 'external' ? externalPaymentNote : null,
-        ghlContactId: ghlResult.contactId,
-        ghlAppointmentId: ghlResult.appointmentId,
+        ghlContactId: ghlResult.contactId || null,
+        ghlAppointmentId: ghlAppointmentId,
         createdAt: new Date(),
-        createdBy: currentUser?.uid,
+        createdBy: currentUser?.uid || null,
         bookedViaMobile: true
       };
 
