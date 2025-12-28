@@ -72,7 +72,12 @@ function LoginForm() {
       if (redirectUrl && serviceId) {
         router.push(`${redirectUrl}?step=calendar&service=${serviceId}`);
       } else if (redirectUrl) {
-        router.push(redirectUrl);
+        // Use window.location for mobile-booking to ensure full page reload with auth state
+        if (redirectUrl === '/mobile-booking') {
+          window.location.href = redirectUrl;
+        } else {
+          router.push(redirectUrl);
+        }
       } else {
         router.push('/dashboard');
       }
