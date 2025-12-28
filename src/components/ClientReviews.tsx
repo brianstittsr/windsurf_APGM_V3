@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { GoogleReviewsService, GoogleReview } from '@/services/googleReviewsService';
 
 interface Review {
   id: string;
@@ -64,19 +65,22 @@ export default function ClientReviews() {
     }
   ];
 
-  // Load reviews from Google Reviews API
+  // Load reviews from Google Reviews Service (same as admin section)
   useEffect(() => {
     const loadGoogleReviews = async () => {
       try {
-        const response = await fetch('/api/google-reviews');
-        const data = await response.json();
+        // Use the same service as the admin section
+        const result = await GoogleReviewsService.getReviews();
         
-        if (data.success && data.data?.reviews?.length > 0) {
+        if (result.success && result.data && result.data.reviews && result.data.reviews.length > 0) {
+          // Filter to 4+ star reviews and sort by date
+          const filteredReviews = GoogleReviewsService.filterByRating(result.data.reviews, 4);
+          const sortedReviews = GoogleReviewsService.sortReviews(filteredReviews, 'date');
+          
           // Transform Google Reviews to our Review format
-          const googleReviews: Review[] = data.data.reviews
-            .filter((review: any) => review.rating >= 4) // Only show 4+ star reviews
+          const googleReviews: Review[] = sortedReviews
             .slice(0, 6) // Limit to 6 reviews
-            .map((review: any, index: number) => ({
+            .map((review: GoogleReview, index: number) => ({
               id: `google-${index}`,
               name: review.author_name || 'Anonymous',
               service: 'Google Review',
@@ -88,14 +92,14 @@ export default function ClientReviews() {
             }));
           
           if (googleReviews.length > 0) {
-            console.log(`Loaded ${googleReviews.length} Google Reviews`);
+            console.log(`Loaded ${googleReviews.length} Google Reviews from service`);
             setReviews(googleReviews);
           } else {
             console.log('No qualifying Google Reviews, using fallback');
             setReviews(fallbackReviews);
           }
         } else {
-          console.log('Google Reviews API not configured or no reviews, using fallback');
+          console.log('Google Reviews not available, using fallback');
           setReviews(fallbackReviews);
         }
       } catch (error) {
