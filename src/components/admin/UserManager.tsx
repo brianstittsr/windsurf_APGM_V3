@@ -190,6 +190,64 @@ export default function UserManager() {
     }
   };
 
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.email || !formData.displayName) {
+      await showAlert({
+        title: 'Missing Information',
+        description: 'Email and display name are required.',
+        variant: 'warning'
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const idToken = await currentUser?.getIdToken();
+      const response = await fetch('/api/users/manage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          action: 'create_user',
+          email: formData.email,
+          displayName: formData.displayName,
+          role: formData.role,
+          phone: formData.phone,
+          newPassword: formData.newPassword || undefined,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create user');
+      }
+
+      await showAlert({
+        title: 'Success',
+        description: data.passwordResetSent 
+          ? 'User created successfully! A password reset email has been sent.'
+          : 'User created successfully!',
+        variant: 'success'
+      });
+      setShowModal(false);
+      setFormData({ email: '', displayName: '', role: 'client', phone: '', newPassword: '' });
+      fetchUsers();
+    } catch (error: any) {
+      console.error('Error creating user:', error);
+      await showAlert({
+        title: 'Error',
+        description: error.message || 'Error creating user.',
+        variant: 'destructive'
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleDeleteUser = async (userId: string, userEmail: string) => {
     const confirmed = await showConfirm({
       title: 'Delete User',
@@ -415,7 +473,7 @@ export default function UserManager() {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
-            <form onSubmit={editingUser ? handleEditUser : () => {}}>
+            <form onSubmit={editingUser ? handleEditUser : handleCreateUser}>
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900">{editingUser ? 'Edit User' : 'Create New User'}</h3>
                 <button type="button" className="p-2 text-gray-400 hover:text-gray-600 transition-colors" onClick={closeModal}>
@@ -448,23 +506,24 @@ export default function UserManager() {
                   <Label htmlFor="phone">Phone</Label>
                   <Input type="tel" id="phone" value={formData.phone} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, phone: e.target.value })} />
                 </div>
-                {editingUser && (
-                  <div className="space-y-2">
-                    <Label htmlFor="newPassword">New Password</Label>
-                    <Input
-                      type="password"
-                      id="newPassword"
-                      placeholder="Leave blank to keep current password"
-                      value={formData.newPassword}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, newPassword: e.target.value })}
-                    />
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">{editingUser ? 'New Password' : 'Password (Optional)'}</Label>
+                  <Input
+                    type="password"
+                    id="newPassword"
+                    placeholder={editingUser ? 'Leave blank to keep current password' : 'Leave blank to send password reset email'}
+                    value={formData.newPassword}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, newPassword: e.target.value })}
+                  />
+                  {!editingUser && (
+                    <p className="text-xs text-gray-500">If left blank, the user will receive an email to set their password.</p>
+                  )}
+                </div>
               </div>
               <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
                 <Button type="button" variant="outline" onClick={closeModal}>Cancel</Button>
                 <Button type="submit" className="bg-[#AD6269] hover:bg-[#9d5860]" disabled={submitting}>
-                  {submitting ? 'Saving...' : 'Save Changes'}
+                  {submitting ? (editingUser ? 'Saving...' : 'Creating...') : (editingUser ? 'Save Changes' : 'Create User')}
                 </Button>
               </div>
             </form>

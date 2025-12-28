@@ -90,14 +90,82 @@ export async function POST(req: Request) {
     console.log(`✅ User ${requesterUid} verified as admin: ${isAdmin}`);
     
     // Proceed with the requested action
-    const { action, uid, email, newPassword } = await req.json();
-    console.log(`🔄 Processing action: ${action} for uid: ${uid}`);
+    const { action, uid, email, newPassword, displayName, role, phone } = await req.json();
+    console.log(`🔄 Processing action: ${action} for uid: ${uid || 'new user'}`);
 
-    if (!action || !uid) {
-      return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
+    if (!action) {
+      return NextResponse.json({ error: 'Missing action parameter' }, { status: 400 });
     }
 
     switch (action) {
+      case 'create_user':
+        if (!email || !displayName) {
+          return NextResponse.json({ error: 'Email and display name are required' }, { status: 400 });
+        }
+        
+        try {
+          console.log(`🆕 Creating new user with email: ${email}`);
+          
+          // Generate a temporary password if not provided
+          const tempPassword = newPassword || Math.random().toString(36).slice(-12) + 'A1!';
+          
+          // Create user in Firebase Auth using Admin SDK
+          const newUser = await adminAuth.createUser({
+            email,
+            password: tempPassword,
+            displayName,
+          });
+          
+          console.log(`✅ User created in Firebase Auth with UID: ${newUser.uid}`);
+          
+          // Create user document in Firestore
+          await adminDb.collection('users').doc(newUser.uid).set({
+            email,
+            displayName,
+            role: role || 'client',
+            phone: phone || '',
+            isActive: true,
+            createdAt: new Date(),
+            createdBy: requesterUid,
+          });
+          
+          console.log(`✅ User document created in Firestore`);
+          
+          // Send password reset email so user can set their own password
+          if (!newPassword) {
+            try {
+              await sendPasswordResetEmail(clientAuth, email);
+              console.log(`📧 Password reset email sent to ${email}`);
+            } catch (emailError) {
+              console.error('Failed to send password reset email:', emailError);
+              // Don't fail the whole operation if email fails
+            }
+          }
+          
+          return NextResponse.json({ 
+            message: 'User created successfully',
+            uid: newUser.uid,
+            passwordResetSent: !newPassword
+          });
+        } catch (createError: any) {
+          console.error('Error creating user:', createError);
+          
+          let errorMessage = 'Failed to create user';
+          let statusCode = 500;
+          
+          if (createError.code === 'auth/email-already-exists') {
+            errorMessage = 'A user with this email already exists';
+            statusCode = 409;
+          } else if (createError.code === 'auth/invalid-email') {
+            errorMessage = 'Invalid email address format';
+            statusCode = 400;
+          } else if (createError.code === 'auth/weak-password') {
+            errorMessage = 'Password is too weak';
+            statusCode = 400;
+          }
+          
+          return NextResponse.json({ error: errorMessage, code: createError.code }, { status: statusCode });
+        }
       case 'reset_password':
         if (!email) {
           return NextResponse.json({ error: 'Email is required to send a password reset link' }, { status: 400 });
