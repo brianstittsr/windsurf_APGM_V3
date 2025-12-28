@@ -30,6 +30,12 @@ export default function HeroCarouselManager() {
   const [wizardStep, setWizardStep] = useState(1);
   const { showAlert, showConfirm, AlertDialogComponent } = useAlertDialog();
   
+  // File upload state
+  const [uploading, setUploading] = useState(false);
+  const [uploadingAfterPhoto, setUploadingAfterPhoto] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [dragActiveAfterPhoto, setDragActiveAfterPhoto] = useState(false);
+  
   // Google Reviews state
   const [googleReviews, setGoogleReviews] = useState<GoogleReview[]>([]);
   const [googlePlaceDetails, setGooglePlaceDetails] = useState<PlaceDetails | null>(null);
@@ -271,6 +277,75 @@ export default function HeroCarouselManager() {
   const openPreview = (data?: HeroSlideFormData) => {
     setPreviewSlide(data || formData);
     setShowPreview(true);
+  };
+
+  // File upload handler
+  const handleFileUpload = async (file: File, field: 'backgroundImage' | 'afterPhoto' | 'certificationBadge') => {
+    const isAfterPhoto = field === 'afterPhoto';
+    const setUploadingState = isAfterPhoto ? setUploadingAfterPhoto : setUploading;
+    
+    setUploadingState(true);
+    
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+      formDataUpload.append('folder', field === 'backgroundImage' ? 'hero' : 'reviews');
+      
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formDataUpload
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Upload failed');
+      }
+      
+      setFormData({ ...formData, [field]: result.url });
+      await showAlert({
+        title: 'Upload Successful',
+        description: `Image uploaded successfully!`,
+        variant: 'success'
+      });
+    } catch (error) {
+      console.error('Upload error:', error);
+      await showAlert({
+        title: 'Upload Failed',
+        description: error instanceof Error ? error.message : 'Failed to upload file',
+        variant: 'destructive'
+      });
+    } finally {
+      setUploadingState(false);
+    }
+  };
+
+  // Drag and drop handlers
+  const handleDrag = (e: React.DragEvent, isAfterPhoto: boolean = false) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      isAfterPhoto ? setDragActiveAfterPhoto(true) : setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      isAfterPhoto ? setDragActiveAfterPhoto(false) : setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent, field: 'backgroundImage' | 'afterPhoto' | 'certificationBadge') => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    setDragActiveAfterPhoto(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileUpload(e.dataTransfer.files[0], field);
+    }
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'backgroundImage' | 'afterPhoto' | 'certificationBadge') => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileUpload(e.target.files[0], field);
+    }
   };
 
   if (loading) {
@@ -885,70 +960,236 @@ export default function HeroCarouselManager() {
                   </div>
 
                   <div className="space-y-6">
+                    {/* Background Image Upload */}
                     <div className="space-y-2">
                       <Label htmlFor="backgroundImage">
-                        Background Image URL {formData.styleType !== 'google-review' && <span className="text-red-500">*</span>}
+                        Background Image {formData.styleType !== 'google-review' && <span className="text-red-500">*</span>}
                         {formData.styleType === 'google-review' && <span className="text-gray-400 text-xs ml-1">(optional)</span>}
                       </Label>
+                      
+                      {/* Drag and Drop Upload Area */}
+                      <div
+                        className={`relative mt-2 rounded-xl border-2 border-dashed transition-all ${
+                          dragActive 
+                            ? 'border-[#AD6269] bg-[#AD6269]/5' 
+                            : formData.backgroundImage 
+                            ? 'border-green-300 bg-green-50' 
+                            : 'border-gray-300 hover:border-gray-400 bg-gray-50'
+                        }`}
+                        onDragEnter={(e) => handleDrag(e, false)}
+                        onDragLeave={(e) => handleDrag(e, false)}
+                        onDragOver={(e) => handleDrag(e, false)}
+                        onDrop={(e) => handleDrop(e, 'backgroundImage')}
+                      >
+                        {formData.backgroundImage ? (
+                          <div className="relative h-48 rounded-lg overflow-hidden">
+                            <div 
+                              className="absolute inset-0 bg-cover bg-center"
+                              style={{ backgroundImage: `url(${formData.backgroundImage})` }}
+                            />
+                            <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center">
+                              <span className="text-white text-sm font-medium bg-black/50 px-3 py-1 rounded mb-2">Preview</span>
+                              <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, backgroundImage: '' })}
+                                className="text-white/80 hover:text-white text-xs underline"
+                              >
+                                Remove image
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <label className="flex flex-col items-center justify-center h-48 cursor-pointer">
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept="image/*"
+                              onChange={(e) => handleFileInputChange(e, 'backgroundImage')}
+                              disabled={uploading}
+                            />
+                            {uploading ? (
+                              <div className="flex flex-col items-center">
+                                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#AD6269] mb-3"></div>
+                                <p className="text-gray-500 text-sm">Uploading...</p>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="w-14 h-14 rounded-full bg-[#AD6269]/10 flex items-center justify-center mb-3">
+                                  <i className="fas fa-cloud-upload-alt text-2xl text-[#AD6269]"></i>
+                                </div>
+                                <p className="text-gray-700 font-medium mb-1">
+                                  {dragActive ? 'Drop your image here' : 'Drag & drop your image here'}
+                                </p>
+                                <p className="text-gray-400 text-sm mb-3">or click to browse</p>
+                                <span className="px-4 py-2 bg-[#AD6269] text-white text-sm font-medium rounded-lg hover:bg-[#9d5860] transition-colors">
+                                  Choose File
+                                </span>
+                                <p className="text-gray-400 text-xs mt-3">Supports: JPEG, PNG, GIF, WebP (max 10MB)</p>
+                              </>
+                            )}
+                          </label>
+                        )}
+                      </div>
+
+                      {/* URL Input as alternative */}
+                      <div className="relative mt-4">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-gray-200"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                          <span className="px-3 bg-white text-gray-500">or enter URL</span>
+                        </div>
+                      </div>
                       <Input
                         id="backgroundImage"
                         value={formData.backgroundImage}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, backgroundImage: e.target.value })}
                         placeholder={formData.styleType === 'google-review' ? "Optional - leave blank for solid color background" : "/images/hero/your-image.jpg"}
+                        className="mt-2"
                       />
                       <p className="text-xs text-gray-400">
                         {formData.styleType === 'google-review' 
                           ? "Optional: Leave blank to use a solid gradient background for the review slide"
-                          : "Enter the path to your image file (e.g., /images/hero/slide1.jpg)"}
+                          : "Enter the path to your image file or upload above"}
                       </p>
-                      {formData.backgroundImage && (
-                        <div className="mt-3 h-48 rounded-lg bg-cover bg-center border-2 border-dashed border-gray-300 relative overflow-hidden" style={{ backgroundImage: `url(${formData.backgroundImage})` }}>
-                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                            <span className="text-white text-sm font-medium bg-black/50 px-3 py-1 rounded">Preview</span>
-                          </div>
-                        </div>
-                      )}
-                      {!formData.backgroundImage && (
-                        <div className="mt-3 h-48 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50">
-                          <div className="text-center">
-                            <i className="fas fa-image text-4xl text-gray-300 mb-2"></i>
-                            <p className="text-gray-400 text-sm">Image preview will appear here</p>
-                          </div>
-                        </div>
-                      )}
                     </div>
 
                     {/* After Photo for Google Review */}
                     {formData.styleType === 'google-review' && (
                       <div className="space-y-2">
-                        <Label htmlFor="afterPhoto">After Photo URL <span className="text-red-500">*</span></Label>
+                        <Label htmlFor="afterPhoto">After Photo <span className="text-red-500">*</span></Label>
+                        
+                        {/* Drag and Drop for After Photo */}
+                        <div
+                          className={`relative mt-2 rounded-xl border-2 border-dashed transition-all ${
+                            dragActiveAfterPhoto 
+                              ? 'border-[#AD6269] bg-[#AD6269]/5' 
+                              : formData.afterPhoto 
+                              ? 'border-green-300 bg-green-50' 
+                              : 'border-gray-300 hover:border-gray-400 bg-gray-50'
+                          }`}
+                          onDragEnter={(e) => handleDrag(e, true)}
+                          onDragLeave={(e) => handleDrag(e, true)}
+                          onDragOver={(e) => handleDrag(e, true)}
+                          onDrop={(e) => handleDrop(e, 'afterPhoto')}
+                        >
+                          {formData.afterPhoto ? (
+                            <div className="flex items-center justify-center py-6">
+                              <div className="relative">
+                                <div 
+                                  className="h-32 w-32 rounded-full bg-cover bg-center border-4 border-white shadow-lg"
+                                  style={{ backgroundImage: `url(${formData.afterPhoto})` }}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setFormData({ ...formData, afterPhoto: '' })}
+                                  className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                                >
+                                  <i className="fas fa-times text-sm"></i>
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <label className="flex flex-col items-center justify-center py-8 cursor-pointer">
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept="image/*"
+                                onChange={(e) => handleFileInputChange(e, 'afterPhoto')}
+                                disabled={uploadingAfterPhoto}
+                              />
+                              {uploadingAfterPhoto ? (
+                                <div className="flex flex-col items-center">
+                                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AD6269] mb-2"></div>
+                                  <p className="text-gray-500 text-sm">Uploading...</p>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="w-12 h-12 rounded-full bg-[#AD6269]/10 flex items-center justify-center mb-2">
+                                    <i className="fas fa-user-circle text-xl text-[#AD6269]"></i>
+                                  </div>
+                                  <p className="text-gray-700 font-medium text-sm mb-1">
+                                    {dragActiveAfterPhoto ? 'Drop photo here' : 'Upload client photo'}
+                                  </p>
+                                  <p className="text-gray-400 text-xs">Drag & drop or click to browse</p>
+                                </>
+                              )}
+                            </label>
+                          )}
+                        </div>
+                        
                         <Input
                           id="afterPhoto"
                           value={formData.afterPhoto}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, afterPhoto: e.target.value })}
                           placeholder="/images/reviews/client-after.jpg"
+                          className="mt-2"
                         />
                         <p className="text-xs text-gray-400">The client&apos;s after photo to display with the review</p>
-                        {formData.afterPhoto && (
-                          <div className="mt-3 h-32 w-32 rounded-full bg-cover bg-center border-4 border-white shadow-lg mx-auto" style={{ backgroundImage: `url(${formData.afterPhoto})` }} />
-                        )}
                       </div>
                     )}
 
                     {/* Certification Badge for Certification */}
                     {formData.styleType === 'certification' && (
                       <div className="space-y-2">
-                        <Label htmlFor="certificationBadge">Certification Badge/Logo URL</Label>
+                        <Label htmlFor="certificationBadge">Certification Badge/Logo</Label>
+                        
+                        {/* Drag and Drop for Badge */}
+                        <div
+                          className={`relative mt-2 rounded-xl border-2 border-dashed transition-all ${
+                            dragActive 
+                              ? 'border-[#AD6269] bg-[#AD6269]/5' 
+                              : formData.certificationBadge 
+                              ? 'border-green-300 bg-green-50' 
+                              : 'border-gray-300 hover:border-gray-400 bg-gray-50'
+                          }`}
+                          onDragEnter={(e) => handleDrag(e, false)}
+                          onDragLeave={(e) => handleDrag(e, false)}
+                          onDragOver={(e) => handleDrag(e, false)}
+                          onDrop={(e) => handleDrop(e, 'certificationBadge')}
+                        >
+                          {formData.certificationBadge ? (
+                            <div className="flex items-center justify-center py-6">
+                              <div className="relative">
+                                <div 
+                                  className="h-24 w-24 rounded-lg bg-contain bg-center bg-no-repeat border border-gray-200"
+                                  style={{ backgroundImage: `url(${formData.certificationBadge})` }}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setFormData({ ...formData, certificationBadge: '' })}
+                                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                                >
+                                  <i className="fas fa-times text-xs"></i>
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <label className="flex flex-col items-center justify-center py-6 cursor-pointer">
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept="image/*"
+                                onChange={(e) => handleFileInputChange(e, 'certificationBadge')}
+                                disabled={uploading}
+                              />
+                              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mb-2">
+                                <i className="fas fa-certificate text-lg text-blue-600"></i>
+                              </div>
+                              <p className="text-gray-700 font-medium text-sm mb-1">Upload badge image</p>
+                              <p className="text-gray-400 text-xs">Drag & drop or click to browse</p>
+                            </label>
+                          )}
+                        </div>
+                        
                         <Input
                           id="certificationBadge"
                           value={formData.certificationBadge}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, certificationBadge: e.target.value })}
                           placeholder="/images/certifications/badge.png"
+                          className="mt-2"
                         />
                         <p className="text-xs text-gray-400">Optional: Add a certification badge or logo image</p>
-                        {formData.certificationBadge && (
-                          <div className="mt-3 h-24 w-24 rounded-lg bg-contain bg-center bg-no-repeat border border-gray-200 mx-auto" style={{ backgroundImage: `url(${formData.certificationBadge})` }} />
-                        )}
                       </div>
                     )}
 
