@@ -19,6 +19,7 @@ export default function ClientReviews() {
   const [currentReview, setCurrentReview] = useState(0);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Helper function to mask last name
   const maskLastName = (fullName: string) => {
@@ -65,14 +66,20 @@ export default function ClientReviews() {
     }
   ];
 
-  // Load reviews from Google Reviews Service (same as admin section)
+  // Load reviews from Google Reviews API (production environment variables only)
   useEffect(() => {
     const loadGoogleReviews = async () => {
       try {
-        // Use the same service as the admin section
         const result = await GoogleReviewsService.getReviews();
         
-        if (result.success && result.data && result.data.reviews && result.data.reviews.length > 0) {
+        if (!result.success) {
+          console.error('Google Reviews API error:', result.error);
+          setError(result.error || 'Failed to load Google Reviews');
+          setLoading(false);
+          return;
+        }
+        
+        if (result.data && result.data.reviews && result.data.reviews.length > 0) {
           // Filter to 4+ star reviews and sort by date
           const filteredReviews = GoogleReviewsService.filterByRating(result.data.reviews, 4);
           const sortedReviews = GoogleReviewsService.sortReviews(filteredReviews, 'date');
@@ -92,19 +99,17 @@ export default function ClientReviews() {
             }));
           
           if (googleReviews.length > 0) {
-            console.log(`Loaded ${googleReviews.length} Google Reviews from service`);
+            console.log(`Loaded ${googleReviews.length} Google Reviews`);
             setReviews(googleReviews);
           } else {
-            console.log('No qualifying Google Reviews, using fallback');
-            setReviews(fallbackReviews);
+            setError('No reviews with 4+ stars found');
           }
         } else {
-          console.log('Google Reviews not available, using fallback');
-          setReviews(fallbackReviews);
+          setError('No Google Reviews available for this business');
         }
       } catch (error) {
         console.error('Error loading Google Reviews:', error);
-        setReviews(fallbackReviews);
+        setError('Failed to load Google Reviews');
       } finally {
         setLoading(false);
       }
@@ -153,6 +158,24 @@ export default function ClientReviews() {
           <div className="text-center">
             <div className="spinner-border text-primary" role="status">
               <span className="visually-hidden">Loading reviews...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section id="reviews" className="py-section bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <h2 className="main-heading font-bold text-gray-900 mb-4">
+              Client<span className="text-rose-600"> Reviews</span>
+            </h2>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-xl mx-auto">
+              <p className="text-red-600 font-medium">Error loading Google Reviews</p>
+              <p className="text-red-500 text-sm mt-2">{error}</p>
             </div>
           </div>
         </div>
