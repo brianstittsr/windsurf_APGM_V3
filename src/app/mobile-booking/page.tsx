@@ -142,23 +142,8 @@ export default function MobileBookingPage() {
     );
   }
 
-  // Show access denied if not admin
-  if (!authLoading && currentUser && userRole !== 'admin') {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-[#AD6269]/10 to-white flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-            <User className="w-8 h-8 text-red-600" />
-          </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-          <p className="text-gray-500 mb-4">You need admin access to use this feature.</p>
-          <Link href="/">
-            <Button className="bg-[#AD6269] hover:bg-[#9d5860]">Go Home</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // Debug log for auth state
+  console.log('Mobile Booking Auth:', { currentUser: currentUser?.email, userRole, authLoading });
 
   // Don't render if not authenticated
   if (!currentUser) {
