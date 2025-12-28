@@ -49,7 +49,7 @@ type WizardStep = 'client-type' | 'client-selection' | 'new-client' | 'date-sele
 type DateSelectionMode = 'next-available' | 'weekend' | 'calendar-override';
 
 export default function MobileBookingPage() {
-  const { currentUser, loading: authLoading, userRole } = useAuth();
+  const { user: currentUser, loading: authLoading, userRole } = useAuth();
   const { showAlert, AlertDialogComponent } = useAlertDialog();
   
   // Wizard state
@@ -98,24 +98,17 @@ export default function MobileBookingPage() {
   const [creatingBooking, setCreatingBooking] = useState(false);
   const [bookingCreated, setBookingCreated] = useState(false);
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !currentUser) {
-      window.location.href = '/login?redirect=/mobile-booking';
-    }
-  }, [authLoading, currentUser]);
+  // No login redirect - allow direct access to mobile booking
 
   useEffect(() => {
-    if (currentUser) {
-      fetchCalendars();
-    }
-  }, [currentUser]);
+    fetchCalendars();
+  }, []);
 
   useEffect(() => {
-    if (currentStep === 'client-selection' && currentUser) {
+    if (currentStep === 'client-selection') {
       fetchClients();
     }
-  }, [currentStep, currentUser]);
+  }, [currentStep]);
 
   useEffect(() => {
     if (clientSearch.trim() === '') {
@@ -144,11 +137,6 @@ export default function MobileBookingPage() {
 
   // Debug log for auth state
   console.log('Mobile Booking Auth:', { currentUser: currentUser?.email, userRole, authLoading });
-
-  // Don't render if not authenticated
-  if (!currentUser) {
-    return null;
-  }
 
   const fetchCalendars = async () => {
     try {
