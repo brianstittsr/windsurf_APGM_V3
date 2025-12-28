@@ -82,6 +82,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       sessionId: session.id,
+      url: session.url,
       bookingId,
     });
   } catch (error) {

@@ -383,28 +383,32 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
   const handleStripePayment = async () => {
     setProcessingPayment(true);
     try {
-      // Create Stripe checkout session
+      // Create Stripe checkout session - API expects email, name, phone, serviceName
       const response = await fetch('/api/create-deposit-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: depositAmount * 100, // Stripe uses cents
-          clientEmail: selectedClient?.email,
-          clientName: selectedClient?.displayName,
+          email: selectedClient?.email,
+          name: selectedClient?.displayName || `${selectedClient?.firstName} ${selectedClient?.lastName}`,
+          phone: selectedClient?.phone || '',
           serviceName: serviceName || 'PMU Appointment',
-          appointmentDate: selectedDate,
-          appointmentTime: selectedSlot?.time
+          servicePrice: depositAmount
         })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create payment session');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create payment session');
       }
 
       const { url } = await response.json();
       
-      // Open Stripe checkout in new window
-      window.open(url, '_blank');
+      // Redirect to Stripe checkout using the URL from the API
+      if (url) {
+        window.open(url, '_blank');
+      } else {
+        throw new Error('No checkout URL returned');
+      }
       
       // For now, mark as complete (in production, you'd use webhooks)
       await showAlert({
@@ -418,7 +422,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
       console.error('Error processing payment:', error);
       await showAlert({
         title: 'Payment Error',
-        description: 'Failed to process payment. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to process payment. Please try again.',
         variant: 'destructive'
       });
     } finally {
