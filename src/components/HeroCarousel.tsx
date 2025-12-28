@@ -1,10 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { HeroSlide } from '@/types/heroSlide';
 import { HeroSlideService } from '@/services/heroSlideService';
+
+// Soft transition types
+type TransitionType = 'fade' | 'fadeUp' | 'fadeDown' | 'fadeScale' | 'crossfade' | 'blur';
+
+const TRANSITIONS: TransitionType[] = ['fade', 'fadeUp', 'fadeDown', 'fadeScale', 'crossfade', 'blur'];
 
 interface HeroCarouselProps {
   slides?: HeroSlide[];
@@ -15,8 +20,16 @@ interface HeroCarouselProps {
 export default function HeroCarousel({ slides: propSlides, autoPlay = true, interval = 5000 }: HeroCarouselProps) {
   const [slides, setSlides] = useState<HeroSlide[]>(propSlides || []);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [previousIndex, setPreviousIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [loading, setLoading] = useState(!propSlides);
+  const [currentTransition, setCurrentTransition] = useState<TransitionType>('fade');
+  
+  // Pick a random transition for each slide change
+  const pickRandomTransition = useCallback(() => {
+    const randomIndex = Math.floor(Math.random() * TRANSITIONS.length);
+    setCurrentTransition(TRANSITIONS[randomIndex]);
+  }, []);
 
   useEffect(() => {
     if (!propSlides) {
@@ -74,10 +87,12 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
 
   const goToSlide = useCallback((index: number) => {
     if (isTransitioning || index === currentIndex) return;
+    pickRandomTransition();
+    setPreviousIndex(currentIndex);
     setIsTransitioning(true);
     setCurrentIndex(index);
-    setTimeout(() => setIsTransitioning(false), 500);
-  }, [currentIndex, isTransitioning]);
+    setTimeout(() => setIsTransitioning(false), 800);
+  }, [currentIndex, isTransitioning, pickRandomTransition]);
 
   const nextSlide = useCallback(() => {
     const next = (currentIndex + 1) % slides.length;
@@ -111,10 +126,48 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
   return (
     <section id="hero" className="flex items-center relative overflow-hidden" style={{ height: '100vh', width: '100vw', marginTop: '0', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}>
       {/* Slides */}
-      {slides.map((slide, index) => (
+      {slides.map((slide, index) => {
+        const isActive = index === currentIndex;
+        const isPrevious = index === previousIndex && isTransitioning;
+        
+        // Get transition classes based on current transition type
+        const getTransitionClasses = () => {
+          if (!isActive && !isPrevious) return 'opacity-0 scale-100 translate-y-0 blur-0';
+          
+          switch (currentTransition) {
+            case 'fade':
+              return isActive 
+                ? 'opacity-100 transition-opacity duration-700 ease-out' 
+                : 'opacity-0 transition-opacity duration-700 ease-out';
+            case 'fadeUp':
+              return isActive 
+                ? 'opacity-100 translate-y-0 transition-all duration-700 ease-out' 
+                : 'opacity-0 translate-y-8 transition-all duration-700 ease-out';
+            case 'fadeDown':
+              return isActive 
+                ? 'opacity-100 translate-y-0 transition-all duration-700 ease-out' 
+                : 'opacity-0 -translate-y-8 transition-all duration-700 ease-out';
+            case 'fadeScale':
+              return isActive 
+                ? 'opacity-100 scale-100 transition-all duration-700 ease-out' 
+                : 'opacity-0 scale-95 transition-all duration-700 ease-out';
+            case 'crossfade':
+              return isActive 
+                ? 'opacity-100 transition-opacity duration-1000 ease-in-out' 
+                : 'opacity-0 transition-opacity duration-1000 ease-in-out';
+            case 'blur':
+              return isActive 
+                ? 'opacity-100 blur-0 transition-all duration-700 ease-out' 
+                : 'opacity-0 blur-sm transition-all duration-700 ease-out';
+            default:
+              return isActive ? 'opacity-100' : 'opacity-0';
+          }
+        };
+        
+        return (
         <div
           key={slide.id}
-          className={`absolute inset-0 transition-opacity duration-500 ${index === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+          className={`absolute inset-0 ${getTransitionClasses()} ${isActive ? 'z-10' : isPrevious ? 'z-5' : 'z-0'}`}
         >
           {/* Background Image/Video */}
           {slide.backgroundVideo ? (
@@ -158,7 +211,8 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
             }}
           />
         </div>
-      ))}
+        );
+      })}
 
       {/* Content */}
       <div className="container mx-auto px-4 py-5 relative z-20">
