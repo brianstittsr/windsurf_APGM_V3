@@ -92,7 +92,7 @@ export default function BookingCalendar() {
           console.log('Setting calendars:', data.calendars);
           setCalendars(data.calendars);
         } else {
-          console.warn('No calendars returned from API');
+          console.warn('No calendars returned from API:', data.message || data.error || 'Unknown reason');
         }
       } else {
         console.error('Failed to fetch calendars:', response.status);

@@ -8,12 +8,15 @@ export async function GET(request: NextRequest) {
     const apiKey = process.env.GHL_API_KEY || '';
     const locationId = process.env.GHL_LOCATION_ID || '';
     
+    console.log('[calendars/list] API Key present:', !!apiKey, 'Location ID present:', !!locationId);
+    
     if (!apiKey || !locationId) {
+      console.warn('[calendars/list] GHL credentials not configured');
       // Return empty calendars if not configured (graceful degradation)
       return NextResponse.json({
-        success: true,
+        success: false,
         calendars: [],
-        message: 'GHL credentials not configured'
+        message: 'GHL credentials not configured. Please set GHL_API_KEY and GHL_LOCATION_ID environment variables.'
       });
     }
 
