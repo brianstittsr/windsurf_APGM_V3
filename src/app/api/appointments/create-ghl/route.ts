@@ -86,7 +86,35 @@ export async function POST(request: NextRequest) {
     const useServiceCalendar = couponCode === 'MOELCALL200' || couponCode === 'MODELCALL200';
     
     // Use Service Calendar if MOELCALL200 is applied, otherwise use provided calendarId
-    const calendarId = useServiceCalendar ? SERVICE_CALENDAR_ID : appointmentData.calendarId;
+    let calendarId = useServiceCalendar ? SERVICE_CALENDAR_ID : appointmentData.calendarId;
+    
+    // If no calendarId provided, fetch the first available calendar
+    if (!calendarId) {
+      console.log('No calendarId provided, fetching available calendars...');
+      const calendarsResponse = await fetch(
+        `https://services.leadconnectorhq.com/calendars/?locationId=${credentials.locationId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${credentials.apiKey}`,
+            'Version': '2021-07-28'
+          }
+        }
+      );
+      
+      if (calendarsResponse.ok) {
+        const calendarsData = await calendarsResponse.json();
+        if (calendarsData.calendars && calendarsData.calendars.length > 0) {
+          calendarId = calendarsData.calendars[0].id;
+          console.log('Using first available calendar:', calendarId);
+        }
+      }
+      
+      if (!calendarId) {
+        // Use the known Service Calendar as fallback
+        calendarId = SERVICE_CALENDAR_ID;
+        console.log('Using fallback Service Calendar:', calendarId);
+      }
+    }
     
     // Create the appointment in GHL
     const appointmentPayload = {
