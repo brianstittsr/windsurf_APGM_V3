@@ -143,21 +143,19 @@ export async function POST(request: NextRequest) {
       }
     );
 
+    let appointmentResult = null;
+    let ghlAppointmentId = null;
+    
     if (!createAppointmentResponse.ok) {
       const errorText = await createAppointmentResponse.text();
       console.error('GHL appointment creation failed:', createAppointmentResponse.status, errorText);
       console.error('Appointment payload:', JSON.stringify(appointmentPayload, null, 2));
-      return NextResponse.json(
-        { 
-          error: `Failed to create appointment in GHL: ${createAppointmentResponse.status}`,
-          details: errorText,
-          payload: appointmentPayload
-        },
-        { status: createAppointmentResponse.status }
-      );
+      // Continue without GHL - we'll still create the booking in Firestore
+      console.log('Continuing without GHL appointment - will create local booking only');
+    } else {
+      appointmentResult = await createAppointmentResponse.json();
+      ghlAppointmentId = appointmentResult?.event?.id || appointmentResult?.id || null;
     }
-
-    const appointmentResult = await createAppointmentResponse.json();
 
     // Also create the appointment in the website's database
     const bookingData = {
@@ -173,8 +171,8 @@ export async function POST(request: NextRequest) {
       price: appointmentData.price || 0,
       depositPaid: appointmentData.depositPaid || false,
       notes: appointmentData.notes || '',
-      ghlContactId: contactId,
-      ghlAppointmentId: appointmentResult.event?.id || appointmentResult.id,
+      ghlContactId: contactId || null,
+      ghlAppointmentId: ghlAppointmentId,
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -187,8 +185,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       appointment: appointmentResult,
+      appointmentId: ghlAppointmentId,
       contactId: contactId,
-      message: 'Appointment created successfully in GHL and website'
+      message: ghlAppointmentId 
+        ? 'Appointment created successfully in GHL and website'
+        : 'Booking created in website (GHL sync pending)'
     });
 
   } catch (error) {
