@@ -17,6 +17,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect');
   const serviceId = searchParams.get('service');
+  const isMobileBooking = redirectUrl === '/mobile-booking';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -117,6 +118,119 @@ function LoginForm() {
     }
   };
 
+  // Mobile booking login with hero background
+  if (isMobileBooking) {
+    return (
+      <div 
+        className="min-h-screen flex items-center justify-center p-4 relative"
+        style={{
+          backgroundImage: 'url(/images/hero/victoria-escobar-hero-main.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black/50" />
+        
+        <div className="w-full max-w-md relative z-10">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6">
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#AD6269] mb-3">
+                <i className="fas fa-calendar-check text-white text-2xl"></i>
+              </div>
+              <h1 className="text-xl font-bold text-[#AD6269] mb-1" style={{ fontFamily: 'Playfair Display, serif' }}>
+                Quick Book Login
+              </h1>
+              <p className="text-gray-500 text-sm">Sign in to access mobile booking</p>
+            </div>
+
+            {/* Error Alert */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg mb-4 flex items-start gap-2">
+                <i className="fas fa-exclamation-triangle mt-0.5 text-sm"></i>
+                <span className="text-sm">{error}</span>
+              </div>
+            )}
+
+            {/* Login Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1">
+                <Label htmlFor="email-mobile" className="text-gray-700 font-medium text-sm">
+                  Email
+                </Label>
+                <Input
+                  type="email"
+                  id="email-mobile"
+                  value={email}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                  required
+                  placeholder="Enter your email"
+                  className="h-12 border-gray-300 focus:border-[#AD6269] focus:ring-[#AD6269]"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="password-mobile" className="text-gray-700 font-medium text-sm">
+                  Password
+                </Label>
+                <Input
+                  type="password"
+                  id="password-mobile"
+                  value={password}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                  required
+                  placeholder="Enter your password"
+                  className="h-12 border-gray-300 focus:border-[#AD6269] focus:ring-[#AD6269]"
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="rememberMe-mobile"
+                  checked={rememberMe}
+                  onCheckedChange={(checked: boolean) => setRememberMe(checked)}
+                  className="border-gray-300 data-[state=checked]:bg-[#AD6269] data-[state=checked]:border-[#AD6269]"
+                />
+                <label htmlFor="rememberMe-mobile" className="text-sm text-gray-600 cursor-pointer">
+                  Remember me
+                </label>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full h-12 bg-[#AD6269] hover:bg-[#9d5860] text-white font-semibold rounded-lg"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Signing in...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-sign-in-alt mr-2"></i>
+                    Sign In
+                  </>
+                )}
+              </Button>
+            </form>
+
+            {/* Back to Home */}
+            <div className="mt-4 text-center">
+              <Link href="/" className="text-gray-500 hover:text-[#AD6269] inline-flex items-center gap-2 text-sm">
+                <i className="fas fa-arrow-left"></i>
+                Back to Home
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Standard login page
   return (
     <>
       <Header />
