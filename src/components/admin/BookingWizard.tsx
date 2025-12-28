@@ -484,6 +484,9 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
       const ghlResult = await ghlResponse.json();
 
       // Create booking in Firestore
+      // Extract appointment ID from GHL response - it can be in different places
+      const ghlAppointmentId = ghlResult.appointment?.id || ghlResult.appointmentId || ghlResult.appointment?.event?.id || null;
+      
       const bookingData = {
         clientName: selectedClient.displayName,
         clientEmail: selectedClient.email,
@@ -501,10 +504,10 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
         depositAmount: depositAmount,
         notes: notes + (externalPaymentNote ? ` | Payment Note: ${externalPaymentNote}` : ''),
         externalPaymentNote: paymentMethod === 'external' ? externalPaymentNote : null,
-        ghlContactId: ghlResult.contactId,
-        ghlAppointmentId: ghlResult.appointmentId,
+        ghlContactId: ghlResult.contactId || null,
+        ghlAppointmentId: ghlAppointmentId,
         createdAt: new Date(),
-        createdBy: currentUser?.uid
+        createdBy: currentUser?.uid || null
       };
 
       await addDoc(collection(getDb(), 'bookings'), bookingData);
@@ -878,16 +881,26 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                   </p>
                 </div>
 
-                {/* Service Name */}
+                {/* Service Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Service Name</label>
-                  <input
-                    type="text"
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Service</label>
+                  <select
                     value={serviceName}
                     onChange={(e) => setServiceName(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
-                    placeholder="e.g., Microblading, Lip Blush, etc."
-                  />
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] bg-white"
+                  >
+                    <option value="">Select a service...</option>
+                    <option value="Microblading">Microblading</option>
+                    <option value="Powder Brows">Powder Brows</option>
+                    <option value="Combo Brows">Combo Brows</option>
+                    <option value="Lip Blush">Lip Blush</option>
+                    <option value="Eyeliner">Eyeliner</option>
+                    <option value="Lash Enhancement">Lash Enhancement</option>
+                    <option value="Microblading Touch-Up">Microblading Touch-Up</option>
+                    <option value="Powder Brows Touch-Up">Powder Brows Touch-Up</option>
+                    <option value="Lip Blush Touch-Up">Lip Blush Touch-Up</option>
+                    <option value="Consultation">Consultation</option>
+                  </select>
                 </div>
 
                 {/* Date Selection Mode Buttons */}
