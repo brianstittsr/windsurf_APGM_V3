@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
 import { auth, isFirebaseConfigured, getDb } from '@/lib/firebase';
-import { doc, setDoc, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { UserService } from '@/services/userService';
 import { User, UserProfile } from '@/types/database';
 
@@ -57,6 +57,16 @@ export function useAuth() {
                 // Safely access email and role, accommodating both nested and flat structures.
                 const userEmail = (userProfile as any).profile?.email || (userProfile as any).email;
                 const userRole = (userProfile as any).role || 'client';
+
+                // Update last login time
+                try {
+                  const userDocRef = doc(getDb(), 'users', firebaseUser.uid);
+                  await updateDoc(userDocRef, {
+                    lastLoginAt: Timestamp.now()
+                  });
+                } catch (updateError) {
+                  console.warn('Could not update last login time:', updateError);
+                }
 
                 console.log('✅ User profile loaded:', userEmail, 'Role:', userRole);
                 setAuthState({

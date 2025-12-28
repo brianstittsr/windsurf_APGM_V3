@@ -58,6 +58,7 @@ export default function UserManager() {
         const email = data.email || data.profile?.email || '';
         const phone = data.phone || data.profile?.phone || '';
         const role = data.role || 'client';
+        const lastLoginAt = data.lastLoginAt;
         return {
           id: doc.id,
           displayName,
@@ -65,6 +66,7 @@ export default function UserManager() {
           phone,
           role,
           isActive: data.isActive !== false,
+          lastLoginAt,
           ...data,
         } as User;
       });
@@ -326,6 +328,7 @@ export default function UserManager() {
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Email</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Role</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Phone</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Last Login</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Status</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Document ID</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Actions</th>
@@ -342,6 +345,18 @@ export default function UserManager() {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-600">{user.phone || '-'}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">
+                        {(user as any).lastLoginAt 
+                          ? new Date((user as any).lastLoginAt.seconds * 1000).toLocaleString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true
+                            })
+                          : 'Never'}
+                      </td>
                       <td className="py-3 px-4">
                         <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                           {user.isActive ? 'Active' : 'Inactive'}
