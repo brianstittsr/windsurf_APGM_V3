@@ -49,32 +49,40 @@ export async function POST(request: NextRequest) {
 
       // If contact doesn't exist, create it
       if (!contactId) {
-        const createContactResponse = await fetch(
-          'https://services.leadconnectorhq.com/contacts/',
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${credentials.apiKey}`,
-              'Version': '2021-07-28',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              locationId: credentials.locationId,
-              firstName: appointmentData.firstName || appointmentData.name?.split(' ')[0] || '',
-              lastName: appointmentData.lastName || appointmentData.name?.split(' ').slice(1).join(' ') || '',
-              email: appointmentData.email,
-              phone: appointmentData.phone || '',
-              source: 'Website Admin'
-            })
+        try {
+          const createContactResponse = await fetch(
+            'https://services.leadconnectorhq.com/contacts/',
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${credentials.apiKey}`,
+                'Version': '2021-07-28',
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                locationId: credentials.locationId,
+                firstName: appointmentData.firstName || appointmentData.name?.split(' ')[0] || '',
+                lastName: appointmentData.lastName || appointmentData.name?.split(' ').slice(1).join(' ') || '',
+                email: appointmentData.email,
+                phone: appointmentData.phone || '',
+                source: 'Website Admin'
+              })
+            }
+          );
+
+          if (!createContactResponse.ok) {
+            const errorText = await createContactResponse.text();
+            console.error('GHL contact creation failed:', createContactResponse.status, errorText);
+            console.log('Continuing without GHL contact - will create local booking only');
+            // Don't throw - continue without GHL contact
+          } else {
+            const contactResult = await createContactResponse.json();
+            contactId = contactResult.contact?.id || contactResult.id || null;
           }
-        );
-
-        if (!createContactResponse.ok) {
-          throw new Error('Failed to create contact in GHL');
+        } catch (contactError) {
+          console.error('Error creating GHL contact:', contactError);
+          // Continue without GHL contact
         }
-
-        const contactResult = await createContactResponse.json();
-        contactId = contactResult.contact.id;
       }
     }
 
