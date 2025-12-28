@@ -1,16 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Lazy load Firebase Admin to prevent build issues
-async function getFirebaseStorage() {
-  try {
-    const { storage } = await import('@/lib/firebase-admin');
-    return storage;
-  } catch (error) {
-    console.error('Firebase Storage not available:', error);
-    return null;
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -24,83 +13,52 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
+    // Validate file type - only images for base64 storage (videos too large)
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { error: 'Invalid file type. Allowed: JPEG, PNG, GIF, WebP, MP4, WebM' },
+        { error: 'Invalid file type. Allowed: JPEG, PNG, GIF, WebP' },
         { status: 400 }
       );
     }
 
-    // Validate file size (max 10MB for images, 50MB for videos)
-    const maxSize = file.type.startsWith('video/') ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    // Validate file size (max 2MB for base64 storage in Firestore)
+    // Firestore document limit is 1MB, but base64 increases size by ~33%
+    const maxSize = 2 * 1024 * 1024;
     if (file.size > maxSize) {
-      const maxSizeMB = maxSize / (1024 * 1024);
       return NextResponse.json(
-        { error: `File too large. Maximum size: ${maxSizeMB}MB` },
+        { error: 'File too large. Maximum size: 2MB for image uploads' },
         { status: 400 }
       );
     }
 
-    // Get Firebase Storage
-    const storage = await getFirebaseStorage();
-    if (!storage) {
-      return NextResponse.json(
-        { error: 'Storage service not available' },
-        { status: 500 }
-      );
-    }
+    // Convert file to base64
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const base64 = buffer.toString('base64');
+    
+    // Create data URL (can be used directly in img src)
+    const dataUrl = `data:${file.type};base64,${base64}`;
 
-    // Create unique filename
+    // Create unique filename for reference
     const timestamp = Date.now();
     const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const fileName = `${timestamp}-${originalName}`;
-    
-    // Determine storage path based on file type
-    const isVideo = file.type.startsWith('video/');
-    const storagePath = isVideo 
-      ? `videos/${folder}/${fileName}`
-      : `images/${folder}/${fileName}`;
-
-    // Get the default bucket
-    const bucket = storage.bucket();
-    const fileRef = bucket.file(storagePath);
-
-    // Convert file to buffer
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // Upload to Firebase Storage
-    await fileRef.save(buffer, {
-      metadata: {
-        contentType: file.type,
-        metadata: {
-          originalName: file.name,
-          uploadedAt: new Date().toISOString()
-        }
-      }
-    });
-
-    // Make the file publicly accessible
-    await fileRef.makePublic();
-
-    // Get the public URL
-    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${storagePath}`;
 
     return NextResponse.json({
       success: true,
-      url: publicUrl,
+      url: dataUrl,
       fileName,
-      storagePath,
+      folder,
       size: file.size,
-      type: file.type
+      type: file.type,
+      isBase64: true
     });
 
   } catch (error) {
-    console.error('Error uploading file:', error);
+    console.error('Error processing file:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to upload file' },
+      { error: error instanceof Error ? error.message : 'Failed to process file' },
       { status: 500 }
     );
   }
