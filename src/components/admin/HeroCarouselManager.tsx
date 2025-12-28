@@ -40,14 +40,69 @@ export default function HeroCarouselManager() {
     loadSlides();
   }, []);
 
-  // Load Google Reviews when selecting google-review style
+  // Load Google Reviews from Google Business Profile API (same as Google Reviews Dashboard)
   const loadGoogleReviews = async () => {
     setLoadingGoogleReviews(true);
-    const result = await GoogleReviewsService.getReviews();
-    if (result.success && result.data) {
-      setGooglePlaceDetails(result.data);
-      setGoogleReviews(result.data.reviews || []);
+    
+    try {
+      // First try Google Business Profile API (used by Google Reviews Dashboard)
+      const accountId = localStorage.getItem('google_reviews_account_id');
+      const locationId = localStorage.getItem('google_reviews_location_id');
+      const businessName = localStorage.getItem('google_reviews_business_name');
+      
+      if (accountId && locationId) {
+        // Fetch from Google Business Profile API
+        const res = await fetch('/api/reviews/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            action: 'list_reviews',
+            accountId,
+            locationId,
+            pageSize: 50
+          })
+        });
+        const data = await res.json();
+        
+        if (data.success && data.reviews) {
+          // Transform Google Business Profile reviews to match expected format
+          const transformedReviews: GoogleReview[] = data.reviews.map((review: any) => {
+            const ratingMap: { [key: string]: number } = {
+              'ONE': 1, 'TWO': 2, 'THREE': 3, 'FOUR': 4, 'FIVE': 5
+            };
+            return {
+              author_name: review.reviewer?.displayName || 'Anonymous',
+              author_url: undefined,
+              profile_photo_url: review.reviewer?.profilePhotoUrl,
+              rating: ratingMap[review.starRating] || 5,
+              relative_time_description: new Date(review.createTime).toLocaleDateString(),
+              text: review.comment || '',
+              time: Math.floor(new Date(review.createTime).getTime() / 1000)
+            };
+          });
+          
+          setGooglePlaceDetails({
+            name: businessName || 'A Pretty Girl Matter',
+            rating: 5,
+            user_ratings_total: transformedReviews.length,
+            reviews: transformedReviews
+          });
+          setGoogleReviews(transformedReviews);
+          setLoadingGoogleReviews(false);
+          return;
+        }
+      }
+      
+      // Fallback to Google Places API if Business Profile not configured
+      const result = await GoogleReviewsService.getReviews();
+      if (result.success && result.data) {
+        setGooglePlaceDetails(result.data);
+        setGoogleReviews(result.data.reviews || []);
+      }
+    } catch (error) {
+      console.error('Error loading Google Reviews:', error);
     }
+    
     setLoadingGoogleReviews(false);
   };
 
