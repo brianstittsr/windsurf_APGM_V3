@@ -143,6 +143,7 @@ const navigationGroups: NavGroup[] = [
     items: [
       { id: 'gohighlevel', label: 'GoHighLevel', icon: Zap },
       { id: 'gohighlevel-mcp', label: 'GHL MCP', icon: Zap },
+      { id: 'canva', label: 'Canva', icon: Palette },
       { id: 'alexa', label: 'Alexa Skills', icon: Mic },
     ],
   },

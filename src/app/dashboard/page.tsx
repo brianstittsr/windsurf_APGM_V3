@@ -38,9 +38,10 @@ import VideoMarketingDashboard from '../../components/admin/VideoMarketingDashbo
 import PaidTrafficDashboard from '../../components/admin/PaidTrafficDashboard';
 import RetargetingDashboard from '../../components/admin/RetargetingDashboard';
 import PPCCampaignsDashboard from '../../components/admin/PPCCampaignsDashboard';
+import CanvaIntegration from '../../components/admin/CanvaIntegration';
 import { cn } from '@/lib/utils';
 
-type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'alexa' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation' | 'hero-carousel' | 'documents';
+type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'alexa' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation' | 'hero-carousel' | 'documents' | 'canva';
 
 interface BookingMetrics {
   total: number;
@@ -165,6 +166,7 @@ export default function DashboardPage() {
       'marketing-automation': 'Marketing Automation',
       'hero-carousel': 'Hero Carousel',
       'documents': 'Documents & Agreements',
+      'canva': 'Canva Integration',
     };
     return titles[tab] || 'Dashboard';
   };
@@ -529,6 +531,8 @@ export default function DashboardPage() {
         return <HeroCarouselManager />;
       case 'documents':
         return <DocumentsManager />;
+      case 'canva':
+        return <CanvaIntegration />;
       default:
         return null;
     }

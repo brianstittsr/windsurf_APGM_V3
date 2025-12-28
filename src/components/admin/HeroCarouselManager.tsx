@@ -1042,6 +1042,31 @@ export default function HeroCarouselManager() {
                         )}
                       </div>
 
+                      {/* Import from Canva */}
+                      <div className="relative mt-4">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-gray-200"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                          <span className="px-3 bg-white text-gray-500">or import from Canva</span>
+                        </div>
+                      </div>
+                      <a
+                        href="/dashboard?tab=canva"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#00C4CC] hover:bg-[#00b3ba] text-white font-medium rounded-lg transition-colors"
+                      >
+                        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="currentColor"/>
+                          <path d="M8.5 14.5c0 1.1.9 2 2 2h3c1.1 0 2-.9 2-2v-5c0-1.1-.9-2-2-2h-3c-1.1 0-2 .9-2 2v5z" fill="#00C4CC"/>
+                        </svg>
+                        Import from Canva
+                      </a>
+                      <p className="text-xs text-gray-400 text-center mt-1">
+                        Connect your Canva account to import designs directly
+                      </p>
+
                       {/* URL Input as alternative */}
                       <div className="relative mt-4">
                         <div className="absolute inset-0 flex items-center">
