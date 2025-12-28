@@ -31,9 +31,15 @@ function initializeFirebaseAdmin() {
         privateKey,
       };
 
+      // Get storage bucket from env or construct default
+      const storageBucket = process.env.FIREBASE_STORAGE_BUCKET || 
+        process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
+        `${projectId}.appspot.com`;
+
       initializeApp({
         credential: cert(serviceAccount),
         projectId,
+        storageBucket,
       });
       
       console.log('✅ Firebase Admin SDK initialized successfully');
