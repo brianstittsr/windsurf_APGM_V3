@@ -5,6 +5,7 @@ import { collection, getDocs, doc, deleteDoc, updateDoc, query, where } from 'fi
 import { getDb } from '../../lib/firebase';
 import { Button } from '@/components/ui/button';
 import { useAlertDialog } from '@/components/ui/alert-dialog';
+import BookingWizard from './BookingWizard';
 
 interface Appointment {
   id: string;
@@ -31,6 +32,10 @@ export default function BookingCalendarManager() {
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const { showAlert, showConfirm, AlertDialogComponent } = useAlertDialog();
   
+  // Booking wizard state
+  const [showBookingWizard, setShowBookingWizard] = useState(false);
+  const [calendars, setCalendars] = useState<Array<{id: string, name: string}>>([]);
+  
   // Edit appointment modal state
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [editDate, setEditDate] = useState('');
@@ -39,7 +44,22 @@ export default function BookingCalendarManager() {
 
   useEffect(() => {
     fetchAppointments();
+    fetchCalendars();
   }, []);
+
+  const fetchCalendars = async () => {
+    try {
+      const response = await fetch('/api/calendars/list');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.calendars) {
+          setCalendars(data.calendars);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching calendars:', error);
+    }
+  };
 
   const fetchAppointments = async () => {
     try {
@@ -251,9 +271,18 @@ export default function BookingCalendarManager() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-        <i className="fas fa-calendar-alt text-[#AD6269]"></i>Booking Calendar
-      </h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+          <i className="fas fa-calendar-alt text-[#AD6269]"></i>Booking Calendar
+        </h2>
+        <Button 
+          onClick={() => setShowBookingWizard(true)}
+          className="bg-[#AD6269] hover:bg-[#9d5860] text-white"
+        >
+          <i className="fas fa-plus mr-2"></i>
+          Create Booking
+        </Button>
+      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -549,6 +578,14 @@ export default function BookingCalendarManager() {
       )}
 
       {AlertDialogComponent}
+
+      {/* Booking Wizard */}
+      <BookingWizard
+        isOpen={showBookingWizard}
+        onClose={() => setShowBookingWizard(false)}
+        onBookingCreated={fetchAppointments}
+        calendars={calendars}
+      />
     </div>
   );
 }
