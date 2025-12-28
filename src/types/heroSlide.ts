@@ -3,6 +3,7 @@ export type SlideStyleType = 'standard' | 'google-review' | 'certification';
 export interface HeroSlide {
   id: string;
   title: string;
+  hideTitle?: boolean;
   subtitle?: string;
   highlightText?: string;
   description?: string;
@@ -34,6 +35,7 @@ export interface HeroSlide {
 
 export interface HeroSlideFormData {
   title: string;
+  hideTitle: boolean;
   subtitle: string;
   highlightText: string;
   description: string;
@@ -63,6 +65,7 @@ export interface HeroSlideFormData {
 
 export const defaultHeroSlideFormData: HeroSlideFormData = {
   title: '',
+  hideTitle: false,
   subtitle: '',
   highlightText: '',
   description: '',

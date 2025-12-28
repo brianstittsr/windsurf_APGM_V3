@@ -222,7 +222,7 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
             {/* Google Review Style */}
             {currentSlide.styleType === 'google-review' ? (
               <div className="fade-in-1">
-                {currentSlide.title && (
+                {currentSlide.title && !currentSlide.hideTitle && (
                   <h2 className="text-2xl md:text-3xl font-semibold text-white mb-8 text-center" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
                     {currentSlide.title}
                   </h2>
@@ -297,7 +297,7 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
                     Certified {currentSlide.certificationYear}
                   </p>
                 )}
-                {currentSlide.title && (
+                {currentSlide.title && !currentSlide.hideTitle && (
                   <h1 className="main-heading font-bold text-white leading-tight mt-6">
                     {currentSlide.title}
                   </h1>
@@ -329,11 +329,13 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
                       {currentSlide.highlightText && <span className="text-white"> {currentSlide.highlightText}</span>}
                     </p>
                   )}
-                  <h1 className="main-heading font-bold text-white leading-tight">
-                    {currentSlide.title.split(' ').map((word, i) => (
-                      <span key={i} className={`animated-word word-fade-${i + 1}`}>{word} </span>
-                    ))}
-                  </h1>
+                  {!currentSlide.hideTitle && (
+                    <h1 className="main-heading font-bold text-white leading-tight">
+                      {currentSlide.title.split(' ').map((word, i) => (
+                        <span key={i} className={`animated-word word-fade-${i + 1}`}>{word} </span>
+                      ))}
+                    </h1>
+                  )}
                   {currentSlide.description && (
                     <p className="text-white/80 text-lg mt-4 max-w-2xl mx-auto fade-in-2">
                       {currentSlide.description}

@@ -241,6 +241,7 @@ export default function HeroCarouselManager() {
     setEditingSlide(slide);
     setFormData({
       title: slide.title,
+      hideTitle: slide.hideTitle || false,
       subtitle: slide.subtitle || '',
       highlightText: slide.highlightText || '',
       description: slide.description || '',
@@ -432,6 +433,7 @@ export default function HeroCarouselManager() {
                     <button
                       onClick={() => openPreview({
                         title: slide.title,
+                        hideTitle: slide.hideTitle || false,
                         subtitle: slide.subtitle || '',
                         highlightText: slide.highlightText || '',
                         description: slide.description || '',
@@ -668,6 +670,15 @@ export default function HeroCarouselManager() {
                           className="text-lg"
                         />
                         <p className="text-xs text-gray-400">This is the main headline of your slide</p>
+                        <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.hideTitle || false}
+                            onChange={(e) => setFormData({ ...formData, hideTitle: e.target.checked })}
+                            className="w-4 h-4 rounded border-gray-300 text-[#AD6269] focus:ring-[#AD6269]"
+                          />
+                          <span className="text-sm text-gray-600">Hide title on slide (title is still required for admin reference)</span>
+                        </label>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
