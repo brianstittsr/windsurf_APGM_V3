@@ -29,6 +29,10 @@ import LoyaltyDashboard from '../../components/admin/LoyaltyDashboard';
 import GeoCompetitorDashboard from '../../components/admin/GeoCompetitorDashboard';
 import HeroCarouselManager from '../../components/admin/HeroCarouselManager';
 import DocumentsManager from '../../components/admin/DocumentsManager';
+import ReputationDashboard from '../../components/admin/ReputationDashboard';
+import EmailMarketingDashboard from '../../components/admin/EmailMarketingDashboard';
+import SocialMediaDashboard from '../../components/admin/SocialMediaDashboard';
+import LeadGenerationDashboard from '../../components/admin/LeadGenerationDashboard';
 import { cn } from '@/lib/utils';
 
 type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'alexa' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation' | 'hero-carousel' | 'documents';
@@ -499,15 +503,15 @@ export default function DashboardPage() {
       case 'retargeting':
         return <MarketingPlaceholder title="Customer Retargeting" description="Capture 100% of your website visitors after they've left your site. Reach them when they're ready to buy to 10X your marketing!" features={['Visitor Capture', 'Exit-Intent Detection', 'Multi-Channel Retargeting', 'Abandoned Cart Recovery', 'Email/SMS Sequences']} />;
       case 'reputation':
-        return <MarketingPlaceholder title="Reputation Marketing" description="Get stellar reviews and blow away your competition. Market your 5-Star status to dominate your market." features={['Automated Review Requests', 'Multi-Platform Monitoring', 'Sentiment Analysis', 'Response Templates', 'Review Widgets']} />;
+        return <ReputationDashboard />;
       case 'social-media':
-        return <MarketingPlaceholder title="Social Media Management" description="Grab the attention of your customers and find new prospects easily with cutting-edge social media marketing strategies." features={['Content Scheduling', 'Multi-Platform Posting', 'Unified Inbox', 'Engagement Analytics', 'Hashtag Tracking']} />;
+        return <SocialMediaDashboard />;
       case 'email-marketing':
-        return <MarketingPlaceholder title="Email Marketing" description="Turn the names on your email list into money in the bank. Highly targeted email campaigns can return up to 40X what they cost." features={['Drag-and-Drop Builder', 'Automation Workflows', 'Segmentation', 'A/B Testing', 'Performance Analytics']} />;
+        return <EmailMarketingDashboard />;
       case 'video-marketing':
         return <MarketingPlaceholder title="Video Marketing" description="Create some of the highest-converting videos in the industry, from reputation videos to expert interviews to online offers." features={['Testimonial Videos', 'Service Demonstrations', 'YouTube Optimization', 'Social Distribution', 'Video Analytics']} />;
       case 'lead-generation':
-        return <MarketingPlaceholder title="Lead Generation" description="Get high-quality leads for your team every day. We'll do the hard work to deliver the contacts you need to grow your business." features={['Multi-Step Forms', 'Quiz Funnels', 'Lead Scoring', 'Auto-Assignment', 'Real-Time Notifications']} />;
+        return <LeadGenerationDashboard />;
       case 'online-offers':
         return <MarketingPlaceholder title="Online Offers" description="Online video offers can convert at over 20%. Create innovative offers that keep your customers coming back again and again." features={['Video Sales Letters', 'Countdown Timers', 'Scarcity Elements', 'Payment Plans', 'A/B Testing']} />;
       case 'ppc-campaigns':
