@@ -98,46 +98,7 @@ export default function MobileBookingPage() {
   const [creatingBooking, setCreatingBooking] = useState(false);
   const [bookingCreated, setBookingCreated] = useState(false);
 
-  // No login redirect - allow direct access to mobile booking
-
-  useEffect(() => {
-    fetchCalendars();
-  }, []);
-
-  useEffect(() => {
-    if (currentStep === 'client-selection') {
-      fetchClients();
-    }
-  }, [currentStep]);
-
-  useEffect(() => {
-    if (clientSearch.trim() === '') {
-      setFilteredClients(clients);
-    } else {
-      const search = clientSearch.toLowerCase();
-      setFilteredClients(clients.filter(client => 
-        client.displayName?.toLowerCase().includes(search) ||
-        client.email?.toLowerCase().includes(search) ||
-        client.phone?.includes(search)
-      ));
-    }
-  }, [clientSearch, clients]);
-
-  // Show loading while checking auth
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-[#AD6269]/10 to-white flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-10 h-10 animate-spin text-[#AD6269] mx-auto mb-4" />
-          <p className="text-gray-500">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Debug log for auth state
-  console.log('Mobile Booking Auth:', { currentUser: currentUser?.email, userRole, authLoading });
-
+  // Define functions BEFORE useEffects to avoid "Cannot access before initialization" error
   const fetchCalendars = async () => {
     try {
       const response = await fetch('/api/calendars/list');
@@ -179,6 +140,45 @@ export default function MobileBookingPage() {
       setLoadingClients(false);
     }
   };
+
+  // useEffects after function definitions
+  useEffect(() => {
+    fetchCalendars();
+  }, []);
+
+  useEffect(() => {
+    if (currentStep === 'client-selection') {
+      fetchClients();
+    }
+  }, [currentStep]);
+
+  useEffect(() => {
+    if (clientSearch.trim() === '') {
+      setFilteredClients(clients);
+    } else {
+      const search = clientSearch.toLowerCase();
+      setFilteredClients(clients.filter(client => 
+        client.displayName?.toLowerCase().includes(search) ||
+        client.email?.toLowerCase().includes(search) ||
+        client.phone?.includes(search)
+      ));
+    }
+  }, [clientSearch, clients]);
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#AD6269]/10 to-white flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 animate-spin text-[#AD6269] mx-auto mb-4" />
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Debug log for auth state
+  console.log('Mobile Booking Auth:', { currentUser: currentUser?.email, userRole, authLoading });
 
   const handleCreateClient = async () => {
     if (!newClientForm.firstName || !newClientForm.lastName || !newClientForm.email) {
