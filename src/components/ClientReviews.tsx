@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
-import { getDb } from '@/lib/firebase';
 
 interface Review {
   id: string;
@@ -12,7 +10,6 @@ interface Review {
   rating: number;
   text: string;
   image: string;
-  beforeAfter?: string;
   isApproved: boolean;
   isVisible: boolean;
 }
@@ -33,7 +30,7 @@ export default function ClientReviews() {
     return `${firstName} ${lastNameInitial}.`;
   };
 
-  // Fallback reviews if database is empty or unavailable
+  // Fallback reviews if Google Reviews API is unavailable
   const fallbackReviews: Review[] = [
     {
       id: 'fallback-1',
@@ -42,7 +39,6 @@ export default function ClientReviews() {
       rating: 5,
       text: "Victoria is absolutely amazing! My eyebrows look so natural and perfect. I wake up every morning feeling confident and beautiful. The whole process was comfortable and professional. I couldn't be happier with the results!",
       image: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop",
-      beforeAfter: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400&h=200&fit=crop",
       isApproved: true,
       isVisible: true
     },
@@ -53,7 +49,6 @@ export default function ClientReviews() {
       rating: 5,
       text: "I was nervous about getting permanent eyeliner, but Victoria made me feel so comfortable. The results are exactly what I wanted - subtle but defined. I save so much time in the morning now!",
       image: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop",
-      beforeAfter: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400&h=200&fit=crop",
       isApproved: true,
       isVisible: true
     },
@@ -64,65 +59,63 @@ export default function ClientReviews() {
       rating: 5,
       text: "My lips have never looked better! The color is perfect for my skin tone and looks so natural. Victoria is a true artist. I get compliments every day and people can't believe it's permanent makeup.",
       image: "https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop",
-      beforeAfter: "https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=400&h=200&fit=crop",
       isApproved: true,
       isVisible: true
     }
   ];
 
-  // Load reviews from database
+  // Load reviews from Google Reviews API
   useEffect(() => {
-    const loadReviews = async () => {
+    const loadGoogleReviews = async () => {
       try {
-        const db = getDb();
-        if (!db) {
-          console.log('Firebase not initialized, using fallback reviews');
-          setReviews(fallbackReviews);
-          setLoading(false);
-          return;
-        }
-
-        // Try to fetch reviews - use simple query first to avoid index issues
-        const reviewsRef = collection(getDb(), 'reviews');
-        const querySnapshot = await getDocs(reviewsRef);
+        const response = await fetch('/api/google-reviews');
+        const data = await response.json();
         
-        // Filter and sort client-side to avoid index requirements
-        const reviewsData = querySnapshot.docs
-          .map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }))
-          .filter((review: any) => review.isApproved === true && review.isVisible === true)
-          .sort((a: any, b: any) => {
-            const aTime = a.createdAt?.toMillis?.() || 0;
-            const bTime = b.createdAt?.toMillis?.() || 0;
-            return bTime - aTime;
-          })
-          .slice(0, 6) as Review[];
-
-        // Use database reviews if available, otherwise fallback
-        setReviews(reviewsData.length > 0 ? reviewsData : fallbackReviews);
-      } catch (error: any) {
-        // Silently handle permissions errors and use fallback reviews
-        if (error?.code === 'permission-denied' || error?.message?.includes('permission')) {
-          console.log('Using fallback reviews due to permissions');
+        if (data.success && data.data?.reviews?.length > 0) {
+          // Transform Google Reviews to our Review format
+          const googleReviews: Review[] = data.data.reviews
+            .filter((review: any) => review.rating >= 4) // Only show 4+ star reviews
+            .slice(0, 6) // Limit to 6 reviews
+            .map((review: any, index: number) => ({
+              id: `google-${index}`,
+              name: review.author_name || 'Anonymous',
+              service: 'Google Review',
+              rating: review.rating,
+              text: review.text || '',
+              image: review.profile_photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.author_name || 'A')}&background=AD6269&color=fff&size=80`,
+              isApproved: true,
+              isVisible: true
+            }));
+          
+          if (googleReviews.length > 0) {
+            console.log(`Loaded ${googleReviews.length} Google Reviews`);
+            setReviews(googleReviews);
+          } else {
+            console.log('No qualifying Google Reviews, using fallback');
+            setReviews(fallbackReviews);
+          }
         } else {
-          console.error('Error loading reviews:', error);
+          console.log('Google Reviews API not configured or no reviews, using fallback');
+          setReviews(fallbackReviews);
         }
+      } catch (error) {
+        console.error('Error loading Google Reviews:', error);
         setReviews(fallbackReviews);
       } finally {
         setLoading(false);
       }
     };
 
-    loadReviews();
+    loadGoogleReviews();
   }, []);
 
-  // Auto-rotate reviews every 6 seconds
+  // Auto-rotate reviews every 5 seconds
   useEffect(() => {
+    if (reviews.length === 0) return;
+    
     const interval = setInterval(() => {
       setCurrentReview((prev) => (prev + 1) % reviews.length);
-    }, 6000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [reviews.length]);
@@ -184,12 +177,12 @@ export default function ClientReviews() {
         <div className="flex gap-8 max-w-4xl mx-auto">
           {/* Navigation Dots */}
           <div className="flex flex-col gap-3 pt-4">
-            {reviews.slice(0, 3).map((_, index) => (
+            {reviews.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentReview(index)}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  index === currentReview ? 'bg-gray-800' : 'bg-gray-300'
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  index === currentReview ? 'bg-gray-800 scale-125' : 'bg-gray-300 hover:bg-gray-400'
                 }`}
                 aria-label={`View review ${index + 1}`}
               />
@@ -197,31 +190,38 @@ export default function ClientReviews() {
           </div>
 
           {/* Review Carousel */}
-          <div className="flex-1 relative overflow-hidden" style={{ minHeight: '150px' }}>
-            {reviews.slice(0, 3).map((review, index) => (
+          <div className="flex-1 relative overflow-hidden" style={{ minHeight: '180px' }}>
+            {reviews.map((review, index) => (
               <div
-                key={index}
-                className={`absolute top-0 left-0 w-full transition-opacity duration-500 ${
-                  index === currentReview ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                key={review.id}
+                className={`absolute top-0 left-0 w-full transition-all duration-700 ease-in-out ${
+                  index === currentReview ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 pointer-events-none'
                 }`}
               >
-                <div className="flex gap-4 items-start">
+                <div className="flex gap-6 items-start">
                   {/* Profile Image */}
                   <div className="flex-shrink-0">
                     <img
                       src={review.image}
                       alt={review.name}
-                      className="rounded-full w-24 h-24 object-cover"
+                      className="rounded-full w-24 h-24 object-cover border-2 border-gray-100 shadow-sm"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(review.name)}&background=AD6269&color=fff&size=96`;
+                      }}
                     />
                     <div className="text-center mt-3">
                       <div className="font-semibold text-gray-900 text-base">{maskLastName(review.name)}</div>
                       <div className="text-rose-600 text-sm">{review.service}</div>
+                      {/* Star Rating */}
+                      <div className="flex justify-center mt-1">
+                        {renderStars(review.rating)}
+                      </div>
                     </div>
                   </div>
 
                   {/* Review Text */}
                   <div className="flex-1">
-                    <p className="text-gray-900 leading-relaxed">
+                    <p className="text-gray-700 leading-relaxed text-lg">
                       &quot;{review.text}&quot;
                     </p>
                   </div>
