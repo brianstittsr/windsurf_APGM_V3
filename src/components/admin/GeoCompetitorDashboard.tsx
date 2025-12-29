@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 // ============================================================================
 // Types
@@ -217,50 +218,71 @@ export default function GeoCompetitorDashboard() {
   };
 
   const getSaturationColor = (saturation: string): string => {
-    if (saturation === 'low') return 'success';
-    if (saturation === 'medium') return 'warning';
-    return 'danger';
+    if (saturation === 'low') return 'from-green-500 to-emerald-600';
+    if (saturation === 'medium') return 'from-amber-500 to-orange-600';
+    return 'from-red-500 to-rose-600';
+  };
+
+  const getSaturationBadge = (saturation: string): string => {
+    if (saturation === 'low') return 'bg-green-100 text-green-700';
+    if (saturation === 'medium') return 'bg-amber-100 text-amber-700';
+    return 'bg-red-100 text-red-700';
   };
 
   const getPositionBadge = (position: string): string => {
-    if (position === 'leader') return 'danger';
-    if (position === 'challenger') return 'warning';
-    if (position === 'follower') return 'info';
-    return 'secondary';
+    if (position === 'leader') return 'bg-red-100 text-red-700';
+    if (position === 'challenger') return 'bg-amber-100 text-amber-700';
+    if (position === 'follower') return 'bg-blue-100 text-blue-700';
+    return 'bg-gray-100 text-gray-700';
   };
+
+  const tabs = [
+    { id: 'search', label: `Competitors (${competitors.length})`, icon: 'fa-list' },
+    { id: 'analysis', label: 'Market Analysis', icon: 'fa-chart-pie', disabled: !marketAnalysis },
+    { id: 'pricing', label: 'Pricing Analysis', icon: 'fa-dollar-sign', disabled: competitors.length === 0 },
+  ];
 
   // --------------------------------------------------------------------------
   // Render
   // --------------------------------------------------------------------------
 
   return (
-    <div className="geo-competitor-dashboard">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="mb-0">
-          <i className="fas fa-map-marker-alt me-2 text-danger"></i>
-          Geographical Competitor Analysis
-        </h2>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <i className="fas fa-map-marker-alt text-red-500"></i>
+            Geographical Competitor Analysis
+          </h2>
+          <p className="text-gray-500 text-sm mt-1">Find and analyze competitors in your area</p>
+        </div>
       </div>
 
       {/* Search Bar */}
-      <div className="card mb-4">
-        <div className="card-body">
-          <div className="row align-items-end">
-            <div className="col-md-5">
-              <label className="form-label">Location</label>
-              <input
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-red-500 to-rose-600">
+          <h3 className="font-semibold text-white flex items-center gap-2">
+            <i className="fas fa-map-marker-alt"></i>
+            Geographical Competitor Analysis
+          </h3>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+            <div className="md:col-span-5 space-y-2">
+              <Label>Location</Label>
+              <Input
                 type="text"
-                className="form-control"
                 placeholder="Enter address or city"
                 value={searchAddress}
-                onChange={(e) => setSearchAddress(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && searchCompetitors()}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchAddress(e.target.value)}
+                onKeyPress={(e: React.KeyboardEvent) => e.key === 'Enter' && searchCompetitors()}
               />
             </div>
-            <div className="col-md-3">
-              <label className="form-label">Search Radius</label>
+            <div className="md:col-span-3 space-y-2">
+              <Label>Search Radius</Label>
               <select
-                className="form-select"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 value={searchRadius}
                 onChange={(e) => setSearchRadius(parseInt(e.target.value))}
               >
@@ -270,31 +292,29 @@ export default function GeoCompetitorDashboard() {
                 <option value={48000}>30 miles</option>
               </select>
             </div>
-            <div className="col-md-4">
-              <div className="btn-group w-100">
-                <button
-                  className="btn btn-primary"
-                  onClick={searchCompetitors}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <span className="spinner-border spinner-border-sm"></span>
-                  ) : (
-                    <>
-                      <i className="fas fa-search me-2"></i>
-                      Search
-                    </>
-                  )}
-                </button>
-                <button
-                  className="btn btn-success"
-                  onClick={analyzeMarket}
-                  disabled={loading}
-                >
-                  <i className="fas fa-chart-bar me-2"></i>
-                  Full Analysis
-                </button>
-              </div>
+            <div className="md:col-span-4 flex gap-2">
+              <Button
+                className="flex-1 bg-red-500 hover:bg-red-600"
+                onClick={searchCompetitors}
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                ) : (
+                  <>
+                    <i className="fas fa-search mr-2"></i>
+                    Search
+                  </>
+                )}
+              </Button>
+              <Button
+                className="flex-1 bg-green-500 hover:bg-green-600"
+                onClick={analyzeMarket}
+                disabled={loading}
+              >
+                <i className="fas fa-chart-bar mr-2"></i>
+                Full Analysis
+              </Button>
             </div>
           </div>
         </div>
@@ -302,122 +322,123 @@ export default function GeoCompetitorDashboard() {
 
       {/* Error Alert */}
       {error && (
-        <div className="alert alert-danger alert-dismissible fade show">
-          <i className="fas fa-exclamation-circle me-2"></i>
-          {error}
-          <button type="button" className="btn-close" onClick={() => setError(null)}></button>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start justify-between">
+          <div className="flex items-start gap-3">
+            <i className="fas fa-exclamation-circle text-red-500 mt-0.5"></i>
+            <p className="text-red-700 text-sm">{error}</p>
+          </div>
+          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
+            <i className="fas fa-times"></i>
+          </button>
         </div>
       )}
 
       {/* Tabs */}
-      <ul className="nav nav-tabs mb-4">
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === 'search' ? 'active' : ''}`}
-            onClick={() => setActiveTab('search')}
-          >
-            <i className="fas fa-list me-2"></i>
-            Competitors ({competitors.length})
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === 'analysis' ? 'active' : ''}`}
-            onClick={() => setActiveTab('analysis')}
-            disabled={!marketAnalysis}
-          >
-            <i className="fas fa-chart-pie me-2"></i>
-            Market Analysis
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === 'pricing' ? 'active' : ''}`}
-            onClick={() => { if (competitors.length > 0) analyzePricing(); }}
-            disabled={competitors.length === 0}
-          >
-            <i className="fas fa-dollar-sign me-2"></i>
-            Pricing Analysis
-          </button>
-        </li>
-      </ul>
+      <div className="border-b border-gray-200">
+        <nav className="flex gap-4">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                if (tab.id === 'pricing' && competitors.length > 0) {
+                  analyzePricing();
+                } else if (!tab.disabled) {
+                  setActiveTab(tab.id as any);
+                }
+              }}
+              disabled={tab.disabled}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === tab.id
+                  ? 'border-red-500 text-red-600'
+                  : tab.disabled
+                  ? 'border-transparent text-gray-300 cursor-not-allowed'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <i className={`fas ${tab.icon} mr-2`}></i>
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </div>
 
       {/* Search Results Tab */}
       {activeTab === 'search' && (
         <div>
           {competitors.length > 0 ? (
-            <div className="row">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {competitors.map((competitor, idx) => (
-                <div key={competitor.placeId} className="col-md-6 mb-4">
-                  <div className="card h-100">
-                    <div className="card-body">
-                      <div className="d-flex justify-content-between align-items-start mb-2">
-                        <div>
-                          <h5 className="card-title mb-1">
-                            {idx + 1}. {competitor.name}
-                          </h5>
-                          <p className="text-muted small mb-0">
-                            <i className="fas fa-map-marker-alt me-1"></i>
-                            {competitor.address}
-                          </p>
-                        </div>
-                        <span className="badge bg-secondary">
-                          {formatMiles(competitor.distance)}
-                        </span>
-                      </div>
-
-                      <div className="d-flex align-items-center mb-3">
-                        <span className="text-warning me-2">
-                          {[1, 2, 3, 4, 5].map(i => (
-                            <i key={i} className={`fas fa-star${i <= Math.round(competitor.rating) ? '' : '-o text-muted'}`}></i>
-                          ))}
-                        </span>
-                        <span className="fw-bold">{competitor.rating.toFixed(1)}</span>
-                        <span className="text-muted ms-2">({competitor.totalReviews} reviews)</span>
-                      </div>
-
-                      <div className="mb-3">
-                        {competitor.website && (
-                          <a 
-                            href={competitor.website} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="btn btn-sm btn-outline-primary me-2"
-                          >
-                            <i className="fas fa-globe me-1"></i>
-                            Website
-                          </a>
-                        )}
-                        {competitor.phone && (
-                          <a 
-                            href={`tel:${competitor.phone}`}
-                            className="btn btn-sm btn-outline-secondary me-2"
-                          >
-                            <i className="fas fa-phone me-1"></i>
-                            {competitor.phone}
-                          </a>
-                        )}
-                        <span className={`badge bg-${competitor.openNow ? 'success' : 'secondary'}`}>
-                          {competitor.openNow ? 'Open Now' : 'Closed'}
-                        </span>
-                      </div>
-
-                      <button
-                        className="btn btn-outline-info btn-sm w-100"
-                        onClick={() => analyzeCompetitor(competitor)}
-                      >
-                        <i className="fas fa-chart-line me-2"></i>
-                        SWOT Analysis
-                      </button>
+                <div key={competitor.placeId} className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg transition-shadow">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-900 mb-1">
+                        {idx + 1}. {competitor.name}
+                      </h4>
+                      <p className="text-gray-500 text-sm flex items-center gap-1">
+                        <i className="fas fa-map-marker-alt text-red-400"></i>
+                        {competitor.address}
+                      </p>
                     </div>
+                    <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-medium">
+                      {formatMiles(competitor.distance)}
+                    </span>
                   </div>
+
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="flex text-amber-400">
+                      {[1, 2, 3, 4, 5].map(i => (
+                        <i key={i} className={`fas fa-star ${i <= Math.round(competitor.rating) ? '' : 'text-gray-300'}`}></i>
+                      ))}
+                    </div>
+                    <span className="font-bold text-gray-900">{competitor.rating.toFixed(1)}</span>
+                    <span className="text-gray-500 text-sm">({competitor.totalReviews} reviews)</span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {competitor.website && (
+                      <a 
+                        href={competitor.website} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 border border-blue-500 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-50 transition-colors"
+                      >
+                        <i className="fas fa-globe"></i>
+                        Website
+                      </a>
+                    )}
+                    {competitor.phone && (
+                      <a 
+                        href={`tel:${competitor.phone}`}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 border border-gray-300 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors"
+                      >
+                        <i className="fas fa-phone"></i>
+                        {competitor.phone}
+                      </a>
+                    )}
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${competitor.openNow ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                      {competitor.openNow ? 'Open Now' : 'Closed'}
+                    </span>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full border-cyan-500 text-cyan-600 hover:bg-cyan-50"
+                    onClick={() => analyzeCompetitor(competitor)}
+                  >
+                    <i className="fas fa-chart-line mr-2"></i>
+                    SWOT Analysis
+                  </Button>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-5">
-              <i className="fas fa-search fa-3x text-muted mb-3"></i>
-              <p className="text-muted">Search for competitors in your area</p>
+            <div className="text-center py-16">
+              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i className="fas fa-search text-4xl text-gray-400"></i>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Search for competitors in your area</h3>
+              <p className="text-gray-500 text-sm">Enter a location and search radius to find nearby PMU businesses</p>
             </div>
           )}
         </div>
@@ -425,56 +446,68 @@ export default function GeoCompetitorDashboard() {
 
       {/* Market Analysis Tab */}
       {activeTab === 'analysis' && marketAnalysis && (
-        <div>
+        <div className="space-y-6">
           {/* Stats Cards */}
-          <div className="row mb-4">
-            <div className="col-md-3">
-              <div className="card bg-primary text-white h-100">
-                <div className="card-body text-center">
-                  <div className="display-4">{marketAnalysis.totalCompetitors}</div>
-                  <p className="mb-0">Total Competitors</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl p-5 text-white shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/80 text-sm font-medium">Total Competitors</p>
+                  <p className="text-4xl font-bold mt-1">{marketAnalysis.totalCompetitors}</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <i className="fas fa-users text-xl"></i>
                 </div>
               </div>
             </div>
-            <div className="col-md-3">
-              <div className="card bg-warning text-dark h-100">
-                <div className="card-body text-center">
-                  <div className="display-4">{marketAnalysis.averageRating.toFixed(1)}</div>
-                  <p className="mb-0">Avg Rating</p>
+            <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-5 text-white shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/80 text-sm font-medium">Avg Rating</p>
+                  <p className="text-4xl font-bold mt-1">{marketAnalysis.averageRating.toFixed(1)}</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <i className="fas fa-star text-xl"></i>
                 </div>
               </div>
             </div>
-            <div className="col-md-3">
-              <div className="card bg-info text-white h-100">
-                <div className="card-body text-center">
-                  <div className="display-4">{Math.round(marketAnalysis.averageReviews)}</div>
-                  <p className="mb-0">Avg Reviews</p>
+            <div className="bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl p-5 text-white shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/80 text-sm font-medium">Avg Reviews</p>
+                  <p className="text-4xl font-bold mt-1">{Math.round(marketAnalysis.averageReviews)}</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <i className="fas fa-comments text-xl"></i>
                 </div>
               </div>
             </div>
-            <div className="col-md-3">
-              <div className={`card bg-${getSaturationColor(marketAnalysis.marketSaturation)} text-white h-100`}>
-                <div className="card-body text-center">
-                  <div className="display-4 text-capitalize">{marketAnalysis.marketSaturation}</div>
-                  <p className="mb-0">Market Saturation</p>
+            <div className={`bg-gradient-to-br ${getSaturationColor(marketAnalysis.marketSaturation)} rounded-xl p-5 text-white shadow-lg`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/80 text-sm font-medium">Market Saturation</p>
+                  <p className="text-4xl font-bold mt-1 capitalize">{marketAnalysis.marketSaturation}</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <i className="fas fa-chart-pie text-xl"></i>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Recommendations */}
-          <div className="card mb-4">
-            <div className="card-header">
-              <h5 className="mb-0">
-                <i className="fas fa-lightbulb text-warning me-2"></i>
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 bg-amber-500">
+              <h3 className="font-semibold text-white flex items-center gap-2">
+                <i className="fas fa-lightbulb"></i>
                 Recommendations
-              </h5>
+              </h3>
             </div>
-            <div className="card-body">
-              <ul className="list-unstyled mb-0">
+            <div className="p-6">
+              <ul className="space-y-2">
                 {marketAnalysis.recommendations.map((rec, idx) => (
-                  <li key={idx} className="mb-2 p-2 bg-light rounded">
-                    <i className="fas fa-check-circle text-success me-2"></i>
+                  <li key={idx} className="p-3 bg-amber-50 rounded-lg border border-amber-200 text-amber-800 text-sm flex items-start gap-2">
+                    <i className="fas fa-check-circle text-green-500 mt-0.5"></i>
                     {rec}
                   </li>
                 ))}
@@ -483,58 +516,57 @@ export default function GeoCompetitorDashboard() {
           </div>
 
           {/* Top Competitors */}
-          <div className="card">
-            <div className="card-header">
-              <h5 className="mb-0">
-                <i className="fas fa-trophy text-warning me-2"></i>
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 bg-amber-500">
+              <h3 className="font-semibold text-white flex items-center gap-2">
+                <i className="fas fa-trophy"></i>
                 Top Competitors
-              </h5>
+              </h3>
             </div>
-            <div className="card-body p-0">
-              <div className="table-responsive">
-                <table className="table table-hover mb-0">
-                  <thead className="table-light">
-                    <tr>
-                      <th>#</th>
-                      <th>Name</th>
-                      <th>Rating</th>
-                      <th>Reviews</th>
-                      <th>Distance</th>
-                      <th>Actions</th>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 w-12">#</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Name</th>
+                    <th className="text-center py-3 px-4 font-medium text-gray-700">Rating</th>
+                    <th className="text-center py-3 px-4 font-medium text-gray-700">Reviews</th>
+                    <th className="text-center py-3 px-4 font-medium text-gray-700">Distance</th>
+                    <th className="text-center py-3 px-4 font-medium text-gray-700">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {marketAnalysis.topCompetitors.map((comp, idx) => (
+                    <tr key={comp.placeId} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        {idx === 0 && <i className="fas fa-trophy text-amber-500"></i>}
+                        {idx === 1 && <i className="fas fa-medal text-gray-400"></i>}
+                        {idx === 2 && <i className="fas fa-award text-amber-600"></i>}
+                        {idx > 2 && <span className="text-gray-500">{idx + 1}</span>}
+                      </td>
+                      <td className="py-3 px-4">
+                        <p className="font-medium text-gray-900">{comp.name}</p>
+                        <p className="text-gray-500 text-xs">{comp.address}</p>
+                      </td>
+                      <td className="text-center py-3 px-4">
+                        <span className="text-amber-500">★</span> {comp.rating.toFixed(1)}
+                      </td>
+                      <td className="text-center py-3 px-4 text-gray-700">{comp.totalReviews}</td>
+                      <td className="text-center py-3 px-4 text-gray-700">{formatMiles(comp.distance)}</td>
+                      <td className="text-center py-3 px-4">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-cyan-500 text-cyan-600 hover:bg-cyan-50"
+                          onClick={() => analyzeCompetitor(comp)}
+                        >
+                          Analyze
+                        </Button>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {marketAnalysis.topCompetitors.map((comp, idx) => (
-                      <tr key={comp.placeId}>
-                        <td>
-                          {idx === 0 && <i className="fas fa-trophy text-warning"></i>}
-                          {idx === 1 && <i className="fas fa-medal text-secondary"></i>}
-                          {idx === 2 && <i className="fas fa-award text-warning"></i>}
-                          {idx > 2 && idx + 1}
-                        </td>
-                        <td>
-                          <strong>{comp.name}</strong>
-                          <br />
-                          <small className="text-muted">{comp.address}</small>
-                        </td>
-                        <td>
-                          <span className="text-warning">★</span> {comp.rating.toFixed(1)}
-                        </td>
-                        <td>{comp.totalReviews}</td>
-                        <td>{formatMiles(comp.distance)}</td>
-                        <td>
-                          <button
-                            className="btn btn-sm btn-outline-info"
-                            onClick={() => analyzeCompetitor(comp)}
-                          >
-                            Analyze
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -542,50 +574,42 @@ export default function GeoCompetitorDashboard() {
 
       {/* Pricing Tab */}
       {activeTab === 'pricing' && pricingData && (
-        <div>
+        <div className="space-y-6">
           {/* Average Pricing */}
-          <div className="card mb-4">
-            <div className="card-header">
-              <h5 className="mb-0">
-                <i className="fas fa-dollar-sign me-2"></i>
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 bg-green-500">
+              <h3 className="font-semibold text-white flex items-center gap-2">
+                <i className="fas fa-dollar-sign"></i>
                 Average Market Pricing
-              </h5>
+              </h3>
             </div>
-            <div className="card-body">
-              <div className="row">
+            <div className="p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {pricingData.averagePricing && (
                   <>
-                    <div className="col-md-3 mb-3">
-                      <div className="border rounded p-3 text-center">
-                        <h6>Microblading</h6>
-                        <h4 className="text-primary">
-                          ${pricingData.averagePricing.microblading?.min} - ${pricingData.averagePricing.microblading?.max}
-                        </h4>
-                      </div>
+                    <div className="bg-gradient-to-br from-pink-50 to-rose-100 rounded-xl p-5 border border-pink-200">
+                      <h4 className="text-gray-700 text-sm font-medium mb-2">Microblading</h4>
+                      <p className="text-2xl font-bold text-pink-600">
+                        ${pricingData.averagePricing.microblading?.min} - ${pricingData.averagePricing.microblading?.max}
+                      </p>
                     </div>
-                    <div className="col-md-3 mb-3">
-                      <div className="border rounded p-3 text-center">
-                        <h6>Powder Brows</h6>
-                        <h4 className="text-primary">
-                          ${pricingData.averagePricing.powderBrows?.min} - ${pricingData.averagePricing.powderBrows?.max}
-                        </h4>
-                      </div>
+                    <div className="bg-gradient-to-br from-purple-50 to-violet-100 rounded-xl p-5 border border-purple-200">
+                      <h4 className="text-gray-700 text-sm font-medium mb-2">Powder Brows</h4>
+                      <p className="text-2xl font-bold text-purple-600">
+                        ${pricingData.averagePricing.powderBrows?.min} - ${pricingData.averagePricing.powderBrows?.max}
+                      </p>
                     </div>
-                    <div className="col-md-3 mb-3">
-                      <div className="border rounded p-3 text-center">
-                        <h6>Lip Blush</h6>
-                        <h4 className="text-primary">
-                          ${pricingData.averagePricing.lipBlush?.min} - ${pricingData.averagePricing.lipBlush?.max}
-                        </h4>
-                      </div>
+                    <div className="bg-gradient-to-br from-red-50 to-rose-100 rounded-xl p-5 border border-red-200">
+                      <h4 className="text-gray-700 text-sm font-medium mb-2">Lip Blush</h4>
+                      <p className="text-2xl font-bold text-red-600">
+                        ${pricingData.averagePricing.lipBlush?.min} - ${pricingData.averagePricing.lipBlush?.max}
+                      </p>
                     </div>
-                    <div className="col-md-3 mb-3">
-                      <div className="border rounded p-3 text-center">
-                        <h6>Eyeliner</h6>
-                        <h4 className="text-primary">
-                          ${pricingData.averagePricing.eyeliner?.min} - ${pricingData.averagePricing.eyeliner?.max}
-                        </h4>
-                      </div>
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl p-5 border border-blue-200">
+                      <h4 className="text-gray-700 text-sm font-medium mb-2">Eyeliner</h4>
+                      <p className="text-2xl font-bold text-blue-600">
+                        ${pricingData.averagePricing.eyeliner?.min} - ${pricingData.averagePricing.eyeliner?.max}
+                      </p>
                     </div>
                   </>
                 )}
@@ -594,18 +618,18 @@ export default function GeoCompetitorDashboard() {
           </div>
 
           {/* Pricing Recommendations */}
-          <div className="card mb-4">
-            <div className="card-header">
-              <h5 className="mb-0">
-                <i className="fas fa-lightbulb text-warning me-2"></i>
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 bg-amber-500">
+              <h3 className="font-semibold text-white flex items-center gap-2">
+                <i className="fas fa-lightbulb"></i>
                 Pricing Recommendations
-              </h5>
+              </h3>
             </div>
-            <div className="card-body">
-              <ul className="list-unstyled mb-0">
+            <div className="p-6">
+              <ul className="space-y-2">
                 {pricingData.pricingRecommendations?.map((rec: string, idx: number) => (
-                  <li key={idx} className="mb-2 p-2 bg-light rounded">
-                    <i className="fas fa-info-circle text-info me-2"></i>
+                  <li key={idx} className="p-3 bg-blue-50 rounded-lg border border-blue-200 text-blue-800 text-sm flex items-start gap-2">
+                    <i className="fas fa-info-circle text-blue-500 mt-0.5"></i>
                     {rec}
                   </li>
                 ))}
@@ -615,35 +639,36 @@ export default function GeoCompetitorDashboard() {
 
           {/* Competitor Pricing */}
           {pricingData.competitorPricing?.length > 0 && (
-            <div className="card">
-              <div className="card-header">
-                <h5 className="mb-0">Competitor Pricing Estimates</h5>
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 bg-purple-500">
+                <h3 className="font-semibold text-white flex items-center gap-2">
+                  <i className="fas fa-tags"></i>
+                  Competitor Pricing Estimates
+                </h3>
               </div>
-              <div className="card-body p-0">
-                <div className="table-responsive">
-                  <table className="table table-hover mb-0">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Competitor</th>
-                        <th>Microblading</th>
-                        <th>Powder Brows</th>
-                        <th>Lip Blush</th>
-                        <th>Eyeliner</th>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200 bg-gray-50">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700">Competitor</th>
+                      <th className="text-center py-3 px-4 font-medium text-gray-700">Microblading</th>
+                      <th className="text-center py-3 px-4 font-medium text-gray-700">Powder Brows</th>
+                      <th className="text-center py-3 px-4 font-medium text-gray-700">Lip Blush</th>
+                      <th className="text-center py-3 px-4 font-medium text-gray-700">Eyeliner</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pricingData.competitorPricing.map((cp: any, idx: number) => (
+                      <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-3 px-4 font-medium text-gray-900">{cp.name}</td>
+                        <td className="text-center py-3 px-4 text-gray-700">${cp.pricing.microblading?.min}-${cp.pricing.microblading?.max}</td>
+                        <td className="text-center py-3 px-4 text-gray-700">${cp.pricing.powderBrows?.min}-${cp.pricing.powderBrows?.max}</td>
+                        <td className="text-center py-3 px-4 text-gray-700">${cp.pricing.lipBlush?.min}-${cp.pricing.lipBlush?.max}</td>
+                        <td className="text-center py-3 px-4 text-gray-700">${cp.pricing.eyeliner?.min}-${cp.pricing.eyeliner?.max}</td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {pricingData.competitorPricing.map((cp: any, idx: number) => (
-                        <tr key={idx}>
-                          <td><strong>{cp.name}</strong></td>
-                          <td>${cp.pricing.microblading?.min}-${cp.pricing.microblading?.max}</td>
-                          <td>${cp.pricing.powderBrows?.min}-${cp.pricing.powderBrows?.max}</td>
-                          <td>${cp.pricing.lipBlush?.min}-${cp.pricing.lipBlush?.max}</td>
-                          <td>${cp.pricing.eyeliner?.min}-${cp.pricing.eyeliner?.max}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
@@ -652,124 +677,132 @@ export default function GeoCompetitorDashboard() {
 
       {/* SWOT Analysis Modal */}
       {selectedCompetitor && competitorAnalysis && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-cyan-500 to-blue-600">
+              <div className="flex items-center gap-3">
+                <h3 className="font-semibold text-white">
                   SWOT Analysis: {selectedCompetitor.name}
-                  <span className={`badge ms-2 bg-${getPositionBadge(competitorAnalysis.marketPosition)}`}>
-                    {competitorAnalysis.marketPosition}
-                  </span>
-                </h5>
-                <button 
-                  type="button" 
-                  className="btn-close" 
-                  onClick={() => { setSelectedCompetitor(null); setCompetitorAnalysis(null); }}
-                ></button>
+                </h3>
+                <span className={`px-2 py-1 rounded text-xs font-medium ${getPositionBadge(competitorAnalysis.marketPosition)}`}>
+                  {competitorAnalysis.marketPosition}
+                </span>
               </div>
-              <div className="modal-body">
-                <div className="row">
-                  {/* Strengths */}
-                  <div className="col-md-6 mb-3">
-                    <div className="card border-success h-100">
-                      <div className="card-header bg-success text-white">
-                        <i className="fas fa-plus-circle me-2"></i>
-                        Strengths
-                      </div>
-                      <div className="card-body">
-                        <ul className="mb-0">
-                          {competitorAnalysis.strengths.map((s, i) => (
-                            <li key={i}>{s}</li>
-                          ))}
-                          {competitorAnalysis.strengths.length === 0 && (
-                            <li className="text-muted">No notable strengths identified</li>
-                          )}
-                        </ul>
-                      </div>
-                    </div>
+              <button 
+                className="text-white/80 hover:text-white"
+                onClick={() => { setSelectedCompetitor(null); setCompetitorAnalysis(null); }}
+              >
+                <i className="fas fa-times text-xl"></i>
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Strengths */}
+                <div className="bg-green-50 rounded-xl border border-green-200 overflow-hidden">
+                  <div className="px-4 py-3 bg-green-500 text-white font-medium flex items-center gap-2">
+                    <i className="fas fa-plus-circle"></i>
+                    Strengths
                   </div>
-
-                  {/* Weaknesses */}
-                  <div className="col-md-6 mb-3">
-                    <div className="card border-danger h-100">
-                      <div className="card-header bg-danger text-white">
-                        <i className="fas fa-minus-circle me-2"></i>
-                        Weaknesses
-                      </div>
-                      <div className="card-body">
-                        <ul className="mb-0">
-                          {competitorAnalysis.weaknesses.map((w, i) => (
-                            <li key={i}>{w}</li>
-                          ))}
-                          {competitorAnalysis.weaknesses.length === 0 && (
-                            <li className="text-muted">No notable weaknesses identified</li>
-                          )}
-                        </ul>
-                      </div>
-                    </div>
+                  <div className="p-4">
+                    <ul className="space-y-2 text-sm text-green-800">
+                      {competitorAnalysis.strengths.map((s, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <i className="fas fa-check text-green-500 mt-0.5"></i>
+                          {s}
+                        </li>
+                      ))}
+                      {competitorAnalysis.strengths.length === 0 && (
+                        <li className="text-gray-400">No notable strengths identified</li>
+                      )}
+                    </ul>
                   </div>
+                </div>
 
-                  {/* Opportunities */}
-                  <div className="col-md-6 mb-3">
-                    <div className="card border-info h-100">
-                      <div className="card-header bg-info text-white">
-                        <i className="fas fa-lightbulb me-2"></i>
-                        Opportunities
-                      </div>
-                      <div className="card-body">
-                        <ul className="mb-0">
-                          {competitorAnalysis.opportunities.map((o, i) => (
-                            <li key={i}>{o}</li>
-                          ))}
-                          {competitorAnalysis.opportunities.length === 0 && (
-                            <li className="text-muted">No opportunities identified</li>
-                          )}
-                        </ul>
-                      </div>
-                    </div>
+                {/* Weaknesses */}
+                <div className="bg-red-50 rounded-xl border border-red-200 overflow-hidden">
+                  <div className="px-4 py-3 bg-red-500 text-white font-medium flex items-center gap-2">
+                    <i className="fas fa-minus-circle"></i>
+                    Weaknesses
                   </div>
+                  <div className="p-4">
+                    <ul className="space-y-2 text-sm text-red-800">
+                      {competitorAnalysis.weaknesses.map((w, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <i className="fas fa-times text-red-500 mt-0.5"></i>
+                          {w}
+                        </li>
+                      ))}
+                      {competitorAnalysis.weaknesses.length === 0 && (
+                        <li className="text-gray-400">No notable weaknesses identified</li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
 
-                  {/* Threats */}
-                  <div className="col-md-6 mb-3">
-                    <div className="card border-warning h-100">
-                      <div className="card-header bg-warning text-dark">
-                        <i className="fas fa-exclamation-triangle me-2"></i>
-                        Threats
-                      </div>
-                      <div className="card-body">
-                        <ul className="mb-0">
-                          {competitorAnalysis.threats.map((t, i) => (
-                            <li key={i}>{t}</li>
-                          ))}
-                          {competitorAnalysis.threats.length === 0 && (
-                            <li className="text-muted">No threats identified</li>
-                          )}
-                        </ul>
-                      </div>
-                    </div>
+                {/* Opportunities */}
+                <div className="bg-blue-50 rounded-xl border border-blue-200 overflow-hidden">
+                  <div className="px-4 py-3 bg-blue-500 text-white font-medium flex items-center gap-2">
+                    <i className="fas fa-lightbulb"></i>
+                    Opportunities
+                  </div>
+                  <div className="p-4">
+                    <ul className="space-y-2 text-sm text-blue-800">
+                      {competitorAnalysis.opportunities.map((o, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <i className="fas fa-arrow-up text-blue-500 mt-0.5"></i>
+                          {o}
+                        </li>
+                      ))}
+                      {competitorAnalysis.opportunities.length === 0 && (
+                        <li className="text-gray-400">No opportunities identified</li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Threats */}
+                <div className="bg-amber-50 rounded-xl border border-amber-200 overflow-hidden">
+                  <div className="px-4 py-3 bg-amber-500 text-white font-medium flex items-center gap-2">
+                    <i className="fas fa-exclamation-triangle"></i>
+                    Threats
+                  </div>
+                  <div className="p-4">
+                    <ul className="space-y-2 text-sm text-amber-800">
+                      {competitorAnalysis.threats.map((t, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <i className="fas fa-exclamation text-amber-500 mt-0.5"></i>
+                          {t}
+                        </li>
+                      ))}
+                      {competitorAnalysis.threats.length === 0 && (
+                        <li className="text-gray-400">No threats identified</li>
+                      )}
+                    </ul>
                   </div>
                 </div>
               </div>
-              <div className="modal-footer">
-                <button 
-                  type="button" 
-                  className="btn btn-secondary" 
-                  onClick={() => { setSelectedCompetitor(null); setCompetitorAnalysis(null); }}
-                >
-                  Close
-                </button>
-              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+              <Button 
+                variant="outline"
+                onClick={() => { setSelectedCompetitor(null); setCompetitorAnalysis(null); }}
+              >
+                Close
+              </Button>
             </div>
           </div>
         </div>
       )}
 
       {/* Configuration Notice */}
-      <div className="alert alert-info mt-4">
-        <i className="fas fa-info-circle me-2"></i>
-        <strong>Configuration Required:</strong> This feature requires a Google Maps API key with Places API enabled.
-        Set <code>GOOGLE_MAPS_API_KEY</code> environment variable.
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+        <i className="fas fa-info-circle text-blue-500 mt-0.5"></i>
+        <div>
+          <p className="text-blue-800 font-medium text-sm">Configuration Required</p>
+          <p className="text-blue-700 text-sm">
+            This feature requires a Google Maps API key with Places API enabled. Set <code className="bg-blue-100 px-1 rounded">GOOGLE_MAPS_API_KEY</code> environment variable.
+          </p>
+        </div>
       </div>
     </div>
   );
