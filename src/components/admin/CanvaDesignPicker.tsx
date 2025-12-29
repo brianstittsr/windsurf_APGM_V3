@@ -247,23 +247,43 @@ export default function CanvaDesignPicker({
               <p className="text-gray-500">Checking Canva connection...</p>
             </div>
           ) : isConfigured === false ? (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center">
-              <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-              <h3 className="font-semibold text-yellow-800 text-lg mb-2">Canva API Not Configured</h3>
-              <p className="text-yellow-700 text-sm mb-4">
-                To use Canva integration, you need to configure the Canva API credentials in your environment variables.
-              </p>
-              <div className="bg-yellow-100 rounded-lg p-4 text-left text-sm text-yellow-800">
-                <p className="font-medium mb-2">Required environment variables:</p>
-                <ul className="list-disc list-inside space-y-1">
-                  <li>CANVA_CLIENT_ID</li>
-                  <li>CANVA_CLIENT_SECRET</li>
-                  <li>CANVA_REDIRECT_URI</li>
-                </ul>
-                <p className="mt-3">
-                  Visit <a href="https://www.canva.dev" target="_blank" rel="noopener noreferrer" className="underline font-medium">canva.dev</a> to create a Canva Connect app and get your credentials.
-                </p>
+            <div className="text-center py-8">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#00C4CC]/20 to-[#7B2FF7]/20 flex items-center justify-center mx-auto mb-6">
+                <svg viewBox="0 0 24 24" className="w-10 h-10" fill="none">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="#00C4CC"/>
+                  <path d="M8.5 14.5c0 1.1.9 2 2 2h3c1.1 0 2-.9 2-2v-5c0-1.1-.9-2-2-2h-3c-1.1 0-2 .9-2 2v5z" fill="white"/>
+                </svg>
               </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Canva Integration Coming Soon</h3>
+              <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                Direct Canva import requires API credentials from the Canva Connect program.
+              </p>
+              
+              <div className="bg-gray-50 rounded-xl p-6 max-w-lg mx-auto text-left">
+                <h4 className="font-semibold text-gray-800 mb-3">For now, you can:</h4>
+                <ol className="space-y-3 text-sm text-gray-600">
+                  <li className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#00C4CC] text-white flex items-center justify-center text-xs font-bold">1</span>
+                    <span>Design your slide background in <a href="https://www.canva.com" target="_blank" rel="noopener noreferrer" className="text-[#00C4CC] font-medium hover:underline">Canva</a></span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#00C4CC] text-white flex items-center justify-center text-xs font-bold">2</span>
+                    <span>Download it as PNG or JPG (Share → Download)</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#00C4CC] text-white flex items-center justify-center text-xs font-bold">3</span>
+                    <span>Drag & drop the file into the upload area above</span>
+                  </li>
+                </ol>
+              </div>
+              
+              <Button
+                variant="outline"
+                onClick={onClose}
+                className="mt-6"
+              >
+                Got it, I'll upload manually
+              </Button>
             </div>
           ) : !isConnected ? (
             <div className="text-center py-12">
