@@ -540,36 +540,76 @@ export default function DashboardPage() {
 
   // Placeholder component for marketing solutions (to be implemented)
   const MarketingPlaceholder = ({ title, description, features }: { title: string; description: string; features: string[] }) => (
-    <div className="card">
-      <div className="card-header bg-gradient-to-r from-rose-500 to-pink-600 text-white">
-        <h5 className="card-title mb-0">{title}</h5>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <i className="fas fa-rocket text-rose-500"></i>
+            {title}
+          </h2>
+          <p className="text-gray-500 text-sm mt-1">Complete Marketing Solutions Suite</p>
+        </div>
       </div>
-      <div className="card-body">
-        <div className="alert alert-info mb-4">
-          <i className="fas fa-info-circle me-2"></i>
-          This feature is part of the Complete Marketing Solutions Suite. Implementation in progress.
+
+      {/* Main Card */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-rose-500 to-pink-600">
+          <h3 className="font-semibold text-white flex items-center gap-2">
+            <i className="fas fa-cog"></i>
+            {title}
+          </h3>
         </div>
-        <p className="lead mb-4">{description}</p>
-        <h6 className="fw-bold mb-3">Key Features:</h6>
-        <div className="row">
-          {features.map((feature, index) => (
-            <div key={index} className="col-md-6 mb-2">
-              <div className="d-flex align-items-center">
-                <i className="fas fa-check-circle text-success me-2"></i>
-                <span>{feature}</span>
-              </div>
+        <div className="p-6 space-y-6">
+          {/* Info Banner */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+            <i className="fas fa-info-circle text-blue-500 mt-0.5"></i>
+            <p className="text-blue-700 text-sm">
+              This feature is part of the Complete Marketing Solutions Suite. Implementation in progress.
+            </p>
+          </div>
+
+          {/* Description */}
+          <p className="text-gray-700 text-lg">{description}</p>
+
+          {/* Features */}
+          <div>
+            <h4 className="font-semibold text-gray-900 mb-4">Key Features:</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {features.map((feature, index) => (
+                <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i className="fas fa-check text-green-600 text-sm"></i>
+                  </div>
+                  <span className="text-gray-700">{feature}</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        <hr className="my-4" />
-        <div className="text-center">
-          <p className="text-muted mb-3">For implementation support, contact us:</p>
-          <a href="tel:5132737789" className="btn btn-outline-primary me-2">
-            <i className="fas fa-phone me-2"></i>513.273.7789
-          </a>
-          <a href="mailto:support@aprettygirlmatter.com" className="btn btn-outline-secondary">
-            <i className="fas fa-envelope me-2"></i>Email Support
-          </a>
+          </div>
+
+          {/* Divider */}
+          <hr className="border-gray-200" />
+
+          {/* Contact Section */}
+          <div className="text-center py-4">
+            <p className="text-gray-500 mb-4">For implementation support, contact us:</p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <a 
+                href="tel:5132737789" 
+                className="inline-flex items-center gap-2 px-5 py-2.5 border border-rose-500 text-rose-600 rounded-lg font-medium hover:bg-rose-50 transition-colors"
+              >
+                <i className="fas fa-phone"></i>
+                513.273.7789
+              </a>
+              <a 
+                href="mailto:support@aprettygirlmatter.com" 
+                className="inline-flex items-center gap-2 px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+              >
+                <i className="fas fa-envelope"></i>
+                Email Support
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
