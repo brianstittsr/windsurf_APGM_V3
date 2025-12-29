@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -15,6 +15,64 @@ export default function FinancingPage() {
   const [selectedTerm, setSelectedTerm] = useState(12);
   const [animatedValue, setAnimatedValue] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
+  const [fireworks, setFireworks] = useState<{ id: number; x: number; y: number }[]>([]);
+
+  // Fireworks animation function
+  const triggerFireworks = useCallback((e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const id = Date.now();
+    
+    setFireworks(prev => [...prev, { id, x, y }]);
+    
+    // Remove firework after animation completes
+    setTimeout(() => {
+      setFireworks(prev => prev.filter(fw => fw.id !== id));
+    }, 1000);
+  }, []);
+
+  // Firework particle component
+  const FireworkParticle = ({ x, y }: { x: number; y: number }) => {
+    const colors = ['#AD6269', '#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'];
+    const particles = Array.from({ length: 12 }, (_, i) => {
+      const angle = (i * 30) * (Math.PI / 180);
+      const distance = 60 + Math.random() * 40;
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      return { angle, distance, color, delay: Math.random() * 0.2 };
+    });
+
+    return (
+      <div className="absolute pointer-events-none" style={{ left: x, top: y }}>
+        {particles.map((particle, i) => (
+          <div
+            key={i}
+            className="absolute w-2 h-2 rounded-full animate-ping"
+            style={{
+              backgroundColor: particle.color,
+              transform: `translate(-50%, -50%)`,
+              animation: `firework-particle 0.8s ease-out forwards`,
+              animationDelay: `${particle.delay}s`,
+              '--tx': `${Math.cos(particle.angle) * particle.distance}px`,
+              '--ty': `${Math.sin(particle.angle) * particle.distance}px`,
+            } as React.CSSProperties}
+          />
+        ))}
+        <style jsx>{`
+          @keyframes firework-particle {
+            0% {
+              transform: translate(-50%, -50%) scale(1);
+              opacity: 1;
+            }
+            100% {
+              transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0);
+              opacity: 0;
+            }
+          }
+        `}</style>
+      </div>
+    );
+  };
 
   useEffect(() => {
     setIsVisible(true);
@@ -165,8 +223,12 @@ export default function FinancingPage() {
                   <div className="absolute -inset-1 bg-gradient-to-r from-[#AD6269] via-[#d4949a] to-[#AD6269] rounded-2xl blur-lg opacity-75 animate-pulse" style={{ animationDuration: '2s' }}></div>
                   <div className="absolute -inset-2 bg-gradient-to-r from-[#FFD700] via-[#AD6269] to-[#FFD700] rounded-2xl blur-xl opacity-50 animate-pulse" style={{ animationDuration: '3s', animationDelay: '0.5s' }}></div>
                   
-                  <Card className="relative shadow-2xl border-0 bg-white/95 backdrop-blur-sm rounded-xl">
-                  <CardContent className="p-8">
+                  <Card className="relative shadow-2xl border-0 bg-white/95 backdrop-blur-sm rounded-xl overflow-visible">
+                  <CardContent className="p-8 relative">
+                    {/* Fireworks container */}
+                    {fireworks.map(fw => (
+                      <FireworkParticle key={fw.id} x={fw.x} y={fw.y} />
+                    ))}
                     <div className="text-center mb-6">
                       <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Calculator</h2>
                       <p className="text-gray-500">See how affordable your treatment can be</p>
@@ -177,8 +239,11 @@ export default function FinancingPage() {
                       {popularServices.map((service) => (
                         <button
                           key={service.name}
-                          onClick={() => setPurchaseAmount(service.price.toString())}
-                          className={`p-3 rounded-lg border-2 transition-all hover:scale-105 ${
+                          onClick={(e) => {
+                            setPurchaseAmount(service.price.toString());
+                            triggerFireworks(e);
+                          }}
+                          className={`p-3 rounded-lg border-2 transition-all hover:scale-105 relative overflow-visible ${
                             purchaseAmount === service.price.toString()
                               ? 'border-[#AD6269] bg-[#AD6269]/10'
                               : 'border-gray-200 hover:border-[#AD6269]/50'
@@ -216,8 +281,11 @@ export default function FinancingPage() {
                         {[3, 6, 12].map((months) => (
                           <button
                             key={months}
-                            onClick={() => setSelectedTerm(months)}
-                            className={`py-3 rounded-lg font-bold transition-all ${
+                            onClick={(e) => {
+                              setSelectedTerm(months);
+                              triggerFireworks(e);
+                            }}
+                            className={`py-3 rounded-lg font-bold transition-all relative overflow-visible ${
                               selectedTerm === months
                                 ? 'bg-[#AD6269] text-white shadow-lg'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
