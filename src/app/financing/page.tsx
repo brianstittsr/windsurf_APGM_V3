@@ -425,7 +425,7 @@ export default function FinancingPage() {
                 <CardContent className="p-6 text-center">
                   <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <img 
-                      src="https://cdn.affirm.com/brand/buttons/checkout/affirm-logo-black.svg" 
+                      src="https://cdn-assets.affirm.com/images/black_logo-transparent_bg.png" 
                       alt="Affirm Logo" 
                       className="w-full h-auto object-contain"
                     />
