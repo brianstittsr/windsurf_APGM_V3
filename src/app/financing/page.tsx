@@ -148,8 +148,24 @@ export default function FinancingPage() {
               </div>
 
               {/* Right side - Calculator */}
-              <div className={`transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}>
-                <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
+              <div className={`transition-all duration-1000 delay-300 relative ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}>
+                {/* Sparkles around the calculator */}
+                <div className="absolute -top-4 -left-4 text-2xl animate-bounce" style={{ animationDelay: '0s', animationDuration: '2s' }}>✨</div>
+                <div className="absolute -top-2 right-8 text-xl animate-bounce" style={{ animationDelay: '0.5s', animationDuration: '2.5s' }}>⭐</div>
+                <div className="absolute top-1/4 -right-4 text-2xl animate-bounce" style={{ animationDelay: '1s', animationDuration: '2s' }}>✨</div>
+                <div className="absolute bottom-1/4 -left-4 text-xl animate-bounce" style={{ animationDelay: '1.5s', animationDuration: '2.5s' }}>💫</div>
+                <div className="absolute -bottom-4 left-8 text-2xl animate-bounce" style={{ animationDelay: '0.3s', animationDuration: '2s' }}>⭐</div>
+                <div className="absolute -bottom-2 right-12 text-xl animate-bounce" style={{ animationDelay: '0.8s', animationDuration: '2.5s' }}>✨</div>
+                <div className="absolute top-1/2 -left-6 text-lg animate-ping" style={{ animationDuration: '3s' }}>✦</div>
+                <div className="absolute top-1/3 -right-6 text-lg animate-ping" style={{ animationDelay: '1.5s', animationDuration: '3s' }}>✦</div>
+                
+                {/* Glowing card wrapper */}
+                <div className="relative">
+                  {/* Glow effect */}
+                  <div className="absolute -inset-1 bg-gradient-to-r from-[#AD6269] via-[#d4949a] to-[#AD6269] rounded-2xl blur-lg opacity-75 animate-pulse" style={{ animationDuration: '2s' }}></div>
+                  <div className="absolute -inset-2 bg-gradient-to-r from-[#FFD700] via-[#AD6269] to-[#FFD700] rounded-2xl blur-xl opacity-50 animate-pulse" style={{ animationDuration: '3s', animationDelay: '0.5s' }}></div>
+                  
+                  <Card className="relative shadow-2xl border-0 bg-white/95 backdrop-blur-sm rounded-xl">
                   <CardContent className="p-8">
                     <div className="text-center mb-6">
                       <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Calculator</h2>
@@ -240,6 +256,7 @@ export default function FinancingPage() {
                     </p>
                   </CardContent>
                 </Card>
+                </div>
               </div>
             </div>
           </div>
