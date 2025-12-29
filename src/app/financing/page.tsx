@@ -460,7 +460,7 @@ export default function FinancingPage() {
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">How It Works</h2>
-              <p className="text-white text-lg">Get approved in 3 simple steps</p>
+              <p className="text-lg" style={{ color: '#ffffff' }}>Get approved in 3 simple steps</p>
             </div>
 
             <div className="max-w-4xl mx-auto">
@@ -479,7 +479,7 @@ export default function FinancingPage() {
                     </div>
                     <div className="text-[#d4949a] font-bold mb-2">Step {item.step}</div>
                     <h3 className="text-xl font-bold mb-2 text-white">{item.title}</h3>
-                    <p className="text-white">{item.desc}</p>
+                    <p style={{ color: '#ffffff' }}>{item.desc}</p>
                   </div>
                 ))}
               </div>
@@ -588,9 +588,9 @@ export default function FinancingPage() {
         </section>
 
         {/* Footer Disclaimer */}
-        <section className="py-8 bg-gray-900 text-white">
+        <section className="py-8 bg-gray-900">
           <div className="container mx-auto px-4">
-            <div className="text-center text-xs space-y-2 text-white">
+            <div className="text-center text-xs space-y-2" style={{ color: '#ffffff' }}>
               <p>
                 Payment options through Cherry Technologies, Inc. are issued by the following lending partners: withcherry.com/lending-partners. See withcherry.com/terms for details.
               </p>
