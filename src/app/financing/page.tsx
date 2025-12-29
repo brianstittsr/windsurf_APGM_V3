@@ -590,14 +590,14 @@ export default function FinancingPage() {
         {/* Footer Disclaimer */}
         <section className="py-8 bg-gray-900">
           <div className="container mx-auto px-4">
-            <div className="text-center text-xs space-y-2" style={{ color: '#ffffff' }}>
-              <p>
+            <div className="text-center text-xs space-y-2">
+              <p className="!text-white" style={{ color: 'white' }}>
                 Payment options through Cherry Technologies, Inc. are issued by the following lending partners: withcherry.com/lending-partners. See withcherry.com/terms for details.
               </p>
-              <p>
+              <p className="!text-white" style={{ color: 'white' }}>
                 0% APR and other promotional rates subject to eligibility. Exact terms and APR depend on credit score and other factors.
               </p>
-              <p>
+              <p className="!text-white" style={{ color: 'white' }}>
                 Copyright © 2020-2025 Cherry Technologies Inc. NMLS #2061234
               </p>
             </div>
