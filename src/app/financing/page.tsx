@@ -132,15 +132,15 @@ export default function FinancingPage() {
                 <div className="flex flex-wrap gap-4">
                   <Button 
                     size="lg" 
-                    className="bg-white text-[#AD6269] hover:bg-white/90 font-bold px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105"
-                    onClick={() => window.location.href = '/book-now'}
+                    className="bg-white text-[#AD6269] hover:bg-gray-100 font-bold px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105"
+                    onClick={() => window.location.href = '/book-now-custom'}
                   >
                     Book Now & Pay Later
                   </Button>
                   <Button 
                     size="lg" 
                     variant="outline" 
-                    className="border-2 border-white text-white hover:bg-white/10 font-bold px-8 py-6 text-lg"
+                    className="border-2 border-white bg-transparent text-white hover:bg-white/20 font-bold px-8 py-6 text-lg"
                   >
                     Learn More
                   </Button>
@@ -230,7 +230,7 @@ export default function FinancingPage() {
 
                     <Button 
                       className="w-full bg-[#AD6269] hover:bg-[#9a555c] text-white font-bold py-6 text-lg shadow-lg hover:shadow-xl transition-all"
-                      onClick={() => window.location.href = '/book-now'}
+                      onClick={() => window.location.href = '/book-now-custom'}
                     >
                       Apply Now - Takes 60 Seconds ⚡
                     </Button>
@@ -372,13 +372,13 @@ export default function FinancingPage() {
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
               {/* Cherry */}
-              <Card className="border-2 border-transparent hover:border-[#AD6269] transition-all hover:shadow-xl group cursor-pointer">
+              <Card className="border-2 border-transparent hover:border-[#AD6269] transition-all hover:shadow-xl group cursor-pointer bg-white">
                 <CardContent className="p-6 text-center">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-white border-2 border-gray-100 flex items-center justify-center overflow-hidden p-3 group-hover:scale-110 transition-transform">
+                  <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <img 
                       src="https://cdn.prod.website-files.com/681bf1d6f7dea459fe255c59/68252146834983973a92051f_cherry-logo-primary.svg" 
                       alt="Cherry Logo" 
-                      className="w-full h-full object-contain"
+                      className="w-full h-auto object-contain"
                     />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Cherry</h3>
@@ -388,13 +388,13 @@ export default function FinancingPage() {
               </Card>
 
               {/* Klarna */}
-              <Card className="border-2 border-transparent hover:border-[#FFB3C7] transition-all hover:shadow-xl group cursor-pointer">
+              <Card className="border-2 border-transparent hover:border-[#FFB3C7] transition-all hover:shadow-xl group cursor-pointer bg-white">
                 <CardContent className="p-6 text-center">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#FFB3C7] flex items-center justify-center overflow-hidden p-3 group-hover:scale-110 transition-transform">
+                  <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <img 
-                      src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Klarna_Payment_Badge.svg/512px-Klarna_Payment_Badge.svg.png" 
+                      src="https://cdn.klarna.com/1.0/shared/image/generic/logo/en_us/basic/logo_black.png" 
                       alt="Klarna Logo" 
-                      className="w-full h-full object-contain"
+                      className="w-full h-auto object-contain"
                     />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Klarna</h3>
@@ -404,13 +404,13 @@ export default function FinancingPage() {
               </Card>
 
               {/* Affirm */}
-              <Card className="border-2 border-transparent hover:border-[#0FA0EA] transition-all hover:shadow-xl group cursor-pointer">
+              <Card className="border-2 border-transparent hover:border-[#0FA0EA] transition-all hover:shadow-xl group cursor-pointer bg-white">
                 <CardContent className="p-6 text-center">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#0FA0EA] flex items-center justify-center overflow-hidden p-3 group-hover:scale-110 transition-transform">
+                  <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <img 
-                      src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Affirm_logo.svg/512px-Affirm_logo.svg.png" 
+                      src="https://cdn.affirm.com/brand/buttons/checkout/affirm-logo-black.svg" 
                       alt="Affirm Logo" 
-                      className="w-full h-full object-contain"
+                      className="w-full h-auto object-contain"
                     />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Affirm</h3>
@@ -420,13 +420,13 @@ export default function FinancingPage() {
               </Card>
 
               {/* PayPal */}
-              <Card className="border-2 border-transparent hover:border-[#003087] transition-all hover:shadow-xl group cursor-pointer">
+              <Card className="border-2 border-transparent hover:border-[#003087] transition-all hover:shadow-xl group cursor-pointer bg-white">
                 <CardContent className="p-6 text-center">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#003087] flex items-center justify-center overflow-hidden p-3 group-hover:scale-110 transition-transform">
+                  <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <img 
-                      src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/512px-PayPal.svg.png" 
+                      src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-200px.png" 
                       alt="PayPal Logo" 
-                      className="w-full h-full object-contain"
+                      className="w-full h-auto object-contain"
                     />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">PayPal Credit</h3>
@@ -439,11 +439,11 @@ export default function FinancingPage() {
         </section>
 
         {/* How It Works */}
-        <section className="py-16 bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+        <section className="py-16 bg-gradient-to-br from-gray-800 to-gray-900 text-white">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
-              <p className="text-gray-400 text-lg">Get approved in 3 simple steps</p>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">How It Works</h2>
+              <p className="text-gray-300 text-lg">Get approved in 3 simple steps</p>
             </div>
 
             <div className="max-w-4xl mx-auto">
@@ -460,9 +460,9 @@ export default function FinancingPage() {
                     <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#AD6269] to-[#d4949a] flex items-center justify-center text-4xl shadow-lg shadow-[#AD6269]/30">
                       {item.icon}
                     </div>
-                    <div className="text-[#AD6269] font-bold mb-2">Step {item.step}</div>
-                    <h3 className="text-xl font-bold mb-2">{item.title}</h3>
-                    <p className="text-gray-400">{item.desc}</p>
+                    <div className="text-[#d4949a] font-bold mb-2">Step {item.step}</div>
+                    <h3 className="text-xl font-bold mb-2 text-white">{item.title}</h3>
+                    <p className="text-gray-300">{item.desc}</p>
                   </div>
                 ))}
               </div>
@@ -547,24 +547,24 @@ export default function FinancingPage() {
         </section>
 
         {/* Final CTA */}
-        <section className="py-20 bg-gradient-to-r from-[#AD6269] to-[#d4949a] text-white">
+        <section className="py-20 bg-gradient-to-r from-[#8B4D52] to-[#AD6269] text-white">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">
+            <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white">
               Ready to Get Started?
             </h2>
-            <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
               Don&apos;t wait another day for the look you deserve. Apply now and get instant approval!
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Button 
                 size="lg" 
-                className="bg-white text-[#AD6269] hover:bg-white/90 font-bold px-10 py-7 text-xl shadow-xl hover:shadow-2xl transition-all hover:scale-105"
-                onClick={() => window.location.href = '/book-now'}
+                className="bg-white text-[#AD6269] hover:bg-gray-100 font-bold px-10 py-7 text-xl shadow-xl hover:shadow-2xl transition-all hover:scale-105"
+                onClick={() => window.location.href = '/book-now-custom'}
               >
                 Book Now & Pay Later ✨
               </Button>
             </div>
-            <p className="mt-6 text-white/60 text-sm">
+            <p className="mt-6 text-white/80 text-sm">
               No hard credit check • Instant approval • 0% APR available
             </p>
           </div>
