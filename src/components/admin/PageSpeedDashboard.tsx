@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 // ============================================================================
 // Types
@@ -108,19 +109,25 @@ export default function PageSpeedDashboard() {
   // --------------------------------------------------------------------------
 
   const getScoreColor = (score: number): string => {
-    if (score >= 90) return 'success';
-    if (score >= 50) return 'warning';
-    return 'danger';
+    if (score >= 90) return 'text-green-600';
+    if (score >= 50) return 'text-amber-500';
+    return 'text-red-500';
+  };
+
+  const getScoreBgColor = (score: number): string => {
+    if (score >= 90) return 'from-green-500 to-emerald-600';
+    if (score >= 50) return 'from-amber-500 to-orange-600';
+    return 'from-red-500 to-rose-600';
   };
 
   const getGradeColor = (grade: string): string => {
     switch (grade) {
-      case 'A': return 'success';
-      case 'B': return 'info';
-      case 'C': return 'warning';
-      case 'D': return 'orange';
-      case 'F': return 'danger';
-      default: return 'secondary';
+      case 'A': return 'text-green-600 bg-green-100';
+      case 'B': return 'text-blue-600 bg-blue-100';
+      case 'C': return 'text-amber-600 bg-amber-100';
+      case 'D': return 'text-orange-600 bg-orange-100';
+      case 'F': return 'text-red-600 bg-red-100';
+      default: return 'text-gray-600 bg-gray-100';
     }
   };
 
@@ -147,10 +154,10 @@ export default function PageSpeedDashboard() {
     return 'poor';
   };
 
-  const getStatusColor = (status: string): string => {
-    if (status === 'good') return 'success';
-    if (status === 'needs-improvement') return 'warning';
-    return 'danger';
+  const getStatusBadge = (status: string): string => {
+    if (status === 'good') return 'bg-green-100 text-green-700';
+    if (status === 'needs-improvement') return 'bg-amber-100 text-amber-700';
+    return 'bg-red-100 text-red-700';
   };
 
   const currentResult = report ? (activeView === 'mobile' ? report.mobile : report.desktop) : null;
@@ -160,48 +167,57 @@ export default function PageSpeedDashboard() {
   // --------------------------------------------------------------------------
 
   return (
-    <div className="pagespeed-dashboard">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="mb-0">
-          <i className="fas fa-tachometer-alt me-2"></i>
-          PageSpeed Insights
-        </h2>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <i className="fas fa-tachometer-alt text-blue-500"></i>
+            PageSpeed Insights
+          </h2>
+          <p className="text-gray-500 text-sm mt-1">Analyze your website performance and get optimization tips</p>
+        </div>
       </div>
 
       {/* Input Section */}
-      <div className="card mb-4">
-        <div className="card-body">
-          <div className="row align-items-end">
-            <div className="col-md-9">
-              <label className="form-label">Website URL</label>
-              <input
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-500 to-indigo-600">
+          <h3 className="font-semibold text-white flex items-center gap-2">
+            <i className="fas fa-globe"></i>
+            PageSpeed Insights
+          </h3>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div className="md:col-span-3 space-y-2">
+              <Label>Website URL</Label>
+              <Input
                 type="text"
-                className="form-control"
                 placeholder="e.g., https://your-website.com"
                 value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && analyzeUrl()}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUrl(e.target.value)}
+                onKeyPress={(e: React.KeyboardEvent) => e.key === 'Enter' && analyzeUrl()}
               />
-              <small className="text-muted">Enter the full URL of the page you want to analyze</small>
+              <p className="text-xs text-gray-500">Enter the full URL of the page you want to analyze</p>
             </div>
-            <div className="col-md-3">
-              <button
-                className="btn btn-primary w-100"
+            <div>
+              <Button
+                className="w-full bg-blue-500 hover:bg-blue-600"
                 onClick={analyzeUrl}
                 disabled={loading}
               >
                 {loading ? (
                   <>
-                    <span className="spinner-border spinner-border-sm me-2"></span>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     Analyzing...
                   </>
                 ) : (
                   <>
-                    <i className="fas fa-bolt me-2"></i>
+                    <i className="fas fa-bolt mr-2"></i>
                     Analyze
                   </>
                 )}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -209,32 +225,36 @@ export default function PageSpeedDashboard() {
 
       {/* Error Alert */}
       {error && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
-          <i className="fas fa-exclamation-circle me-2"></i>
-          {error}
-          <button type="button" className="btn-close" onClick={() => setError(null)}></button>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start justify-between">
+          <div className="flex items-start gap-3">
+            <i className="fas fa-exclamation-circle text-red-500 mt-0.5"></i>
+            <p className="text-red-700 text-sm">{error}</p>
+          </div>
+          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
+            <i className="fas fa-times"></i>
+          </button>
         </div>
       )}
 
       {/* Results */}
       {report && (
-        <>
+        <div className="space-y-6">
           {/* Overall Grade */}
-          <div className="card mb-4">
-            <div className="card-body text-center">
-              <div className="row align-items-center">
-                <div className="col-md-3">
-                  <div className={`display-1 text-${getGradeColor(report.overallGrade)}`}>
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="p-6">
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                <div className="text-center">
+                  <div className={`w-24 h-24 rounded-full flex items-center justify-center text-5xl font-bold ${getGradeColor(report.overallGrade)}`}>
                     {report.overallGrade}
                   </div>
-                  <p className="text-muted mb-0">Overall Grade</p>
+                  <p className="text-gray-500 text-sm mt-2">Overall Grade</p>
                 </div>
-                <div className="col-md-9">
-                  <p className="mb-2">
-                    <strong>URL:</strong> {report.url}
+                <div className="flex-1 text-center md:text-left">
+                  <p className="text-gray-900 font-medium mb-1">
+                    <span className="text-gray-500">URL:</span> {report.url}
                   </p>
-                  <p className="mb-0 text-muted">
-                    <small>Analyzed: {new Date(report.generatedAt).toLocaleString()}</small>
+                  <p className="text-gray-500 text-sm">
+                    Analyzed: {new Date(report.generatedAt).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -242,81 +262,59 @@ export default function PageSpeedDashboard() {
           </div>
 
           {/* Mobile/Desktop Toggle */}
-          <div className="btn-group mb-4" role="group">
-            <button
-              type="button"
-              className={`btn ${activeView === 'mobile' ? 'btn-primary' : 'btn-outline-primary'}`}
+          <div className="flex gap-2">
+            <Button
+              variant={activeView === 'mobile' ? 'default' : 'outline'}
+              className={activeView === 'mobile' ? 'bg-blue-500 hover:bg-blue-600' : ''}
               onClick={() => setActiveView('mobile')}
             >
-              <i className="fas fa-mobile-alt me-2"></i>
+              <i className="fas fa-mobile-alt mr-2"></i>
               Mobile
-            </button>
-            <button
-              type="button"
-              className={`btn ${activeView === 'desktop' ? 'btn-primary' : 'btn-outline-primary'}`}
+            </Button>
+            <Button
+              variant={activeView === 'desktop' ? 'default' : 'outline'}
+              className={activeView === 'desktop' ? 'bg-blue-500 hover:bg-blue-600' : ''}
               onClick={() => setActiveView('desktop')}
             >
-              <i className="fas fa-desktop me-2"></i>
+              <i className="fas fa-desktop mr-2"></i>
               Desktop
-            </button>
+            </Button>
           </div>
 
           {currentResult && (
-            <>
+            <div className="space-y-6">
               {/* Score Cards */}
-              <div className="row mb-4">
-                <div className="col-md-3">
-                  <div className="card h-100">
-                    <div className="card-body text-center">
-                      <div className={`display-4 text-${getScoreColor(currentResult.scores.performance)}`}>
-                        {currentResult.scores.performance}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: 'Performance', score: currentResult.scores.performance, icon: 'fa-rocket' },
+                  { label: 'Accessibility', score: currentResult.scores.accessibility, icon: 'fa-universal-access' },
+                  { label: 'Best Practices', score: currentResult.scores.bestPractices, icon: 'fa-check-double' },
+                  { label: 'SEO', score: currentResult.scores.seo, icon: 'fa-search' },
+                ].map((item) => (
+                  <div key={item.label} className={`bg-gradient-to-br ${getScoreBgColor(item.score)} rounded-xl p-5 text-white shadow-lg`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white/80 text-sm font-medium">{item.label}</p>
+                        <p className="text-4xl font-bold mt-1">{item.score}</p>
                       </div>
-                      <p className="mb-0">Performance</p>
+                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                        <i className={`fas ${item.icon} text-xl`}></i>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="col-md-3">
-                  <div className="card h-100">
-                    <div className="card-body text-center">
-                      <div className={`display-4 text-${getScoreColor(currentResult.scores.accessibility)}`}>
-                        {currentResult.scores.accessibility}
-                      </div>
-                      <p className="mb-0">Accessibility</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-md-3">
-                  <div className="card h-100">
-                    <div className="card-body text-center">
-                      <div className={`display-4 text-${getScoreColor(currentResult.scores.bestPractices)}`}>
-                        {currentResult.scores.bestPractices}
-                      </div>
-                      <p className="mb-0">Best Practices</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-md-3">
-                  <div className="card h-100">
-                    <div className="card-body text-center">
-                      <div className={`display-4 text-${getScoreColor(currentResult.scores.seo)}`}>
-                        {currentResult.scores.seo}
-                      </div>
-                      <p className="mb-0">SEO</p>
-                    </div>
-                  </div>
-                </div>
+                ))}
               </div>
 
               {/* Core Web Vitals */}
-              <div className="card mb-4">
-                <div className="card-header">
-                  <h5 className="mb-0">
-                    <i className="fas fa-heartbeat me-2"></i>
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 bg-purple-500">
+                  <h3 className="font-semibold text-white flex items-center gap-2">
+                    <i className="fas fa-heartbeat"></i>
                     Core Web Vitals
-                  </h5>
+                  </h3>
                 </div>
-                <div className="card-body">
-                  <div className="row">
+                <div className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {[
                       { key: 'firstContentfulPaint', label: 'First Contentful Paint', value: currentResult.metrics.firstContentfulPaint },
                       { key: 'largestContentfulPaint', label: 'Largest Contentful Paint', value: currentResult.metrics.largestContentfulPaint },
@@ -327,21 +325,19 @@ export default function PageSpeedDashboard() {
                     ].map((metric) => {
                       const status = getMetricStatus(metric.key, metric.value);
                       return (
-                        <div key={metric.key} className="col-md-4 mb-3">
-                          <div className="d-flex justify-content-between align-items-center p-3 border rounded">
-                            <div>
-                              <strong>{metric.label}</strong>
-                              <div className="text-muted">
-                                {metric.key === 'cumulativeLayoutShift' 
-                                  ? metric.value.toFixed(3)
-                                  : formatTime(metric.value)
-                                }
-                              </div>
-                            </div>
-                            <span className={`badge bg-${getStatusColor(status)}`}>
-                              {status === 'good' ? '✓ Good' : status === 'needs-improvement' ? '⚠ Needs Work' : '✗ Poor'}
-                            </span>
+                        <div key={metric.key} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                          <div>
+                            <p className="font-medium text-gray-900 text-sm">{metric.label}</p>
+                            <p className="text-gray-500 text-lg font-semibold">
+                              {metric.key === 'cumulativeLayoutShift' 
+                                ? metric.value.toFixed(3)
+                                : formatTime(metric.value)
+                              }
+                            </p>
                           </div>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(status)}`}>
+                            {status === 'good' ? '✓ Good' : status === 'needs-improvement' ? '⚠ Needs Work' : '✗ Poor'}
+                          </span>
                         </div>
                       );
                     })}
@@ -351,17 +347,18 @@ export default function PageSpeedDashboard() {
 
               {/* Recommendations */}
               {report.recommendations.length > 0 && (
-                <div className="card mb-4">
-                  <div className="card-header">
-                    <h5 className="mb-0">
-                      <i className="fas fa-lightbulb me-2 text-warning"></i>
+                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                  <div className="px-6 py-4 border-b border-gray-200 bg-amber-500">
+                    <h3 className="font-semibold text-white flex items-center gap-2">
+                      <i className="fas fa-lightbulb"></i>
                       Recommendations
-                    </h5>
+                    </h3>
                   </div>
-                  <div className="card-body">
-                    <ul className="list-unstyled mb-0">
+                  <div className="p-6">
+                    <ul className="space-y-2">
                       {report.recommendations.map((rec, idx) => (
-                        <li key={idx} className="mb-2 p-2 bg-light rounded">
+                        <li key={idx} className="p-3 bg-amber-50 rounded-lg border border-amber-200 text-amber-800 text-sm flex items-start gap-2">
+                          <i className="fas fa-check-circle text-amber-500 mt-0.5"></i>
                           {rec}
                         </li>
                       ))}
@@ -372,75 +369,77 @@ export default function PageSpeedDashboard() {
 
               {/* Opportunities */}
               {currentResult.opportunities.length > 0 && (
-                <div className="card mb-4">
-                  <div className="card-header">
-                    <h5 className="mb-0">
-                      <i className="fas fa-tools me-2"></i>
+                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                  <div className="px-6 py-4 border-b border-gray-200 bg-blue-500">
+                    <h3 className="font-semibold text-white flex items-center gap-2">
+                      <i className="fas fa-tools"></i>
                       Optimization Opportunities
-                    </h5>
+                    </h3>
                   </div>
-                  <div className="card-body p-0">
-                    <div className="table-responsive">
-                      <table className="table table-hover mb-0">
-                        <thead className="table-light">
-                          <tr>
-                            <th>Issue</th>
-                            <th>Potential Savings</th>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-200 bg-gray-50">
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">Issue</th>
+                          <th className="text-right py-3 px-4 font-medium text-gray-700">Potential Savings</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {currentResult.opportunities.map((opp, idx) => (
+                          <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
+                            <td className="py-3 px-4">
+                              <p className="font-medium text-gray-900">{opp.title}</p>
+                              <p className="text-gray-500 text-xs mt-1">{opp.description}</p>
+                            </td>
+                            <td className="text-right py-3 px-4">
+                              {opp.displayValue && (
+                                <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded text-xs font-medium">
+                                  {opp.displayValue}
+                                </span>
+                              )}
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {currentResult.opportunities.map((opp, idx) => (
-                            <tr key={idx}>
-                              <td>
-                                <strong>{opp.title}</strong>
-                                <div className="text-muted small">{opp.description}</div>
-                              </td>
-                              <td>
-                                {opp.displayValue && (
-                                  <span className="badge bg-warning text-dark">
-                                    {opp.displayValue}
-                                  </span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               )}
 
               {/* Audit Summary */}
-              <div className="card">
-                <div className="card-body">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <span>
-                      <i className="fas fa-check-circle text-success me-2"></i>
-                      <strong>{currentResult.passedAudits}</strong> of <strong>{currentResult.totalAudits}</strong> audits passed
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <i className="fas fa-check-circle text-green-500 text-xl"></i>
+                    <span className="text-gray-700">
+                      <strong className="text-gray-900">{currentResult.passedAudits}</strong> of <strong className="text-gray-900">{currentResult.totalAudits}</strong> audits passed
                     </span>
-                    <div className="progress" style={{ width: '200px', height: '10px' }}>
-                      <div
-                        className="progress-bar bg-success"
-                        style={{ width: `${(currentResult.passedAudits / currentResult.totalAudits) * 100}%` }}
-                      ></div>
-                    </div>
+                  </div>
+                  <div className="w-full sm:w-48 h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-green-500 rounded-full transition-all"
+                      style={{ width: `${(currentResult.passedAudits / currentResult.totalAudits) * 100}%` }}
+                    ></div>
                   </div>
                 </div>
               </div>
-            </>
+            </div>
           )}
-        </>
+        </div>
       )}
 
       {/* Configuration Notice */}
-      <div className="alert alert-info mt-4">
-        <i className="fas fa-info-circle me-2"></i>
-        <strong>Configuration Required:</strong> This feature requires a Google PageSpeed API key.
-        Set <code>GOOGLE_PAGESPEED_API_KEY</code> environment variable.
-        <a href="https://developers.google.com/speed/docs/insights/v5/get-started" target="_blank" rel="noopener noreferrer" className="ms-2">
-          Get API Key →
-        </a>
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+        <i className="fas fa-info-circle text-blue-500 mt-0.5"></i>
+        <div>
+          <p className="text-blue-800 font-medium text-sm">Configuration Required</p>
+          <p className="text-blue-700 text-sm">
+            This feature requires a Google PageSpeed API key. Set <code className="bg-blue-100 px-1 rounded">GOOGLE_PAGESPEED_API_KEY</code> environment variable.
+            <a href="https://developers.google.com/speed/docs/insights/v5/get-started" target="_blank" rel="noopener noreferrer" className="ml-2 underline hover:text-blue-900">
+              Get API Key →
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );
