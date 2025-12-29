@@ -66,8 +66,8 @@ export function getServiceImagePath(service: ServiceItem): string {
     return service.image;
   }
 
-  // Ultimate fallback to a default service image
-  return '/images/services/POWDER.png';
+  // Ultimate fallback to the logo
+  return '/images/logo.png';
 }
 
 /**

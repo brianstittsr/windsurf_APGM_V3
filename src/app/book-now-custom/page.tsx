@@ -1006,7 +1006,7 @@ function BookNowCustomContent() {
         <>
           {/* Services Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.slice(0, 6).map((service: ServiceItem) => (
+            {services.map((service: ServiceItem) => (
               <div 
                 key={service.id}
                 className={`bg-white rounded-xl shadow-md overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
