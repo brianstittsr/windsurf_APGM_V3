@@ -77,7 +77,7 @@ export default function ArtistManager() {
             ...data
           } as Artist;
         })
-        .filter(user => (user as any).role === 'artist');
+        .filter(user => (user as any).role === 'artist' || (user as any).isArtist === true);
       setArtists(artistsList);
     } catch (error) {
       console.error('Error fetching artists:', error);
