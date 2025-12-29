@@ -11,114 +11,100 @@ service firebase.storage {
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
-    
-    function isAdmin() {
-      return isAuthenticated() && 
-             exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
-             get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-    
-    function isAdminOrArtist() {
-      return isAuthenticated() && 
-             exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
-             get(/databases/(default)/documents/users/$(request.auth.uid)).data.role in ['admin', 'artist'];
-    }
 
-    // Client forms - only accessible by the client who owns them and staff
-    match /client-forms/{clientId}/{fileName} {
-      allow read: if isOwner(clientId) || isAdminOrArtist();
-      allow write: if isAdminOrArtist();
-      allow delete: if isAdmin();
-    }
-
-    // Health forms - accessible by client and staff
-    match /health-forms/{clientId}/{fileName} {
-      allow read: if isOwner(clientId) || isAdminOrArtist();
-      allow write: if isOwner(clientId) || isAdminOrArtist();
-      allow delete: if isAdmin();
-    }
-
-    // Consent forms - accessible by client and staff
-    match /consent-forms/{clientId}/{fileName} {
-      allow read: if isOwner(clientId) || isAdminOrArtist();
-      allow write: if isAdminOrArtist();
-      allow delete: if isAdmin();
-    }
-
-    // Appointment documents - accessible by client and staff
-    match /appointments/{appointmentId}/{fileName} {
-      allow read: if isAuthenticated() && (
-        exists(/databases/(default)/documents/appointments/$(appointmentId)) &&
-        (get(/databases/(default)/documents/appointments/$(appointmentId)).data.clientId == request.auth.uid || isAdminOrArtist())
-      );
-      allow write: if isAdminOrArtist();
-      allow delete: if isAdmin();
-    }
-
-    // User profile images - users can manage their own, staff can view all
-    match /profile-images/{userId}/{fileName} {
-      allow read: if isOwner(userId) || isAdminOrArtist();
-      allow write: if isOwner(userId) || isAdminOrArtist();
-      allow delete: if isOwner(userId) || isAdmin();
-    }
-
-    // Portfolio images - readable by all authenticated users, manageable by staff
-    match /portfolio/{fileName} {
-      allow read: if isAuthenticated();
-      allow write: if isAdminOrArtist();
-      allow delete: if isAdmin();
-    }
-
-    // Service images - readable by all authenticated users, manageable by admins
-    match /service-images/{fileName} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-      allow delete: if isAdmin();
-    }
-
-    // Services folder - readable by all, manageable by admins
+    // Services folder - readable by all, writable by authenticated users
     match /services/{fileName} {
       allow read: if true;
-      allow write: if isAdmin();
-      allow delete: if isAdmin();
+      allow write: if isAuthenticated();
+      allow delete: if isAuthenticated();
     }
 
-    // Business assets - readable by authenticated users, manageable by admins
+    // Service images - readable by all, writable by authenticated users
+    match /service-images/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+
+    // Portfolio images - readable by all, writable by authenticated users
+    match /portfolio/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+
+    // Business assets - readable by all, writable by authenticated users
     match /business/{fileName} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-      allow delete: if isAdmin();
+      allow read: if true;
+      allow write: if isAuthenticated();
+      allow delete: if isAuthenticated();
     }
 
-    // Before/after photos - accessible by client and staff
+    // Public assets (logos, etc.) - readable by all, writable by authenticated users
+    match /public/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+
+    // User profile images - users can manage their own
+    match /profile-images/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if isOwner(userId) || isAuthenticated();
+      allow delete: if isOwner(userId) || isAuthenticated();
+    }
+
+    // Client forms - accessible by authenticated users
+    match /client-forms/{clientId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+
+    // Health forms - accessible by authenticated users
+    match /health-forms/{clientId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+
+    // Consent forms - accessible by authenticated users
+    match /consent-forms/{clientId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+
+    // Appointment documents - accessible by authenticated users
+    match /appointments/{appointmentId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+
+    // Before/after photos - accessible by authenticated users
     match /before-after/{clientId}/{fileName} {
-      allow read: if isOwner(clientId) || isAdminOrArtist();
-      allow write: if isAdminOrArtist();
-      allow delete: if isAdmin();
+      allow read: if true;
+      allow write: if isAuthenticated();
+      allow delete: if isAuthenticated();
     }
 
     // Temporary uploads - users can upload to their own temp folder
     match /temp/{userId}/{fileName} {
-      allow read, write: if isOwner(userId);
-      allow delete: if isOwner(userId) || isAdmin();
+      allow read, write: if isOwner(userId) || isAuthenticated();
+      allow delete: if isOwner(userId) || isAuthenticated();
     }
 
-    // Admin-only files
+    // Admin files - accessible by authenticated users
     match /admin/{fileName} {
-      allow read, write: if isAdmin();
-      allow delete: if isAdmin();
+      allow read, write: if isAuthenticated();
+      allow delete: if isAuthenticated();
     }
 
-    // Public assets (logos, etc.) - readable by all, manageable by admins
-    match /public/{fileName} {
-      allow read: if true;
-      allow write: if isAdmin();
-      allow delete: if isAdmin();
-    }
-
-    // Deny all other access
+    // Catch-all for any other paths - allow authenticated users
     match /{allPaths=**} {
-      allow read, write: if false;
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
   }
 }
