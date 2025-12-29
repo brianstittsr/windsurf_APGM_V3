@@ -460,7 +460,7 @@ export default function FinancingPage() {
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">How It Works</h2>
-              <p className="text-lg" style={{ color: '#ffffff' }}>Get approved in 3 simple steps</p>
+              <p className="text-lg !text-white" style={{ color: 'white' }}>Get approved in 3 simple steps</p>
             </div>
 
             <div className="max-w-4xl mx-auto">
@@ -478,8 +478,8 @@ export default function FinancingPage() {
                       {item.icon}
                     </div>
                     <div className="text-[#d4949a] font-bold mb-2">Step {item.step}</div>
-                    <h3 className="text-xl font-bold mb-2 text-white">{item.title}</h3>
-                    <p style={{ color: '#ffffff' }}>{item.desc}</p>
+                    <h3 className="text-xl font-bold mb-2 !text-white" style={{ color: 'white' }}>{item.title}</h3>
+                    <p className="!text-white" style={{ color: 'white' }}>{item.desc}</p>
                   </div>
                 ))}
               </div>
