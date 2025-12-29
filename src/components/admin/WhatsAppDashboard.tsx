@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 // ============================================================================
 // Types
@@ -284,101 +285,109 @@ export default function WhatsAppDashboard() {
   // Render
   // --------------------------------------------------------------------------
 
+  const tabs = [
+    { id: 'send', label: 'Send Message', icon: 'fa-paper-plane' },
+    { id: 'templates', label: 'Templates', icon: 'fa-file-alt' },
+    { id: 'messages', label: 'Messages', icon: 'fa-inbox' },
+    { id: 'settings', label: 'Settings', icon: 'fa-cog' },
+  ];
+
   return (
-    <div className="whatsapp-dashboard">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="mb-0">
-          <i className="fab fa-whatsapp me-2 text-success"></i>
-          WhatsApp Business
-        </h2>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <i className="fab fa-whatsapp text-green-500"></i>
+            WhatsApp Business
+          </h2>
+          <p className="text-gray-500 text-sm mt-1">Send messages and manage templates</p>
+        </div>
       </div>
 
       {/* Tabs */}
-      <ul className="nav nav-tabs mb-4">
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === 'send' ? 'active' : ''}`}
-            onClick={() => setActiveTab('send')}
-          >
-            <i className="fas fa-paper-plane me-2"></i>
-            Send Message
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === 'templates' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('templates'); loadTemplates(); }}
-          >
-            <i className="fas fa-file-alt me-2"></i>
-            Templates
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === 'messages' ? 'active' : ''}`}
-            onClick={() => setActiveTab('messages')}
-          >
-            <i className="fas fa-inbox me-2"></i>
-            Messages
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('settings')}
-          >
-            <i className="fas fa-cog me-2"></i>
-            Settings
-          </button>
-        </li>
-      </ul>
+      <div className="border-b border-gray-200">
+        <nav className="flex gap-4">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveTab(tab.id as any);
+                if (tab.id === 'templates') loadTemplates();
+              }}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === tab.id
+                  ? 'border-green-500 text-green-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <i className={`fas ${tab.icon} mr-2`}></i>
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </div>
 
       {/* Alerts */}
       {error && (
-        <div className="alert alert-danger alert-dismissible fade show">
-          <i className="fas fa-exclamation-circle me-2"></i>
-          {error}
-          <button type="button" className="btn-close" onClick={() => setError(null)}></button>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start justify-between">
+          <div className="flex items-start gap-3">
+            <i className="fas fa-exclamation-circle text-red-500 mt-0.5"></i>
+            <p className="text-red-700 text-sm">{error}</p>
+          </div>
+          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
+            <i className="fas fa-times"></i>
+          </button>
         </div>
       )}
       {success && (
-        <div className="alert alert-success alert-dismissible fade show">
-          <i className="fas fa-check-circle me-2"></i>
-          {success}
-          <button type="button" className="btn-close" onClick={() => setSuccess(null)}></button>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start justify-between">
+          <div className="flex items-start gap-3">
+            <i className="fas fa-check-circle text-green-500 mt-0.5"></i>
+            <p className="text-green-700 text-sm">{success}</p>
+          </div>
+          <button onClick={() => setSuccess(null)} className="text-green-400 hover:text-green-600">
+            <i className="fas fa-times"></i>
+          </button>
         </div>
       )}
 
       {/* Send Message Tab */}
       {activeTab === 'send' && (
-        <div className="row">
-          <div className="col-md-8">
-            <div className="card">
-              <div className="card-header">
-                <h5 className="mb-0">Send WhatsApp Message</h5>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Send Form */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-green-500 to-emerald-600">
+                <h3 className="font-semibold text-white flex items-center gap-2">
+                  <i className="fab fa-whatsapp"></i>
+                  Send WhatsApp Message
+                </h3>
               </div>
-              <div className="card-body">
+              <div className="p-6 space-y-4">
                 {/* Recipient */}
-                <div className="mb-3">
-                  <label className="form-label">Recipient Phone Number</label>
-                  <div className="input-group">
-                    <span className="input-group-text">+1</span>
-                    <input
+                <div className="space-y-2">
+                  <Label>Recipient Phone Number</Label>
+                  <div className="flex">
+                    <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                      +1
+                    </span>
+                    <Input
                       type="tel"
-                      className="form-control"
+                      className="rounded-l-none"
                       placeholder="4045551234"
                       value={recipientPhone}
-                      onChange={(e) => setRecipientPhone(e.target.value.replace(/\D/g, ''))}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRecipientPhone(e.target.value.replace(/\D/g, ''))}
                     />
                   </div>
-                  <small className="text-muted">Enter 10-digit US phone number</small>
+                  <p className="text-xs text-gray-500">Enter 10-digit US phone number</p>
                 </div>
 
                 {/* Template Selection */}
-                <div className="mb-3">
-                  <label className="form-label">Message Template</label>
+                <div className="space-y-2">
+                  <Label>Message Template</Label>
                   <select
-                    className="form-select"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     value={selectedTemplate}
                     onChange={(e) => setSelectedTemplate(e.target.value)}
                   >
@@ -404,23 +413,22 @@ export default function WhatsAppDashboard() {
 
                 {/* Dynamic Fields based on template */}
                 {selectedTemplate && selectedTemplate !== 'custom' && (
-                  <>
-                    <div className="mb-3">
-                      <label className="form-label">Client Name</label>
-                      <input
+                  <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="space-y-2">
+                      <Label>Client Name</Label>
+                      <Input
                         type="text"
-                        className="form-control"
                         placeholder="Sarah"
                         value={clientName}
-                        onChange={(e) => setClientName(e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setClientName(e.target.value)}
                       />
                     </div>
 
                     {['appointment_confirmation', 'appointment_reminder', 'booking_deposit', 'aftercare', 'touchup_reminder', 'review_request'].includes(selectedTemplate) && (
-                      <div className="mb-3">
-                        <label className="form-label">Service Name</label>
+                      <div className="space-y-2">
+                        <Label>Service Name</Label>
                         <select
-                          className="form-select"
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                           value={serviceName}
                           onChange={(e) => setServiceName(e.target.value)}
                         >
@@ -434,112 +442,112 @@ export default function WhatsAppDashboard() {
                     )}
 
                     {['appointment_confirmation', 'appointment_reminder', 'booking_deposit'].includes(selectedTemplate) && (
-                      <div className="row">
-                        <div className="col-md-6 mb-3">
-                          <label className="form-label">Appointment Date</label>
-                          <input
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Appointment Date</Label>
+                          <Input
                             type="date"
-                            className="form-control"
                             value={appointmentDate}
-                            onChange={(e) => setAppointmentDate(e.target.value)}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAppointmentDate(e.target.value)}
                           />
                         </div>
-                        <div className="col-md-6 mb-3">
-                          <label className="form-label">Appointment Time</label>
-                          <input
+                        <div className="space-y-2">
+                          <Label>Appointment Time</Label>
+                          <Input
                             type="time"
-                            className="form-control"
                             value={appointmentTime}
-                            onChange={(e) => setAppointmentTime(e.target.value)}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAppointmentTime(e.target.value)}
                           />
                         </div>
                       </div>
                     )}
-                  </>
+                  </div>
                 )}
 
                 {/* Custom Message */}
                 {selectedTemplate === 'custom' && (
-                  <div className="mb-3">
-                    <label className="form-label">Message</label>
+                  <div className="space-y-2">
+                    <Label>Message</Label>
                     <textarea
-                      className="form-control"
-                      rows={4}
+                      className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       placeholder="Type your message..."
                       value={customMessage}
                       onChange={(e) => setCustomMessage(e.target.value)}
-                    ></textarea>
-                    <small className="text-muted">
-                      Note: Custom messages can only be sent within 24 hours of the customer's last message.
-                    </small>
+                    />
+                    <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                      <i className="fas fa-info-circle mr-1"></i>
+                      Custom messages can only be sent within 24 hours of the customer's last message.
+                    </p>
                   </div>
                 )}
 
                 {/* Action Buttons */}
-                <div className="d-flex gap-2 mb-3">
-                  <button
-                    className="btn btn-outline-primary flex-grow-1"
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-blue-500 text-blue-500 hover:bg-blue-50"
                     onClick={reviewWithAI}
                     disabled={reviewLoading || !selectedTemplate}
                   >
                     {reviewLoading ? (
                       <>
-                        <span className="spinner-border spinner-border-sm me-2"></span>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
                         Analyzing...
                       </>
                     ) : (
                       <>
-                        <i className="fas fa-robot me-2"></i>
+                        <i className="fas fa-robot mr-2"></i>
                         AI Review & Recommend
                       </>
                     )}
-                  </button>
+                  </Button>
                 </div>
 
-                <button
-                  className="btn btn-success btn-lg w-100"
+                <Button
+                  size="lg"
+                  className="w-full bg-green-500 hover:bg-green-600 text-lg py-6"
                   onClick={sendMessage}
                   disabled={loading || !recipientPhone || !selectedTemplate}
                 >
                   {loading ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-2"></span>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                       Sending...
                     </>
                   ) : (
                     <>
-                      <i className="fab fa-whatsapp me-2"></i>
+                      <i className="fab fa-whatsapp mr-2"></i>
                       Send WhatsApp Message
                     </>
                   )}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
 
           {/* Template Preview & AI Review */}
-          <div className="col-md-4">
-            <div className="card">
-              <div className="card-header">
-                <h5 className="mb-0">Preview</h5>
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <h3 className="font-semibold text-gray-900">Preview</h3>
               </div>
-              <div className="card-body">
+              <div className="p-6">
                 {selectedTemplate && pmuTemplates[selectedTemplate] ? (
-                  <div className="whatsapp-preview bg-light p-3 rounded">
-                    <div className="d-flex align-items-center mb-2">
-                      <div className="bg-success text-white rounded-circle p-2 me-2">
-                        <i className="fab fa-whatsapp"></i>
+                  <div className="bg-[#e5ddd5] p-4 rounded-lg">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center">
+                        <i className="fab fa-whatsapp text-sm"></i>
                       </div>
-                      <strong>Atlanta Glamour PMU</strong>
+                      <span className="font-medium text-gray-900 text-sm">A Pretty Girl Matter</span>
                     </div>
-                    <div className="bg-white p-3 rounded shadow-sm">
+                    <div className="bg-white p-3 rounded-lg shadow-sm">
                       {pmuTemplates[selectedTemplate].components.map((comp: any, idx: number) => (
                         <div key={idx}>
                           {comp.type === 'HEADER' && comp.text && (
-                            <p className="fw-bold mb-2">{comp.text}</p>
+                            <p className="font-bold text-gray-900 mb-2">{comp.text}</p>
                           )}
                           {comp.type === 'BODY' && (
-                            <p className="mb-2" style={{ whiteSpace: 'pre-line' }}>
+                            <p className="text-gray-700 text-sm whitespace-pre-line mb-2">
                               {comp.text
                                 ?.replace('{{1}}', clientName || '[Client Name]')
                                 .replace('{{2}}', serviceName || '[Service]')
@@ -548,20 +556,20 @@ export default function WhatsAppDashboard() {
                             </p>
                           )}
                           {comp.type === 'FOOTER' && (
-                            <p className="text-muted small mb-0">{comp.text}</p>
+                            <p className="text-gray-500 text-xs">{comp.text}</p>
                           )}
                         </div>
                       ))}
                     </div>
                   </div>
                 ) : selectedTemplate === 'custom' ? (
-                  <div className="whatsapp-preview bg-light p-3 rounded">
-                    <div className="bg-white p-3 rounded shadow-sm">
-                      <p style={{ whiteSpace: 'pre-line' }}>{customMessage || 'Your message will appear here...'}</p>
+                  <div className="bg-[#e5ddd5] p-4 rounded-lg">
+                    <div className="bg-white p-3 rounded-lg shadow-sm">
+                      <p className="text-gray-700 text-sm whitespace-pre-line">{customMessage || 'Your message will appear here...'}</p>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-muted text-center">
+                  <p className="text-gray-400 text-center text-sm">
                     Select a template to see preview
                   </p>
                 )}
@@ -570,54 +578,54 @@ export default function WhatsAppDashboard() {
 
             {/* AI Review Results */}
             {showAiReview && aiReview && (
-              <div className="card mt-3">
-                <div className="card-header d-flex justify-content-between align-items-center">
-                  <h5 className="mb-0">
-                    <i className="fas fa-robot me-2"></i>
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 bg-blue-50 flex items-center justify-between">
+                  <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                    <i className="fas fa-robot text-blue-500"></i>
                     AI Analysis
-                  </h5>
+                  </h3>
                   <button 
-                    className="btn btn-sm btn-outline-secondary"
+                    className="p-1 text-gray-400 hover:text-gray-600"
                     onClick={() => setShowAiReview(false)}
                   >
                     <i className="fas fa-times"></i>
                   </button>
                 </div>
-                <div className="card-body">
+                <div className="p-6 space-y-4">
                   {/* Overall Score */}
-                  <div className={`text-center p-3 rounded mb-3 ${getScoreBgColor(aiReview.score)}`}>
-                    <h2 className={`mb-0 ${getScoreColor(aiReview.score)}`}>
+                  <div className={`text-center p-4 rounded-lg ${getScoreBgColor(aiReview.score)}`}>
+                    <p className={`text-4xl font-bold ${getScoreColor(aiReview.score)}`}>
                       {aiReview.score}/100
-                    </h2>
-                    <small className="text-muted">Overall Score</small>
+                    </p>
+                    <p className="text-gray-500 text-sm">Overall Score</p>
                   </div>
 
                   {/* Analysis Breakdown */}
-                  <div className="mb-3">
-                    <h6 className="mb-2">Analysis</h6>
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-gray-900">Analysis</h4>
                     {Object.entries(aiReview.analysis).map(([key, value]) => (
-                      <div key={key} className="mb-2">
-                        <div className="d-flex justify-content-between align-items-center">
-                          <span className="text-capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
-                          <span className={`badge ${value.score >= 80 ? 'bg-success' : value.score >= 60 ? 'bg-warning' : 'bg-danger'}`}>
+                      <div key={key} className="space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-700 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${value.score >= 80 ? 'bg-green-100 text-green-700' : value.score >= 60 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
                             {value.score}
                           </span>
                         </div>
-                        <small className="text-muted d-block">{value.feedback}</small>
+                        <p className="text-xs text-gray-500">{value.feedback}</p>
                       </div>
                     ))}
                   </div>
 
                   {/* Warnings */}
                   {aiReview.warnings.length > 0 && (
-                    <div className="alert alert-warning mb-3">
-                      <h6 className="alert-heading mb-2">
-                        <i className="fas fa-exclamation-triangle me-2"></i>
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <h4 className="font-medium text-amber-800 flex items-center gap-2 mb-2">
+                        <i className="fas fa-exclamation-triangle"></i>
                         Warnings
-                      </h6>
-                      <ul className="mb-0 ps-3">
+                      </h4>
+                      <ul className="space-y-1">
                         {aiReview.warnings.map((warning, idx) => (
-                          <li key={idx} className="small">{warning}</li>
+                          <li key={idx} className="text-sm text-amber-700">• {warning}</li>
                         ))}
                       </ul>
                     </div>
@@ -625,15 +633,15 @@ export default function WhatsAppDashboard() {
 
                   {/* Suggestions */}
                   {aiReview.suggestions.length > 0 && (
-                    <div className="mb-3">
-                      <h6 className="mb-2">
-                        <i className="fas fa-lightbulb me-2 text-warning"></i>
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                        <i className="fas fa-lightbulb text-yellow-500"></i>
                         Suggestions
-                      </h6>
-                      <ul className="list-unstyled mb-0">
+                      </h4>
+                      <ul className="space-y-1">
                         {aiReview.suggestions.map((suggestion, idx) => (
-                          <li key={idx} className="small mb-1">
-                            <i className="fas fa-check-circle me-2 text-primary"></i>
+                          <li key={idx} className="text-sm text-gray-600 flex items-start gap-2">
+                            <i className="fas fa-check-circle text-blue-500 mt-0.5"></i>
                             {suggestion}
                           </li>
                         ))}
@@ -643,21 +651,22 @@ export default function WhatsAppDashboard() {
 
                   {/* Improved Version */}
                   {aiReview.improvedVersion && selectedTemplate === 'custom' && (
-                    <div className="border-top pt-3">
-                      <h6 className="mb-2">
-                        <i className="fas fa-magic me-2 text-success"></i>
+                    <div className="border-t border-gray-200 pt-4 space-y-3">
+                      <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                        <i className="fas fa-magic text-green-500"></i>
                         Improved Version
-                      </h6>
-                      <div className="bg-light p-2 rounded mb-2" style={{ whiteSpace: 'pre-line', fontSize: '0.85rem' }}>
+                      </h4>
+                      <div className="bg-gray-50 p-3 rounded-lg text-sm text-gray-700 whitespace-pre-line">
                         {aiReview.improvedVersion}
                       </div>
-                      <button 
-                        className="btn btn-sm btn-success w-100"
+                      <Button 
+                        size="sm"
+                        className="w-full bg-green-500 hover:bg-green-600"
                         onClick={applyImprovedVersion}
                       >
-                        <i className="fas fa-check me-2"></i>
+                        <i className="fas fa-check mr-2"></i>
                         Apply Improved Version
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -669,63 +678,68 @@ export default function WhatsAppDashboard() {
 
       {/* Templates Tab */}
       {activeTab === 'templates' && (
-        <div className="card">
-          <div className="card-header d-flex justify-content-between align-items-center">
-            <h5 className="mb-0">Message Templates</h5>
-            <button className="btn btn-sm btn-outline-primary" onClick={loadTemplates}>
-              <i className="fas fa-sync-alt me-2"></i>
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 bg-green-500 flex items-center justify-between">
+            <h3 className="font-semibold text-white">Message Templates</h3>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+              onClick={loadTemplates}
+            >
+              <i className="fas fa-sync-alt mr-2"></i>
               Refresh
-            </button>
+            </Button>
           </div>
-          <div className="card-body">
+          <div className="p-6">
             {loading ? (
-              <div className="text-center py-5">
-                <div className="spinner-border text-primary"></div>
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
               </div>
             ) : (
-              <>
+              <div className="space-y-6">
                 {/* PMU Templates */}
-                <h6 className="mb-3">PMU Templates (Pre-defined)</h6>
-                <div className="row mb-4">
-                  {Object.entries(pmuTemplates).map(([key, template]: [string, any]) => (
-                    <div key={key} className="col-md-4 mb-3">
-                      <div className="card h-100">
-                        <div className="card-body">
-                          <h6 className="card-title">{template.name}</h6>
-                          <span className={`badge bg-${template.category === 'UTILITY' ? 'primary' : 'warning'} mb-2`}>
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-4">PMU Templates (Pre-defined)</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {Object.entries(pmuTemplates).map(([key, template]: [string, any]) => (
+                      <div key={key} className="bg-gray-50 rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between mb-2">
+                          <h5 className="font-medium text-gray-900 text-sm">{template.name}</h5>
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${template.category === 'UTILITY' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
                             {template.category}
                           </span>
-                          <p className="card-text small text-muted">
-                            {template.components.find((c: any) => c.type === 'BODY')?.text?.substring(0, 100)}...
-                          </p>
                         </div>
+                        <p className="text-gray-500 text-xs line-clamp-3">
+                          {template.components.find((c: any) => c.type === 'BODY')?.text?.substring(0, 100)}...
+                        </p>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
 
                 {/* Meta Templates */}
                 {templates.length > 0 && (
-                  <>
-                    <h6 className="mb-3">Approved Templates (Meta)</h6>
-                    <div className="table-responsive">
-                      <table className="table">
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-4">Approved Templates (Meta)</h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
                         <thead>
-                          <tr>
-                            <th>Name</th>
-                            <th>Category</th>
-                            <th>Language</th>
-                            <th>Status</th>
+                          <tr className="border-b border-gray-200">
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">Name</th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">Category</th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">Language</th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
                           </tr>
                         </thead>
                         <tbody>
                           {templates.map((template, idx) => (
-                            <tr key={idx}>
-                              <td>{template.name}</td>
-                              <td>{template.category}</td>
-                              <td>{template.language}</td>
-                              <td>
-                                <span className={`badge bg-${template.status === 'APPROVED' ? 'success' : 'warning'}`}>
+                            <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
+                              <td className="py-3 px-4 text-gray-900">{template.name}</td>
+                              <td className="py-3 px-4 text-gray-600">{template.category}</td>
+                              <td className="py-3 px-4 text-gray-600">{template.language}</td>
+                              <td className="py-3 px-4">
+                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${template.status === 'APPROVED' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
                                   {template.status}
                                 </span>
                               </td>
@@ -734,9 +748,9 @@ export default function WhatsAppDashboard() {
                         </tbody>
                       </table>
                     </div>
-                  </>
+                  </div>
                 )}
-              </>
+              </div>
             )}
           </div>
         </div>
@@ -744,97 +758,112 @@ export default function WhatsAppDashboard() {
 
       {/* Messages Tab */}
       {activeTab === 'messages' && (
-        <div className="card">
-          <div className="card-header">
-            <h5 className="mb-0">Recent Messages</h5>
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 bg-green-500">
+            <h3 className="font-semibold text-white">Recent Messages</h3>
           </div>
-          <div className="card-body">
-            <p className="text-muted text-center py-5">
-              <i className="fas fa-inbox fa-3x mb-3 d-block"></i>
-              Messages will appear here when received via webhook.
-              <br />
-              <small>Configure your webhook URL in Meta Business Suite.</small>
-            </p>
+          <div className="p-6">
+            <div className="text-center py-12">
+              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i className="fas fa-inbox text-4xl text-gray-400"></i>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Messages Yet</h3>
+              <p className="text-gray-500 text-sm">Messages will appear here when received via webhook.</p>
+              <p className="text-gray-400 text-xs mt-2">Configure your webhook URL in Meta Business Suite.</p>
+            </div>
           </div>
         </div>
       )}
 
       {/* Settings Tab */}
       {activeTab === 'settings' && (
-        <div className="card">
-          <div className="card-header">
-            <h5 className="mb-0">WhatsApp Business Configuration</h5>
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 bg-green-500">
+            <h3 className="font-semibold text-white">WhatsApp Business Configuration</h3>
           </div>
-          <div className="card-body">
-            <div className="alert alert-info">
-              <i className="fas fa-info-circle me-2"></i>
-              <strong>Setup Instructions:</strong>
-              <ol className="mb-0 mt-2">
-                <li>Create a Meta Business Account at <a href="https://business.facebook.com" target="_blank" rel="noopener noreferrer">business.facebook.com</a></li>
+          <div className="p-6 space-y-6">
+            {/* Setup Instructions */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-medium text-blue-800 flex items-center gap-2 mb-3">
+                <i className="fas fa-info-circle"></i>
+                Setup Instructions
+              </h4>
+              <ol className="space-y-2 text-sm text-blue-700 list-decimal list-inside">
+                <li>Create a Meta Business Account at <a href="https://business.facebook.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-900">business.facebook.com</a></li>
                 <li>Set up WhatsApp Business API in Meta Business Suite</li>
                 <li>Create a System User and generate an Access Token</li>
-                <li>Add the following environment variables to your <code>.env.local</code> file</li>
+                <li>Add the following environment variables to your <code className="bg-blue-100 px-1 rounded">.env.local</code> file</li>
               </ol>
             </div>
 
-            <div className="bg-dark text-light p-3 rounded mb-4">
-              <code>
-                # WhatsApp Business API<br />
-                WHATSAPP_ACCESS_TOKEN=your_access_token<br />
-                WHATSAPP_PHONE_NUMBER_ID=your_phone_number_id<br />
-                WHATSAPP_BUSINESS_ACCOUNT_ID=your_business_account_id<br />
-                WHATSAPP_WEBHOOK_VERIFY_TOKEN=pmu_whatsapp_verify
-              </code>
+            {/* Environment Variables */}
+            <div className="bg-gray-900 text-gray-100 p-4 rounded-lg font-mono text-sm overflow-x-auto">
+              <p className="text-gray-400"># WhatsApp Business API</p>
+              <p>WHATSAPP_ACCESS_TOKEN=<span className="text-green-400">your_access_token</span></p>
+              <p>WHATSAPP_PHONE_NUMBER_ID=<span className="text-green-400">your_phone_number_id</span></p>
+              <p>WHATSAPP_BUSINESS_ACCOUNT_ID=<span className="text-green-400">your_business_account_id</span></p>
+              <p>WHATSAPP_WEBHOOK_VERIFY_TOKEN=<span className="text-green-400">pmu_whatsapp_verify</span></p>
             </div>
 
-            <h6>Webhook Configuration</h6>
-            <p>Configure this webhook URL in Meta Business Suite:</p>
-            <div className="input-group mb-3">
-              <input
-                type="text"
-                className="form-control"
-                value={`${typeof window !== 'undefined' ? window.location.origin : ''}/api/whatsapp/webhook`}
-                readOnly
-              />
-              <button
-                className="btn btn-outline-secondary"
-                onClick={() => {
-                  navigator.clipboard.writeText(`${window.location.origin}/api/whatsapp/webhook`);
-                  setSuccess('Webhook URL copied to clipboard!');
-                }}
+            {/* Webhook Configuration */}
+            <div className="space-y-3">
+              <h4 className="font-medium text-gray-900">Webhook Configuration</h4>
+              <p className="text-gray-500 text-sm">Configure this webhook URL in Meta Business Suite:</p>
+              <div className="flex">
+                <Input
+                  type="text"
+                  className="rounded-r-none font-mono text-sm"
+                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/api/whatsapp/webhook`}
+                  readOnly
+                />
+                <Button
+                  variant="outline"
+                  className="rounded-l-none border-l-0"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/api/whatsapp/webhook`);
+                    setSuccess('Webhook URL copied to clipboard!');
+                  }}
+                >
+                  <i className="fas fa-copy"></i>
+                </Button>
+              </div>
+              <p className="text-gray-500 text-xs">
+                Verify Token: <code className="bg-gray-100 px-1 rounded">pmu_whatsapp_verify</code>
+              </p>
+            </div>
+
+            <hr className="border-gray-200" />
+
+            {/* Template Submission */}
+            <div className="space-y-3">
+              <h4 className="font-medium text-gray-900">Template Submission</h4>
+              <p className="text-gray-500 text-sm">
+                Message templates must be submitted to Meta for approval before use.
+                Templates are reviewed within 24-48 hours.
+              </p>
+              <a 
+                href="https://business.facebook.com/wa/manage/message-templates/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 border border-green-500 text-green-600 rounded-lg hover:bg-green-50 transition-colors text-sm font-medium"
               >
-                <i className="fas fa-copy"></i>
-              </button>
+                <i className="fas fa-external-link-alt"></i>
+                Manage Templates in Meta
+              </a>
             </div>
-            <small className="text-muted">
-              Verify Token: <code>pmu_whatsapp_verify</code>
-            </small>
-
-            <hr />
-
-            <h6>Template Submission</h6>
-            <p className="text-muted">
-              Message templates must be submitted to Meta for approval before use.
-              Templates are reviewed within 24-48 hours.
-            </p>
-            <a 
-              href="https://business.facebook.com/wa/manage/message-templates/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="btn btn-outline-primary"
-            >
-              <i className="fas fa-external-link-alt me-2"></i>
-              Manage Templates in Meta
-            </a>
           </div>
         </div>
       )}
 
       {/* Configuration Notice */}
-      <div className="alert alert-info mt-4">
-        <i className="fas fa-info-circle me-2"></i>
-        <strong>Configuration Required:</strong> This feature requires WhatsApp Business API access.
-        Set <code>WHATSAPP_ACCESS_TOKEN</code>, <code>WHATSAPP_PHONE_NUMBER_ID</code>, and <code>WHATSAPP_BUSINESS_ACCOUNT_ID</code> environment variables.
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+        <i className="fas fa-info-circle text-blue-500 mt-0.5"></i>
+        <div>
+          <p className="text-blue-800 font-medium text-sm">Configuration Required</p>
+          <p className="text-blue-700 text-sm">
+            This feature requires WhatsApp Business API access. Set <code className="bg-blue-100 px-1 rounded">WHATSAPP_ACCESS_TOKEN</code>, <code className="bg-blue-100 px-1 rounded">WHATSAPP_PHONE_NUMBER_ID</code>, and <code className="bg-blue-100 px-1 rounded">WHATSAPP_BUSINESS_ACCOUNT_ID</code> environment variables.
+          </p>
+        </div>
       </div>
     </div>
   );
