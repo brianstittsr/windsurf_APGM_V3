@@ -5,6 +5,9 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy,
 import { getDb } from '../../lib/firebase';
 import QRCode from 'qrcode';
 import { useAlertDialog } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface QRCodeData {
   id: string;
@@ -188,269 +191,316 @@ export default function QRCodeManager() {
 
   if (loading) {
     return (
-      <div className="text-center py-5">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AD6269]"></div>
       </div>
     );
   }
 
   return (
-    <div className="container-fluid">
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="d-flex justify-content-between align-items-center">
-            <div>
-              <h3 className="mb-2">QR Code Manager</h3>
-              <p className="text-muted">Generate, track, and manage QR codes for your business</p>
-            </div>
-            <button
-              className="btn btn-primary"
-              onClick={() => setShowModal(true)}
-            >
-              <i className="fas fa-plus me-2"></i>Create QR Code
-            </button>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <i className="fas fa-qrcode text-[#AD6269]"></i>
+            QR Code Manager
+          </h2>
+          <p className="text-gray-500 text-sm mt-1">Generate, track, and manage QR codes for your business</p>
         </div>
+        <Button 
+          onClick={() => setShowModal(true)}
+          className="bg-[#AD6269] hover:bg-[#9d5860]"
+        >
+          <i className="fas fa-plus mr-2"></i>Create QR Code
+        </Button>
       </div>
 
       {/* Statistics Cards */}
-      <div className="row mb-4">
-        <div className="col-md-3">
-          <div className="card bg-primary text-white">
-            <div className="card-body">
-              <h6 className="card-title">Total QR Codes</h6>
-              <h2 className="mb-0">{qrCodes.length}</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total QR Codes */}
+        <div className="bg-gradient-to-br from-[#AD6269] to-[#c17a80] rounded-xl p-5 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white/80 text-sm font-medium">Total QR Codes</p>
+              <p className="text-3xl font-bold mt-1">{qrCodes.length}</p>
+            </div>
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+              <i className="fas fa-qrcode text-xl"></i>
             </div>
           </div>
         </div>
-        <div className="col-md-3">
-          <div className="card bg-success text-white">
-            <div className="card-body">
-              <h6 className="card-title">Active QR Codes</h6>
-              <h2 className="mb-0">{qrCodes.filter(qr => qr.isActive).length}</h2>
+
+        {/* Active QR Codes */}
+        <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-5 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white/80 text-sm font-medium">Active</p>
+              <p className="text-3xl font-bold mt-1">{qrCodes.filter(qr => qr.isActive).length}</p>
+            </div>
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+              <i className="fas fa-check-circle text-xl"></i>
             </div>
           </div>
         </div>
-        <div className="col-md-3">
-          <div className="card bg-info text-white">
-            <div className="card-body">
-              <h6 className="card-title">Total Scans</h6>
-              <h2 className="mb-0">{qrCodes.reduce((sum, qr) => sum + (qr.scans || 0), 0)}</h2>
+
+        {/* Total Scans */}
+        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl p-5 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white/80 text-sm font-medium">Total Scans</p>
+              <p className="text-3xl font-bold mt-1">{qrCodes.reduce((sum, qr) => sum + (qr.scans || 0), 0)}</p>
+            </div>
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+              <i className="fas fa-chart-line text-xl"></i>
             </div>
           </div>
         </div>
-        <div className="col-md-3">
-          <div className="card bg-warning text-white">
-            <div className="card-body">
-              <h6 className="card-title">Inactive QR Codes</h6>
-              <h2 className="mb-0">{qrCodes.filter(qr => !qr.isActive).length}</h2>
+
+        {/* Inactive QR Codes */}
+        <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-5 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white/80 text-sm font-medium">Inactive</p>
+              <p className="text-3xl font-bold mt-1">{qrCodes.filter(qr => !qr.isActive).length}</p>
+            </div>
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+              <i className="fas fa-pause-circle text-xl"></i>
             </div>
           </div>
         </div>
       </div>
 
       {/* QR Codes Grid */}
-      <div className="row">
-        {qrCodes.length === 0 ? (
-          <div className="col-12">
-            <div className="alert alert-info">
-              <i className="fas fa-info-circle me-2"></i>
-              No QR codes created yet. Click "Create QR Code" to get started!
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 bg-[#AD6269]">
+          <h3 className="font-semibold text-white">All QR Codes ({qrCodes.length})</h3>
+        </div>
+        <div className="p-6">
+          {qrCodes.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i className="fas fa-qrcode text-4xl text-gray-400"></i>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No QR Codes Yet</h3>
+              <p className="text-gray-500 mb-4">Create your first QR code to start tracking scans</p>
+              <Button 
+                onClick={() => setShowModal(true)}
+                className="bg-[#AD6269] hover:bg-[#9d5860]"
+              >
+                <i className="fas fa-plus mr-2"></i>Create QR Code
+              </Button>
             </div>
-          </div>
-        ) : (
-          qrCodes.map(qrCode => (
-            <div key={qrCode.id} className="col-md-6 col-lg-4 mb-4">
-              <div className="card h-100 shadow-sm">
-                <div className="card-body">
-                  <div className="d-flex justify-content-between align-items-start mb-3">
-                    <h5 className="card-title mb-0">{qrCode.name}</h5>
-                    <span className={`badge ${qrCode.isActive ? 'bg-success' : 'bg-secondary'}`}>
-                      {qrCode.isActive ? 'Active' : 'Inactive'}
-                    </span>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {qrCodes.map(qrCode => (
+                <div 
+                  key={qrCode.id} 
+                  className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group"
+                >
+                  {/* Card Header */}
+                  <div className="p-4 border-b border-gray-100">
+                    <div className="flex items-start justify-between">
+                      <h4 className="font-semibold text-gray-900 truncate flex-1">{qrCode.name}</h4>
+                      <span className={`ml-2 px-2.5 py-1 rounded-full text-xs font-medium ${
+                        qrCode.isActive 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {qrCode.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
                   </div>
                   
                   {/* QR Code Image */}
-                  <div className="text-center mb-3">
-                    <img 
-                      src={qrCode.qrCodeDataUrl} 
-                      alt={qrCode.name}
-                      className="img-fluid"
-                      style={{ maxWidth: '200px', border: '1px solid #dee2e6', padding: '10px' }}
-                    />
-                  </div>
-
-                  {/* Description */}
-                  {qrCode.description && (
-                    <p className="text-muted small mb-2">{qrCode.description}</p>
-                  )}
-
-                  {/* URL */}
-                  <div className="mb-3">
-                    <small className="text-muted d-block mb-1">Target URL:</small>
-                    <a 
-                      href={qrCode.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-primary text-decoration-none small"
-                      style={{ wordBreak: 'break-all' }}
-                    >
-                      {qrCode.url}
-                    </a>
-                  </div>
-
-                  {/* Statistics */}
-                  <div className="row mb-3">
-                    <div className="col-6">
-                      <small className="text-muted d-block">Scans</small>
-                      <strong>{qrCode.scans || 0}</strong>
-                    </div>
-                    <div className="col-6">
-                      <small className="text-muted d-block">Created</small>
-                      <strong className="small">{formatDate(qrCode.createdAt)}</strong>
+                  <div className="p-6 bg-gray-50 flex items-center justify-center">
+                    <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                      <img 
+                        src={qrCode.qrCodeDataUrl} 
+                        alt={qrCode.name}
+                        className="w-40 h-40 object-contain"
+                      />
                     </div>
                   </div>
 
-                  {qrCode.lastScannedAt && (
-                    <div className="mb-3">
-                      <small className="text-muted d-block">Last Scanned</small>
-                      <strong className="small">{formatDate(qrCode.lastScannedAt)}</strong>
+                  {/* Card Body */}
+                  <div className="p-4 space-y-3">
+                    {/* Description */}
+                    {qrCode.description && (
+                      <p className="text-gray-600 text-sm line-clamp-2">{qrCode.description}</p>
+                    )}
+
+                    {/* URL */}
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Target URL</p>
+                      <a 
+                        href={qrCode.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-[#AD6269] hover:text-[#9d5860] text-sm font-medium truncate block"
+                      >
+                        {qrCode.url}
+                      </a>
                     </div>
-                  )}
+
+                    {/* Statistics */}
+                    <div className="grid grid-cols-2 gap-4 pt-3 border-t border-gray-100">
+                      <div>
+                        <p className="text-xs text-gray-500">Scans</p>
+                        <p className="text-lg font-bold text-gray-900">{qrCode.scans || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Created</p>
+                        <p className="text-sm font-medium text-gray-700">{formatDate(qrCode.createdAt)}</p>
+                      </div>
+                    </div>
+
+                    {qrCode.lastScannedAt && (
+                      <div className="pt-2">
+                        <p className="text-xs text-gray-500">Last Scanned</p>
+                        <p className="text-sm font-medium text-gray-700">{formatDate(qrCode.lastScannedAt)}</p>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Action Buttons */}
-                  <div className="d-flex gap-2">
-                    <button
-                      className="btn btn-sm btn-primary flex-fill"
+                  <div className="px-4 pb-4 flex gap-2">
+                    <Button
+                      size="sm"
+                      className="flex-1 bg-[#AD6269] hover:bg-[#9d5860]"
                       onClick={() => handleDownload(qrCode)}
                     >
-                      <i className="fas fa-download me-1"></i>Download
-                    </button>
-                    <button
-                      className="btn btn-sm btn-warning"
+                      <i className="fas fa-download mr-1"></i>Download
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-blue-500 text-blue-500 hover:bg-blue-50"
                       onClick={() => handleEdit(qrCode)}
                     >
                       <i className="fas fa-edit"></i>
-                    </button>
-                    <button
-                      className="btn btn-sm btn-danger"
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-red-500 text-red-500 hover:bg-red-50"
                       onClick={() => handleDelete(qrCode.id)}
                     >
                       <i className="fas fa-trash"></i>
-                    </button>
+                    </Button>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))
-        )}
+          )}
+        </div>
       </div>
 
       {/* Create/Edit Modal */}
       {showModal && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {editingQRCode ? 'Edit QR Code' : 'Create New QR Code'}
-                </h5>
-                <button
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {editingQRCode ? 'Edit QR Code' : 'Create New QR Code'}
+              </h3>
+              <button
+                type="button"
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                onClick={handleCloseModal}
+                disabled={generatingQR}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <form onSubmit={handleSubmit}>
+              <div className="p-6 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name <span className="text-red-500">*</span></Label>
+                  <Input
+                    type="text"
+                    id="name"
+                    value={formData.name}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="e.g., Facebook Reviews"
+                    required
+                    disabled={generatingQR}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="url">Target URL <span className="text-red-500">*</span></Label>
+                  <Input
+                    type="url"
+                    id="url"
+                    value={formData.url}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, url: e.target.value })}
+                    placeholder="https://example.com"
+                    required
+                    disabled={generatingQR}
+                  />
+                  <p className="text-xs text-gray-500">The URL users will be directed to when scanning</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <textarea
+                    id="description"
+                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Optional description for internal reference"
+                    rows={3}
+                    disabled={generatingQR}
+                  />
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="isActive"
+                    className="h-4 w-4 rounded border-gray-300 text-[#AD6269] focus:ring-[#AD6269]"
+                    checked={formData.isActive}
+                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                    disabled={generatingQR}
+                  />
+                  <Label htmlFor="isActive" className="text-sm font-normal cursor-pointer">
+                    Active (QR code is in use)
+                  </Label>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
+                <Button
                   type="button"
-                  className="btn-close"
+                  variant="outline"
                   onClick={handleCloseModal}
                   disabled={generatingQR}
-                ></button>
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-[#AD6269] hover:bg-[#9d5860]"
+                  disabled={generatingQR}
+                >
+                  {generatingQR ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-save mr-2"></i>
+                      {editingQRCode ? 'Update' : 'Create'} QR Code
+                    </>
+                  )}
+                </Button>
               </div>
-              <form onSubmit={handleSubmit}>
-                <div className="modal-body">
-                  <div className="mb-3">
-                    <label className="form-label">Name *</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="e.g., Facebook Reviews"
-                      required
-                      disabled={generatingQR}
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Target URL *</label>
-                    <input
-                      type="url"
-                      className="form-control"
-                      value={formData.url}
-                      onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                      placeholder="https://example.com"
-                      required
-                      disabled={generatingQR}
-                    />
-                    <small className="text-muted">The URL users will be directed to when scanning</small>
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Description</label>
-                    <textarea
-                      className="form-control"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Optional description for internal reference"
-                      rows={3}
-                      disabled={generatingQR}
-                    />
-                  </div>
-
-                  <div className="form-check">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="isActive"
-                      checked={formData.isActive}
-                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                      disabled={generatingQR}
-                    />
-                    <label className="form-check-label" htmlFor="isActive">
-                      Active (QR code is in use)
-                    </label>
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={handleCloseModal}
-                    disabled={generatingQR}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={generatingQR}
-                  >
-                    {generatingQR ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2"></span>
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fas fa-save me-2"></i>
-                        {editingQRCode ? 'Update' : 'Create'} QR Code
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
+            </form>
           </div>
         </div>
       )}
+      {AlertDialogComponent}
     </div>
   );
 }
