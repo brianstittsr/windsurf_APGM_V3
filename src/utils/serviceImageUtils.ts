@@ -67,7 +67,7 @@ export function getServiceImagePath(service: ServiceItem): string {
   }
 
   // Ultimate fallback to the logo
-  return '/images/logo.png';
+  return '/APRG_Text_Logo.png';
 }
 
 /**
