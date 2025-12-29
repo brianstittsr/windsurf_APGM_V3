@@ -980,218 +980,294 @@ function BookNowCustomContent() {
 
 
   const renderServiceSelection = () => (
-    <div className="max-w-6xl mx-auto px-4 py-12">
-      <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-[#AD6269] mb-3" style={{ fontFamily: 'Playfair Display, serif' }}>Choose Your Service</h1>
-        <p className="text-gray-600 text-lg">Select the permanent makeup service you&apos;d like to book</p>
-      </div>
-          
-      {servicesLoading && (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#AD6269] mx-auto" role="status">
-            <span className="sr-only">Loading services...</span>
+    <div className="min-h-screen bg-gradient-to-b from-[#AD6269]/5 via-white to-[#AD6269]/5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        {/* Header Section */}
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#AD6269]/10 mb-6">
+            <svg className="w-8 h-8 text-[#AD6269]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
+            </svg>
           </div>
-          <p className="mt-4 text-gray-500">Loading services...</p>
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'Playfair Display, serif' }}>
+            Choose Your <span className="text-[#AD6269]">Service</span>
+          </h1>
+          <p className="text-gray-600 text-lg md:text-xl max-w-2xl mx-auto">
+            Select the permanent makeup service you&apos;d like to book
+          </p>
+          <div className="mt-6 flex items-center justify-center gap-2 text-sm text-gray-500">
+            <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span>Free consultation included</span>
+            <span className="mx-2">•</span>
+            <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span>Touch-up included</span>
+          </div>
         </div>
-      )}
-      
-      {servicesError && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg">
-          <h4 className="font-bold text-lg">Error Loading Services</h4>
-          <p>{servicesError}</p>
-        </div>
-      )}
           
-      {!servicesLoading && !servicesError && (
-        <>
-          {/* Services Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.map((service: ServiceItem) => (
-              <div 
-                key={service.id}
-                className={`bg-white rounded-xl shadow-md overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
-                  selectedService?.id === service.id 
-                    ? 'ring-2 ring-[#AD6269] bg-[#AD6269]/5' 
-                    : ''
-                }`}
-                onClick={() => handleServiceSelect(service)}
-              >
-                {/* Image Container - Fixed smaller height */}
-                <div className="relative h-[160px] bg-gray-50 overflow-hidden">
-                  <Image
-                    src={getServiceImagePath(service)}
-                    alt={service.name}
-                    fill
-                    className="object-contain p-4"
-                  />
-                </div>
-                
-                {/* Card Content */}
-                <div className="p-5">
-                  <h3 className="text-[#AD6269] font-semibold text-lg mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
-                    {service.name}
-                  </h3>
+        {servicesLoading && (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-[#AD6269]/20 rounded-full"></div>
+              <div className="absolute top-0 left-0 w-16 h-16 border-4 border-[#AD6269] rounded-full border-t-transparent animate-spin"></div>
+            </div>
+            <p className="mt-6 text-gray-500 font-medium">Loading services...</p>
+          </div>
+        )}
+      
+        {servicesError && (
+          <div className="max-w-md mx-auto bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h4 className="font-bold text-lg text-red-800 mb-2">Error Loading Services</h4>
+            <p className="text-red-600">{servicesError}</p>
+          </div>
+        )}
+          
+        {!servicesLoading && !servicesError && (
+          <>
+            {/* Services Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+              {services.map((service: ServiceItem) => (
+                <div 
+                  key={service.id}
+                  className={`group relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-[#AD6269]/30 ${
+                    selectedService?.id === service.id 
+                      ? 'ring-2 ring-[#AD6269] border-[#AD6269] shadow-lg shadow-[#AD6269]/10' 
+                      : ''
+                  }`}
+                  onClick={() => handleServiceSelect(service)}
+                >
+                  {/* Selected Badge */}
+                  {selectedService?.id === service.id && (
+                    <div className="absolute top-4 right-4 z-10 bg-[#AD6269] text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      Selected
+                    </div>
+                  )}
                   
-                  {/* Price and Duration Badges */}
-                  <div className="flex gap-2 mb-3">
-                    <span className="inline-block bg-[#AD6269] text-white px-3 py-1 rounded-full text-sm font-medium">
-                      ${service.price}
-                    </span>
-                    <span className="inline-block bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm">
-                      {service.duration}
-                    </span>
+                  {/* Image Container */}
+                  <div className="relative h-[180px] bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+                    <div className="absolute inset-0 bg-[#AD6269]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <Image
+                      src={getServiceImagePath(service)}
+                      alt={service.name}
+                      fill
+                      className="object-contain p-6 transition-transform duration-300 group-hover:scale-105"
+                    />
                   </div>
+                
+                  {/* Card Content */}
+                  <div className="p-6">
+                    {/* Category Tag */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#AD6269]/10 text-[#AD6269]">
+                        Permanent Makeup
+                      </span>
+                    </div>
+                    
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-[#AD6269] transition-colors" style={{ fontFamily: 'Playfair Display, serif' }}>
+                      {service.name}
+                    </h3>
                   
-                  {/* Description */}
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                    {service.description}
-                  </p>
+                    {/* Price and Duration */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="inline-flex items-center bg-gradient-to-r from-[#AD6269] to-[#c17a80] text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-sm">
+                        ${service.price}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 text-gray-500 text-sm">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {service.duration}
+                      </span>
+                    </div>
                   
-                  {/* Select Button */}
-                  <Button
-                    className="w-full bg-[#AD6269] hover:bg-[#9d5860] text-sm"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleServiceSelect(service);
-                    }}
+                    {/* Description */}
+                    <p className="text-gray-600 text-sm mb-5 line-clamp-2 leading-relaxed">
+                      {service.description}
+                    </p>
+                  
+                    {/* Select Button */}
+                    <Button
+                      className={`w-full font-semibold transition-all duration-300 ${
+                        selectedService?.id === service.id
+                          ? 'bg-[#AD6269] hover:bg-[#9d5860] text-white'
+                          : 'bg-gray-900 hover:bg-[#AD6269] text-white'
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleServiceSelect(service);
+                      }}
+                    >
+                      {selectedService?.id === service.id ? (
+                        <>
+                          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          Selected
+                        </>
+                      ) : (
+                        'Select This Service'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Bottom CTA for selected service */}
+            {selectedService && (
+              <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-gray-200 shadow-2xl z-50 p-4 md:hidden">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Selected</p>
+                    <p className="font-bold text-gray-900">{selectedService.name}</p>
+                  </div>
+                  <Button 
+                    className="bg-[#AD6269] hover:bg-[#9d5860] px-6"
+                    onClick={() => handleServiceSelect(selectedService)}
                   >
-                    Select This Service
+                    Continue
+                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   </Button>
                 </div>
               </div>
-            ))}
-          </div>
-        </>
-      )}
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 
   const renderAccountSuggestion = () => (
-    <div className="container-fluid py-5">
-      <div className="row justify-content-center">
-        <div className="col-lg-8">
-          <div className="card shadow-lg border-0">
-            <div className="card-header text-center py-4" style={{ backgroundColor: '#AD6269', color: 'white' }}>
-              <i className="fas fa-user-plus fa-3x mb-3"></i>
-              <h2 className="h3 mb-0">Create Your Account</h2>
-              <p className="mb-0 opacity-75">Save your information for faster future bookings</p>
+    <div className="min-h-screen bg-gradient-to-b from-[#AD6269]/5 via-white to-[#AD6269]/5 py-12">
+      <div className="max-w-4xl mx-auto px-4">
+        {/* Header Card */}
+        <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-[#AD6269] to-[#c17a80] text-white text-center py-10 px-6">
+            <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
             </div>
-            
-            <div className="card-body p-5">
-              <div className="row">
-                <div className="col-md-6">
-                  <div className="card h-100 border-0 shadow-sm bg-light">
-                    <div className="card-body text-center p-4">
-                      <div className="mb-4">
-                        <i className="fas fa-check-circle text-success fa-3x mb-3"></i>
-                        <h3 className="fw-bold text-primary mb-3">Benefits of Creating an Account</h3>
-                      </div>
-                      <ul className="list-unstyled text-start">
-                        <li className="mb-3 d-flex align-items-center">
-                          <i className="fas fa-check-circle text-success me-3 fs-5"></i>
-                          <span className="fs-6 fw-medium">Save your profile information</span>
-                        </li>
-                        <li className="mb-3 d-flex align-items-center">
-                          <i className="fas fa-check-circle text-success me-3 fs-5"></i>
-                          <span className="fs-6 fw-medium">View appointment history</span>
-                        </li>
-                        <li className="mb-3 d-flex align-items-center">
-                          <i className="fas fa-check-circle text-success me-3 fs-5"></i>
-                          <span className="fs-6 fw-medium">Faster future bookings</span>
-                        </li>
-                        <li className="mb-3 d-flex align-items-center">
-                          <i className="fas fa-check-circle text-success me-3 fs-5"></i>
-                          <span className="fs-6 fw-medium">Receive appointment reminders</span>
-                        </li>
-                        <li className="mb-3 d-flex align-items-center">
-                          <i className="fas fa-check-circle text-success me-3 fs-5"></i>
-                          <span className="fs-6 fw-medium">Access exclusive offers</span>
-                        </li>
-                        <li className="mb-3 d-flex align-items-center">
-                          <i className="fas fa-check-circle text-success me-3 fs-5"></i>
-                          <span className="fs-6 fw-medium">Secure health form storage</span>
-                        </li>
-                      </ul>
-                    </div>
+            <h2 className="text-3xl font-bold mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>Create Your Account</h2>
+            <p className="text-white/80 text-lg">Save your information for faster future bookings</p>
+          </div>
+          
+          {/* Content */}
+          <div className="p-8">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Benefits Card */}
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Account Benefits</h3>
+                </div>
+                <ul className="space-y-4">
+                  {[
+                    'Save your profile information',
+                    'View appointment history',
+                    'Faster future bookings',
+                    'Receive appointment reminders',
+                    'Access exclusive offers',
+                    'Secure health form storage'
+                  ].map((benefit, index) => (
+                    <li key={index} className="flex items-center gap-3">
+                      <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-gray-700 font-medium">{benefit}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              {/* Selection Card */}
+              <div className="bg-gradient-to-br from-[#AD6269]/5 to-[#AD6269]/10 rounded-2xl p-6 border border-[#AD6269]/20">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 bg-[#AD6269]/20 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-[#AD6269]" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Your Selection</h3>
+                </div>
+                
+                <div className="bg-white rounded-xl p-6 shadow-sm mb-6">
+                  <div className="text-center">
+                    <p className="text-sm text-gray-500 mb-1">Service</p>
+                    <p className="text-2xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'Playfair Display, serif' }}>{selectedService?.name}</p>
+                    <p className="text-sm text-gray-500 mb-1">Price</p>
+                    <p className="text-4xl font-bold text-[#AD6269]">${selectedService?.price}</p>
                   </div>
                 </div>
                 
-                <div className="col-md-6">
-                  <div className="card h-100 border-0 shadow-sm">
-                    <div className="card-body text-center p-4">
-                      <div className="mb-4">
-                        <i className="fas fa-clock text-primary fa-3x mb-3"></i>
-                        <h3 className="fw-bold text-primary mb-3">Quick & Easy Setup</h3>
-                      </div>
-                      <div className="mb-4">
-                        <p className="fs-6 text-dark lh-lg mb-3">
-                          <strong>Creating an account takes less than 2 minutes</strong> and will save you time on future visits.
-                        </p>
-                        <p className="fs-6 text-muted lh-lg">
-                          Your information is securely stored and never shared with third parties.
-                        </p>
-                      </div>
-                      
-                      <div className="text-center mt-4">
-                        <div className="mb-3">
-                          <div className="d-flex align-items-center justify-content-center mb-3">
-                            <i className="fas fa-star me-2 fs-4" style={{ color: '#AD6269' }}></i>
-                            <span className="fw-bold fs-5" style={{ color: '#AD6269' }}>Your Selection</span>
-                          </div>
-                          
-                          <div className="mb-3">
-                            <div className="text-muted fs-6 mb-1">Service</div>
-                            <div className="fw-bold fs-4 text-dark">{selectedService?.name}</div>
-                          </div>
-                          
-                          <div>
-                            <div className="text-muted fs-6 mb-1">Price</div>
-                            <div className="fw-bold fs-2" style={{ color: '#AD6269' }}>${selectedService?.price}</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    <p className="text-sm text-blue-700">
+                      <strong>Quick setup!</strong> Creating an account takes less than 2 minutes.
+                    </p>
                   </div>
                 </div>
               </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="mt-8 space-y-4">
+              <Button
+                size="lg"
+                className="w-full bg-[#AD6269] hover:bg-[#9d5860] text-lg py-6 rounded-xl shadow-lg shadow-[#AD6269]/20"
+                onClick={() => window.location.href = '/register?redirect=/book-now-custom&service=' + selectedService?.id}
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+                Create Account & Continue
+              </Button>
               
-              <div className="text-center mt-4">
-                <div className="d-flex justify-content-center">
-                  <Button
-                    size="lg"
-                    className="bg-[#AD6269] hover:bg-[#9d5860] px-5"
-                    onClick={() => window.location.href = '/register?redirect=/book-now-custom&service=' + selectedService?.id}
-                  >
-                    <i className="fas fa-user-plus me-2"></i>
-                    Create Account & Continue
-                  </Button>
-                </div>
-                
-                <div className="mt-4">
-                  <div className="d-flex align-items-center justify-content-center gap-3">
-                    <span className="fs-5 text-dark fw-medium">Already have an account?</span>
-                    <Button 
-                      asChild
-                      className="bg-[#AD6269] hover:bg-[#9d5860] rounded-full px-4"
-                    >
-                      <a href={`/login?redirect=/book-now-custom&service=${selectedService?.id}`}>
-                        Sign In
-                      </a>
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="mt-4">
-                  <Button
-                    variant="ghost"
-                    className="text-gray-500"
-                    onClick={() => setCurrentStep('services')}
-                  >
-                    <i className="fas fa-arrow-left me-2"></i>
-                    Back to Services
-                  </Button>
-                </div>
+              <div className="flex items-center justify-center gap-4 py-4">
+                <span className="text-gray-600 font-medium">Already have an account?</span>
+                <Button 
+                  asChild
+                  variant="outline"
+                  className="border-[#AD6269] text-[#AD6269] hover:bg-[#AD6269] hover:text-white rounded-full px-6"
+                >
+                  <a href={`/login?redirect=/book-now-custom&service=${selectedService?.id}`}>
+                    Sign In
+                  </a>
+                </Button>
+              </div>
+              
+              <div className="text-center pt-4 border-t border-gray-100">
+                <Button
+                  variant="ghost"
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={() => setCurrentStep('services')}
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back to Services
+                </Button>
               </div>
             </div>
           </div>
