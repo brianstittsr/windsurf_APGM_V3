@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAlertDialog } from '@/components/ui/alert-dialog';
+import { useAuth } from '@/hooks/useAuth';
+import CanvaDesignPicker from './CanvaDesignPicker';
 
 // Wizard steps configuration
 const WIZARD_STEPS = [
@@ -19,6 +21,7 @@ const WIZARD_STEPS = [
 ];
 
 export default function HeroCarouselManager() {
+  const { user } = useAuth();
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -29,6 +32,9 @@ export default function HeroCarouselManager() {
   const [previewSlide, setPreviewSlide] = useState<HeroSlideFormData | null>(null);
   const [wizardStep, setWizardStep] = useState(1);
   const { showAlert, showConfirm, AlertDialogComponent } = useAlertDialog();
+  
+  // Canva picker state
+  const [showCanvaPicker, setShowCanvaPicker] = useState(false);
   
   // File upload state
   const [uploading, setUploading] = useState(false);
@@ -1051,10 +1057,9 @@ export default function HeroCarouselManager() {
                           <span className="px-3 bg-white text-gray-500">or import from Canva</span>
                         </div>
                       </div>
-                      <a
-                        href="/dashboard?tab=canva"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        type="button"
+                        onClick={() => setShowCanvaPicker(true)}
                         className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#00C4CC] hover:bg-[#00b3ba] text-white font-medium rounded-lg transition-colors"
                       >
                         <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
@@ -1062,7 +1067,7 @@ export default function HeroCarouselManager() {
                           <path d="M8.5 14.5c0 1.1.9 2 2 2h3c1.1 0 2-.9 2-2v-5c0-1.1-.9-2-2-2h-3c-1.1 0-2 .9-2 2v5z" fill="#00C4CC"/>
                         </svg>
                         Import from Canva
-                      </a>
+                      </button>
                       <p className="text-xs text-gray-400 text-center mt-1">
                         Connect your Canva account to import designs directly
                       </p>
@@ -1639,6 +1644,17 @@ export default function HeroCarouselManager() {
         </div>
       )}
       {AlertDialogComponent}
+      
+      {/* Canva Design Picker Modal */}
+      <CanvaDesignPicker
+        isOpen={showCanvaPicker}
+        onClose={() => setShowCanvaPicker(false)}
+        onImport={(imageUrl, designName) => {
+          setFormData({ ...formData, backgroundImage: imageUrl });
+          setShowCanvaPicker(false);
+        }}
+        userId={user?.uid}
+      />
     </div>
   );
 }
