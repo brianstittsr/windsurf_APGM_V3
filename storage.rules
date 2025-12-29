@@ -76,6 +76,13 @@ service firebase.storage {
       allow delete: if isAdmin();
     }
 
+    // Services folder - readable by all, manageable by admins
+    match /services/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
     // Business assets - readable by authenticated users, manageable by admins
     match /business/{fileName} {
       allow read: if isAuthenticated();
