@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, getDocs, doc, deleteDoc, setDoc, updateDoc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc, setDoc, updateDoc, getDoc, query, where } from 'firebase/firestore';
 import { getDb } from '../../lib/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -44,6 +44,8 @@ export default function ArtistManager() {
     isActive: true
   });
   const [submitting, setSubmitting] = useState(false);
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkEmail, setLinkEmail] = useState('');
   const { showAlert, showConfirm, AlertDialogComponent } = useAlertDialog();
 
   useEffect(() => {
@@ -193,6 +195,64 @@ export default function ArtistManager() {
     setFormData({ displayName: '', email: '', phone: '', specialties: '', bio: '', isActive: true });
   };
 
+  // Link existing user as artist (for users who already have accounts)
+  const handleLinkExistingUser = async () => {
+    if (!linkEmail) {
+      await showAlert({ title: 'Missing Email', description: 'Please enter an email address.', variant: 'warning' });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      // Search for user by email
+      const usersCollection = collection(getDb(), 'users');
+      let q = query(usersCollection, where('email', '==', linkEmail));
+      let snapshot = await getDocs(q);
+      
+      // Try profile.email if not found
+      if (snapshot.empty) {
+        q = query(usersCollection, where('profile.email', '==', linkEmail));
+        snapshot = await getDocs(q);
+      }
+
+      if (snapshot.empty) {
+        await showAlert({ 
+          title: 'User Not Found', 
+          description: `No user found with email ${linkEmail}. Make sure they have logged in at least once.`, 
+          variant: 'warning' 
+        });
+        return;
+      }
+
+      const userDoc = snapshot.docs[0];
+      const userData = userDoc.data() as { role?: string; specialties?: string[]; displayName?: string; profile?: { firstName?: string } };
+      
+      // Update user to be an artist (keep existing role if admin)
+      await updateDoc(doc(getDb(), 'users', userDoc.id), {
+        isArtist: true,
+        role: userData.role === 'admin' ? 'admin' : 'artist', // Keep admin role if already admin
+        specialties: userData.specialties || ['Permanent Makeup'],
+        isActive: true,
+        updatedAt: new Date(),
+        updatedBy: currentUser?.uid
+      });
+
+      await showAlert({ 
+        title: 'Success', 
+        description: `${userData.displayName || userData.profile?.firstName || linkEmail} is now linked as an artist!`, 
+        variant: 'success' 
+      });
+      setShowLinkModal(false);
+      setLinkEmail('');
+      fetchArtists();
+    } catch (error) {
+      console.error('Error linking user as artist:', error);
+      await showAlert({ title: 'Error', description: 'Error linking user. Please try again.', variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -208,9 +268,14 @@ export default function ArtistManager() {
         <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
           <i className="fas fa-user-tie text-[#AD6269]"></i>Artist Management
         </h2>
-        <Button onClick={openCreateModal} className="bg-[#AD6269] hover:bg-[#9d5860]">
-          <i className="fas fa-plus mr-2"></i>Add New Artist
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setShowLinkModal(true)} variant="outline" className="border-[#AD6269] text-[#AD6269] hover:bg-[#AD6269] hover:text-white">
+            <i className="fas fa-link mr-2"></i>Link Existing User
+          </Button>
+          <Button onClick={openCreateModal} className="bg-[#AD6269] hover:bg-[#9d5860]">
+            <i className="fas fa-plus mr-2"></i>Add New Artist
+          </Button>
+        </div>
       </div>
 
       {/* Artists Table */}
@@ -389,6 +454,61 @@ export default function ArtistManager() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Link Existing User Modal */}
+      {showLinkModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Link Existing User as Artist</h3>
+              <button
+                type="button"
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                onClick={() => { setShowLinkModal(false); setLinkEmail(''); }}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-gray-600">
+                Enter the email address of an existing user to give them artist privileges. 
+                They must have logged in at least once.
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="linkEmail">Email Address</Label>
+                <Input
+                  type="email"
+                  id="linkEmail"
+                  value={linkEmail}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLinkEmail(e.target.value)}
+                  placeholder="victoria@aprettygirlmatter.com"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
+              <Button type="button" variant="outline" onClick={() => { setShowLinkModal(false); setLinkEmail(''); }}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleLinkExistingUser} 
+                className="bg-[#AD6269] hover:bg-[#9d5860]" 
+                disabled={submitting || !linkEmail}
+              >
+                {submitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Linking...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-link mr-2"></i>
+                    Link as Artist
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       )}
