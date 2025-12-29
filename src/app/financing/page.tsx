@@ -136,11 +136,11 @@ export default function FinancingPage() {
               <Card className="shadow-md border-0">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="w-14 h-14 rounded-full bg-white border border-gray-200 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-full bg-white border border-gray-200 flex items-center justify-center overflow-hidden p-2">
                       <img 
                         src="https://cdn.prod.website-files.com/681bf1d6f7dea459fe255c59/68252146834983973a92051f_cherry-logo-primary.svg" 
                         alt="Cherry Logo" 
-                        className="w-10 h-10"
+                        className="w-full h-full object-contain"
                       />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900">Pay with Cherry</h3>
@@ -155,11 +155,11 @@ export default function FinancingPage() {
               <Card className="shadow-md border-0">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="w-14 h-14 rounded-full bg-white border border-gray-200 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-full bg-[#FFB3C7] border border-gray-200 flex items-center justify-center overflow-hidden p-2">
                       <img 
-                        src="https://logos-world.net/wp-content/uploads/2024/06/Klarna-Symbol.png" 
+                        src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Klarna_Payment_Badge.svg/512px-Klarna_Payment_Badge.svg.png" 
                         alt="Klarna Logo" 
-                        className="w-10 h-10"
+                        className="w-full h-full object-contain"
                       />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900">Pay with Klarna</h3>
@@ -174,11 +174,11 @@ export default function FinancingPage() {
               <Card className="shadow-md border-0">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="w-14 h-14 rounded-full bg-white border border-gray-200 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-full bg-[#0FA0EA] border border-gray-200 flex items-center justify-center overflow-hidden p-2">
                       <img 
-                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQASxDA7wX68xJ32zCBksW76SH8skp63-eZw&s" 
+                        src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Affirm_logo.svg/512px-Affirm_logo.svg.png" 
                         alt="Affirm Logo" 
-                        className="w-10 h-10"
+                        className="w-full h-full object-contain"
                       />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900">Pay with Affirm</h3>
@@ -193,11 +193,11 @@ export default function FinancingPage() {
               <Card className="shadow-md border-0 lg:col-span-2 lg:max-w-[calc(50%-12px)]">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="w-14 h-14 rounded-full bg-white border border-gray-200 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-full bg-[#003087] border border-gray-200 flex items-center justify-center overflow-hidden p-2">
                       <img 
-                        src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png" 
+                        src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/512px-PayPal.svg.png" 
                         alt="PayPal Logo" 
-                        className="w-10 h-10"
+                        className="w-full h-full object-contain"
                       />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900">Pay with PayPal Credit</h3>
