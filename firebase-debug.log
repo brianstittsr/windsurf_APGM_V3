@@ -1,0 +1,17 @@
+[debug] [2025-12-29T04:33:58.122Z] ----------------------------------------------------------------------
+[debug] [2025-12-29T04:33:58.123Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Buyer\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js target:apply storage default aprettygirlmatterllc.appspot.com
+[debug] [2025-12-29T04:33:58.124Z] CLI Version:   14.23.0
+[debug] [2025-12-29T04:33:58.124Z] Platform:      win32
+[debug] [2025-12-29T04:33:58.124Z] Node Version:  v22.16.0
+[debug] [2025-12-29T04:33:58.124Z] Time:          Sun Dec 28 2025 23:33:58 GMT-0500 (Eastern Standard Time)
+[debug] [2025-12-29T04:33:58.124Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-12-29T04:33:58.463Z] Error: EPERM: operation not permitted, open 'C:\Users\Buyer\Documents\CascadeProjects\APGM_V3\permanent-makeup-website\.firebaserc'
+    at Object.writeFileSync (node:fs:2426:20)
+    at RC.save (C:\Users\Buyer\AppData\Roaming\npm\node_modules\firebase-tools\lib\rc.js:157:16)
+    at RC.applyTarget (C:\Users\Buyer\AppData\Roaming\npm\node_modules\firebase-tools\lib\rc.js:98:14)
+    at Command.actionFn (C:\Users\Buyer\AppData\Roaming\npm\node_modules\firebase-tools\lib\commands\target-apply.js:17:32)
+    at C:\Users\Buyer\AppData\Roaming\npm\node_modules\firebase-tools\lib\command.js:261:25
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[error] 
+[error] Error: An unexpected error has occurred.
