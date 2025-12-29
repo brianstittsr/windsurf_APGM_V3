@@ -275,5 +275,18 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
+
+    // Canva integration collection - Users can manage their own connection
+    match /canvaIntegration/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Canva imports collection - Users can manage their own imports
+    match /canvaImports/{importId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
   }
 }
