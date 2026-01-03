@@ -6,13 +6,53 @@ This guide provides step-by-step instructions for common administrative tasks in
 
 ## Table of Contents
 
-1. [Creating a New Client](#creating-a-new-client)
-2. [Adding a New Booking](#adding-a-new-booking)
-3. [Adding Procedure Notes](#adding-procedure-notes)
-4. [Managing Bookings](#managing-bookings)
-5. [Artist Availability Management](#artist-availability-management)
-6. [Time Slot System](#time-slot-system)
-7. [Troubleshooting](#troubleshooting)
+1. [Admin Dashboard Overview](#admin-dashboard-overview)
+2. [Creating a New Client](#creating-a-new-client)
+3. [Adding a New Booking](#adding-a-new-booking)
+4. [Adding Procedure Notes](#adding-procedure-notes)
+5. [Managing Bookings](#managing-bookings)
+6. [Artist Availability Management](#artist-availability-management)
+7. [Time Slot System](#time-slot-system)
+8. [Site Configuration Options](#site-configuration-options)
+9. [GoHighLevel Integration](#gohighlevel-integration)
+10. [AI Features](#ai-features)
+11. [Troubleshooting](#troubleshooting)
+
+---
+
+## Admin Dashboard Overview
+
+The admin dashboard is accessible at `/dashboard` and provides comprehensive control over all aspects of the website.
+
+### Dashboard Tabs
+
+| Tab | Description |
+|-----|-------------|
+| **Overview** | Dashboard home with statistics and quick actions |
+| **Users** | Manage user accounts and roles |
+| **Clients** | View and manage client profiles |
+| **Calendar** | Visual booking calendar with GHL sync |
+| **Bookings** | List view of all bookings with filters |
+| **Reviews** | Manage client reviews and testimonials |
+| **Services** | Configure service catalog and pricing |
+| **Coupons & Gifts** | Manage discount codes and gift cards |
+| **Business Settings** | Configure business information |
+| **Artists** | Manage artist profiles |
+| **Availability** | Configure artist weekly schedules |
+| **Forms** | Manage registration forms |
+| **FAQs** | Manage website FAQ content |
+| **GoHighLevel** | CRM integration settings |
+| **GoHighLevel MCP** | MCP protocol integration |
+| **BMAD Orchestrator** | AI workflow automation |
+| **AI Workflow Builder** | Create GHL workflows with AI chat |
+
+### User Roles
+
+| Role | Access Level |
+|------|--------------|
+| **Admin** | Full access to all dashboard features |
+| **Artist** | Access to own bookings, availability, and client notes |
+| **Client** | Access to own profile and booking history |
 
 ---
 
@@ -357,3 +397,175 @@ The booking calendar (`/book-now-custom`) now reflects artist availability setti
 - All date handling now uses local timezone instead of UTC
 - Added Lucide icons for better visual consistency
 - Monthly calendar now fetches availability from Firestore to gray out unavailable days
+
+---
+
+## Site Configuration Options
+
+### Business Settings
+
+Access via **Dashboard → Business Settings**
+
+| Setting | Description |
+|---------|-------------|
+| **Business Name** | Displayed in header and emails |
+| **Contact Email** | Primary contact email |
+| **Phone Number** | Displayed on website and in communications |
+| **Address** | Business location for maps and directions |
+| **Business Hours** | Operating hours displayed on contact page |
+| **Social Media Links** | Facebook, Instagram, TikTok URLs |
+
+### Service Configuration
+
+Access via **Dashboard → Services**
+
+- **Add/Edit Services** - Configure service name, description, duration, and pricing
+- **Service Categories** - Group services by type (Brows, Lips, Eyes, etc.)
+- **Pricing Tiers** - Set different prices for initial vs touch-up appointments
+- **Service Images** - Upload before/after photos for each service
+- **Active/Inactive Status** - Hide services without deleting them
+
+### Coupon & Gift Card Management
+
+Access via **Dashboard → Coupons & Gifts**
+
+**Coupon Types:**
+- **Percentage Off** - e.g., 20% off
+- **Fixed Amount** - e.g., $50 off
+- **Free Service** - Complimentary add-on
+
+**Coupon Settings:**
+- Expiration date
+- Usage limits (per customer or total)
+- Minimum purchase requirement
+- Service restrictions
+
+**Gift Cards:**
+- Generate unique codes
+- Set custom amounts
+- Track balance and usage
+- Email delivery to recipients
+
+### Review Management
+
+Access via **Dashboard → Reviews**
+
+- **Approve/Reject** - Moderate reviews before they appear on site
+- **Feature Reviews** - Highlight top reviews on homepage
+- **Respond to Reviews** - Add public responses
+- **Request Reviews** - Send review request emails to clients
+
+### FAQ Management
+
+Access via **Dashboard → FAQs**
+
+- **Add/Edit FAQs** - Create questions and answers
+- **Categories** - Organize FAQs by topic
+- **Order** - Drag to reorder FAQs
+- **AI Chat Integration** - FAQs are used by the chatbot to answer questions
+
+---
+
+## GoHighLevel Integration
+
+### Setup
+
+1. **Get API Credentials**
+   - Log in to GoHighLevel
+   - Go to **Settings → Integrations → Private Integrations**
+   - Create a new Private Integration
+   - Copy the **API Key** and **Location ID**
+
+2. **Configure in Dashboard**
+   - Go to **Dashboard → GoHighLevel**
+   - Enter your API Key and Location ID
+   - Click **Test Connection** to verify
+
+### Features
+
+| Feature | Description |
+|---------|-------------|
+| **Contact Sync** | Automatically creates/updates contacts in GHL |
+| **Appointment Sync** | Syncs bookings to GHL calendar |
+| **Pipeline Management** | Creates opportunities for new bookings |
+| **SMS/Email** | Sends messages through GHL |
+| **Workflow Triggers** | Triggers GHL workflows on events |
+
+### Sync Options
+
+- **Manual Sync** - Click "Sync All with GHL" in Calendar tab
+- **Auto Sync** - Bookings sync automatically on creation/update
+- **Webhook Sync** - GHL sends updates back to website
+
+### Required GHL Scopes
+
+- `contacts.readonly`, `contacts.write`
+- `calendars.readonly`, `calendars.write`
+- `opportunities.readonly`, `opportunities.write`
+- `conversations.readonly`, `conversations.write`
+- `workflows.readonly`
+
+---
+
+## AI Features
+
+### PMU Chatbot
+
+The homepage features an AI-powered chatbot that:
+- Answers questions about services, pricing, and care instructions
+- Collects booking information from customers
+- Provides 24/7 automated customer service
+- Integrates with GHL for lead capture
+
+### AI Workflow Builder
+
+Access via **Dashboard → Integrations → AI Workflow Builder**
+
+Create GHL workflows using natural language:
+1. Describe what you want (e.g., "Send appointment reminder 24 hours before")
+2. AI generates step-by-step workflow
+3. Download and implement in GHL
+
+**Pre-built Templates:**
+- Lead Nurturing Sequence
+- Appointment Reminder Sequence
+- No-Show Recovery
+- Review Request Sequence
+- Client Reactivation
+- Speed to Lead
+- Birthday Campaign
+- Post-Service Follow-up
+
+### BMAD Orchestrator
+
+Access via **Dashboard → BMAD Orchestrator**
+
+AI-powered workflow automation that:
+- Executes workflows based on triggers
+- Manages customer journey automation
+- Integrates with GHL for CRM actions
+- Provides chat interface for workflow management
+
+**Available Workflows:**
+- `booking_created` - New booking automation
+- `booking_confirmed` - Confirmation and prep instructions
+- `user_registered` - Welcome sequence
+- `payment_received` - Receipt and confirmation
+- `review_submitted` - Thank you and referral offer
+- `appointment_reminder` - 24-hour reminder
+- `follow_up` - Post-appointment check-in
+
+---
+
+## Admin API Endpoints
+
+For developers and advanced users, the following admin API endpoints are available:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/admin/debug-availability` | GET | View all artist availability documents |
+| `/api/admin/reset-availability` | POST | Reset availability for an artist |
+| `/api/admin/cleanup-availability` | DELETE | Remove duplicate availability documents |
+| `/api/admin/clear-bookings` | DELETE | Clear all bookings (use with caution!) |
+
+**Note:** These endpoints require admin authentication and should be used carefully in production.
