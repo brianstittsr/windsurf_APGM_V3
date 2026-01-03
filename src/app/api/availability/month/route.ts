@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { db as adminDb } from '@/lib/firebase-admin';
 
-// No Firebase Admin dependency to avoid Turbopack symlink issues on Windows
+// Day name mapping
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 /**
  * GET /api/availability/month
@@ -24,41 +26,71 @@ export async function GET(req: NextRequest) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Generate all dates in range with default availability
+    // Fetch artist availability from Firestore
+    let artistAvailability: any = null;
+    try {
+      const availabilitySnapshot = await adminDb.collection('artist-availability').get();
+      if (!availabilitySnapshot.empty) {
+        // Use the first artist's availability
+        const doc = availabilitySnapshot.docs[0];
+        artistAvailability = doc.data()?.availability || {};
+      }
+    } catch (error) {
+      console.error('[Month API] Error fetching artist availability:', error);
+    }
+
+    // Generate all dates in range with availability based on artist settings
     const availability: Record<string, { date: string; bookingCount: number; isAvailable: boolean }> = {};
-    const start = new Date(startDate + 'T00:00:00');
-    const end = new Date(endDate + 'T00:00:00');
+    const start = new Date(startDate + 'T12:00:00');
+    const end = new Date(endDate + 'T12:00:00');
     
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       const dateString = d.toISOString().split('T')[0];
+      const dayOfWeek = DAY_NAMES[d.getDay()];
+      
+      // Check if this day is available based on artist settings
+      let isDayAvailable = d >= today;
+      
+      if (isDayAvailable && artistAvailability) {
+        const dayConfig = artistAvailability[dayOfWeek];
+        
+        if (dayConfig && dayConfig.enabled) {
+          // Day is configured - check if at least one time slot is enabled
+          const timeSlots = dayConfig.timeSlots || { morning: true, afternoon: true, evening: true };
+          const hasAnySlotEnabled = timeSlots.morning === true || 
+                                     timeSlots.afternoon === true || 
+                                     timeSlots.evening === true;
+          isDayAvailable = hasAnySlotEnabled;
+        } else if (artistAvailability && Object.keys(artistAvailability).length > 0) {
+          // Artist has some days configured but not this one - day is unavailable
+          isDayAvailable = false;
+        }
+      }
+      
       availability[dateString] = {
         date: dateString,
         bookingCount: 0,
-        isAvailable: d >= today,
+        isAvailable: isDayAvailable,
       };
     }
 
-    // Find next available date (before GHL check for fast response)
+    // Find next available date
     let nextAvailable: string | null = null;
     const sortedDates = Object.keys(availability).sort();
     for (const dateStr of sortedDates) {
-      const dateObj = new Date(dateStr + 'T00:00:00');
+      const dateObj = new Date(dateStr + 'T12:00:00');
       if (dateObj >= today && availability[dateStr].isAvailable) {
         nextAvailable = dateStr;
         break;
       }
     }
 
-    // Return default availability immediately
-    // The MonthlyCalendar only needs to know which dates are in the past
-    // Actual time slot availability is checked by the TimeSlotSelector via /api/availability/ghl
-    // This avoids the slow GHL events API call that was causing timeouts
     return NextResponse.json({
       availability,
       nextAvailable,
       startDate,
       endDate,
-      source: 'default'
+      source: 'firestore'
     });
 
   } catch (error) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { doc, setDoc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { getDb } from '../../lib/firebase';
 import { useAuth } from '../../hooks/useAuth';
@@ -9,8 +9,20 @@ import FirestorePermissionTest from './FirestorePermissionTest';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAlertDialog } from '@/components/ui/alert-dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Calendar, Clock, Sun, CloudSun, Moon, Save, User } from 'lucide-react';
 
 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+// Standard time slots that match the booking page
+const TIME_SLOTS = [
+  { id: 'morning', label: 'Morning', startTime: '10:00', endTime: '13:00', icon: 'fa-sun' },
+  { id: 'afternoon', label: 'Afternoon', startTime: '13:00', endTime: '16:00', icon: 'fa-cloud-sun' },
+  { id: 'evening', label: 'Evening', startTime: '16:00', endTime: '19:00', icon: 'fa-moon' },
+];
 
 export default function ArtistAvailabilityManager() {
   const [availability, setAvailability] = useState<any>({});
@@ -38,11 +50,12 @@ export default function ArtistAvailabilityManager() {
         
         console.log('All users:', usersList);
         
-        // Filter artists with improved logging
+        // Filter artists with improved logging - include admins who can also be artists
         const artistsList = usersList.filter((user: any) => {
-          const isArtist = user.role === 'artist';
+          // Include users with role 'artist' OR 'admin' (admins can manage their own availability)
+          const isArtist = user.role === 'artist' || user.role === 'admin';
           if (isArtist) {
-            console.log('Found artist:', user);
+            console.log('Found artist/admin:', user);
           }
           return isArtist;
         });
@@ -77,7 +90,7 @@ export default function ArtistAvailabilityManager() {
             const userData = userDoc.exists() ? userDoc.data() : null;
             console.log('Current user data:', userData);
             
-            if (userData && userData.role === 'artist') {
+            if (userData && (userData.role === 'artist' || userData.role === 'admin')) {
               const displayName = userData.displayName || 
                                 (userData.profile?.firstName && userData.profile?.lastName ? 
                                  `${userData.profile.firstName} ${userData.profile.lastName}` : '') || 
@@ -86,7 +99,7 @@ export default function ArtistAvailabilityManager() {
               
               setArtists([{ id: user.uid, displayName, ...userData }]);
               setSelectedArtist(user.uid);
-              console.log('Using current user as artist');
+              console.log('Using current user as artist/admin');
             }
           } catch (userError) {
             console.error('❌ Error fetching current user:', userError);
@@ -171,6 +184,89 @@ export default function ArtistAvailabilityManager() {
     fetchAvailability();
   }, [selectedArtist]);
 
+  // Auto-save functionality - save whenever availability changes
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const autoSave = useCallback(async (dataToSave: any) => {
+    if (!selectedArtist) return;
+    
+    try {
+      console.log('🔄 Auto-saving availability...', dataToSave);
+      const db = getDb();
+      const docRef = doc(db, 'artist-availability', selectedArtist);
+      
+      // Prepare clean data
+      const cleanedAvailability: any = {};
+      Object.keys(dataToSave).forEach(day => {
+        if (dataToSave[day]) {
+          cleanedAvailability[day] = {
+            enabled: true,
+            slots: (dataToSave[day].slots || []).map((slot: any) => ({
+              start: slot.start || '',
+              end: slot.end || '',
+              service: slot.service || ''
+            })),
+            timeSlots: dataToSave[day].timeSlots || { morning: true, afternoon: true, evening: true }
+          };
+        }
+      });
+      
+      // Save to Firestore
+      await setDoc(docRef, { 
+        availability: cleanedAvailability, 
+        breakTime,
+        updatedAt: new Date() 
+      });
+      
+      console.log('✅ Auto-saved to Firestore! Days saved:', Object.keys(cleanedAvailability));
+      
+      // Note: GHL calendar sync is handled separately - the booking page reads
+      // availability from Firestore and checks GHL for booked appointments
+      
+    } catch (error) {
+      console.error('❌ Auto-save failed:', error);
+    }
+  }, [selectedArtist, breakTime]);
+
+  // Track if data has been loaded from Firestore
+  const dataLoadedRef = useRef(false);
+  
+  // Debounced auto-save when availability changes
+  useEffect(() => {
+    // Skip until data has been loaded from Firestore
+    if (!dataLoadedRef.current) {
+      return;
+    }
+    
+    // Clear any existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    // Set a new timeout to save after 500ms of no changes
+    saveTimeoutRef.current = setTimeout(() => {
+      autoSave(availability);
+    }, 500);
+    
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [availability, autoSave]);
+  
+  // Mark data as loaded after initial fetch completes
+  useEffect(() => {
+    if (!loading && selectedArtist) {
+      // Small delay to ensure state is settled
+      const timer = setTimeout(() => {
+        dataLoadedRef.current = true;
+        console.log('📋 Data loaded, auto-save enabled');
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, selectedArtist]);
+
   const handleDayToggle = (day: string) => {
     console.log(`Toggling day: ${day}`);
     
@@ -183,13 +279,35 @@ export default function ArtistAvailabilityManager() {
         console.log(`Removing day: ${day}`);
         delete newAvailability[day];
       } else {
-        // If day doesn't exist, add it with default structure
+        // If day doesn't exist, add it with default structure (all slots enabled by default)
         console.log(`Adding day: ${day}`);
-        newAvailability[day] = { enabled: true, slots: [] };
+        newAvailability[day] = { 
+          enabled: true, 
+          slots: [],
+          timeSlots: { morning: true, afternoon: true, evening: true }
+        };
       }
       
       console.log('Updated availability:', newAvailability);
       return newAvailability;
+    });
+  };
+
+  const handleTimeSlotToggle = (day: string, slotId: string) => {
+    setAvailability((prev: any) => {
+      const dayData = prev[day] || { enabled: true, slots: [], timeSlots: { morning: true, afternoon: true, evening: true } };
+      const currentTimeSlots = dayData.timeSlots || { morning: true, afternoon: true, evening: true };
+      
+      return {
+        ...prev,
+        [day]: {
+          ...dayData,
+          timeSlots: {
+            ...currentTimeSlots,
+            [slotId]: !currentTimeSlots[slotId]
+          }
+        }
+      };
     });
   };
 
@@ -237,19 +355,29 @@ export default function ArtistAvailabilityManager() {
     const cleanedAvailability: any = {};
     
     try {
+      console.log('📋 Preparing availability data. Current state:', availability);
+      console.log('📋 Days in state:', Object.keys(availability));
+      
       // Manually construct a clean object
       Object.keys(availability).forEach(day => {
-        if (availability[day] && availability[day].enabled) {
+        console.log(`📋 Processing day: ${day}, data:`, availability[day]);
+        
+        // Save the day if it exists in the state (checkbox is checked)
+        if (availability[day]) {
           cleanedAvailability[day] = {
             enabled: true,
-            slots: availability[day].slots.map((slot: any) => ({
+            slots: (availability[day].slots || []).map((slot: any) => ({
               start: slot.start || '',
               end: slot.end || '',
               service: slot.service || ''
-            }))
+            })),
+            timeSlots: availability[day].timeSlots || { morning: true, afternoon: true, evening: true }
           };
+          console.log(`✅ Added ${day} to save data:`, cleanedAvailability[day]);
         }
       });
+      
+      console.log('📋 Final data to save:', cleanedAvailability);
       
       // Test if it can be serialized
       JSON.stringify(cleanedAvailability);
@@ -331,135 +459,153 @@ export default function ArtistAvailabilityManager() {
     <div className="space-y-6">
       <FirestorePermissionTest />
       
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-          <i className="fas fa-calendar-check text-[#AD6269]"></i>Artist Availability
-        </h2>
-        <div className="w-64">
-          <select 
-            className="w-full h-10 px-3 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
-            value={selectedArtist} 
-            onChange={(e) => {
-              console.log('Selected artist changed to:', e.target.value);
-              setSelectedArtist(e.target.value);
-            }}
-          >
-            {artists.length > 0 ? (
-              artists.map(artist => (
-                <option key={artist.id} value={artist.id}>
-                  {artist.displayName || 'Unknown Artist'}
-                </option>
-              ))
-            ) : (
-              <option value="">No artists available</option>
-            )}
-          </select>
+      {/* Header with Artist Selector */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-[#AD6269]/10 rounded-lg">
+            <Calendar className="h-6 w-6 text-[#AD6269]" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">Artist Availability</h2>
+            <p className="text-sm text-gray-500">Manage weekly schedule and time slots</p>
+          </div>
+        </div>
+        <div className="w-full sm:w-72">
+          <Select value={selectedArtist} onValueChange={(value) => {
+            console.log('Selected artist changed to:', value);
+            setSelectedArtist(value);
+          }}>
+            <SelectTrigger className="w-full bg-white border-gray-200 focus:ring-[#AD6269] focus:ring-offset-0">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-gray-400" />
+                <SelectValue placeholder="Select an artist" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="bg-white">
+              {artists.length > 0 ? (
+                artists.map(artist => (
+                  <SelectItem key={artist.id} value={artist.id} className="cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <span>{artist.displayName || 'Unknown Artist'}</span>
+                      {artist.role === 'admin' && (
+                        <span className="text-xs bg-[#AD6269]/10 text-[#AD6269] px-2 py-0.5 rounded-full">Admin</span>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="" disabled>No artists available</SelectItem>
+              )}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       {/* Settings Card */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-          <h5 className="font-semibold text-gray-900">Settings</h5>
-        </div>
-        <div className="p-6 space-y-4">
-          <div>
-            <label htmlFor="breakTime" className="block text-sm font-medium text-gray-700 mb-1">Break Time (minutes)</label>
+      <Card className="border-gray-200 shadow-sm">
+        <CardHeader className="bg-gray-50/50 border-b border-gray-100 py-4">
+          <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
+            <Clock className="h-4 w-4 text-[#AD6269]" />
+            Settings
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="breakTime" className="text-sm font-medium text-gray-700">Break Time (minutes)</Label>
             <Input 
               type="number" 
               id="breakTime" 
-              className="w-36" 
+              className="w-36 border-gray-200 focus:ring-[#AD6269] focus:border-[#AD6269]" 
               value={breakTime} 
               onChange={(e) => setBreakTime(parseInt(e.target.value, 10))} 
             />
           </div>
-          <div className="flex gap-3">
-            <a href="/api/auth/google" className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-              <i className="fab fa-google mr-2 text-red-500"></i>
-              Connect to Google Calendar
-            </a>
+          <div className="flex flex-wrap gap-3 pt-2">
+            <Button variant="outline" asChild className="border-gray-200 hover:bg-gray-50">
+              <a href="/api/auth/google">
+                <i className="fab fa-google mr-2 text-red-500"></i>
+                Connect to Google Calendar
+              </a>
+            </Button>
             <Button 
               variant="outline"
+              className="border-gray-200 hover:bg-gray-50"
               onClick={() => setShowOutlookModal(true)}
             >
               <i className="fab fa-microsoft mr-2 text-blue-500"></i>
               Connect to Outlook Calendar
             </Button>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Availability Card */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-          <h5 className="font-semibold text-gray-900">Weekly Schedule</h5>
-        </div>
-        <div className="p-6 space-y-4">
+      {/* Weekly Schedule Card */}
+      <Card className="border-gray-200 shadow-sm">
+        <CardHeader className="bg-gray-50/50 border-b border-gray-100 py-4">
+          <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-[#AD6269]" />
+            Weekly Schedule
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 space-y-4">
           {daysOfWeek.map(day => (
             <div key={day} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  id={`day-${day}`}
                   checked={!!availability[day]}
-                  onChange={() => handleDayToggle(day)}
-                  className="w-5 h-5 rounded border-gray-300 text-[#AD6269] focus:ring-[#AD6269]"
+                  onCheckedChange={() => handleDayToggle(day)}
+                  className="h-5 w-5 border-gray-300 data-[state=checked]:bg-[#AD6269] data-[state=checked]:border-[#AD6269]"
                 />
-                <span className="font-medium text-gray-900">{day}</span>
-              </label>
+                <Label htmlFor={`day-${day}`} className="font-medium text-gray-900 cursor-pointer">
+                  {day}
+                </Label>
+              </div>
               {availability[day] && (
-                <div className="ml-8 mt-3 space-y-2">
-                  {availability[day].slots.map((slot: any, index: number) => (
-                    <div key={index} className="flex items-center gap-2 flex-wrap">
-                      <Input 
-                        type="time" 
-                        className="w-32" 
-                        value={slot.start} 
-                        onChange={(e) => handleTimeSlotChange(day, index, 'start', e.target.value)} 
-                      />
-                      <span className="text-gray-500">-</span>
-                      <Input 
-                        type="time" 
-                        className="w-32" 
-                        value={slot.end} 
-                        onChange={(e) => handleTimeSlotChange(day, index, 'end', e.target.value)} 
-                      />
-                      <select 
-                        className="h-10 px-3 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
-                        value={slot.service} 
-                        onChange={(e) => handleTimeSlotChange(day, index, 'service', e.target.value)}
-                      >
-                        <option value="">All Services</option>
-                        {services.map(service => (
-                          <option key={service.id} value={service.id}>{service.name}</option>
-                        ))}
-                      </select>
-                      <button 
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        onClick={() => removeTimeSlot(day, index)}
-                      >
-                        <i className="fas fa-times"></i>
-                      </button>
-                    </div>
-                  ))}
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => addTimeSlot(day)}
-                    className="mt-2"
-                  >
-                    <i className="fas fa-plus mr-1"></i>Add Time Slot
-                  </Button>
+                <div className="ml-8 mt-3">
+                  <div className="flex flex-wrap gap-3">
+                    {TIME_SLOTS.map((slot) => {
+                      const isEnabled = availability[day]?.timeSlots?.[slot.id] ?? true;
+                      const SlotIcon = slot.id === 'morning' ? Sun : slot.id === 'afternoon' ? CloudSun : Moon;
+                      return (
+                        <label
+                          key={slot.id}
+                          className={`
+                            flex items-center gap-2 px-4 py-3 rounded-lg border-2 cursor-pointer transition-all
+                            ${isEnabled 
+                              ? 'border-[#AD6269] bg-[#AD6269]/10 text-[#AD6269]' 
+                              : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300'
+                            }
+                          `}
+                        >
+                          <Checkbox
+                            checked={isEnabled}
+                            onCheckedChange={() => handleTimeSlotToggle(day, slot.id)}
+                            className="h-4 w-4 border-gray-300 data-[state=checked]:bg-[#AD6269] data-[state=checked]:border-[#AD6269]"
+                          />
+                          <SlotIcon className={`h-4 w-4 ${isEnabled ? 'text-[#AD6269]' : 'text-gray-400'}`} />
+                          <div className="flex flex-col">
+                            <span className="font-medium text-sm">{slot.label}</span>
+                            <span className="text-xs opacity-75">
+                              {slot.startTime.replace(':00', '')}:00 - {slot.endTime.replace(':00', '')}:00
+                            </span>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
           ))}
-        </div>
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+        </CardContent>
+        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50">
           <Button className="bg-[#AD6269] hover:bg-[#9d5860]" onClick={handleSave}>
-            <i className="fas fa-save mr-2"></i>Save Changes
+            <Save className="h-4 w-4 mr-2" />
+            Save Changes
           </Button>
         </div>
-      </div>
+      </Card>
 
       {/* Outlook Calendar Setup Modal */}
       <OutlookCalendarSetup

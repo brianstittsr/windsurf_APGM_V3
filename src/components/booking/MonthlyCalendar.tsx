@@ -165,8 +165,13 @@ export default function MonthlyCalendar({
       return true;
     }
 
-    // Check if date has max bookings
+    // Check if date is unavailable (all slots disabled)
     const availability = dateAvailability[dateString];
+    if (availability && availability.isAvailable === false) {
+      return true;
+    }
+
+    // Check if date has max bookings
     if (availability && availability.bookingCount >= maxBookingsPerDay) {
       return true;
     }
@@ -174,7 +179,7 @@ export default function MonthlyCalendar({
     return false;
   };
 
-  const getDateStatus = (date: Date): 'past' | 'full' | 'available' | 'selected' | 'today' => {
+  const getDateStatus = (date: Date): 'past' | 'full' | 'unavailable' | 'available' | 'selected' | 'today' => {
     const dateString = date.toISOString().split('T')[0];
     const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     
@@ -191,6 +196,12 @@ export default function MonthlyCalendar({
     }
 
     const availability = dateAvailability[dateString];
+    
+    // Check if day is completely unavailable (all slots disabled)
+    if (availability && availability.isAvailable === false) {
+      return 'unavailable';
+    }
+
     if (availability && availability.bookingCount >= maxBookingsPerDay) {
       return 'full';
     }
@@ -284,7 +295,7 @@ export default function MonthlyCalendar({
                     ? 'bg-[#AD6269] text-white ring-2 ring-[#AD6269] ring-offset-2' 
                     : status === 'today'
                     ? 'bg-yellow-100 text-yellow-800 border-2 border-yellow-400 hover:bg-yellow-200'
-                    : status === 'past' || status === 'full'
+                    : status === 'past' || status === 'full' || status === 'unavailable'
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-white border border-gray-200 text-gray-900 hover:bg-[#AD6269]/10 hover:border-[#AD6269]'
                   }

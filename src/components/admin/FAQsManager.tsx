@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { collection, getDocs, doc, setDoc, deleteDoc, updateDoc, addDoc } from 'firebase/firestore';
 import { getDb } from '../../lib/firebase';
 import { Button } from '@/components/ui/button';
@@ -238,6 +238,11 @@ Each note is automatically timestamped with the current date and time.`
   },
 ];
 
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export default function FAQsManager() {
   const [faqs, setFaqs] = useState<FAQItem[]>([]);
   const [categories] = useState<FAQCategory[]>(defaultCategories);
@@ -253,6 +258,15 @@ export default function FAQsManager() {
   });
   const [saving, setSaving] = useState(false);
   const { showAlert, showConfirm, AlertDialogComponent } = useAlertDialog();
+  
+  // Chat state
+  const [showChat, setShowChat] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    { role: 'assistant', content: 'Hello! 👋 I\'m your FAQ assistant. Ask me anything about creating clients, managing bookings, or adding procedure notes!' }
+  ]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchFAQs();
@@ -410,6 +424,57 @@ export default function FAQsManager() {
       await fetchFAQs();
     } catch (error) {
       console.error('Error initializing FAQs:', error);
+    }
+  };
+
+  // Chat with FAQ documentation
+  const handleSendMessage = async () => {
+    if (!chatInput.trim() || chatLoading) return;
+
+    const userMessage = chatInput.trim();
+    setChatInput('');
+    setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setChatLoading(true);
+
+    try {
+      const response = await fetch('/api/faqs/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMessage,
+          history: chatMessages,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setChatMessages(prev => [...prev, { role: 'assistant', content: data.message }]);
+      } else {
+        setChatMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: 'Sorry, I encountered an error. Please try again or browse the FAQs above.' 
+        }]);
+      }
+    } catch (error) {
+      console.error('Chat error:', error);
+      setChatMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: 'Sorry, I couldn\'t connect to the server. Please try again.' 
+      }]);
+    } finally {
+      setChatLoading(false);
+      // Scroll to bottom
+      setTimeout(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
     }
   };
 
@@ -703,6 +768,95 @@ export default function FAQsManager() {
                 )}
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chat with Documentation Button */}
+      <button
+        onClick={() => setShowChat(!showChat)}
+        className="fixed bottom-6 right-6 w-14 h-14 bg-[#AD6269] hover:bg-[#9d5860] text-white rounded-full shadow-lg flex items-center justify-center transition-all z-40"
+        title="Chat with FAQ Documentation"
+      >
+        <i className={`fas ${showChat ? 'fa-times' : 'fa-comments'} text-xl`}></i>
+      </button>
+
+      {/* Chat Panel */}
+      {showChat && (
+        <div className="fixed bottom-24 right-6 w-96 h-[500px] bg-white rounded-xl shadow-2xl border border-gray-200 flex flex-col z-40 overflow-hidden">
+          {/* Chat Header */}
+          <div className="px-4 py-3 bg-[#AD6269] text-white flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <i className="fas fa-robot"></i>
+              <span className="font-medium">FAQ Assistant</span>
+            </div>
+            <button
+              onClick={() => setShowChat(false)}
+              className="p-1 hover:bg-white/20 rounded"
+            >
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
+
+          {/* Chat Messages */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {chatMessages.map((msg, index) => (
+              <div
+                key={index}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[85%] rounded-lg px-4 py-2 ${
+                    msg.role === 'user'
+                      ? 'bg-[#AD6269] text-white'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}
+                >
+                  <div 
+                    className="text-sm whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{ 
+                      __html: msg.content
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\n/g, '<br/>')
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+            {chatLoading && (
+              <div className="flex justify-start">
+                <div className="bg-gray-100 rounded-lg px-4 py-2">
+                  <i className="fas fa-circle-notch fa-spin text-[#AD6269]"></i>
+                  <span className="ml-2 text-sm text-gray-600">Thinking...</span>
+                </div>
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
+
+          {/* Chat Input */}
+          <div className="p-3 border-t border-gray-200 bg-gray-50">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Ask a question..."
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent text-sm"
+                disabled={chatLoading}
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={!chatInput.trim() || chatLoading}
+                className="px-4 py-2 bg-[#AD6269] hover:bg-[#9d5860] text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <i className="fas fa-paper-plane"></i>
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-2 text-center">
+              Ask about clients, bookings, or procedure notes
+            </p>
           </div>
         </div>
       )}

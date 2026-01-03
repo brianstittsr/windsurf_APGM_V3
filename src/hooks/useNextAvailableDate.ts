@@ -26,6 +26,14 @@ function convertTo24Hour(time12h: string): number {
   return hourNum;
 }
 
+// Helper to get date string in local timezone
+function getLocalDateString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export function useNextAvailableDate() {
   const [nextAvailable, setNextAvailable] = useState<NextAvailableDate | null>(null);
   const [loading, setLoading] = useState(false);
@@ -43,7 +51,7 @@ export function useNextAvailableDate() {
       setError(null);
 
       const today = new Date();
-      const todayString = today.toISOString().split('T')[0];
+      const todayString = getLocalDateString(today);
       
       // Use startFromDate if provided, otherwise start from today
       // Ensure we never search from a past date
@@ -64,7 +72,7 @@ export function useNextAvailableDate() {
       for (let i = 0; i < 30; i++) {
         const checkDate = new Date(startDate);
         checkDate.setDate(startDate.getDate() + i);
-        const dateString = checkDate.toISOString().split('T')[0];
+        const dateString = getLocalDateString(checkDate);
         
         // Only check dates from today onwards, but allow searching from future dates
         console.log(`🔍 Comparing dates: ${dateString} >= ${todayString} = ${dateString >= todayString}`);
@@ -180,9 +188,9 @@ export function useNextAvailableDate() {
 
   // Function to find next available date after a specific date
   const findNextAvailableAfter = useCallback(async (afterDate: string) => {
-    const nextDay = new Date(afterDate);
+    const nextDay = new Date(afterDate + 'T12:00:00');
     nextDay.setDate(nextDay.getDate() + 1);
-    const nextDayString = nextDay.toISOString().split('T')[0];
+    const nextDayString = getLocalDateString(nextDay);
     console.log('🔍 Finding next available date after:', afterDate, '-> searching from:', nextDayString);
     await findNextAvailableDate(nextDayString);
   }, [findNextAvailableDate]);

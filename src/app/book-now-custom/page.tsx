@@ -90,9 +90,18 @@ function BookNowCustomContent() {
     console.log('Cleared localStorage booking data');
   }, []); // Run once on mount
 
+  // Helper to get today's date in local timezone
+  const getLocalToday = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Simple validation - clear any past dates immediately
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalToday();
     if (selectedDate && selectedDate < today) {
       console.log('Clearing past date:', selectedDate);
       setSelectedDate('');
@@ -101,7 +110,7 @@ function BookNowCustomContent() {
 
   // Simple setter with validation
   const setValidatedSelectedDate = useCallback((dateString: string) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalToday();
     if (dateString === '' || dateString >= today) {
       setSelectedDate(dateString);
     } else {
@@ -219,7 +228,7 @@ function BookNowCustomContent() {
   // Auto-navigate to next available date when nextAvailable is found
   useEffect(() => {
     if (nextAvailable) {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getLocalToday();
       
       if (nextAvailable.date >= today) {
         console.log('Setting calendar to next available date:', nextAvailable.date);
@@ -270,8 +279,11 @@ function BookNowCustomContent() {
       weekStart.setDate(today.getDate() - today.getDay()); // Start of current week (Sunday)
       
       // Ensure we don't start from a past week
-      const todayString = today.toISOString().split('T')[0];
-      const weekStartString = weekStart.toISOString().split('T')[0];
+      const todayString = getLocalToday();
+      const yr = weekStart.getFullYear();
+      const mo = String(weekStart.getMonth() + 1).padStart(2, '0');
+      const dy = String(weekStart.getDate()).padStart(2, '0');
+      const weekStartString = `${yr}-${mo}-${dy}`;
       
       if (weekStartString < todayString) {
         // If week start is in the past, advance to next week
@@ -299,9 +311,8 @@ function BookNowCustomContent() {
 
   // Force clear selected date on component mount and whenever it becomes a past date
   useEffect(() => {
-    const today = new Date();
-    const todayString = today.toISOString().split('T')[0];
-    const dayOfWeek = today.toLocaleDateString('en-US', { weekday: 'long' });
+    const todayString = getLocalToday();
+    const dayOfWeek = new Date().toLocaleDateString('en-US', { weekday: 'long' });
     console.log('🔍 Date validation check - selectedDate:', selectedDate, 'today:', todayString, 'day:', dayOfWeek);
     
     // If selectedDate is in the past, force it to today
@@ -314,8 +325,7 @@ function BookNowCustomContent() {
   // Force refresh if we detect a past date in nextAvailable
   useEffect(() => {
     if (nextAvailable) {
-      const today = new Date();
-      const todayString = today.toISOString().split('T')[0];
+      const todayString = getLocalToday();
       
       if (nextAvailable.date < todayString) {
         console.log('🚨 Detected past date in nextAvailable:', nextAvailable.date, 'forcing refresh...');
@@ -345,7 +355,10 @@ function BookNowCustomContent() {
 
   // Handle date selection from calendar
   const handleDateSelect = (date: Date) => {
-    const dateString = date.toISOString().split('T')[0];
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateString = `${year}-${month}-${day}`;
     console.log('Date clicked:', dateString);
     
     setValidatedSelectedDate(dateString);

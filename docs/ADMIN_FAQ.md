@@ -10,7 +10,9 @@ This guide provides step-by-step instructions for common administrative tasks in
 2. [Adding a New Booking](#adding-a-new-booking)
 3. [Adding Procedure Notes](#adding-procedure-notes)
 4. [Managing Bookings](#managing-bookings)
-5. [Troubleshooting](#troubleshooting)
+5. [Artist Availability Management](#artist-availability-management)
+6. [Time Slot System](#time-slot-system)
+7. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -180,6 +182,86 @@ Touch-up Notes - Feb 15, 2026
 
 ---
 
+## Artist Availability Management
+
+The Artist Availability page allows you to configure which days and time slots are available for booking.
+
+### Accessing Artist Availability
+
+1. **Navigate to Availability**
+   - Go to **"Services & Artists"** → **"Availability"** in the sidebar
+
+2. **Select an Artist**
+   - Use the dropdown in the top right to select an artist
+   - **Note**: Both artists and admins appear in this dropdown (admins can manage their own availability)
+   - Admin users are marked with an "Admin" badge
+
+### Configuring Weekly Schedule
+
+1. **Enable Days**
+   - Check the checkbox next to each day you want to be available for booking
+   - Unchecked days will not show any available slots on the booking page
+
+2. **Configure Time Slots**
+   - When a day is enabled, three time slots appear:
+     - **Morning**: 10:00 AM - 1:00 PM
+     - **Afternoon**: 1:00 PM - 4:00 PM
+     - **Evening**: 4:00 PM - 7:00 PM
+   - Check/uncheck each slot to enable/disable it
+   - Enabled slots appear with a pink border and background
+   - Disabled slots appear grayed out
+
+3. **Save Changes**
+   - Click **"Save Changes"** to apply your availability settings
+   - Changes take effect immediately on the booking page
+
+### Settings
+
+- **Break Time**: Configure the break time between appointments (in minutes)
+- **Calendar Integration**: Connect to Google Calendar or Outlook Calendar for sync
+
+---
+
+## Time Slot System
+
+The booking system uses a simplified time slot system with three daily slots.
+
+### Available Time Slots
+
+| Slot | Time Range | Duration |
+|------|------------|----------|
+| Morning | 10:00 AM - 1:00 PM | 3 hours |
+| Afternoon | 1:00 PM - 4:00 PM | 3 hours |
+| Evening | 4:00 PM - 7:00 PM | 3 hours |
+
+### Time-Based Filtering (Public Booking Page)
+
+The booking page automatically filters time slots based on the current time:
+
+- **Past Slots**: If the current time has passed a slot's start time, that slot is **grayed out** and marked as "Past"
+- **Example**: At 11:30 AM, the Morning slot (10:00 AM) would be grayed out for today's date
+- **Future Dates**: All enabled slots are available for dates in the future
+
+### How It Works
+
+1. **Today's Date**: 
+   - Slots that have already started are grayed out with a "Past" badge
+   - Remaining slots are available for booking
+
+2. **Future Dates**:
+   - All enabled slots (based on artist availability) are available
+
+3. **Admin Override**:
+   - Admins can use "Calendar Override" in the booking wizard to book any time
+   - This bypasses the time slot restrictions
+
+### Timezone
+
+- The system uses the user's **local timezone** (Eastern Time for most users)
+- All time comparisons are done in local time to ensure accurate availability
+
+---
+
 ## Troubleshooting
 
 ### Client Not Showing in Search
@@ -227,3 +309,51 @@ For additional support:
 ---
 
 *Last Updated: January 3, 2026*
+
+---
+
+## Recent Changes (January 2026)
+
+### Booking Calendar Availability System
+
+The booking calendar (`/book-now-custom`) now reflects artist availability settings from the admin dashboard:
+
+**How It Works:**
+1. **Admin configures availability** in Dashboard → Availability tab
+2. **Checked time slots = Available** for booking
+3. **Unchecked time slots = Unavailable** (grayed out on booking page)
+4. **Days with ALL slots unchecked** are completely grayed out on the monthly calendar
+
+**Time Slot Definitions:**
+| Slot | Time Range |
+|------|------------|
+| Morning | 10:00 AM - 1:00 PM |
+| Afternoon | 1:00 PM - 4:00 PM |
+| Evening | 4:00 PM - 7:00 PM |
+
+**Calendar Visual Indicators:**
+- **White dates** - Available for booking (at least one time slot enabled)
+- **Gray dates** - Unavailable (all time slots disabled or past dates)
+- **Yellow dates** - Today
+- **Pink/Red dates** - Selected date
+
+**Auto-Save Feature:**
+- Changes in the Availability tab are automatically saved after 500ms
+- No need to click "Save Changes" (though the button still works)
+
+### Time Slot Filtering
+- Past time slots are now **grayed out** (instead of hidden) on the booking page
+- A "Past" badge appears on slots that have already started
+- Uses local timezone (Eastern Time) for accurate time comparisons
+
+### Artist Availability UI Update
+- Replaced detailed time pickers with simplified **Morning/Afternoon/Evening** checkboxes
+- Time slots now match the public booking page exactly
+- Updated styling with shadcn/ui components (Select, Card, Checkbox, Label)
+- Admin users now appear in the artist dropdown with an "Admin" badge
+
+### Technical Improvements
+- Fixed timezone issues that were causing incorrect date comparisons
+- All date handling now uses local timezone instead of UTC
+- Added Lucide icons for better visual consistency
+- Monthly calendar now fetches availability from Firestore to gray out unavailable days

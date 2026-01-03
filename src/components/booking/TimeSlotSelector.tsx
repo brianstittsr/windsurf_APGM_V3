@@ -11,6 +11,8 @@ interface TimeSlot {
   endTime: string;
   available: boolean;
   booked: boolean;
+  isPast?: boolean;
+  isDisabled?: boolean; // Disabled by artist availability settings
 }
 
 interface TimeSlotSelectorProps {
@@ -56,6 +58,49 @@ function addHours(time24: string, hours: number): string {
   return `${newHours.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
 }
 
+// Check if a time slot is in the past for a given date
+function isSlotInPast(date: string, startTime: string): boolean {
+  const now = new Date();
+  
+  // Get today's date in local timezone (YYYY-MM-DD format)
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const today = `${year}-${month}-${day}`;
+  
+  console.log(`🕐 isSlotInPast check: selectedDate=${date}, today=${today}, startTime=${startTime}, currentTime=${now.getHours()}:${now.getMinutes()}`);
+  
+  // If the date is in the future, the slot is not in the past
+  if (date > today) {
+    console.log(`  → Date ${date} is in the future (after ${today}), slot is available`);
+    return false;
+  }
+  
+  // If the date is in the past, all slots are in the past
+  if (date < today) {
+    console.log(`  → Date ${date} is in the past (before ${today}), slot is unavailable`);
+    return true;
+  }
+  
+  // For today, compare the current time with the slot start time
+  const [slotHours, slotMinutes] = startTime.split(':').map(Number);
+  const currentHours = now.getHours();
+  const currentMinutes = now.getMinutes();
+  
+  // Slot is in the past if current time is >= slot start time
+  if (currentHours > slotHours) {
+    console.log(`  → Today: current hour ${currentHours} > slot hour ${slotHours}, slot is unavailable`);
+    return true;
+  }
+  if (currentHours === slotHours && currentMinutes >= slotMinutes) {
+    console.log(`  → Today: current time ${currentHours}:${currentMinutes} >= slot time ${slotHours}:${slotMinutes}, slot is unavailable`);
+    return true;
+  }
+  
+  console.log(`  → Today: current time ${currentHours}:${currentMinutes} < slot time ${slotHours}:${slotMinutes}, slot is available`);
+  return false;
+}
+
 export default function TimeSlotSelector({
   selectedDate,
   selectedSlot,
@@ -93,17 +138,22 @@ export default function TimeSlotSelector({
           // Check if this slot is booked
           const isBooked = data.bookedSlots?.includes(slot.id) || false;
           
-          // Check if slot is in the past (for today)
-          const now = new Date();
-          const slotDateTime = new Date(`${selectedDate}T${startTime}:00`);
-          const isPast = slotDateTime < now;
+          // Check if this slot is disabled by artist availability settings
+          const isDisabled = data.disabledSlots?.includes(slot.id) || false;
+          
+          // Check if slot is in the past using robust comparison
+          const isPast = isSlotInPast(selectedDate, startTime);
+
+          console.log(`[TimeSlotSelector] Slot ${slot.id}: booked=${isBooked}, disabled=${isDisabled}, isPast=${isPast}`);
 
           return {
             ...slot,
             startTime,
             endTime,
-            available: !isBooked && !isPast,
+            available: !isBooked && !isPast && !isDisabled,
             booked: isBooked,
+            isPast,
+            isDisabled,
           };
         });
 
@@ -117,9 +167,8 @@ export default function TimeSlotSelector({
           const startTime = slot.defaultStartTime;
           const endTime = addHours(startTime, 3);
           
-          const now = new Date();
-          const slotDateTime = new Date(`${selectedDate}T${startTime}:00`);
-          const isPast = slotDateTime < now;
+          // Use robust isPast check
+          const isPast = isSlotInPast(selectedDate, startTime);
 
           return {
             ...slot,
@@ -127,6 +176,7 @@ export default function TimeSlotSelector({
             endTime,
             available: !isPast,
             booked: false,
+            isPast,
           };
         });
         setTimeSlots(fallbackSlots);
@@ -181,18 +231,21 @@ export default function TimeSlotSelector({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {timeSlots.map((slot) => {
             const isSelected = selectedSlot === slot.id;
-            const isDisabled = !slot.available;
+            const isPast = slot.isPast || false;
+            const isDisabled = !slot.available || isPast;
 
             return (
               <button
                 key={slot.id}
                 type="button"
                 disabled={isDisabled}
-                onClick={() => slot.available && onSlotSelect(slot.id, slot.startTime)}
+                onClick={() => !isDisabled && onSlotSelect(slot.id, slot.startTime)}
                 className={`
                   relative p-6 rounded-xl border-2 transition-all duration-300
                   ${isSelected
                     ? 'border-[#AD6269] bg-[#AD6269] text-white shadow-lg scale-105'
+                    : isPast
+                    ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
                     : isDisabled
                     ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
                     : 'border-gray-200 bg-white text-gray-900 hover:border-[#AD6269] hover:shadow-md hover:-translate-y-1'
@@ -227,11 +280,29 @@ export default function TimeSlotSelector({
                   3 Hours
                 </span>
 
-                {/* Status Indicator */}
-                {slot.booked && (
+                {/* Status Indicator - Past Time */}
+                {isPast && !slot.booked && !slot.isDisabled && (
+                  <div className="absolute top-2 right-2">
+                    <span className="px-2 py-1 bg-gray-200 text-gray-500 text-xs font-semibold rounded-full">
+                      Past
+                    </span>
+                  </div>
+                )}
+
+                {/* Status Indicator - Booked */}
+                {slot.booked && !isPast && !slot.isDisabled && (
                   <div className="absolute top-2 right-2">
                     <span className="px-2 py-1 bg-red-100 text-red-600 text-xs font-semibold rounded-full">
                       Booked
+                    </span>
+                  </div>
+                )}
+
+                {/* Status Indicator - Not Available (disabled by artist) */}
+                {slot.isDisabled && !isPast && !slot.booked && (
+                  <div className="absolute top-2 right-2">
+                    <span className="px-2 py-1 bg-orange-100 text-orange-600 text-xs font-semibold rounded-full">
+                      Not Available
                     </span>
                   </div>
                 )}
@@ -247,12 +318,15 @@ export default function TimeSlotSelector({
         </div>
       )}
 
-      {/* No Slots Available */}
-      {!loading && timeSlots.length > 0 && !timeSlots.some(s => s.available) && (
-        <div className="text-center py-6 mt-4 bg-gray-50 rounded-lg">
-          <i className="fas fa-calendar-times text-gray-400 text-3xl mb-3"></i>
-          <p className="text-gray-600 font-medium">No available times on this date</p>
-          <p className="text-gray-500 text-sm">Please select a different date</p>
+      {/* No Slots Available Message */}
+      {!loading && timeSlots.length > 0 && !timeSlots.some(s => s.available && !s.isPast) && (
+        <div className="text-center py-4 mt-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <i className="fas fa-info-circle text-amber-500 text-xl mb-2"></i>
+          <p className="text-amber-700 font-medium text-sm">
+            {timeSlots.every(s => s.isPast) 
+              ? 'All time slots have passed for today. Please select a future date.'
+              : 'All available time slots are booked. Please select a different date.'}
+          </p>
         </div>
       )}
     </div>
