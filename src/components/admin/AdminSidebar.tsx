@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import {
   LayoutDashboard,
   Users,
+  UserCheck,
   Star,
   Scissors,
   Gift,
@@ -41,6 +42,9 @@ import {
   MousePointerClick,
   Share2,
   Megaphone,
+  ArrowLeftRight,
+  ShieldCheck,
+  HelpCircle,
 } from 'lucide-react';
 
 // Navigation item types
@@ -72,7 +76,8 @@ const navigationGroups: NavGroup[] = [
     label: 'Clients & Bookings',
     icon: Users,
     items: [
-      { id: 'users', label: 'Users', icon: Users },
+      { id: 'users', label: 'Users', icon: ShieldCheck },
+      { id: 'clients', label: 'Clients', icon: UserCheck },
       { id: 'calendar', label: 'Calendar', icon: Calendar },
       { id: 'bookings', label: 'Bookings', icon: ClipboardList },
       { id: 'reviews', label: 'Reviews', icon: Star },
@@ -143,6 +148,8 @@ const navigationGroups: NavGroup[] = [
     items: [
       { id: 'gohighlevel', label: 'GoHighLevel', icon: Zap },
       { id: 'gohighlevel-mcp', label: 'GHL MCP', icon: Zap },
+      { id: 'ghl-migration', label: 'GHL Migration', icon: ArrowLeftRight },
+      { id: 'ghl-workflow-builder', label: 'AI Workflow Builder', icon: Bot },
       { id: 'canva', label: 'Canva', icon: Palette },
       { id: 'alexa', label: 'Alexa Skills', icon: Mic },
     ],
@@ -154,6 +161,7 @@ const navigationGroups: NavGroup[] = [
     items: [
       { id: 'business', label: 'Business Settings', icon: Settings },
       { id: 'forms', label: 'Forms', icon: FileText },
+      { id: 'faqs', label: 'FAQs & Help', icon: HelpCircle },
     ],
   },
 ];

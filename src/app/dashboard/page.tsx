@@ -8,6 +8,7 @@ import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore
 import { getDb } from '@/lib/firebase';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import UserManager from '../../components/admin/UserManager';
+import ClientsManager from '../../components/admin/ClientsManager';
 import ReviewsManager from '../../components/admin/ReviewsManager';
 import ServicesManager from '../../components/admin/ServicesManager';
 import CouponsGiftCardsManager from '../../components/admin/CouponsGiftCardsManager';
@@ -17,6 +18,8 @@ import BookingCalendarManager from '../../components/admin/BookingCalendarManage
 import RegistrationFormsManager from '../../components/admin/RegistrationFormsManager';
 import GoHighLevelManager from '../../components/admin/GoHighLevelManager';
 import GoHighLevelMCP from '../../components/admin/GoHighLevelMCP';
+import GHLMigration from '../../components/admin/GHLMigration';
+import GHLWorkflowBuilder from '../../components/admin/GHLWorkflowBuilder';
 import BMADOrchestrator from '../../components/admin/BMADOrchestrator';
 import ArtistAvailabilityManager from '../../components/admin/ArtistAvailabilityManager';
 import BookingCalendar from '../../components/admin/BookingCalendar';
@@ -39,9 +42,10 @@ import PaidTrafficDashboard from '../../components/admin/PaidTrafficDashboard';
 import RetargetingDashboard from '../../components/admin/RetargetingDashboard';
 import PPCCampaignsDashboard from '../../components/admin/PPCCampaignsDashboard';
 import CanvaIntegration from '../../components/admin/CanvaIntegration';
+import FAQsManager from '../../components/admin/FAQsManager';
 import { cn } from '@/lib/utils';
 
-type TabType = 'overview' | 'users' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'alexa' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation' | 'hero-carousel' | 'documents' | 'canva';
+type TabType = 'overview' | 'users' | 'clients' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'ghl-migration' | 'ghl-workflow-builder' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'alexa' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation' | 'hero-carousel' | 'documents' | 'canva' | 'faqs';
 
 interface BookingMetrics {
   total: number;
@@ -133,6 +137,7 @@ export default function DashboardPage() {
     const titles: Record<TabType, string> = {
       'overview': 'Dashboard Overview',
       'users': 'User Management',
+      'clients': 'Client Management',
       'reviews': 'Reviews Management',
       'services': 'Services Management',
       'coupons': 'Coupons & Gift Cards',
@@ -142,6 +147,8 @@ export default function DashboardPage() {
       'forms': 'Registration Forms',
       'gohighlevel': 'GoHighLevel Integration',
       'gohighlevel-mcp': 'GoHighLevel MCP',
+      'ghl-migration': 'GHL Migration Tool',
+      'ghl-workflow-builder': 'AI Workflow Builder',
       'bmad-orchestrator': 'BMAD Orchestrator',
       'availability': 'Artist Availability',
       'calendar': 'Booking Calendar',
@@ -167,6 +174,7 @@ export default function DashboardPage() {
       'hero-carousel': 'Hero Carousel',
       'documents': 'Documents & Agreements',
       'canva': 'Canva Integration',
+      'faqs': 'FAQs & Instructions',
     };
     return titles[tab] || 'Dashboard';
   };
@@ -467,6 +475,8 @@ export default function DashboardPage() {
         );
       case 'users':
         return <UserManager />;
+      case 'clients':
+        return <ClientsManager />;
       case 'reviews':
         return <ReviewsManager />;
       case 'services':
@@ -485,6 +495,10 @@ export default function DashboardPage() {
         return <GoHighLevelManager />;
       case 'gohighlevel-mcp':
         return <GoHighLevelMCP />;
+      case 'ghl-migration':
+        return <GHLMigration />;
+      case 'ghl-workflow-builder':
+        return <GHLWorkflowBuilder />;
       case 'bmad-orchestrator':
         return <BMADOrchestrator />;
       case 'availability':
@@ -533,6 +547,8 @@ export default function DashboardPage() {
         return <DocumentsManager />;
       case 'canva':
         return <CanvaIntegration />;
+      case 'faqs':
+        return <FAQsManager />;
       default:
         return null;
     }

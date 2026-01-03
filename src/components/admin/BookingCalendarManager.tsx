@@ -7,6 +7,13 @@ import { Button } from '@/components/ui/button';
 import { useAlertDialog } from '@/components/ui/alert-dialog';
 import BookingWizard from './BookingWizard';
 
+interface BookingNote {
+  id: string;
+  text: string;
+  timestamp: string;
+  createdBy?: string;
+}
+
 interface Appointment {
   id: string;
   clientName: string;
@@ -20,6 +27,7 @@ interface Appointment {
   artistName?: string;
   status: 'confirmed' | 'pending' | 'completed' | 'cancelled';
   notes?: string;
+  bookingNotes?: BookingNote[];
   price?: number;
   depositPaid?: boolean;
   createdAt?: Date;
@@ -41,6 +49,13 @@ export default function BookingCalendarManager() {
   const [editDate, setEditDate] = useState('');
   const [editTime, setEditTime] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
+  
+  // View/Edit booking modal state
+  const [viewingBooking, setViewingBooking] = useState<Appointment | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [newNoteText, setNewNoteText] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
+  const [editedBooking, setEditedBooking] = useState<Partial<Appointment>>({});
 
   useEffect(() => {
     fetchAppointments();
@@ -81,6 +96,7 @@ export default function BookingCalendarManager() {
           artistName: data.artistName,
           status: data.status,
           notes: data.notes,
+          bookingNotes: data.bookingNotes || [],
           price: data.price,
           depositPaid: data.depositPaid,
           createdAt: data.createdAt
@@ -159,6 +175,155 @@ export default function BookingCalendarManager() {
     setEditingAppointment(apt);
     setEditDate(apt.appointmentDate || apt.date || '');
     setEditTime(apt.appointmentTime || apt.time || '');
+  };
+
+  // Open view booking modal
+  const handleViewBooking = (apt: Appointment) => {
+    setViewingBooking(apt);
+    setIsEditMode(false);
+    setNewNoteText('');
+    setEditedBooking({
+      clientName: apt.clientName,
+      clientEmail: apt.clientEmail,
+      clientPhone: apt.clientPhone,
+      serviceName: apt.serviceName,
+      price: apt.price,
+      status: apt.status,
+    });
+  };
+
+  // Close view booking modal
+  const handleCloseViewBooking = () => {
+    setViewingBooking(null);
+    setIsEditMode(false);
+    setNewNoteText('');
+    setEditedBooking({});
+  };
+
+  // Add a new note with timestamp
+  const handleAddNote = async () => {
+    if (!viewingBooking || !newNoteText.trim()) return;
+
+    setSavingNote(true);
+    try {
+      const newNote: BookingNote = {
+        id: `note_${Date.now()}`,
+        text: newNoteText.trim(),
+        timestamp: new Date().toISOString(),
+      };
+
+      const updatedNotes = [...(viewingBooking.bookingNotes || []), newNote];
+
+      // Update in Firestore
+      let bookingRef = doc(getDb(), 'bookings', viewingBooking.id);
+      try {
+        await updateDoc(bookingRef, {
+          bookingNotes: updatedNotes,
+          updatedAt: new Date()
+        });
+      } catch (e) {
+        bookingRef = doc(getDb(), 'appointments', viewingBooking.id);
+        await updateDoc(bookingRef, {
+          bookingNotes: updatedNotes,
+          updatedAt: new Date()
+        });
+      }
+
+      // Update local state
+      setViewingBooking({ ...viewingBooking, bookingNotes: updatedNotes });
+      setNewNoteText('');
+      
+      // Refresh appointments list
+      fetchAppointments();
+    } catch (error) {
+      console.error('Error adding note:', error);
+      await showAlert({ title: 'Error', description: 'Failed to add note. Please try again.', variant: 'destructive' });
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  // Delete a note
+  const handleDeleteNote = async (noteId: string) => {
+    if (!viewingBooking) return;
+
+    const confirmed = await showConfirm({
+      title: 'Delete Note',
+      description: 'Are you sure you want to delete this note?',
+      confirmText: 'Delete',
+      variant: 'destructive'
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const updatedNotes = (viewingBooking.bookingNotes || []).filter(note => note.id !== noteId);
+
+      let bookingRef = doc(getDb(), 'bookings', viewingBooking.id);
+      try {
+        await updateDoc(bookingRef, {
+          bookingNotes: updatedNotes,
+          updatedAt: new Date()
+        });
+      } catch (e) {
+        bookingRef = doc(getDb(), 'appointments', viewingBooking.id);
+        await updateDoc(bookingRef, {
+          bookingNotes: updatedNotes,
+          updatedAt: new Date()
+        });
+      }
+
+      setViewingBooking({ ...viewingBooking, bookingNotes: updatedNotes });
+      fetchAppointments();
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      await showAlert({ title: 'Error', description: 'Failed to delete note. Please try again.', variant: 'destructive' });
+    }
+  };
+
+  // Save edited booking details
+  const handleSaveBookingDetails = async () => {
+    if (!viewingBooking) return;
+
+    setSavingNote(true);
+    try {
+      let bookingRef = doc(getDb(), 'bookings', viewingBooking.id);
+      try {
+        await updateDoc(bookingRef, {
+          ...editedBooking,
+          updatedAt: new Date()
+        });
+      } catch (e) {
+        bookingRef = doc(getDb(), 'appointments', viewingBooking.id);
+        await updateDoc(bookingRef, {
+          ...editedBooking,
+          updatedAt: new Date()
+        });
+      }
+
+      await showAlert({ title: 'Success', description: 'Booking details updated successfully!', variant: 'success' });
+      setViewingBooking({ ...viewingBooking, ...editedBooking });
+      setIsEditMode(false);
+      fetchAppointments();
+    } catch (error) {
+      console.error('Error saving booking:', error);
+      await showAlert({ title: 'Error', description: 'Failed to save booking details. Please try again.', variant: 'destructive' });
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  // Format timestamp for display
+  const formatNoteTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
   };
 
   // Save edited appointment and send email
@@ -402,6 +567,13 @@ export default function BookingCalendarManager() {
                       <td className="py-3 px-4">
                         <div className="flex gap-2">
                           <button
+                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            onClick={() => handleViewBooking(apt)}
+                            title="View Booking Details"
+                          >
+                            <i className="fas fa-eye"></i>
+                          </button>
+                          <button
                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                             onClick={() => handleEditAppointment(apt)}
                             title="Edit Appointment Time"
@@ -469,13 +641,22 @@ export default function BookingCalendarManager() {
                         </span>
                       </td>
                       <td className="py-3 px-4">
-                        <button
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          onClick={() => handleDeleteAppointment(apt.id, apt.clientName)}
-                          title="Delete Appointment"
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            onClick={() => handleViewBooking(apt)}
+                            title="View Booking Details"
+                          >
+                            <i className="fas fa-eye"></i>
+                          </button>
+                          <button
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            onClick={() => handleDeleteAppointment(apt.id, apt.clientName)}
+                            title="Delete Appointment"
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -572,6 +753,268 @@ export default function BookingCalendarManager() {
                   </>
                 )}
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View/Edit Booking Modal */}
+      {viewingBooking && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-gray-200 bg-[#AD6269] rounded-t-xl flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <i className={`fas ${isEditMode ? 'fa-edit' : 'fa-eye'}`}></i>
+                {isEditMode ? 'Edit Booking' : 'Booking Details'}
+              </h3>
+              <div className="flex items-center gap-2">
+                {!isEditMode && (
+                  <button
+                    onClick={() => setIsEditMode(true)}
+                    className="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    <i className="fas fa-edit mr-1"></i>Edit
+                  </button>
+                )}
+                <button
+                  onClick={handleCloseViewBooking}
+                  className="p-1.5 hover:bg-white/20 text-white rounded-lg transition-colors"
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Booking Info Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Client Information */}
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                    <i className="fas fa-user text-[#AD6269]"></i>Client Information
+                  </h4>
+                  {isEditMode ? (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-1">Name</label>
+                        <input
+                          type="text"
+                          value={editedBooking.clientName || ''}
+                          onChange={(e) => setEditedBooking({ ...editedBooking, clientName: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-1">Email</label>
+                        <input
+                          type="email"
+                          value={editedBooking.clientEmail || ''}
+                          onChange={(e) => setEditedBooking({ ...editedBooking, clientEmail: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-1">Phone</label>
+                        <input
+                          type="tel"
+                          value={editedBooking.clientPhone || ''}
+                          onChange={(e) => setEditedBooking({ ...editedBooking, clientPhone: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                      <p className="text-gray-900 font-medium">{viewingBooking.clientName}</p>
+                      <p className="text-gray-600 text-sm flex items-center gap-2">
+                        <i className="fas fa-envelope text-gray-400"></i>{viewingBooking.clientEmail}
+                      </p>
+                      {viewingBooking.clientPhone && (
+                        <p className="text-gray-600 text-sm flex items-center gap-2">
+                          <i className="fas fa-phone text-gray-400"></i>{viewingBooking.clientPhone}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Appointment Details */}
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                    <i className="fas fa-calendar-check text-[#AD6269]"></i>Appointment Details
+                  </h4>
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 text-sm">Service:</span>
+                      <span className="text-gray-900 font-medium">{viewingBooking.serviceName}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 text-sm">Date:</span>
+                      <span className="text-gray-900 font-medium">
+                        {new Date(`${viewingBooking.appointmentDate || viewingBooking.date}T${viewingBooking.appointmentTime || viewingBooking.time}`).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 text-sm">Time:</span>
+                      <span className="text-gray-900 font-medium">{viewingBooking.appointmentTime || viewingBooking.time}</span>
+                    </div>
+                    {viewingBooking.artistName && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 text-sm">Artist:</span>
+                        <span className="text-cyan-600 font-medium">{viewingBooking.artistName}</span>
+                      </div>
+                    )}
+                    {viewingBooking.price && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 text-sm">Price:</span>
+                        <span className="text-green-600 font-medium">${viewingBooking.price}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 text-sm">Status:</span>
+                      <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(viewingBooking.status)}`}>
+                        {viewingBooking.status.charAt(0).toUpperCase() + viewingBooking.status.slice(1)}
+                      </span>
+                    </div>
+                    {viewingBooking.depositPaid && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 text-sm">Deposit:</span>
+                        <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <i className="fas fa-check mr-1"></i>Paid
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Notes Section */}
+              <div className="border-t border-gray-200 pt-6">
+                <h4 className="font-semibold text-gray-900 flex items-center gap-2 mb-4">
+                  <i className="fas fa-sticky-note text-[#AD6269]"></i>Procedure Notes
+                </h4>
+
+                {/* Legacy Notes Field (if exists) */}
+                {viewingBooking.notes && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                    <p className="text-sm font-medium text-amber-800 mb-1">
+                      <i className="fas fa-info-circle mr-1"></i>Original Note/Description:
+                    </p>
+                    <p className="text-gray-900 whitespace-pre-wrap">{viewingBooking.notes}</p>
+                  </div>
+                )}
+
+                {/* Add New Note */}
+                <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Add New Note</label>
+                  <div className="flex gap-2">
+                    <textarea
+                      value={newNoteText}
+                      onChange={(e) => setNewNoteText(e.target.value)}
+                      placeholder="Enter note about the procedure..."
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent resize-none"
+                      rows={2}
+                    />
+                    <Button
+                      onClick={handleAddNote}
+                      disabled={!newNoteText.trim() || savingNote}
+                      className="bg-[#AD6269] hover:bg-[#9d5860] self-end"
+                    >
+                      {savingNote ? (
+                        <i className="fas fa-spinner fa-spin"></i>
+                      ) : (
+                        <i className="fas fa-plus"></i>
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    <i className="fas fa-info-circle mr-1"></i>
+                    Notes are automatically timestamped when added.
+                  </p>
+                </div>
+
+                {/* Notes List */}
+                <div className="space-y-3">
+                  {(viewingBooking.bookingNotes || []).length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <i className="fas fa-clipboard text-3xl mb-2 text-gray-300"></i>
+                      <p>No notes yet. Add a note above to track procedure details.</p>
+                    </div>
+                  ) : (
+                    [...(viewingBooking.bookingNotes || [])].reverse().map((note) => (
+                      <div key={note.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex-1">
+                            <p className="text-gray-900 whitespace-pre-wrap">{note.text}</p>
+                            <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                              <i className="fas fa-clock"></i>
+                              {formatNoteTimestamp(note.timestamp)}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteNote(note.id)}
+                            className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete Note"
+                          >
+                            <i className="fas fa-trash-alt text-sm"></i>
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+              {isEditMode ? (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsEditMode(false);
+                      setEditedBooking({
+                        clientName: viewingBooking.clientName,
+                        clientEmail: viewingBooking.clientEmail,
+                        clientPhone: viewingBooking.clientPhone,
+                        serviceName: viewingBooking.serviceName,
+                        price: viewingBooking.price,
+                        status: viewingBooking.status,
+                      });
+                    }}
+                    disabled={savingNote}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="bg-[#AD6269] hover:bg-[#9d5860]"
+                    onClick={handleSaveBookingDetails}
+                    disabled={savingNote}
+                  >
+                    {savingNote ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin mr-2"></i>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-save mr-2"></i>
+                        Save Changes
+                      </>
+                    )}
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={handleCloseViewBooking}
+                >
+                  Close
+                </Button>
+              )}
             </div>
           </div>
         </div>

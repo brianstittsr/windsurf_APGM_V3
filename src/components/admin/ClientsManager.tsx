@@ -1,40 +1,36 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, getDocs, doc, deleteDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { getDb } from '../../lib/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { User } from '../../types/user';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useAlertDialog } from '@/components/ui/alert-dialog';
 
-interface UserFormData {
+interface ClientFormData {
   email: string;
   displayName: string;
   firstName: string;
   lastName: string;
-  role: 'admin';
   phone: string;
   password: string;
   confirmPassword: string;
 }
 
-export default function UserManager() {
+export default function ClientsManager() {
   const { user: currentUser, userRole, loading: authLoading } = useAuth();
-  const [users, setUsers] = useState<User[]>([]);
+  const [clients, setClients] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  // Users tab now only shows admins - no role filter needed
+  const [editingClient, setEditingClient] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [formData, setFormData] = useState<UserFormData>({
+  const [formData, setFormData] = useState<ClientFormData>({
     email: '',
     displayName: '',
     firstName: '',
     lastName: '',
-    role: 'admin',
     phone: '',
     password: '',
     confirmPassword: '',
@@ -45,43 +41,44 @@ export default function UserManager() {
   const { showAlert, showConfirm, AlertDialogComponent } = useAlertDialog();
 
   useEffect(() => {
-    // Only fetch users when auth is ready and user is admin
     if (!authLoading && currentUser && userRole === 'admin') {
-      fetchUsers();
+      fetchClients();
     } else if (!authLoading) {
       setLoading(false);
     }
   }, [authLoading, currentUser, userRole]);
 
-  const fetchUsers = async () => {
+  const fetchClients = async () => {
     setLoading(true);
     try {
       const usersCollection = collection(getDb(), 'users');
       const usersSnapshot = await getDocs(usersCollection);
-      const usersList = usersSnapshot.docs.map(doc => {
-        const data = doc.data();
-        const displayName = data.displayName || data.name || (data.profile?.firstName && data.profile?.lastName ? `${data.profile.firstName} ${data.profile.lastName}` : '') || data.profile?.firstName || '';
-        const email = data.email || data.profile?.email || '';
-        const phone = data.phone || data.profile?.phone || '';
-        const role = data.role || 'client';
-        const lastLoginAt = data.lastLoginAt;
-        return {
-          id: doc.id,
-          displayName,
-          email,
-          phone,
-          role,
-          isActive: data.isActive !== false,
-          lastLoginAt,
-          ...data,
-        } as User;
-      });
-      setUsers(usersList);
+      const clientsList = usersSnapshot.docs
+        .map(doc => {
+          const data = doc.data();
+          const displayName = data.displayName || data.name || (data.profile?.firstName && data.profile?.lastName ? `${data.profile.firstName} ${data.profile.lastName}` : '') || data.profile?.firstName || '';
+          const email = data.email || data.profile?.email || '';
+          const phone = data.phone || data.profile?.phone || '';
+          const role = data.role || 'client';
+          const lastLoginAt = data.lastLoginAt;
+          return {
+            id: doc.id,
+            displayName,
+            email,
+            phone,
+            role,
+            isActive: data.isActive !== false,
+            lastLoginAt,
+            ...data,
+          } as User;
+        })
+        .filter(user => user.role === 'client'); // Only show clients
+      setClients(clientsList);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Error fetching clients:', error);
       showAlert({
         title: 'Error',
-        description: 'Error fetching users.',
+        description: 'Error fetching clients.',
         variant: 'destructive'
       });
     } finally {
@@ -89,17 +86,17 @@ export default function UserManager() {
     }
   };
 
-  const handlePasswordReset = async (user: User) => {
+  const handlePasswordReset = async (client: User) => {
     const confirmed = await showConfirm({
       title: 'Send Password Reset',
-      description: `Are you sure you want to send a password reset email to ${user.email}?`,
+      description: `Are you sure you want to send a password reset email to ${client.email}?`,
       confirmText: 'Send Reset Email',
       cancelText: 'Cancel',
       variant: 'warning'
     });
     if (!confirmed) return;
 
-    setPasswordResetStatus({ ...passwordResetStatus, [user.id]: 'sending' });
+    setPasswordResetStatus({ ...passwordResetStatus, [client.id]: 'sending' });
     try {
       const idToken = await currentUser?.getIdToken();
       const response = await fetch('/api/users/manage', {
@@ -108,7 +105,7 @@ export default function UserManager() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${idToken}`,
         },
-        body: JSON.stringify({ action: 'reset_password', uid: user.id, email: user.email }),
+        body: JSON.stringify({ action: 'reset_password', uid: client.id, email: client.email }),
       });
 
       if (!response.ok) {
@@ -116,16 +113,16 @@ export default function UserManager() {
         throw new Error(errorData.error || 'Failed to send reset email');
       }
 
-      setPasswordResetStatus({ ...passwordResetStatus, [user.id]: 'sent' });
+      setPasswordResetStatus({ ...passwordResetStatus, [client.id]: 'sent' });
       await showAlert({
         title: 'Email Sent',
         description: 'Password reset email sent successfully!',
         variant: 'success'
       });
-      setTimeout(() => setPasswordResetStatus(prev => ({ ...prev, [user.id]: '' })), 5000);
+      setTimeout(() => setPasswordResetStatus(prev => ({ ...prev, [client.id]: '' })), 5000);
     } catch (error: any) {
       console.error('Error sending password reset email:', error);
-      setPasswordResetStatus({ ...passwordResetStatus, [user.id]: 'error' });
+      setPasswordResetStatus({ ...passwordResetStatus, [client.id]: 'error' });
       await showAlert({
         title: 'Error',
         description: error.message,
@@ -134,16 +131,15 @@ export default function UserManager() {
     }
   };
 
-  const handleEditUser = async (e: React.FormEvent) => {
+  const handleEditClient = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingUser) return;
+    if (!editingClient) return;
 
     setSubmitting(true);
     try {
-      const userDocRef = doc(getDb(), 'users', editingUser.id);
+      const userDocRef = doc(getDb(), 'users', editingClient.id);
       await updateDoc(userDocRef, {
         displayName: formData.displayName,
-        role: formData.role,
         phone: formData.phone || '',
         updatedAt: new Date(),
         updatedBy: currentUser?.uid,
@@ -166,7 +162,7 @@ export default function UserManager() {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${idToken}`,
           },
-          body: JSON.stringify({ action: 'update_password', uid: editingUser.id, newPassword: formData.password }),
+          body: JSON.stringify({ action: 'update_password', uid: editingClient.id, newPassword: formData.password }),
         });
 
         if (!passwordResponse.ok) {
@@ -177,18 +173,18 @@ export default function UserManager() {
 
       await showAlert({
         title: 'Success',
-        description: 'User updated successfully!',
+        description: 'Client updated successfully!',
         variant: 'success'
       });
       setShowModal(false);
-      setEditingUser(null);
-      setFormData({ email: '', displayName: '', firstName: '', lastName: '', role: 'admin', phone: '', password: '', confirmPassword: '' });
-      fetchUsers();
+      setEditingClient(null);
+      setFormData({ email: '', displayName: '', firstName: '', lastName: '', phone: '', password: '', confirmPassword: '' });
+      fetchClients();
     } catch (error: any) {
-      console.error('Error updating user:', error);
+      console.error('Error updating client:', error);
       await showAlert({
         title: 'Error',
-        description: `Error updating user: ${error.message}`,
+        description: `Error updating client: ${error.message}`,
         variant: 'destructive'
       });
     } finally {
@@ -196,10 +192,9 @@ export default function UserManager() {
     }
   };
 
-  const handleCreateUser = async (e: React.FormEvent) => {
+  const handleCreateClient = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation matching registration form
     if (!formData.firstName.trim()) {
       await showAlert({ title: 'Missing Information', description: 'First name is required.', variant: 'warning' });
       return;
@@ -245,7 +240,7 @@ export default function UserManager() {
           displayName,
           firstName: formData.firstName,
           lastName: formData.lastName,
-          role: formData.role,
+          role: 'client', // Always create as client
           phone: formData.phone,
           newPassword: formData.password,
         }),
@@ -254,22 +249,22 @@ export default function UserManager() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create user');
+        throw new Error(data.error || 'Failed to create client');
       }
 
       await showAlert({
         title: 'Success',
-        description: 'User created successfully!',
+        description: 'Client created successfully!',
         variant: 'success'
       });
       setShowModal(false);
-      setFormData({ email: '', displayName: '', firstName: '', lastName: '', role: 'admin', phone: '', password: '', confirmPassword: '' });
-      fetchUsers();
+      setFormData({ email: '', displayName: '', firstName: '', lastName: '', phone: '', password: '', confirmPassword: '' });
+      fetchClients();
     } catch (error: any) {
-      console.error('Error creating user:', error);
+      console.error('Error creating client:', error);
       await showAlert({
         title: 'Error',
-        description: error.message || 'Error creating user.',
+        description: error.message || 'Error creating client.',
         variant: 'destructive'
       });
     } finally {
@@ -277,52 +272,50 @@ export default function UserManager() {
     }
   };
 
-  const handleDeleteUser = async (userId: string, userEmail: string) => {
+  const handleDeleteClient = async (clientId: string, clientEmail: string) => {
     const confirmed = await showConfirm({
-      title: 'Delete User',
-      description: `Are you sure you want to delete the user ${userEmail}?`,
+      title: 'Delete Client',
+      description: `Are you sure you want to delete the client ${clientEmail}?`,
       confirmText: 'Delete',
       cancelText: 'Cancel',
       variant: 'destructive'
     });
     if (!confirmed) return;
     try {
-      await deleteDoc(doc(getDb(), 'users', userId));
+      await deleteDoc(doc(getDb(), 'users', clientId));
       await showAlert({
         title: 'Success',
-        description: 'User deleted successfully!',
+        description: 'Client deleted successfully!',
         variant: 'success'
       });
-      fetchUsers();
+      fetchClients();
     } catch (error) {
-      console.error('Error deleting user:', error);
+      console.error('Error deleting client:', error);
       await showAlert({
         title: 'Error',
-        description: 'Error deleting user.',
+        description: 'Error deleting client.',
         variant: 'destructive'
       });
     }
   };
 
   const openCreateModal = () => {
-    setEditingUser(null);
-    setFormData({ email: '', displayName: '', firstName: '', lastName: '', role: 'admin', phone: '', password: '', confirmPassword: '' });
+    setEditingClient(null);
+    setFormData({ email: '', displayName: '', firstName: '', lastName: '', phone: '', password: '', confirmPassword: '' });
     setShowModal(true);
   };
 
-  const openEditModal = (user: User) => {
-    setEditingUser(user);
-    // Parse displayName into first/last name if possible
-    const nameParts = (user.displayName || '').split(' ');
+  const openEditModal = (client: User) => {
+    setEditingClient(client);
+    const nameParts = (client.displayName || '').split(' ');
     const firstName = nameParts[0] || '';
     const lastName = nameParts.slice(1).join(' ') || '';
     setFormData({
-      email: user.email,
-      displayName: user.displayName,
+      email: client.email,
+      displayName: client.displayName,
       firstName,
       lastName,
-      role: 'admin',
-      phone: user.phone || '',
+      phone: client.phone || '',
       password: '',
       confirmPassword: '',
     });
@@ -331,8 +324,8 @@ export default function UserManager() {
 
   const closeModal = () => {
     setShowModal(false);
-    setEditingUser(null);
-    setFormData({ email: '', displayName: '', firstName: '', lastName: '', role: 'admin', phone: '', password: '', confirmPassword: '' });
+    setEditingClient(null);
+    setFormData({ email: '', displayName: '', firstName: '', lastName: '', phone: '', password: '', confirmPassword: '' });
   };
 
   const copyToClipboard = (id: string) => {
@@ -342,20 +335,10 @@ export default function UserManager() {
     });
   };
 
-  const getRoleBadgeClass = (role: string) => {
-    switch (role) {
-      case 'admin': return 'bg-red-100 text-red-800';
-      case 'artist': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-green-100 text-green-800';
-    }
-  };
-
-  const filteredUsers = users.filter(user => {
-    // Only show admin users in this view
-    const roleMatch = user.role === 'admin';
-    const searchMatch = (user.displayName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) || 
-                      (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase());
-    return roleMatch && searchMatch;
+  const filteredClients = clients.filter(client => {
+    const searchMatch = (client.displayName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) || 
+                      (client.email?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+    return searchMatch;
   });
 
   if (loading) {
@@ -370,9 +353,9 @@ export default function UserManager() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-xl font-semibold text-gray-900">User Management</h2>
+        <h2 className="text-xl font-semibold text-gray-900">Client Management</h2>
         <Button onClick={openCreateModal} className="bg-[#AD6269] hover:bg-[#9d5860]">
-          <i className="fas fa-plus mr-2"></i>Add New Admin
+          <i className="fas fa-plus mr-2"></i>Add New Client
         </Button>
       </div>
 
@@ -387,16 +370,16 @@ export default function UserManager() {
         />
       </div>
 
-      {/* Users Table */}
+      {/* Clients Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="font-semibold text-gray-900">Admin Users ({filteredUsers.length})</h3>
+          <h3 className="font-semibold text-gray-900">All Clients ({filteredClients.length})</h3>
         </div>
         <div className="p-6">
-          {filteredUsers.length === 0 ? (
+          {filteredClients.length === 0 ? (
             <div className="text-center py-12">
-              <i className="fas fa-user-shield text-4xl text-gray-300 mb-4"></i>
-              <p className="text-gray-500">No admin users found.</p>
+              <i className="fas fa-users text-4xl text-gray-300 mb-4"></i>
+              <p className="text-gray-500">No clients found.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -413,14 +396,14 @@ export default function UserManager() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.map((user) => (
-                    <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                      <td className="py-3 px-4 text-sm text-gray-900">{user.displayName || 'N/A'}</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">{user.email || 'N/A'}</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">{user.phone || '-'}</td>
+                  {filteredClients.map((client) => (
+                    <tr key={client.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <td className="py-3 px-4 text-sm text-gray-900">{client.displayName || 'N/A'}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{client.email || 'N/A'}</td>
+                      <td className="py-3 px-4 text-sm text-gray-600">{client.phone || '-'}</td>
                       <td className="py-3 px-4 text-sm text-gray-600">
-                        {(user as any).lastLoginAt 
-                          ? new Date((user as any).lastLoginAt.seconds * 1000).toLocaleString('en-US', {
+                        {(client as any).lastLoginAt 
+                          ? new Date((client as any).lastLoginAt.seconds * 1000).toLocaleString('en-US', {
                               month: 'short',
                               day: 'numeric',
                               year: 'numeric',
@@ -431,19 +414,19 @@ export default function UserManager() {
                           : 'Never'}
                       </td>
                       <td className="py-3 px-4">
-                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                          {user.isActive ? 'Active' : 'Inactive'}
+                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${client.isActive ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                          {client.isActive ? 'Active' : 'Inactive'}
                         </span>
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
-                          <span title={user.id} className="text-sm text-gray-500 font-mono">{`${user.id.substring(0, 4)}...${user.id.substring(user.id.length - 4)}`}</span>
+                          <span title={client.id} className="text-sm text-gray-500 font-mono">{`${client.id.substring(0, 4)}...${client.id.substring(client.id.length - 4)}`}</span>
                           <button 
                             className="p-1 text-gray-400 hover:text-gray-600 transition-colors" 
-                            onClick={() => copyToClipboard(user.id)}
+                            onClick={() => copyToClipboard(client.id)}
                             title="Copy ID"
                           >
-                            <i className={`fas ${copiedId === user.id ? 'fa-check text-green-500' : 'fa-copy'}`}></i>
+                            <i className={`fas ${copiedId === client.id ? 'fa-check text-green-500' : 'fa-copy'}`}></i>
                           </button>
                         </div>
                       </td>
@@ -451,27 +434,25 @@ export default function UserManager() {
                         <div className="flex items-center gap-1">
                           <button
                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            onClick={() => openEditModal(user)}
-                            title="Edit User"
+                            onClick={() => openEditModal(client)}
+                            title="Edit Client"
                           >
                             <i className="fas fa-edit"></i>
                           </button>
-                          {user.email !== currentUser?.email && (
-                            <button
-                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              onClick={() => handleDeleteUser(user.id, user.email)}
-                              title="Delete User"
-                            >
-                              <i className="fas fa-trash"></i>
-                            </button>
-                          )}
+                          <button
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            onClick={() => handleDeleteClient(client.id, client.email)}
+                            title="Delete Client"
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
                           <button
                             className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors disabled:opacity-50"
-                            onClick={() => handlePasswordReset(user)}
+                            onClick={() => handlePasswordReset(client)}
                             title="Send Password Reset Email"
-                            disabled={passwordResetStatus[user.id] === 'sending' || passwordResetStatus[user.id] === 'sent'}
+                            disabled={passwordResetStatus[client.id] === 'sending' || passwordResetStatus[client.id] === 'sent'}
                           >
-                            <i className={`fas ${passwordResetStatus[user.id] === 'sent' ? 'fa-check-circle text-green-500' : 'fa-key'}`}></i>
+                            <i className={`fas ${passwordResetStatus[client.id] === 'sent' ? 'fa-check-circle text-green-500' : 'fa-key'}`}></i>
                           </button>
                         </div>
                       </td>
@@ -484,11 +465,11 @@ export default function UserManager() {
         </div>
       </div>
 
-      {/* Modal - Registration Style */}
+      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overflow-y-auto py-8">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4">
-            <form onSubmit={editingUser ? handleEditUser : handleCreateUser} noValidate>
+            <form onSubmit={editingClient ? handleEditClient : handleCreateClient} noValidate>
               {/* Header */}
               <div className="p-6 pb-0">
                 <div className="flex justify-between items-start">
@@ -497,10 +478,10 @@ export default function UserManager() {
                       <i className="fas fa-user-plus text-[#AD6269] text-2xl"></i>
                     </div>
                     <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                      {editingUser ? 'Edit Admin' : 'Add New Admin'}
+                      {editingClient ? 'Edit Client' : 'Add New Client'}
                     </h3>
                     <p className="text-gray-500">
-                      {editingUser ? 'Update admin information' : 'Create a new administrator account'}
+                      {editingClient ? 'Update client information' : 'Create a new client account'}
                     </p>
                   </div>
                   <button type="button" className="p-2 text-gray-400 hover:text-gray-600 transition-colors" onClick={closeModal}>
@@ -524,7 +505,7 @@ export default function UserManager() {
                       value={formData.firstName}
                       onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                       required
-                      placeholder="Enter your first name"
+                      placeholder="Enter first name"
                     />
                   </div>
                   <div>
@@ -538,7 +519,7 @@ export default function UserManager() {
                       value={formData.lastName}
                       onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                       required
-                      placeholder="Enter your last name"
+                      placeholder="Enter last name"
                     />
                   </div>
                 </div>
@@ -555,8 +536,8 @@ export default function UserManager() {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
-                    disabled={!!editingUser}
-                    placeholder="Enter your email address"
+                    disabled={!!editingClient}
+                    placeholder="Enter email address"
                   />
                 </div>
 
@@ -572,18 +553,15 @@ export default function UserManager() {
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     required
-                    placeholder="Enter your phone number"
+                    placeholder="Enter phone number"
                   />
                 </div>
-
-                {/* Role is fixed to admin - hidden field */}
-                <input type="hidden" value="admin" />
 
                 {/* Password */}
                 <div>
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                     <i className="fas fa-lock mr-2 text-gray-400"></i>
-                    {editingUser ? 'New Password' : 'Password (min 6 characters) *'}
+                    {editingClient ? 'New Password' : 'Password (min 6 characters) *'}
                   </label>
                   <input
                     type="password"
@@ -591,8 +569,8 @@ export default function UserManager() {
                     id="password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    required={!editingUser}
-                    placeholder={editingUser ? 'Leave blank to keep current password' : 'Create a password'}
+                    required={!editingClient}
+                    placeholder={editingClient ? 'Leave blank to keep current password' : 'Create a password'}
                     minLength={6}
                   />
                 </div>
@@ -601,7 +579,7 @@ export default function UserManager() {
                 <div>
                   <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
                     <i className="fas fa-lock mr-2 text-gray-400"></i>
-                    {editingUser ? 'Confirm New Password' : 'Confirm Password *'}
+                    {editingClient ? 'Confirm New Password' : 'Confirm Password *'}
                   </label>
                   <input
                     type="password"
@@ -609,8 +587,8 @@ export default function UserManager() {
                     id="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    required={!editingUser}
-                    placeholder={editingUser ? 'Confirm new password' : 'Confirm your password'}
+                    required={!editingClient}
+                    placeholder={editingClient ? 'Confirm new password' : 'Confirm your password'}
                   />
                 </div>
               </div>
@@ -629,12 +607,12 @@ export default function UserManager() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      {editingUser ? 'Saving...' : 'Creating...'}
+                      {editingClient ? 'Saving...' : 'Creating...'}
                     </>
                   ) : (
                     <>
-                      <i className={`fas ${editingUser ? 'fa-save' : 'fa-user-plus'} mr-2`}></i>
-                      {editingUser ? 'Save Changes' : 'Create Account'}
+                      <i className={`fas ${editingClient ? 'fa-save' : 'fa-user-plus'} mr-2`}></i>
+                      {editingClient ? 'Save Changes' : 'Create Client'}
                     </>
                   )}
                 </button>
