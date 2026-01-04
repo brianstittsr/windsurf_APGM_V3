@@ -162,9 +162,21 @@ export default function BoldSignManager() {
 
     setLoading(true);
     try {
-      // TODO: Test BoldSign API connection
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setMessage({ type: 'success', text: 'Successfully connected to BoldSign!' });
+      // Test BoldSign API connection by fetching templates
+      const response = await fetch('/api/boldsign/templates', {
+        method: 'GET',
+        headers: {
+          'x-boldsign-api-key': config.apiKey,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setMessage({ type: 'success', text: `Successfully connected to BoldSign! Found ${data.templates?.length || 0} templates.` });
+      } else {
+        const error = await response.json();
+        setMessage({ type: 'error', text: `Failed to connect: ${error.error || 'Unknown error'}` });
+      }
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to connect to BoldSign. Check your API key.' });
     } finally {
@@ -180,11 +192,42 @@ export default function BoldSignManager() {
 
     setLoading(true);
     try {
-      // TODO: Fetch templates from BoldSign API
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setMessage({ type: 'info', text: 'Templates synced from BoldSign. Map them to procedures below.' });
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to sync templates from BoldSign' });
+      // Fetch templates from BoldSign API
+      const response = await fetch('/api/boldsign/templates', {
+        method: 'GET',
+        headers: {
+          'x-boldsign-api-key': config.apiKey,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to fetch templates');
+      }
+
+      const data = await response.json();
+      
+      if (data.templates && data.templates.length > 0) {
+        // Map BoldSign templates to our format
+        const syncedTemplates: BoldSignTemplate[] = data.templates.map((t: any, index: number) => ({
+          id: t.templateId,
+          templateId: t.templateId,
+          templateName: t.templateName,
+          description: t.description || `Created by ${t.createdBy}`,
+          category: 'consent' as const,
+          procedures: [], // User will map these
+          isRequired: true,
+          order: index + 1,
+          isActive: true,
+        }));
+
+        setTemplates(syncedTemplates);
+        setMessage({ type: 'success', text: `Synced ${syncedTemplates.length} templates from BoldSign. Now map them to procedures.` });
+      } else {
+        setMessage({ type: 'info', text: 'No templates found in BoldSign. Create templates in BoldSign first.' });
+      }
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message || 'Failed to sync templates from BoldSign' });
     } finally {
       setLoading(false);
     }
