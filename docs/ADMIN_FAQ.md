@@ -582,6 +582,12 @@ The booking page automatically filters time slots based on the current time:
 
 ## BoldSign Form Integration
 
+### Accessing BoldSign Forms
+
+**Location**: Admin Dashboard → **Integrations** → **BoldSign Forms**
+
+The BoldSign Forms manager is located in the sidebar under the **Integrations** section, alongside GoHighLevel, GHL MCP, and other integrations.
+
 ### Overview
 
 BoldSign integration enables automated electronic signature collection for PMU consent forms, health questionnaires, and aftercare agreements. The system dynamically sends appropriate forms based on the procedure(s) booked.
