@@ -106,6 +106,20 @@ export default function ClientsManager() {
     date: new Date().toISOString().split('T')[0],
     notes: ''
   });
+  
+  // Edit appointment from profile state
+  const [showEditAppointmentModal, setShowEditAppointmentModal] = useState(false);
+  const [editingAppointment, setEditingAppointment] = useState<ClientBooking | null>(null);
+  const [editAppointmentData, setEditAppointmentData] = useState({
+    serviceName: '',
+    date: '',
+    time: '',
+    price: 0,
+    status: 'completed' as 'pending' | 'confirmed' | 'completed' | 'cancelled',
+    bookingNotes: [] as Array<{ id: string; text: string; timestamp: string; createdBy?: string }>
+  });
+  const [editAppointmentNoteText, setEditAppointmentNoteText] = useState('');
+  const [savingAppointment, setSavingAppointment] = useState(false);
 
   useEffect(() => {
     if (!authLoading && currentUser && userRole === 'admin') {
@@ -803,6 +817,81 @@ export default function ClientsManager() {
     }
   };
 
+  // Open edit appointment modal
+  const openEditAppointmentModal = (booking: ClientBooking) => {
+    setEditingAppointment(booking);
+    setEditAppointmentData({
+      serviceName: booking.serviceName,
+      date: booking.date,
+      time: booking.time || '10:00',
+      price: booking.price || 0,
+      status: booking.status as any,
+      bookingNotes: booking.bookingNotes || []
+    });
+    setEditAppointmentNoteText('');
+    setShowEditAppointmentModal(true);
+  };
+
+  // Save edited appointment
+  const saveEditedAppointment = async () => {
+    if (!editingAppointment || !viewingClient) return;
+
+    setSavingAppointment(true);
+    try {
+      const bookingRef = doc(getDb(), 'bookings', editingAppointment.id);
+      await updateDoc(bookingRef, {
+        serviceName: editAppointmentData.serviceName,
+        date: editAppointmentData.date,
+        time: editAppointmentData.time,
+        price: editAppointmentData.price,
+        status: editAppointmentData.status,
+        bookingNotes: editAppointmentData.bookingNotes,
+        updatedAt: new Date()
+      });
+
+      // Refresh client bookings
+      const bookingsQuery = query(
+        collection(getDb(), 'bookings'),
+        where('clientEmail', '==', viewingClient.email)
+      );
+      const bookingsSnapshot = await getDocs(bookingsQuery);
+      const bookings: ClientBooking[] = [];
+      bookingsSnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        bookings.push({
+          id: doc.id,
+          serviceName: data.serviceName || 'Unknown Service',
+          date: data.date || data.appointmentDate || '',
+          time: data.time || data.appointmentTime || '',
+          status: data.status || 'unknown',
+          price: data.price,
+          artistName: data.artistName,
+          bookingNotes: data.bookingNotes || []
+        });
+      });
+      bookings.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      setClientBookings(bookings);
+
+      await showAlert({
+        title: 'Appointment Updated!',
+        description: 'The appointment has been updated successfully.',
+        variant: 'success'
+      });
+
+      setShowEditAppointmentModal(false);
+      setEditingAppointment(null);
+    } catch (error) {
+      console.error('Error updating appointment:', error);
+      await showAlert({
+        title: 'Error',
+        description: 'Failed to update appointment.',
+        variant: 'destructive'
+      });
+    } finally {
+      setSavingAppointment(false);
+    }
+  };
+
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'confirmed': return 'bg-green-100 text-green-800';
@@ -1322,9 +1411,9 @@ export default function ClientsManager() {
                       ) : (
                         <div className="space-y-3">
                           {clientBookings.map((booking) => (
-                            <div key={booking.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div key={booking.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-[#AD6269]/30 transition-colors">
                               <div className="flex justify-between items-start">
-                                <div>
+                                <div className="flex-1">
                                   <p className="font-medium text-gray-900">{booking.serviceName}</p>
                                   <p className="text-sm text-gray-600">
                                     <i className="fas fa-calendar mr-1"></i>
@@ -1337,13 +1426,22 @@ export default function ClientsManager() {
                                     </p>
                                   )}
                                 </div>
-                                <div className="text-right">
-                                  <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(booking.status)}`}>
-                                    {booking.status}
-                                  </span>
-                                  {booking.price && (
-                                    <p className="text-sm font-medium text-gray-900 mt-1">${booking.price}</p>
-                                  )}
+                                <div className="text-right flex items-start gap-2">
+                                  <div>
+                                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(booking.status)}`}>
+                                      {booking.status}
+                                    </span>
+                                    {booking.price && (
+                                      <p className="text-sm font-medium text-gray-900 mt-1">${booking.price}</p>
+                                    )}
+                                  </div>
+                                  <button
+                                    onClick={() => openEditAppointmentModal(booking)}
+                                    className="p-2 text-[#AD6269] hover:bg-[#AD6269]/10 rounded-lg transition-colors"
+                                    title="Edit Appointment"
+                                  >
+                                    <i className="fas fa-edit"></i>
+                                  </button>
                                 </div>
                               </div>
                               {booking.bookingNotes && booking.bookingNotes.length > 0 && (
@@ -1807,6 +1905,176 @@ export default function ClientsManager() {
                   <><i className="fas fa-spinner fa-spin mr-2"></i>Adding...</>
                 ) : (
                   <><i className="fas fa-plus mr-2"></i>Add Payment</>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Appointment Modal */}
+      {showEditAppointmentModal && editingAppointment && viewingClient && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-[#AD6269] text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
+              <h3 className="text-xl font-semibold flex items-center gap-2">
+                <i className="fas fa-edit"></i>
+                Edit Appointment
+              </h3>
+              <button onClick={() => setShowEditAppointmentModal(false)} className="text-white/80 hover:text-white">
+                <i className="fas fa-times text-xl"></i>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Service</label>
+                <select
+                  value={editAppointmentData.serviceName}
+                  onChange={(e) => setEditAppointmentData({...editAppointmentData, serviceName: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                >
+                  <option value="Microblading">Microblading</option>
+                  <option value="Powder Brows">Powder Brows</option>
+                  <option value="Combo Brows">Combo Brows</option>
+                  <option value="Lip Blush">Lip Blush</option>
+                  <option value="Eyeliner">Eyeliner</option>
+                  <option value="Touch Up">Touch Up</option>
+                  <option value="Consultation">Consultation</option>
+                </select>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                  <input
+                    type="date"
+                    value={editAppointmentData.date}
+                    onChange={(e) => setEditAppointmentData({...editAppointmentData, date: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                  <select
+                    value={editAppointmentData.time}
+                    onChange={(e) => setEditAppointmentData({...editAppointmentData, time: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                  >
+                    <option value="09:00">9:00 AM</option>
+                    <option value="10:00">10:00 AM</option>
+                    <option value="11:00">11:00 AM</option>
+                    <option value="12:00">12:00 PM</option>
+                    <option value="13:00">1:00 PM</option>
+                    <option value="14:00">2:00 PM</option>
+                    <option value="15:00">3:00 PM</option>
+                    <option value="16:00">4:00 PM</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
+                  <input
+                    type="number"
+                    value={editAppointmentData.price}
+                    onChange={(e) => setEditAppointmentData({...editAppointmentData, price: parseInt(e.target.value) || 0})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <select
+                    value={editAppointmentData.status}
+                    onChange={(e) => setEditAppointmentData({...editAppointmentData, status: e.target.value as any})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                  >
+                    <option value="completed">Completed</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="pending">Pending</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Procedure Notes */}
+              <div className="border-t pt-4">
+                <h4 className="font-semibold text-gray-900 flex items-center gap-2 mb-3">
+                  <i className="fas fa-sticky-note text-[#AD6269]"></i>Procedure Notes
+                </h4>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="flex gap-2">
+                    <textarea
+                      value={editAppointmentNoteText}
+                      onChange={(e) => setEditAppointmentNoteText(e.target.value)}
+                      placeholder="Add a note about the procedure..."
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent resize-none text-sm"
+                      rows={2}
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        if (editAppointmentNoteText.trim()) {
+                          const newNote = {
+                            id: `note-${Date.now()}`,
+                            text: editAppointmentNoteText.trim(),
+                            timestamp: new Date().toISOString(),
+                            createdBy: 'admin'
+                          };
+                          setEditAppointmentData({
+                            ...editAppointmentData,
+                            bookingNotes: [...editAppointmentData.bookingNotes, newNote]
+                          });
+                          setEditAppointmentNoteText('');
+                        }
+                      }}
+                      disabled={!editAppointmentNoteText.trim()}
+                      className="bg-[#AD6269] hover:bg-[#9d5860] self-end"
+                      size="sm"
+                    >
+                      <i className="fas fa-plus"></i>
+                    </Button>
+                  </div>
+                  {editAppointmentData.bookingNotes.length > 0 && (
+                    <div className="mt-3 space-y-2 max-h-40 overflow-y-auto">
+                      {editAppointmentData.bookingNotes.map((note) => (
+                        <div key={note.id} className="bg-white border rounded-lg p-3 flex justify-between items-start">
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-800">{note.text}</p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              {new Date(note.timestamp).toLocaleString()}
+                              {note.createdBy && ` • ${note.createdBy}`}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => setEditAppointmentData({
+                              ...editAppointmentData,
+                              bookingNotes: editAppointmentData.bookingNotes.filter(n => n.id !== note.id)
+                            })}
+                            className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-2"
+                          >
+                            <i className="fas fa-trash-alt text-sm"></i>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3 rounded-b-2xl">
+              <Button variant="outline" onClick={() => setShowEditAppointmentModal(false)}>Cancel</Button>
+              <Button 
+                onClick={saveEditedAppointment}
+                disabled={savingAppointment}
+                className="bg-[#AD6269] hover:bg-[#9d5860]"
+              >
+                {savingAppointment ? (
+                  <><i className="fas fa-spinner fa-spin mr-2"></i>Saving...</>
+                ) : (
+                  <><i className="fas fa-save mr-2"></i>Save Changes</>
                 )}
               </Button>
             </div>

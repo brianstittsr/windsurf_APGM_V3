@@ -186,6 +186,23 @@ You can add appointments directly from a client's profile:
 
 The booking is automatically linked to the client and appears in their appointment history.
 
+### Editing Appointments from Client Profile
+
+You can edit existing appointments directly from a client's profile:
+
+1. Open the client's profile
+2. Go to the **Appointments** tab
+3. Click the **edit icon** (pencil) on the appointment you want to edit
+4. Modify the appointment details:
+   - **Service**: Change the service type
+   - **Date and Time**: Reschedule the appointment
+   - **Price**: Update the price
+   - **Status**: Change status (Completed, Confirmed, Pending, Cancelled)
+   - **Procedure Notes**: Add or remove notes with timestamps
+5. Click **"Save Changes"**
+
+The appointment is updated in the database and the list refreshes automatically.
+
 ### Adding Payments from Client Profile
 
 You can record payments directly from a client's profile:
