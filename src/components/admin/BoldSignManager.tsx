@@ -87,52 +87,7 @@ export default function BoldSignManager() {
     },
   });
 
-  const [templates, setTemplates] = useState<BoldSignTemplate[]>([
-    {
-      id: '1',
-      templateId: '',
-      templateName: 'PMU Consent Form',
-      description: 'General consent form for all PMU procedures',
-      category: 'consent',
-      procedures: ['Microblading', 'Powder Brows', 'Combo Brows'],
-      isRequired: true,
-      order: 1,
-      isActive: true,
-    },
-    {
-      id: '2',
-      templateId: '',
-      templateName: 'Health Questionnaire',
-      description: 'Medical history and health screening',
-      category: 'health',
-      procedures: ['Microblading', 'Powder Brows', 'Combo Brows', 'Lip Blush', 'Eyeliner', 'Touch Up'],
-      isRequired: true,
-      order: 2,
-      isActive: true,
-    },
-    {
-      id: '3',
-      templateId: '',
-      templateName: 'Lip Blush Consent Form',
-      description: 'Specific consent for lip procedures',
-      category: 'consent',
-      procedures: ['Lip Blush'],
-      isRequired: true,
-      order: 3,
-      isActive: true,
-    },
-    {
-      id: '4',
-      templateId: '',
-      templateName: 'Aftercare Agreement',
-      description: 'Post-procedure care instructions acknowledgment',
-      category: 'aftercare',
-      procedures: ['Microblading', 'Powder Brows', 'Combo Brows', 'Lip Blush', 'Eyeliner'],
-      isRequired: true,
-      order: 4,
-      isActive: true,
-    },
-  ]);
+  const [templates, setTemplates] = useState<BoldSignTemplate[]>([]);
 
   const [editingTemplate, setEditingTemplate] = useState<BoldSignTemplate | null>(null);
 
@@ -513,6 +468,18 @@ export default function BoldSignManager() {
 
           {/* Templates List */}
           <div className="space-y-4">
+            {templates.length === 0 ? (
+              <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+                <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Templates Synced</h3>
+                <p className="text-gray-500 mb-4">
+                  Click "Sync from BoldSign" to import your templates from BoldSign.
+                </p>
+                <p className="text-sm text-gray-400">
+                  Make sure you have created templates in your BoldSign account first.
+                </p>
+              </div>
+            ) : null}
             {templates.map(template => (
               <div 
                 key={template.id}
