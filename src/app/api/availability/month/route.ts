@@ -28,12 +28,15 @@ export async function GET(req: NextRequest) {
 
     // Fetch artist availability from Firestore
     let artistAvailability: any = null;
+    let dateSpecificHours: any[] = [];
     try {
       const availabilitySnapshot = await adminDb.collection('artist-availability').get();
       if (!availabilitySnapshot.empty) {
         // Use the first artist's availability
         const doc = availabilitySnapshot.docs[0];
-        artistAvailability = doc.data()?.availability || {};
+        const data = doc.data();
+        artistAvailability = data?.availability || {};
+        dateSpecificHours = data?.dateSpecificHours || [];
       }
     } catch (error) {
       console.error('[Month API] Error fetching artist availability:', error);
@@ -51,19 +54,39 @@ export async function GET(req: NextRequest) {
       // Check if this day is available based on artist settings
       let isDayAvailable = d >= today;
       
-      if (isDayAvailable && artistAvailability) {
-        const dayConfig = artistAvailability[dayOfWeek];
+      if (isDayAvailable) {
+        // First, check for date-specific overrides
+        const dateOverride = dateSpecificHours.find((override: any) => override.date === dateString);
         
-        if (dayConfig && dayConfig.enabled) {
-          // Day is configured - check if at least one time slot is enabled
-          const timeSlots = dayConfig.timeSlots || { morning: true, afternoon: true, evening: true };
-          const hasAnySlotEnabled = timeSlots.morning === true || 
-                                     timeSlots.afternoon === true || 
-                                     timeSlots.evening === true;
-          isDayAvailable = hasAnySlotEnabled;
-        } else if (artistAvailability && Object.keys(artistAvailability).length > 0) {
-          // Artist has some days configured but not this one - day is unavailable
-          isDayAvailable = false;
+        if (dateOverride) {
+          // Date has a specific override
+          if (dateOverride.type === 'blocked') {
+            // Check if ALL slots are blocked
+            const allBlocked = dateOverride.timeSlots.morning && 
+                              dateOverride.timeSlots.afternoon && 
+                              dateOverride.timeSlots.evening;
+            isDayAvailable = !allBlocked;
+          } else if (dateOverride.type === 'available') {
+            // Check if at least one slot is available
+            isDayAvailable = dateOverride.timeSlots.morning || 
+                            dateOverride.timeSlots.afternoon || 
+                            dateOverride.timeSlots.evening;
+          }
+        } else if (artistAvailability) {
+          // No date-specific override, use weekly schedule
+          const dayConfig = artistAvailability[dayOfWeek];
+          
+          if (dayConfig && dayConfig.enabled) {
+            // Day is configured - check if at least one time slot is enabled
+            const timeSlots = dayConfig.timeSlots || { morning: true, afternoon: true, evening: true };
+            const hasAnySlotEnabled = timeSlots.morning === true || 
+                                       timeSlots.afternoon === true || 
+                                       timeSlots.evening === true;
+            isDayAvailable = hasAnySlotEnabled;
+          } else if (artistAvailability && Object.keys(artistAvailability).length > 0) {
+            // Artist has some days configured but not this one - day is unavailable
+            isDayAvailable = false;
+          }
         }
       }
       

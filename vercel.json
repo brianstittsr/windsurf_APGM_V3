@@ -14,5 +14,11 @@
       "source": "/admin/:path*",
       "destination": "/admin/:path*"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/sync-ghl",
+      "schedule": "*/15 * * * *"
+    }
   ]
 }

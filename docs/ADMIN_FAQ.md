@@ -8,15 +8,17 @@ This guide provides step-by-step instructions for common administrative tasks in
 
 1. [Admin Dashboard Overview](#admin-dashboard-overview)
 2. [Creating a New Client](#creating-a-new-client)
-3. [Adding a New Booking](#adding-a-new-booking)
-4. [Adding Procedure Notes](#adding-procedure-notes)
-5. [Managing Bookings](#managing-bookings)
-6. [Artist Availability Management](#artist-availability-management)
-7. [Time Slot System](#time-slot-system)
-8. [Site Configuration Options](#site-configuration-options)
-9. [GoHighLevel Integration](#gohighlevel-integration)
-10. [AI Features](#ai-features)
-11. [Troubleshooting](#troubleshooting)
+3. [Client Profile Management](#client-profile-management)
+4. [Adding a New Booking](#adding-a-new-booking)
+5. [Adding Historical Bookings](#adding-historical-bookings)
+6. [Adding Procedure Notes](#adding-procedure-notes)
+7. [Managing Bookings](#managing-bookings)
+8. [Artist Availability Management](#artist-availability-management)
+9. [Time Slot System](#time-slot-system)
+10. [Site Configuration Options](#site-configuration-options)
+11. [GoHighLevel Integration](#gohighlevel-integration)
+12. [AI Features](#ai-features)
+13. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -89,6 +91,130 @@ The admin dashboard is accessible at `/dashboard` and provides comprehensive con
 
 ---
 
+## Client Profile Management
+
+The enhanced Client Profile provides a comprehensive view of each client's history, including appointments, payments, and progress notes.
+
+### Accessing Client Profiles
+
+1. **Navigate to Clients**
+   - Go to **"Clients & Bookings"** → **"Clients"** in the sidebar
+
+2. **Open a Client Profile**
+   - Find the client in the list
+   - Click the **pink person icon** (👤) in the Actions column
+   - This opens the Client Profile modal
+
+### Profile Tabs
+
+The Client Profile has four tabs:
+
+| Tab | Description |
+|-----|-------------|
+| **Client Info** | View/edit client details and see quick stats |
+| **Appointments** | Full appointment history from all bookings |
+| **Payments** | Payment history with totals |
+| **Progress Notes** | Timestamped notes about the client |
+
+### Client Info Tab
+
+**Viewing Information:**
+- Client name, email, phone, and account status
+- Quick stats showing total appointments, payments, and notes
+
+**Editing Information:**
+1. Click the **"Edit"** button in the top right
+2. Update First Name, Last Name, or Phone
+3. Click **"Save"** to apply changes
+4. Note: Email cannot be changed after account creation
+
+### Appointments Tab
+
+Shows all appointments for the client, including:
+- Service name and date/time
+- Artist who performed the service
+- Appointment status (Confirmed, Completed, Cancelled, etc.)
+- Price
+- Any procedure notes attached to the booking
+
+Appointments are sorted by date (newest first) and pull from both the `bookings` and `appointments` collections.
+
+### Payments Tab
+
+Displays a table of all payments:
+- Date processed
+- Amount
+- Payment type (deposit, full payment, refund)
+- Payment method (card, cash, etc.)
+- Status (completed, pending, failed, refunded)
+
+A summary at the bottom shows the **Total Paid** amount.
+
+### Progress Notes Tab
+
+Progress notes are client-level notes (separate from procedure notes on individual bookings). Use these for:
+- General client preferences
+- Skin type observations
+- Allergies or sensitivities
+- Communication preferences
+- Long-term treatment plans
+
+**Adding a Progress Note:**
+1. Go to the **Progress Notes** tab
+2. Type your note in the text area
+3. Click the **"+"** button
+4. The note is automatically timestamped
+
+**Deleting a Progress Note:**
+1. Click the red trash icon next to the note
+2. Confirm the deletion
+
+### Adding Bookings from Client Profile
+
+You can add appointments directly from a client's profile:
+
+1. Open the client's profile
+2. Go to the **Appointments** tab
+3. Click **"Add Historical Booking"** button
+4. Fill in the appointment details:
+   - Service (dropdown with prices)
+   - Date and Time
+   - Price and Status
+   - Deposit paid checkbox
+   - Procedure notes (optional)
+5. Click **"Add Booking"**
+
+The booking is automatically linked to the client and appears in their appointment history.
+
+### Adding Payments from Client Profile
+
+You can record payments directly from a client's profile:
+
+1. Open the client's profile
+2. Go to the **Payments** tab
+3. Click **"Add Payment"** button
+4. Fill in the payment details:
+   - **Amount**: Payment amount in dollars
+   - **Type**: Deposit, Full Payment, or Refund
+   - **Method**: Cash, Card, Zelle, Venmo, PayPal, Cherry, or Klarna
+   - **Date**: When the payment was made
+   - **Status**: Completed, Pending, Failed, or Refunded
+   - **Notes**: Optional payment notes
+5. Click **"Add Payment"**
+
+The payment is automatically linked to the client and appears in their payment history.
+
+### Data Storage
+
+| Data Type | Storage Location |
+|-----------|------------------|
+| Client Info | `users` collection (`displayName`, `phone`, `email`) |
+| Appointments | `bookings` and `appointments` collections (by `clientEmail`) |
+| Payments | `payments` collection (by `clientId`) |
+| Progress Notes | `users` collection (`progressNotes` array) |
+
+---
+
 ## Adding a New Booking
 
 ### Step-by-Step Instructions
@@ -126,6 +252,82 @@ The admin dashboard is accessible at `/dashboard` and provides comprehensive con
    - Review all details
    - Click **"Create Booking"**
    - Confirmation emails will be sent automatically
+
+---
+
+## Adding Historical Bookings
+
+Historical bookings allow you to add past appointments to your records. This is useful for:
+- Migrating data from a previous system
+- Recording appointments that were booked outside the system
+- Adding historical client data for complete records
+
+### Important: GHL Sync Limitation
+
+**GoHighLevel does not accept appointments with past dates.** When you add a historical booking:
+- The booking is saved to Firebase and appears on your calendar
+- It will **not** sync to GHL calendar (marked as "skipped")
+- The client contact can still be created in GHL
+
+### How to Add a Historical Booking
+
+1. **Navigate to Bookings**
+   - Go to **"Clients & Bookings"** → **"Bookings"** in the sidebar
+
+2. **Click "Add Historical Booking"**
+   - Click the outlined **"Add Historical Booking"** button (with clock icon)
+   - This opens the Historical Booking modal
+
+3. **Enter Client Information**
+   - **Client Name** (required): Enter the client's full name
+   - **Email**: Client's email address (optional but recommended)
+   - **Phone**: Client's phone number (optional)
+
+4. **Enter Appointment Details**
+   - **Service**: Select from the dropdown (prices auto-fill)
+   - **Date** (required): Select the appointment date
+   - **Time**: Select the appointment time
+   - **Price**: Adjust if different from the default
+   - **Status**: Usually "Completed" for historical entries
+   - **Deposit Paid**: Check if deposit was collected
+
+5. **Add Procedure Notes**
+   - Type notes about the procedure in the text area
+   - Click the **"+"** button to add each note
+   - Notes are timestamped automatically
+   - You can add multiple notes before saving
+
+6. **Save the Booking**
+   - Click **"Add Booking"**
+   - The booking will appear on your calendar and in the bookings list
+
+### Past Date Warning
+
+When you select a past date, a yellow warning banner appears:
+> **Note:** This is a past date. The booking will be saved to your records but will not sync to GHL calendar (GHL doesn't allow past appointments).
+
+### Data Storage
+
+Historical bookings are stored in the `bookings` collection with:
+- `isHistoricalEntry: true` - Marks it as a historical entry
+- `ghlSkippedReason: 'past_date'` - Indicates why GHL sync was skipped
+- `bookingNotes: []` - Array of timestamped procedure notes
+
+### Services and Pricing
+
+The service dropdown includes common services with default prices:
+
+| Service | Default Price |
+|---------|---------------|
+| Microblading | $500 |
+| Powder Brows | $550 |
+| Combo Brows | $600 |
+| Lip Blush | $450 |
+| Eyeliner | $400 |
+| Touch Up | $200 |
+| Consultation | $0 |
+
+You can adjust the price field after selecting a service.
 
 ---
 

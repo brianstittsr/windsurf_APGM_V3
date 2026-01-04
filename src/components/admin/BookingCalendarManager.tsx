@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, getDocs, doc, deleteDoc, updateDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, query, where } from 'firebase/firestore';
 import { getDb } from '../../lib/firebase';
 import { Button } from '@/components/ui/button';
 import { useAlertDialog } from '@/components/ui/alert-dialog';
@@ -56,6 +56,23 @@ export default function BookingCalendarManager() {
   const [newNoteText, setNewNoteText] = useState('');
   const [savingNote, setSavingNote] = useState(false);
   const [editedBooking, setEditedBooking] = useState<Partial<Appointment>>({});
+  
+  // Historical booking state
+  const [showHistoricalModal, setShowHistoricalModal] = useState(false);
+  const [creatingHistorical, setCreatingHistorical] = useState(false);
+  const [historicalBooking, setHistoricalBooking] = useState({
+    clientName: '',
+    clientEmail: '',
+    clientPhone: '',
+    serviceName: 'Microblading',
+    date: '',
+    time: '10:00',
+    price: 500,
+    status: 'completed' as 'pending' | 'confirmed' | 'completed' | 'cancelled',
+    depositPaid: true,
+    bookingNotes: [] as Array<{ id: string; text: string; timestamp: string; createdBy?: string }>
+  });
+  const [historicalNoteText, setHistoricalNoteText] = useState('');
 
   useEffect(() => {
     fetchAppointments();
@@ -78,39 +95,68 @@ export default function BookingCalendarManager() {
 
   const fetchAppointments = async () => {
     try {
-      // Try bookings collection first (new format)
-      const bookingsCollection = collection(getDb(), 'bookings');
-      const bookingsSnapshot = await getDocs(bookingsCollection);
-      let appointmentsList = bookingsSnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          clientName: data.clientName,
-          clientEmail: data.clientEmail,
-          clientPhone: data.clientPhone,
-          serviceName: data.serviceName,
-          appointmentDate: data.date,
-          appointmentTime: data.time,
-          date: data.date,
-          time: data.time,
-          artistName: data.artistName,
-          status: data.status,
-          notes: data.notes,
-          bookingNotes: data.bookingNotes || [],
-          price: data.price,
-          depositPaid: data.depositPaid,
-          createdAt: data.createdAt
-        } as Appointment;
-      });
+      let appointmentsList: Appointment[] = [];
 
-      // If no bookings found, try appointments collection (old format)
-      if (appointmentsList.length === 0) {
+      // Fetch from bookings collection (new format)
+      try {
+        const bookingsCollection = collection(getDb(), 'bookings');
+        const bookingsSnapshot = await getDocs(bookingsCollection);
+        const bookingsList = bookingsSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            clientName: data.clientName,
+            clientEmail: data.clientEmail,
+            clientPhone: data.clientPhone,
+            serviceName: data.serviceName,
+            appointmentDate: data.date,
+            appointmentTime: data.time,
+            date: data.date,
+            time: data.time,
+            artistName: data.artistName,
+            status: data.status,
+            notes: data.notes,
+            bookingNotes: data.bookingNotes || [],
+            price: data.price,
+            depositPaid: data.depositPaid,
+            createdAt: data.createdAt,
+            _collection: 'bookings'
+          } as Appointment;
+        });
+        appointmentsList = [...bookingsList];
+      } catch (e) {
+        console.log('No bookings collection or error:', e);
+      }
+
+      // Also fetch from appointments collection (legacy format)
+      try {
         const appointmentsCollection = collection(getDb(), 'appointments');
         const appointmentsSnapshot = await getDocs(appointmentsCollection);
-        appointmentsList = appointmentsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as Appointment));
+        const legacyList = appointmentsSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            clientName: data.clientName || 'Unknown Client',
+            clientEmail: data.clientEmail,
+            clientPhone: data.clientPhone,
+            serviceName: data.serviceName,
+            appointmentDate: data.scheduledDate || data.appointmentDate,
+            appointmentTime: data.scheduledTime || data.appointmentTime,
+            date: data.scheduledDate || data.date,
+            time: data.scheduledTime || data.time,
+            artistName: data.artistId === 'victoria' ? 'Victoria Escobar' : data.artistName,
+            status: data.status,
+            notes: data.specialRequests || data.notes,
+            bookingNotes: data.bookingNotes || [],
+            price: data.totalAmount || data.price,
+            depositPaid: data.depositAmount > 0,
+            createdAt: data.createdAt,
+            _collection: 'appointments'
+          } as Appointment;
+        });
+        appointmentsList = [...appointmentsList, ...legacyList];
+      } catch (e) {
+        console.log('No appointments collection or error:', e);
       }
 
       setAppointments(appointmentsList.sort((a, b) => {
@@ -400,6 +446,97 @@ export default function BookingCalendarManager() {
     }
   };
 
+  const createHistoricalBooking = async () => {
+    if (!historicalBooking.clientName || !historicalBooking.date || !historicalBooking.serviceName) {
+      await showAlert({
+        title: 'Missing Information',
+        description: 'Please fill in client name, date, and service.',
+        variant: 'warning'
+      });
+      return;
+    }
+
+    setCreatingHistorical(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const isPastDate = historicalBooking.date < today;
+
+      // Create booking directly in Firestore
+      const bookingData = {
+        clientName: historicalBooking.clientName,
+        clientEmail: historicalBooking.clientEmail || '',
+        clientPhone: historicalBooking.clientPhone || '',
+        serviceName: historicalBooking.serviceName,
+        date: historicalBooking.date,
+        time: historicalBooking.time,
+        artistId: 'victoria',
+        artistName: 'Victoria Escobar',
+        price: historicalBooking.price,
+        status: historicalBooking.status,
+        depositPaid: historicalBooking.depositPaid,
+        bookingNotes: historicalBooking.bookingNotes,
+        ghlContactId: null,
+        ghlAppointmentId: null,
+        ghlSkippedReason: isPastDate ? 'past_date' : null,
+        isHistoricalEntry: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      await addDoc(collection(getDb(), 'bookings'), bookingData);
+
+      // If it's a future date, try to sync with GHL
+      if (!isPastDate) {
+        try {
+          await fetch('/api/calendar/sync-ghl', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              booking: bookingData,
+              collection: 'bookings'
+            })
+          });
+        } catch (syncError) {
+          console.log('GHL sync will be retried later:', syncError);
+        }
+      }
+
+      await showAlert({
+        title: 'Booking Created!',
+        description: isPastDate 
+          ? 'Historical booking added successfully. It will not sync to GHL calendar (past date).'
+          : 'Booking created and will sync to GHL.',
+        variant: 'success'
+      });
+
+      // Reset form
+      setHistoricalBooking({
+        clientName: '',
+        clientEmail: '',
+        clientPhone: '',
+        serviceName: 'Microblading',
+        date: '',
+        time: '10:00',
+        price: 500,
+        status: 'completed',
+        depositPaid: true,
+        bookingNotes: []
+      });
+      setHistoricalNoteText('');
+      setShowHistoricalModal(false);
+      fetchAppointments();
+    } catch (error) {
+      console.error('Error creating historical booking:', error);
+      await showAlert({
+        title: 'Error',
+        description: `Failed to create booking: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: 'destructive'
+      });
+    } finally {
+      setCreatingHistorical(false);
+    }
+  };
+
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'confirmed': return 'bg-green-100 text-green-800';
@@ -440,13 +577,23 @@ export default function BookingCalendarManager() {
         <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
           <i className="fas fa-calendar-alt text-[#AD6269]"></i>Booking Calendar
         </h2>
-        <Button 
-          onClick={() => setShowBookingWizard(true)}
-          className="bg-[#AD6269] hover:bg-[#9d5860] text-white"
-        >
-          <i className="fas fa-plus mr-2"></i>
-          Create Booking
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => setShowHistoricalModal(true)}
+            variant="outline"
+            className="border-[#AD6269] text-[#AD6269] hover:bg-[#AD6269]/10"
+          >
+            <i className="fas fa-history mr-2"></i>
+            Add Historical Booking
+          </Button>
+          <Button 
+            onClick={() => setShowBookingWizard(true)}
+            className="bg-[#AD6269] hover:bg-[#9d5860] text-white"
+          >
+            <i className="fas fa-plus mr-2"></i>
+            Create Booking
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -1029,6 +1176,268 @@ export default function BookingCalendarManager() {
         onBookingCreated={fetchAppointments}
         calendars={calendars}
       />
+
+      {/* Historical Booking Modal */}
+      {showHistoricalModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="bg-[#AD6269] text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
+              <h3 className="text-xl font-semibold flex items-center gap-2">
+                <i className="fas fa-history"></i>
+                Add Historical Booking
+              </h3>
+              <button 
+                onClick={() => setShowHistoricalModal(false)}
+                className="text-white/80 hover:text-white transition-colors"
+              >
+                <i className="fas fa-times text-xl"></i>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Client Information */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                  <i className="fas fa-user text-[#AD6269]"></i>Client Information
+                </h4>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
+                    <input
+                      type="text"
+                      value={historicalBooking.clientName}
+                      onChange={(e) => setHistoricalBooking({...historicalBooking, clientName: e.target.value})}
+                      placeholder="Enter client name"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                      <input
+                        type="email"
+                        value={historicalBooking.clientEmail}
+                        onChange={(e) => setHistoricalBooking({...historicalBooking, clientEmail: e.target.value})}
+                        placeholder="email@example.com"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                      <input
+                        type="tel"
+                        value={historicalBooking.clientPhone}
+                        onChange={(e) => setHistoricalBooking({...historicalBooking, clientPhone: e.target.value})}
+                        placeholder="(555) 123-4567"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Appointment Details */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                  <i className="fas fa-calendar-check text-[#AD6269]"></i>Appointment Details
+                </h4>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Service *</label>
+                    <select
+                      value={historicalBooking.serviceName}
+                      onChange={(e) => setHistoricalBooking({...historicalBooking, serviceName: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                    >
+                      <option value="Microblading">Microblading - $500</option>
+                      <option value="Powder Brows">Powder Brows - $550</option>
+                      <option value="Combo Brows">Combo Brows - $600</option>
+                      <option value="Lip Blush">Lip Blush - $450</option>
+                      <option value="Eyeliner">Eyeliner - $400</option>
+                      <option value="Touch Up">Touch Up - $200</option>
+                      <option value="Consultation">Consultation - $0</option>
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                      <input
+                        type="date"
+                        value={historicalBooking.date}
+                        onChange={(e) => setHistoricalBooking({...historicalBooking, date: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                      <select
+                        value={historicalBooking.time}
+                        onChange={(e) => setHistoricalBooking({...historicalBooking, time: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                      >
+                        <option value="09:00">9:00 AM</option>
+                        <option value="10:00">10:00 AM</option>
+                        <option value="11:00">11:00 AM</option>
+                        <option value="12:00">12:00 PM</option>
+                        <option value="13:00">1:00 PM</option>
+                        <option value="14:00">2:00 PM</option>
+                        <option value="15:00">3:00 PM</option>
+                        <option value="16:00">4:00 PM</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
+                      <input
+                        type="number"
+                        value={historicalBooking.price}
+                        onChange={(e) => setHistoricalBooking({...historicalBooking, price: parseInt(e.target.value) || 0})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                      <select
+                        value={historicalBooking.status}
+                        onChange={(e) => setHistoricalBooking({...historicalBooking, status: e.target.value as any})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                      >
+                        <option value="completed">Completed</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="pending">Pending</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="historicalDepositPaid"
+                      checked={historicalBooking.depositPaid}
+                      onChange={(e) => setHistoricalBooking({...historicalBooking, depositPaid: e.target.checked})}
+                      className="rounded border-gray-300 text-[#AD6269] focus:ring-[#AD6269]"
+                    />
+                    <label htmlFor="historicalDepositPaid" className="text-sm text-gray-700">Deposit was paid</label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Procedure Notes - styled like the Booking Details modal */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                  <i className="fas fa-sticky-note text-[#AD6269]"></i>Procedure Notes
+                </h4>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Add New Note</label>
+                  <div className="flex gap-2">
+                    <textarea
+                      value={historicalNoteText}
+                      onChange={(e) => setHistoricalNoteText(e.target.value)}
+                      placeholder="Enter note about the procedure..."
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent resize-none"
+                      rows={2}
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        if (historicalNoteText.trim()) {
+                          const newNote = {
+                            id: `note-${Date.now()}`,
+                            text: historicalNoteText.trim(),
+                            timestamp: new Date().toISOString(),
+                            createdBy: 'admin'
+                          };
+                          setHistoricalBooking({
+                            ...historicalBooking,
+                            bookingNotes: [...historicalBooking.bookingNotes, newNote]
+                          });
+                          setHistoricalNoteText('');
+                        }
+                      }}
+                      disabled={!historicalNoteText.trim()}
+                      className="bg-[#AD6269] hover:bg-[#9d5860] self-end"
+                    >
+                      <i className="fas fa-plus"></i>
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    <i className="fas fa-info-circle mr-1"></i>
+                    Notes are automatically timestamped when added.
+                  </p>
+                </div>
+
+                {/* Notes List */}
+                {historicalBooking.bookingNotes.length > 0 && (
+                  <div className="space-y-3">
+                    {[...historicalBooking.bookingNotes].reverse().map((note) => (
+                      <div key={note.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex-1">
+                            <p className="text-gray-900 whitespace-pre-wrap">{note.text}</p>
+                            <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                              <i className="fas fa-clock"></i>
+                              {new Date(note.timestamp).toLocaleString()}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setHistoricalBooking({
+                                ...historicalBooking,
+                                bookingNotes: historicalBooking.bookingNotes.filter(n => n.id !== note.id)
+                              });
+                            }}
+                            className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete Note"
+                          >
+                            <i className="fas fa-trash-alt text-sm"></i>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Info Banner for past dates */}
+              {historicalBooking.date && historicalBooking.date < new Date().toISOString().split('T')[0] && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <p className="text-sm text-amber-700">
+                    <i className="fas fa-info-circle mr-2"></i>
+                    <strong>Note:</strong> This is a past date. The booking will be saved to your records but will not sync to GHL calendar (GHL doesn't allow past appointments).
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3 rounded-b-2xl">
+              <Button variant="outline" onClick={() => setShowHistoricalModal(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={createHistoricalBooking}
+                disabled={creatingHistorical}
+                className="bg-[#AD6269] hover:bg-[#9d5860]"
+              >
+                {creatingHistorical ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin mr-2"></i>
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-plus mr-2"></i>
+                    Add Booking
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

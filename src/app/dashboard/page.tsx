@@ -43,6 +43,7 @@ import RetargetingDashboard from '../../components/admin/RetargetingDashboard';
 import PPCCampaignsDashboard from '../../components/admin/PPCCampaignsDashboard';
 import CanvaIntegration from '../../components/admin/CanvaIntegration';
 import FAQsManager from '../../components/admin/FAQsManager';
+import GHLSyncStatus from '../../components/admin/GHLSyncStatus';
 import { cn } from '@/lib/utils';
 
 type TabType = 'overview' | 'users' | 'clients' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'ghl-migration' | 'ghl-workflow-builder' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'alexa' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation' | 'hero-carousel' | 'documents' | 'canva' | 'faqs';
@@ -207,14 +208,21 @@ export default function DashboardPage() {
       case 'overview':
         return (
           <div className="space-y-8">
-            {/* Booking Metrics Section */}
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Booking Progress</h2>
-              {metricsLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AD6269]"></div>
-                </div>
-              ) : (
+            {/* GHL Sync Status & Booking Metrics */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* GHL Sync Status Card */}
+              <div className="lg:col-span-1">
+                <GHLSyncStatus />
+              </div>
+              
+              {/* Booking Metrics Section */}
+              <div className="lg:col-span-2">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Booking Progress</h2>
+                {metricsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#AD6269]"></div>
+                  </div>
+                ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {/* Total Bookings */}
                   <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
@@ -284,6 +292,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
               )}
+              </div>
             </div>
 
             {/* Quick Actions Section */}

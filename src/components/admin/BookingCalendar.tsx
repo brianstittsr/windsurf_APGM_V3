@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, addDoc, Timestamp } from 'firebase/firestore';
 import { getDb } from '../../lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,6 +66,22 @@ export default function BookingCalendar() {
     notes: '',
     status: 'new' as const
   });
+  
+  // Historical booking state
+  const [showHistoricalModal, setShowHistoricalModal] = useState(false);
+  const [creatingHistorical, setCreatingHistorical] = useState(false);
+  const [historicalBooking, setHistoricalBooking] = useState({
+    clientName: '',
+    clientEmail: '',
+    clientPhone: '',
+    serviceName: 'Microblading',
+    date: '',
+    time: '10:00',
+    price: 500,
+    status: 'completed' as 'pending' | 'confirmed' | 'completed' | 'cancelled',
+    depositPaid: true,
+    notes: ''
+  });
 
   useEffect(() => {
     fetchBookings();
@@ -110,102 +126,97 @@ export default function BookingCalendar() {
   const fetchBookings = async () => {
     setLoading(true);
     try {
-      // Try fetching from the primary 'bookings' collection first
-      const bookingsRef = collection(getDb(), 'bookings');
       const startDate = getViewStartDate();
       const endDate = getViewEndDate();
+      let allBookings: Booking[] = [];
 
-      const q = query(
-        bookingsRef,
-        where('date', '>=', startDate.toISOString().split('T')[0]),
-        where('date', '<=', endDate.toISOString().split('T')[0])
-      );
+      // Fetch from the primary 'bookings' collection
+      try {
+        const bookingsRef = collection(getDb(), 'bookings');
+        const q = query(
+          bookingsRef,
+          where('date', '>=', startDate.toISOString().split('T')[0]),
+          where('date', '<=', endDate.toISOString().split('T')[0])
+        );
 
-      const snapshot = await getDocs(q);
-      let bookingsData = snapshot.docs.map(doc => {
-        const data = doc.data();
-        
-        // Ensure all required fields are present
-        const booking: Booking = {
-          id: doc.id,
-          clientName: data.clientName || 'Unknown Client',
-          clientEmail: data.clientEmail || '',
-          clientPhone: data.clientPhone || '',
-          artistId: data.artistId || '',
-          artistName: data.artistName || 'Unknown Artist',
-          serviceName: data.serviceName || 'Unknown Service',
-          date: data.date || '',
-          time: data.time || '',
-          status: data.status || 'pending',
-          price: data.price || 0,
-          depositPaid: data.depositPaid || false,
-          notes: data.notes,
-          ghlContactId: data.ghlContactId,
-          ghlAppointmentId: data.ghlAppointmentId,
-          createdAt: data.createdAt
-        };
-        
-        return booking;
-      });
+        const snapshot = await getDocs(q);
+        const bookingsData = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            clientName: data.clientName || 'Unknown Client',
+            clientEmail: data.clientEmail || '',
+            clientPhone: data.clientPhone || '',
+            artistId: data.artistId || '',
+            artistName: data.artistName || 'Unknown Artist',
+            serviceName: data.serviceName || 'Unknown Service',
+            date: data.date || '',
+            time: data.time || '',
+            status: data.status || 'pending',
+            price: data.price || 0,
+            depositPaid: data.depositPaid || false,
+            notes: data.notes,
+            ghlContactId: data.ghlContactId,
+            ghlAppointmentId: data.ghlAppointmentId,
+            createdAt: data.createdAt,
+            _collection: 'bookings'
+          } as Booking;
+        });
+        allBookings = [...bookingsData];
+      } catch (e) {
+        console.log('Error fetching from bookings collection:', e);
+      }
 
-      // If no bookings found in the primary collection, try the legacy 'appointments' collection
-      if (bookingsData.length === 0) {
-        console.log('No bookings found in primary collection, checking legacy appointments...');
+      // Also fetch from the legacy 'appointments' collection
+      try {
         const appointmentsRef = collection(getDb(), 'appointments');
-        
-        // Convert date range query to work with legacy fields
         const appointmentsQuery = query(appointmentsRef);
         const appointmentsSnapshot = await getDocs(appointmentsQuery);
         
-        // Map legacy appointments to booking format
         const legacyBookings = appointmentsSnapshot.docs
           .map(doc => {
             const data = doc.data();
-            // Check if the appointment date falls within our date range
             const apptDate = data.scheduledDate || data.appointmentDate;
             if (!apptDate) return null;
             
             const formattedDate = typeof apptDate === 'string' ? apptDate : 
               apptDate.toDate ? apptDate.toDate().toISOString().split('T')[0] : null;
               
-            // Skip if not in range
             if (!formattedDate || 
                 formattedDate < startDate.toISOString().split('T')[0] || 
                 formattedDate > endDate.toISOString().split('T')[0]) {
               return null;
             }
             
-            // Create booking from appointment
             return {
               id: doc.id,
-              clientName: data.clientName || '',
+              clientName: data.clientName || 'Unknown Client',
               clientEmail: data.clientEmail || '',
               clientPhone: data.clientPhone || '',
               artistId: data.artistId || '',
-              artistName: data.artistName || '',
+              artistName: data.artistId === 'victoria' ? 'Victoria Escobar' : (data.artistName || ''),
               serviceName: data.serviceName || '',
               date: formattedDate,
               time: data.scheduledTime || data.appointmentTime || '',
               status: data.status || 'pending',
               price: data.totalAmount || 0,
-              depositPaid: (data.depositAmount > 0 && data.paymentStatus === 'deposit_paid') || false,
+              depositPaid: data.depositAmount > 0,
               notes: data.specialRequests || '',
-              createdAt: data.createdAt
+              createdAt: data.createdAt,
+              _collection: 'appointments'
             } as Booking;
           })
           .filter(booking => booking !== null) as Booking[];
           
-        if (legacyBookings.length > 0) {
-          console.log(`Found ${legacyBookings.length} legacy appointments`);
-          bookingsData = legacyBookings;
-        }
+        allBookings = [...allBookings, ...legacyBookings];
+      } catch (e) {
+        console.log('Error fetching from appointments collection:', e);
       }
 
-      console.log(`Displaying ${bookingsData.length} bookings for date range ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`);
-      setBookings(bookingsData);
+      console.log(`Displaying ${allBookings.length} bookings for date range ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`);
+      setBookings(allBookings);
     } catch (error) {
       console.error('Error fetching bookings:', error);
-      // Show error message
       const errorMessage = document.createElement('div');
       errorMessage.className = 'alert alert-danger mt-3';
       errorMessage.innerHTML = `<strong>Error loading bookings:</strong> ${error instanceof Error ? error.message : 'Unknown error'}`;
@@ -451,6 +462,96 @@ export default function BookingCalendar() {
     }
   };
 
+  const createHistoricalBooking = async () => {
+    if (!historicalBooking.clientName || !historicalBooking.date || !historicalBooking.serviceName) {
+      await showAlert({
+        title: 'Missing Information',
+        description: 'Please fill in client name, date, and service.',
+        variant: 'warning'
+      });
+      return;
+    }
+
+    setCreatingHistorical(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const isPastDate = historicalBooking.date < today;
+
+      // Create booking directly in Firestore
+      const bookingData = {
+        clientName: historicalBooking.clientName,
+        clientEmail: historicalBooking.clientEmail || '',
+        clientPhone: historicalBooking.clientPhone || '',
+        serviceName: historicalBooking.serviceName,
+        date: historicalBooking.date,
+        time: historicalBooking.time,
+        artistId: 'victoria',
+        artistName: 'Victoria Escobar',
+        price: historicalBooking.price,
+        status: historicalBooking.status,
+        depositPaid: historicalBooking.depositPaid,
+        notes: historicalBooking.notes + (isPastDate ? ' [Historical Entry]' : ''),
+        ghlContactId: null,
+        ghlAppointmentId: null,
+        ghlSkippedReason: isPastDate ? 'past_date' : null,
+        isHistoricalEntry: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      await addDoc(collection(getDb(), 'bookings'), bookingData);
+
+      // If it's a future date, try to sync with GHL
+      if (!isPastDate) {
+        try {
+          await fetch('/api/calendar/sync-ghl', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              booking: bookingData,
+              collection: 'bookings'
+            })
+          });
+        } catch (syncError) {
+          console.log('GHL sync will be retried later:', syncError);
+        }
+      }
+
+      await showAlert({
+        title: 'Booking Created!',
+        description: isPastDate 
+          ? 'Historical booking added successfully. It will not sync to GHL calendar (past date).'
+          : 'Booking created and will sync to GHL.',
+        variant: 'success'
+      });
+
+      // Reset form
+      setHistoricalBooking({
+        clientName: '',
+        clientEmail: '',
+        clientPhone: '',
+        serviceName: 'Microblading',
+        date: '',
+        time: '10:00',
+        price: 500,
+        status: 'completed',
+        depositPaid: true,
+        notes: ''
+      });
+      setShowHistoricalModal(false);
+      fetchBookings();
+    } catch (error) {
+      console.error('Error creating historical booking:', error);
+      await showAlert({
+        title: 'Error',
+        description: `Failed to create booking: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: 'destructive'
+      });
+    } finally {
+      setCreatingHistorical(false);
+    }
+  };
+
   const syncFromGHL = async () => {
     setSyncing(true);
     try {
@@ -611,6 +712,13 @@ export default function BookingCalendar() {
                 Sync TO GHL
               </>
             )}
+          </Button>
+          <Button 
+            onClick={() => setShowHistoricalModal(true)}
+            className="bg-[#AD6269] hover:bg-[#9d5860] text-white"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Historical Booking
           </Button>
         </div>
       </div>
@@ -976,6 +1084,185 @@ export default function BookingCalendar() {
         onBookingCreated={fetchBookings}
         calendars={calendars}
       />
+
+      {/* Historical Booking Modal */}
+      {showHistoricalModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-[#AD6269]" />
+                  Add Historical Booking
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">Add a past appointment to your records</p>
+              </div>
+              <button 
+                onClick={() => setShowHistoricalModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              {/* Client Info */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Client Information</h4>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
+                  <Input
+                    value={historicalBooking.clientName}
+                    onChange={(e) => setHistoricalBooking({...historicalBooking, clientName: e.target.value})}
+                    placeholder="Enter client name"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <Input
+                      type="email"
+                      value={historicalBooking.clientEmail}
+                      onChange={(e) => setHistoricalBooking({...historicalBooking, clientEmail: e.target.value})}
+                      placeholder="email@example.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                    <Input
+                      type="tel"
+                      value={historicalBooking.clientPhone}
+                      onChange={(e) => setHistoricalBooking({...historicalBooking, clientPhone: e.target.value})}
+                      placeholder="(555) 123-4567"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Appointment Info */}
+              <div className="space-y-4 pt-4 border-t border-gray-200">
+                <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Appointment Details</h4>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Service *</label>
+                  <select
+                    value={historicalBooking.serviceName}
+                    onChange={(e) => setHistoricalBooking({...historicalBooking, serviceName: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
+                  >
+                    <option value="Microblading">Microblading - $500</option>
+                    <option value="Powder Brows">Powder Brows - $550</option>
+                    <option value="Combo Brows">Combo Brows - $600</option>
+                    <option value="Lip Blush">Lip Blush - $450</option>
+                    <option value="Eyeliner">Eyeliner - $400</option>
+                    <option value="Touch Up">Touch Up - $200</option>
+                    <option value="Consultation">Consultation - $0</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                    <Input
+                      type="date"
+                      value={historicalBooking.date}
+                      onChange={(e) => setHistoricalBooking({...historicalBooking, date: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                    <select
+                      value={historicalBooking.time}
+                      onChange={(e) => setHistoricalBooking({...historicalBooking, time: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
+                    >
+                      <option value="09:00">9:00 AM</option>
+                      <option value="10:00">10:00 AM</option>
+                      <option value="11:00">11:00 AM</option>
+                      <option value="12:00">12:00 PM</option>
+                      <option value="13:00">1:00 PM</option>
+                      <option value="14:00">2:00 PM</option>
+                      <option value="15:00">3:00 PM</option>
+                      <option value="16:00">4:00 PM</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
+                    <Input
+                      type="number"
+                      value={historicalBooking.price}
+                      onChange={(e) => setHistoricalBooking({...historicalBooking, price: parseInt(e.target.value) || 0})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select
+                      value={historicalBooking.status}
+                      onChange={(e) => setHistoricalBooking({...historicalBooking, status: e.target.value as any})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
+                    >
+                      <option value="completed">Completed</option>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="pending">Pending</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="depositPaid"
+                    checked={historicalBooking.depositPaid}
+                    onChange={(e) => setHistoricalBooking({...historicalBooking, depositPaid: e.target.checked})}
+                    className="rounded border-gray-300 text-[#AD6269] focus:ring-[#AD6269]"
+                  />
+                  <label htmlFor="depositPaid" className="text-sm text-gray-700">Deposit was paid</label>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                  <textarea
+                    value={historicalBooking.notes}
+                    onChange={(e) => setHistoricalBooking({...historicalBooking, notes: e.target.value})}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
+                    placeholder="Any additional notes..."
+                  />
+                </div>
+              </div>
+
+              {/* Info Banner */}
+              {historicalBooking.date && historicalBooking.date < new Date().toISOString().split('T')[0] && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700">
+                  <strong>Note:</strong> This is a past date. The booking will be saved to your records but will not sync to GHL calendar (GHL doesn't allow past appointments).
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+              <Button variant="outline" onClick={() => setShowHistoricalModal(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={createHistoricalBooking}
+                disabled={creatingHistorical}
+                className="bg-[#AD6269] hover:bg-[#9d5860]"
+              >
+                {creatingHistorical ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Booking
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Alert Dialog */}
       {AlertDialogComponent}

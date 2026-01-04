@@ -215,7 +215,8 @@ async function createOrUpdateGHLAppointment(booking: Booking, contactId: string,
 
 export async function POST(req: NextRequest) {
   try {
-    const { bookingId, booking, action } = await req.json();
+    const body = await req.json();
+    const { bookingId, booking, action, collection: collectionParam } = body;
 
     if (!bookingId || !booking) {
       return NextResponse.json(
@@ -239,12 +240,15 @@ export async function POST(req: NextRequest) {
     const appointmentId = await createOrUpdateGHLAppointment(booking, contactId, apiKey);
 
     // Update booking in Firestore with GHL IDs
+    // Support both 'bookings' and 'appointments' collections
     const db = getDb();
-    const bookingRef = doc(db, 'bookings', bookingId);
+    const collectionName = collectionParam === 'appointments' ? 'appointments' : 'bookings';
+    const bookingRef = doc(db, collectionName, bookingId);
     await updateDoc(bookingRef, {
       ghlContactId: contactId,
       ghlAppointmentId: appointmentId,
-      lastSyncedAt: new Date().toISOString()
+      lastSyncedAt: new Date().toISOString(),
+      ghlSyncError: null // Clear any previous sync errors
     });
 
     return NextResponse.json({

@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar, Clock, Sun, CloudSun, Moon, Save, User } from 'lucide-react';
+import { Calendar, Clock, Sun, CloudSun, Moon, Save, User, Plus, Trash2, CalendarDays, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -24,6 +24,18 @@ const TIME_SLOTS = [
   { id: 'evening', label: 'Evening', startTime: '16:00', endTime: '19:00', icon: 'fa-moon' },
 ];
 
+// Interface for date-specific overrides
+interface DateSpecificHours {
+  date: string; // YYYY-MM-DD format
+  type: 'available' | 'blocked'; // Whether this date is available or blocked
+  timeSlots: {
+    morning: boolean;
+    afternoon: boolean;
+    evening: boolean;
+  };
+  note?: string; // Optional note for the override
+}
+
 export default function ArtistAvailabilityManager() {
   const [availability, setAvailability] = useState<any>({});
   const { user } = useAuth();
@@ -33,7 +45,17 @@ export default function ArtistAvailabilityManager() {
   const [breakTime, setBreakTime] = useState<number>(15);
   const [loading, setLoading] = useState(true);
   const [showOutlookModal, setShowOutlookModal] = useState(false);
-  const { showAlert, AlertDialogComponent } = useAlertDialog();
+  const { showAlert, showConfirm, AlertDialogComponent } = useAlertDialog();
+  
+  // Date Specific Hours state
+  const [dateSpecificHours, setDateSpecificHours] = useState<DateSpecificHours[]>([]);
+  const [showDateModal, setShowDateModal] = useState(false);
+  const [editingDateOverride, setEditingDateOverride] = useState<DateSpecificHours | null>(null);
+  const [selectedDateForModal, setSelectedDateForModal] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [modalOverrideType, setModalOverrideType] = useState<'available' | 'blocked'>('available');
+  const [modalTimeSlots, setModalTimeSlots] = useState({ morning: true, afternoon: true, evening: true });
+  const [modalNote, setModalNote] = useState('');
+  const [currentModalMonth, setCurrentModalMonth] = useState(new Date());
 
   useEffect(() => {
     const fetchArtists = async () => {
@@ -163,10 +185,19 @@ export default function ArtistAvailabilityManager() {
           
           // Set break time if available, default to 15
           setBreakTime(data.breakTime || 15);
+          
+          // Load date-specific hours if available
+          if (data.dateSpecificHours && Array.isArray(data.dateSpecificHours)) {
+            console.log('Loading date-specific hours:', data.dateSpecificHours);
+            setDateSpecificHours(data.dateSpecificHours);
+          } else {
+            setDateSpecificHours([]);
+          }
         } else {
           console.log('No availability document found, using empty defaults');
           setAvailability({});
           setBreakTime(15);
+          setDateSpecificHours([]);
         }
       } catch (error) {
         console.error('❌ Error fetching availability:', error);
@@ -215,6 +246,7 @@ export default function ArtistAvailabilityManager() {
       await setDoc(docRef, { 
         availability: cleanedAvailability, 
         breakTime,
+        dateSpecificHours,
         updatedAt: new Date() 
       });
       
@@ -430,6 +462,7 @@ export default function ArtistAvailabilityManager() {
       await setDoc(docRef, { 
         availability: data, 
         breakTime,
+        dateSpecificHours,
         updatedAt: new Date() 
       });
       
@@ -606,6 +639,355 @@ export default function ArtistAvailabilityManager() {
           </Button>
         </div>
       </Card>
+
+      {/* Date Specific Hours Card */}
+      <Card className="border-gray-200 shadow-sm">
+        <CardHeader className="bg-gray-50/50 border-b border-gray-100 py-4">
+          <CardTitle className="text-base font-semibold text-gray-900 flex items-center gap-2">
+            <CalendarDays className="h-4 w-4 text-[#AD6269]" />
+            Date Specific Hours
+          </CardTitle>
+          <p className="text-sm text-gray-500 mt-1">
+            Override weekly hours by marking availability/unavailability for specific dates.
+          </p>
+        </CardHeader>
+        <CardContent className="p-6 space-y-4">
+          {/* List of existing date overrides */}
+          {dateSpecificHours.length > 0 ? (
+            <div className="space-y-3">
+              {dateSpecificHours
+                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                .map((override, index) => {
+                  const dateObj = new Date(override.date + 'T12:00:00');
+                  const formattedDate = dateObj.toLocaleDateString('en-US', { 
+                    weekday: 'short', 
+                    month: 'short', 
+                    day: 'numeric',
+                    year: 'numeric'
+                  });
+                  const isPast = new Date(override.date) < new Date(new Date().toISOString().split('T')[0]);
+                  
+                  return (
+                    <div 
+                      key={override.date} 
+                      className={`flex items-center justify-between p-4 rounded-lg border ${
+                        isPast ? 'bg-gray-50 border-gray-200 opacity-60' : 
+                        override.type === 'blocked' ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`p-2 rounded-lg ${
+                          override.type === 'blocked' ? 'bg-red-100' : 'bg-green-100'
+                        }`}>
+                          <CalendarDays className={`h-5 w-5 ${
+                            override.type === 'blocked' ? 'text-red-600' : 'text-green-600'
+                          }`} />
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">{formattedDate}</div>
+                          <div className="text-sm text-gray-500 flex items-center gap-2">
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                              override.type === 'blocked' 
+                                ? 'bg-red-100 text-red-700' 
+                                : 'bg-green-100 text-green-700'
+                            }`}>
+                              {override.type === 'blocked' ? 'Blocked' : 'Available'}
+                            </span>
+                            <span>
+                              {[
+                                override.timeSlots.morning && 'Morning',
+                                override.timeSlots.afternoon && 'Afternoon',
+                                override.timeSlots.evening && 'Evening'
+                              ].filter(Boolean).join(', ') || 'No slots'}
+                            </span>
+                          </div>
+                          {override.note && (
+                            <div className="text-xs text-gray-400 mt-1">{override.note}</div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditingDateOverride(override);
+                            setSelectedDateForModal(override.date);
+                            setModalOverrideType(override.type);
+                            setModalTimeSlots(override.timeSlots);
+                            setModalNote(override.note || '');
+                            setCurrentModalMonth(new Date(override.date + 'T12:00:00'));
+                            setShowDateModal(true);
+                          }}
+                          className="text-gray-500 hover:text-gray-700"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={async () => {
+                            const confirmed = await showConfirm({
+                              title: 'Delete Override',
+                              description: `Are you sure you want to delete the override for ${formattedDate}?`,
+                              confirmText: 'Delete',
+                              variant: 'destructive'
+                            });
+                            if (confirmed) {
+                              setDateSpecificHours(prev => prev.filter(o => o.date !== override.date));
+                            }
+                          }}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <CalendarDays className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+              <p>No date-specific overrides configured.</p>
+              <p className="text-sm">Add overrides for holidays, special events, or schedule changes.</p>
+            </div>
+          )}
+          
+          <Button
+            onClick={() => {
+              setEditingDateOverride(null);
+              setSelectedDateForModal(new Date().toISOString().split('T')[0]);
+              setModalOverrideType('available');
+              setModalTimeSlots({ morning: true, afternoon: true, evening: true });
+              setModalNote('');
+              setCurrentModalMonth(new Date());
+              setShowDateModal(true);
+            }}
+            className="bg-[#AD6269] hover:bg-[#9d5860]"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Date Specific Hours
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Date Specific Hours Modal */}
+      {showDateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {editingDateOverride ? 'Edit Date Override' : 'Choose the date to set specific hours'}
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowDateModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            
+            <div className="p-4 space-y-6">
+              {/* Mini Calendar */}
+              <div className="border rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCurrentModalMonth(prev => {
+                      const newDate = new Date(prev);
+                      newDate.setMonth(newDate.getMonth() - 1);
+                      return newDate;
+                    })}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="font-medium">
+                    {currentModalMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCurrentModalMonth(prev => {
+                      const newDate = new Date(prev);
+                      newDate.setMonth(newDate.getMonth() + 1);
+                      return newDate;
+                    })}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-7 gap-1 text-center text-sm">
+                  {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                    <div key={day} className="py-2 text-gray-500 font-medium">{day}</div>
+                  ))}
+                  {(() => {
+                    const year = currentModalMonth.getFullYear();
+                    const month = currentModalMonth.getMonth();
+                    const firstDay = new Date(year, month, 1).getDay();
+                    const daysInMonth = new Date(year, month + 1, 0).getDate();
+                    const today = new Date().toISOString().split('T')[0];
+                    
+                    const days = [];
+                    // Empty cells for days before the first of the month
+                    for (let i = 0; i < firstDay; i++) {
+                      days.push(<div key={`empty-${i}`} className="py-2"></div>);
+                    }
+                    // Days of the month
+                    for (let day = 1; day <= daysInMonth; day++) {
+                      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                      const isSelected = dateStr === selectedDateForModal;
+                      const isToday = dateStr === today;
+                      const hasOverride = dateSpecificHours.some(o => o.date === dateStr && o.date !== editingDateOverride?.date);
+                      
+                      days.push(
+                        <button
+                          key={day}
+                          onClick={() => setSelectedDateForModal(dateStr)}
+                          className={`py-2 rounded-full transition-all ${
+                            isSelected 
+                              ? 'bg-[#AD6269] text-white' 
+                              : isToday
+                              ? 'bg-blue-100 text-blue-700'
+                              : hasOverride
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'hover:bg-gray-100'
+                          }`}
+                        >
+                          {day}
+                        </button>
+                      );
+                    }
+                    return days;
+                  })()}
+                </div>
+              </div>
+              
+              {/* Override Type */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">Override Type</Label>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setModalOverrideType('available')}
+                    className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                      modalOverrideType === 'available'
+                        ? 'border-green-500 bg-green-50 text-green-700'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium">Available</div>
+                    <div className="text-xs opacity-75">Open for bookings</div>
+                  </button>
+                  <button
+                    onClick={() => setModalOverrideType('blocked')}
+                    className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                      modalOverrideType === 'blocked'
+                        ? 'border-red-500 bg-red-50 text-red-700'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium">Blocked</div>
+                    <div className="text-xs opacity-75">No bookings allowed</div>
+                  </button>
+                </div>
+              </div>
+              
+              {/* Time Slots */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">Time Slots</Label>
+                <div className="flex flex-wrap gap-3">
+                  {TIME_SLOTS.map((slot) => {
+                    const isEnabled = modalTimeSlots[slot.id as keyof typeof modalTimeSlots];
+                    const SlotIcon = slot.id === 'morning' ? Sun : slot.id === 'afternoon' ? CloudSun : Moon;
+                    return (
+                      <label
+                        key={slot.id}
+                        className={`
+                          flex items-center gap-2 px-4 py-3 rounded-lg border-2 cursor-pointer transition-all
+                          ${isEnabled 
+                            ? 'border-[#AD6269] bg-[#AD6269]/10 text-[#AD6269]' 
+                            : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300'
+                          }
+                        `}
+                      >
+                        <Checkbox
+                          checked={isEnabled}
+                          onCheckedChange={(checked) => {
+                            setModalTimeSlots(prev => ({
+                              ...prev,
+                              [slot.id]: !!checked
+                            }));
+                          }}
+                          className="h-4 w-4 border-gray-300 data-[state=checked]:bg-[#AD6269] data-[state=checked]:border-[#AD6269]"
+                        />
+                        <SlotIcon className={`h-4 w-4 ${isEnabled ? 'text-[#AD6269]' : 'text-gray-400'}`} />
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm">{slot.label}</span>
+                          <span className="text-xs opacity-75">
+                            {slot.startTime} - {slot.endTime}
+                          </span>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              {/* Note */}
+              <div className="space-y-2">
+                <Label htmlFor="override-note" className="text-sm font-medium text-gray-700">Note (optional)</Label>
+                <Input
+                  id="override-note"
+                  placeholder="e.g., Holiday, Special event, Personal day"
+                  value={modalNote}
+                  onChange={(e) => setModalNote(e.target.value)}
+                  className="border-gray-200 focus:ring-[#AD6269] focus:border-[#AD6269]"
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-3 p-4 border-t bg-gray-50">
+              <Button
+                variant="outline"
+                onClick={() => setShowDateModal(false)}
+                className="border-gray-200"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  const newOverride: DateSpecificHours = {
+                    date: selectedDateForModal,
+                    type: modalOverrideType,
+                    timeSlots: modalTimeSlots,
+                    note: modalNote || undefined
+                  };
+                  
+                  setDateSpecificHours(prev => {
+                    // Remove existing override for this date if editing
+                    const filtered = prev.filter(o => o.date !== selectedDateForModal);
+                    return [...filtered, newOverride];
+                  });
+                  
+                  setShowDateModal(false);
+                  showAlert({ 
+                    title: 'Success', 
+                    description: `Date override ${editingDateOverride ? 'updated' : 'added'} successfully!`, 
+                    variant: 'success' 
+                  });
+                }}
+                className="bg-[#AD6269] hover:bg-[#9d5860]"
+              >
+                {editingDateOverride ? 'Update' : 'Submit'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Outlook Calendar Setup Modal */}
       <OutlookCalendarSetup

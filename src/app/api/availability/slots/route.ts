@@ -54,8 +54,36 @@ export async function GET(req: NextRequest) {
         for (const doc of availabilitySnapshot.docs) {
           const data = doc.data();
           const availability = data.availability || {};
+          const dateSpecificHours = data.dateSpecificHours || [];
           
           console.log(`[Availability API] Checking artist ${doc.id} for ${dayOfWeek}`);
+          
+          // First, check for date-specific overrides
+          const dateOverride = dateSpecificHours.find((override: any) => override.date === date);
+          
+          if (dateOverride) {
+            console.log(`[Availability API] Found date-specific override for ${date}:`, dateOverride);
+            
+            if (dateOverride.type === 'blocked') {
+              // Date is blocked - check which slots are blocked
+              if (dateOverride.timeSlots.morning) disabledSlots.push('morning');
+              if (dateOverride.timeSlots.afternoon) disabledSlots.push('afternoon');
+              if (dateOverride.timeSlots.evening) disabledSlots.push('evening');
+              
+              // If all slots are blocked, mark day as disabled
+              if (dateOverride.timeSlots.morning && dateOverride.timeSlots.afternoon && dateOverride.timeSlots.evening) {
+                dayEnabled = false;
+              }
+            } else if (dateOverride.type === 'available') {
+              // Date is specifically marked as available - enable only the specified slots
+              // First disable all slots, then enable the ones marked in the override
+              if (!dateOverride.timeSlots.morning) disabledSlots.push('morning');
+              if (!dateOverride.timeSlots.afternoon) disabledSlots.push('afternoon');
+              if (!dateOverride.timeSlots.evening) disabledSlots.push('evening');
+            }
+            
+            break; // Date-specific override takes precedence
+          }
           
           console.log(`[Availability API] Available days in data:`, Object.keys(availability));
           console.log(`[Availability API] Looking for day: ${dayOfWeek}`);
