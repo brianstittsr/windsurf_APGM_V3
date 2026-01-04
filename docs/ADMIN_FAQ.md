@@ -17,8 +17,9 @@ This guide provides step-by-step instructions for common administrative tasks in
 9. [Time Slot System](#time-slot-system)
 10. [Site Configuration Options](#site-configuration-options)
 11. [GoHighLevel Integration](#gohighlevel-integration)
-12. [AI Features](#ai-features)
-13. [Troubleshooting](#troubleshooting)
+12. [BoldSign Form Integration](#boldsign-form-integration)
+13. [AI Features](#ai-features)
+14. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -579,6 +580,109 @@ The booking page automatically filters time slots based on the current time:
 
 ---
 
+## BoldSign Form Integration
+
+### Overview
+
+BoldSign integration enables automated electronic signature collection for PMU consent forms, health questionnaires, and aftercare agreements. The system dynamically sends appropriate forms based on the procedure(s) booked.
+
+> **Full Technical Specification**: See [BOLDSIGN_INTEGRATION_SPEC.md](./BOLDSIGN_INTEGRATION_SPEC.md) for complete implementation details.
+
+### Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **Dynamic Form Sending** | Automatically sends correct forms based on booked procedure(s) |
+| **Multi-Procedure Support** | Handles clients booking multiple procedures (e.g., Microblading + Lip Blush) |
+| **Signature Tracking** | Real-time status updates when forms are viewed/signed |
+| **GHL Reminders** | Automated email and SMS reminders for unsigned forms |
+| **Admin Notifications** | Victoria notified via email and SMS when forms are signed |
+| **Configuration Screen** | Admin UI to manage form-to-procedure mappings |
+
+### Form-to-Procedure Mapping
+
+| Procedure | Required Forms |
+|-----------|---------------|
+| Microblading | Consent Form, Health Questionnaire, Aftercare Agreement |
+| Powder Brows | Consent Form, Health Questionnaire, Aftercare Agreement |
+| Combo Brows | Consent Form, Health Questionnaire, Aftercare Agreement |
+| Lip Blush | Lip Consent Form, Health Questionnaire, Lip Aftercare |
+| Eyeliner | Eyeliner Consent Form, Health Questionnaire, Eyeliner Aftercare |
+| Touch Up | Touch Up Consent, Health Update Form |
+| Consultation | Consultation Agreement |
+
+### Multi-Procedure Logic
+
+When a client books multiple procedures:
+1. System identifies all unique required forms across procedures
+2. Deduplicates common forms (e.g., one Health Questionnaire for all)
+3. Sends procedure-specific forms for each service
+4. Uses BoldSign's multi-template API for efficient delivery
+
+**Example**: Client books Microblading + Lip Blush receives:
+- Health Questionnaire (shared - sent once)
+- Microblading Consent Form
+- Microblading Aftercare Agreement
+- Lip Blush Consent Form
+- Lip Blush Aftercare Agreement
+
+### Reminder Schedule
+
+| Timing | Method | Action |
+|--------|--------|--------|
+| 24 hours after send | Email via GHL | First reminder |
+| 48 hours after send | SMS via GHL | Second reminder |
+| 24 hours before appointment | Email + SMS | Final reminder |
+
+### Admin Notifications
+
+When forms are signed, Victoria receives:
+- **Email**: Victoria@aprettygirllatter.com
+- **SMS**: 919-441-0932
+- **Content**: Client name, procedure, appointment date
+
+### Configuration Screen (Settings → Form Signatures)
+
+**BoldSign Settings**:
+- API Key management
+- Webhook URL configuration
+- Reminder schedule customization
+- Notification contact settings
+
+**Form Template Manager**:
+- Sync templates from BoldSign
+- Map templates to procedures
+- Set required/optional status
+- Enable/disable templates
+- Set display order
+
+### Document Status Indicators
+
+| Status | Description |
+|--------|-------------|
+| 📤 Sent | Forms sent, awaiting client action |
+| 👁️ Viewed | Client has opened the forms |
+| ✅ Signed | All forms signed successfully |
+| ❌ Declined | Client declined to sign |
+| ⏰ Expired | Forms expired before signing |
+
+### Viewing Form Status
+
+**In Booking Details**:
+1. Open booking details modal
+2. Go to "Forms" tab
+3. View status of all sent forms
+4. Download signed documents
+5. Manually resend or remind
+
+**In Client Profile**:
+1. Open client profile
+2. Go to "Forms" tab
+3. View complete form history
+4. Download any signed document
+
+---
+
 ## Need Help?
 
 For additional support:
@@ -587,7 +691,7 @@ For additional support:
 
 ---
 
-*Last Updated: January 3, 2026*
+*Last Updated: January 4, 2026*
 
 ---
 
