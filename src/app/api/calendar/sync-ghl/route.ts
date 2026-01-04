@@ -92,6 +92,25 @@ async function createOrUpdateGHLContact(booking: Booking, apiKey: string) {
 
     // Create new contact
     const locationId = await getGHLLocationId();
+    
+    // Split name into first and last name for GHL
+    const nameParts = booking.clientName.trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+    
+    const contactData = {
+      locationId,
+      firstName,
+      lastName,
+      name: booking.clientName,
+      email: booking.clientEmail,
+      phone: booking.clientPhone,
+      tags: [booking.serviceName, booking.status],
+      source: 'Website Booking'
+    };
+    
+    console.log('Creating GHL contact with data:', JSON.stringify(contactData, null, 2));
+    
     const response = await fetch('https://services.leadconnectorhq.com/contacts/', {
       method: 'POST',
       headers: {
@@ -99,22 +118,44 @@ async function createOrUpdateGHLContact(booking: Booking, apiKey: string) {
         'Content-Type': 'application/json',
         'Version': '2021-07-28'
       },
-      body: JSON.stringify({
-        locationId,
-        name: booking.clientName,
-        email: booking.clientEmail,
-        phone: booking.clientPhone,
-        tags: [booking.serviceName, booking.status],
-        source: 'Website Booking'
-      })
+      body: JSON.stringify(contactData)
     });
 
+    const responseText = await response.text();
+    console.log('GHL contact response:', response.status, responseText);
+
     if (response.ok) {
-      const data = await response.json();
-      return data.contact.id;
+      try {
+        const data = JSON.parse(responseText);
+        return data.contact?.id || data.id;
+      } catch {
+        throw new Error('Invalid response from GHL contact creation');
+      }
     }
 
-    throw new Error('Failed to create GHL contact');
+    // Check if contact already exists (duplicate email/phone)
+    if (response.status === 400 || response.status === 422) {
+      // Try to search for existing contact
+      const searchResponse = await fetch(
+        `https://services.leadconnectorhq.com/contacts/search/duplicate?locationId=${locationId}&email=${encodeURIComponent(booking.clientEmail)}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Version': '2021-07-28'
+          }
+        }
+      );
+      
+      if (searchResponse.ok) {
+        const searchData = await searchResponse.json();
+        if (searchData.contact?.id) {
+          console.log('Found existing contact:', searchData.contact.id);
+          return searchData.contact.id;
+        }
+      }
+    }
+
+    throw new Error(`Failed to create GHL contact: ${responseText}`);
   } catch (error) {
     console.error('Error creating/updating GHL contact:', error);
     throw error;
@@ -189,6 +230,8 @@ async function createOrUpdateGHLAppointment(booking: Booking, contactId: string,
     }
 
     // Create new appointment
+    console.log('Creating GHL appointment with data:', JSON.stringify(appointmentData, null, 2));
+    
     const response = await fetch('https://services.leadconnectorhq.com/calendars/events/appointments', {
       method: 'POST',
       headers: {
@@ -199,14 +242,30 @@ async function createOrUpdateGHLAppointment(booking: Booking, contactId: string,
       body: JSON.stringify(appointmentData)
     });
 
+    const responseText = await response.text();
+    console.log('GHL appointment response:', response.status, responseText);
+
     if (response.ok) {
-      const data = await response.json();
-      return data.id;
+      try {
+        const data = JSON.parse(responseText);
+        return data.id;
+      } catch {
+        // Some successful responses may not have JSON body
+        return null;
+      }
     }
 
-    const errorText = await response.text();
-    console.error('GHL appointment creation failed:', response.status, errorText);
-    throw new Error(`Failed to create GHL appointment: ${response.status} - ${errorText}`);
+    // Parse error response for more details
+    let errorDetails = responseText;
+    try {
+      const errorJson = JSON.parse(responseText);
+      errorDetails = errorJson.message || errorJson.error || responseText;
+    } catch {
+      // Keep original text if not JSON
+    }
+    
+    console.error('GHL appointment creation failed:', response.status, errorDetails);
+    throw new Error(`GHL Error: ${errorDetails}`);
   } catch (error) {
     console.error('Error creating/updating GHL appointment:', error);
     throw error;
