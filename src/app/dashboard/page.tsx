@@ -20,6 +20,7 @@ import GoHighLevelManager from '../../components/admin/GoHighLevelManager';
 import GoHighLevelMCP from '../../components/admin/GoHighLevelMCP';
 import GHLMigration from '../../components/admin/GHLMigration';
 import GHLWorkflowBuilder from '../../components/admin/GHLWorkflowBuilder';
+import BoldSignManager from '../../components/admin/BoldSignManager';
 import BMADOrchestrator from '../../components/admin/BMADOrchestrator';
 import ArtistAvailabilityManager from '../../components/admin/ArtistAvailabilityManager';
 import BookingCalendar from '../../components/admin/BookingCalendar';
@@ -46,7 +47,7 @@ import FAQsManager from '../../components/admin/FAQsManager';
 import GHLSyncStatus from '../../components/admin/GHLSyncStatus';
 import { cn } from '@/lib/utils';
 
-type TabType = 'overview' | 'users' | 'clients' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'ghl-migration' | 'ghl-workflow-builder' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'alexa' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation' | 'hero-carousel' | 'documents' | 'canva' | 'faqs';
+type TabType = 'overview' | 'users' | 'clients' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'ghl-migration' | 'ghl-workflow-builder' | 'boldsign' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'alexa' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation' | 'hero-carousel' | 'documents' | 'canva' | 'faqs';
 
 interface BookingMetrics {
   total: number;
@@ -150,6 +151,7 @@ export default function DashboardPage() {
       'gohighlevel-mcp': 'GoHighLevel MCP',
       'ghl-migration': 'GHL Migration Tool',
       'ghl-workflow-builder': 'AI Workflow Builder',
+      'boldsign': 'BoldSign Forms',
       'bmad-orchestrator': 'BMAD Orchestrator',
       'availability': 'Artist Availability',
       'calendar': 'Booking Calendar',
@@ -508,6 +510,8 @@ export default function DashboardPage() {
         return <GHLMigration />;
       case 'ghl-workflow-builder':
         return <GHLWorkflowBuilder />;
+      case 'boldsign':
+        return <BoldSignManager />;
       case 'bmad-orchestrator':
         return <BMADOrchestrator />;
       case 'availability':

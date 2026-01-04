@@ -45,6 +45,7 @@ import {
   ArrowLeftRight,
   ShieldCheck,
   HelpCircle,
+  PenTool,
 } from 'lucide-react';
 
 // Navigation item types
@@ -150,6 +151,7 @@ const navigationGroups: NavGroup[] = [
       { id: 'gohighlevel-mcp', label: 'GHL MCP', icon: Zap },
       { id: 'ghl-migration', label: 'GHL Migration', icon: ArrowLeftRight },
       { id: 'ghl-workflow-builder', label: 'AI Workflow Builder', icon: Bot },
+      { id: 'boldsign', label: 'BoldSign Forms', icon: PenTool },
       { id: 'canva', label: 'Canva', icon: Palette },
       { id: 'alexa', label: 'Alexa Skills', icon: Mic },
     ],
