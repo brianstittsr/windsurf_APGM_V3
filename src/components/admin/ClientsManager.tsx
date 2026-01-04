@@ -892,6 +892,62 @@ export default function ClientsManager() {
     }
   };
 
+  // Delete appointment from client profile
+  const deleteAppointment = async (bookingId: string) => {
+    if (!viewingClient) return;
+
+    const confirmed = await showAlert({
+      title: 'Delete Appointment',
+      description: 'Are you sure you want to delete this appointment? This action cannot be undone.',
+      variant: 'warning',
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const bookingRef = doc(getDb(), 'bookings', bookingId);
+      await deleteDoc(bookingRef);
+
+      // Refresh client bookings
+      const bookingsQuery = query(
+        collection(getDb(), 'bookings'),
+        where('clientEmail', '==', viewingClient.email)
+      );
+      const bookingsSnapshot = await getDocs(bookingsQuery);
+      const bookings: ClientBooking[] = [];
+      bookingsSnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        bookings.push({
+          id: doc.id,
+          serviceName: data.serviceName || 'Unknown Service',
+          date: data.date || data.appointmentDate || '',
+          time: data.time || data.appointmentTime || '',
+          status: data.status || 'unknown',
+          price: data.price,
+          artistName: data.artistName,
+          bookingNotes: data.bookingNotes || []
+        });
+      });
+      bookings.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      setClientBookings(bookings);
+
+      await showAlert({
+        title: 'Appointment Deleted',
+        description: 'The appointment has been deleted successfully.',
+        variant: 'success'
+      });
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+      await showAlert({
+        title: 'Error',
+        description: 'Failed to delete appointment.',
+        variant: 'destructive'
+      });
+    }
+  };
+
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'confirmed': return 'bg-green-100 text-green-800';
@@ -1435,13 +1491,22 @@ export default function ClientsManager() {
                                       <p className="text-sm font-medium text-gray-900 mt-1">${booking.price}</p>
                                     )}
                                   </div>
-                                  <button
-                                    onClick={() => openEditAppointmentModal(booking)}
-                                    className="p-2 text-[#AD6269] hover:bg-[#AD6269]/10 rounded-lg transition-colors"
-                                    title="Edit Appointment"
-                                  >
-                                    <i className="fas fa-edit"></i>
-                                  </button>
+                                  <div className="flex flex-col gap-1">
+                                    <button
+                                      onClick={() => openEditAppointmentModal(booking)}
+                                      className="p-2 text-[#AD6269] hover:bg-[#AD6269]/10 rounded-lg transition-colors"
+                                      title="Edit Appointment"
+                                    >
+                                      <i className="fas fa-edit"></i>
+                                    </button>
+                                    <button
+                                      onClick={() => deleteAppointment(booking.id)}
+                                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                      title="Delete Appointment"
+                                    >
+                                      <i className="fas fa-trash-alt"></i>
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                               {booking.bookingNotes && booking.bookingNotes.length > 0 && (

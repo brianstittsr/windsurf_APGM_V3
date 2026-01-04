@@ -203,6 +203,26 @@ You can edit existing appointments directly from a client's profile:
 
 The appointment is updated in the database and the list refreshes automatically.
 
+### Deleting Appointments from Client Profile
+
+You can delete appointments directly from a client's profile:
+
+1. Open the client's profile
+2. Go to the **Appointments** tab
+3. Click the **delete icon** (trash) on the appointment you want to remove
+4. Confirm the deletion in the dialog
+
+**Warning**: This action cannot be undone. The appointment will be permanently removed from the database.
+
+### Historical Bookings CRUD Summary
+
+| Operation | How to Access | Description |
+|-----------|---------------|-------------|
+| **Create** | Click "Add Historical Booking" button | Add past appointments with full details and procedure notes |
+| **Read** | View Appointments tab | See all appointments sorted by date (newest first) |
+| **Update** | Click edit icon (pencil) | Modify service, date, time, price, status, and notes |
+| **Delete** | Click delete icon (trash) | Permanently remove the appointment |
+
 ### Adding Payments from Client Profile
 
 You can record payments directly from a client's profile:
