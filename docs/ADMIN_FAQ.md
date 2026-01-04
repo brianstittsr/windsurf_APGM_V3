@@ -918,3 +918,75 @@ For developers and advanced users, the following admin API endpoints are availab
 | `/api/admin/clear-bookings` | DELETE | Clear all bookings (use with caution!) |
 
 **Note:** These endpoints require admin authentication and should be used carefully in production.
+
+---
+
+## GoHighLevel Sync Troubleshooting
+
+### Common Sync Errors
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| **Failed to create appointment** | Calendar ID invalid or missing | Verify calendar exists in GHL |
+| **Failed to create contact** | Duplicate contact or invalid data | Contact may already exist in GHL |
+| **GHL API key not configured** | Missing API key | Add API key in Dashboard → GoHighLevel |
+| **401 Unauthorized** | Invalid or expired API key | Regenerate API key in GHL |
+
+### Retry Failed Syncs
+
+1. Go to **Dashboard → Calendar**
+2. Click **"Sync All with GHL"** button
+3. If sync fails, a modal shows failed appointments
+4. Click **"Retry"** on individual appointments or **"Retry All"**
+
+### GHL Sync Requirements
+
+For successful sync, ensure:
+- **GHL API Key** is configured in Dashboard → GoHighLevel
+- **GHL Location ID** is set correctly
+- **Calendar exists** in your GHL account
+- **Contact permissions** are enabled for the API key
+
+### What Gets Synced
+
+| Data | GHL Object |
+|------|------------|
+| Client name, email, phone | Contact |
+| Appointment date/time | Calendar Event |
+| Service name | Event title |
+| Booking status | Appointment status |
+| Notes | Event notes |
+
+### Sync Status Indicators
+
+- **Green checkmark** - Successfully synced
+- **Red X** - Sync failed (click to see error)
+- **Yellow clock** - Pending sync
+- **No icon** - Never synced
+
+---
+
+## BoldSign Integration Setup
+
+### Initial Configuration
+
+1. Go to **Dashboard → Integrations → BoldSign Forms**
+2. Enter your **BoldSign API Key** (get from BoldSign Settings → API)
+3. Click **Test Connection** to verify
+4. Click **Save Configuration**
+
+### Syncing Templates
+
+1. Go to **Form Templates** tab
+2. Click **Sync from BoldSign**
+3. Templates from your BoldSign account will appear
+4. Map each template to the appropriate procedures
+
+### Firestore Rules Required
+
+The following collections require admin permissions:
+- `boldsignConfig` - API key and settings
+- `boldsignTemplates` - Template mappings
+- `boldsignDocuments` - Sent document tracking
+
+See `FIRESTORE_RULES_BOLDSIGN.md` for deployment instructions.
