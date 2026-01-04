@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { collection, doc, getDocs, setDoc, query, limit } from 'firebase/firestore';
+import { getDb } from '@/lib/firebase';
 import {
   PenTool,
   FileText,
@@ -24,6 +26,7 @@ import {
   Edit,
   ExternalLink,
   Info,
+  Loader2,
 } from 'lucide-react';
 
 interface BoldSignTemplate {
@@ -71,6 +74,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 export default function BoldSignManager() {
   const [activeTab, setActiveTab] = useState<'config' | 'templates' | 'documents'>('config');
   const [loading, setLoading] = useState(false);
+  const [loadingConfig, setLoadingConfig] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info', text: string } | null>(null);
@@ -91,6 +95,57 @@ export default function BoldSignManager() {
 
   const [editingTemplate, setEditingTemplate] = useState<BoldSignTemplate | null>(null);
 
+  // Load config from Firestore on mount
+  useEffect(() => {
+    const loadConfig = async () => {
+      try {
+        const configQuery = query(collection(getDb(), 'boldsignConfig'), limit(1));
+        const snapshot = await getDocs(configQuery);
+        
+        if (!snapshot.empty) {
+          const data = snapshot.docs[0].data();
+          setConfig({
+            apiKey: data.apiKey || '',
+            webhookSecret: data.webhookSecret || '',
+            notificationEmail: data.notificationEmail || 'Victoria@aprettygirllatter.com',
+            notificationPhone: data.notificationPhone || '919-441-0932',
+            reminderSchedule: {
+              firstReminder: data.reminderSchedule?.firstReminder || 24,
+              secondReminder: data.reminderSchedule?.secondReminder || 48,
+              finalReminder: data.reminderSchedule?.finalReminder || 24,
+            },
+          });
+        }
+      } catch (error) {
+        console.error('Error loading BoldSign config:', error);
+      } finally {
+        setLoadingConfig(false);
+      }
+    };
+
+    loadConfig();
+  }, []);
+
+  // Load templates from Firestore on mount
+  useEffect(() => {
+    const loadTemplates = async () => {
+      try {
+        const templatesSnapshot = await getDocs(collection(getDb(), 'boldsignTemplates'));
+        if (!templatesSnapshot.empty) {
+          const loadedTemplates: BoldSignTemplate[] = [];
+          templatesSnapshot.forEach(doc => {
+            loadedTemplates.push({ id: doc.id, ...doc.data() } as BoldSignTemplate);
+          });
+          setTemplates(loadedTemplates.sort((a, b) => a.order - b.order));
+        }
+      } catch (error) {
+        console.error('Error loading BoldSign templates:', error);
+      }
+    };
+
+    loadTemplates();
+  }, []);
+
   const handleSaveConfig = async () => {
     if (!config.apiKey) {
       setMessage({ type: 'error', text: 'API Key is required' });
@@ -99,10 +154,19 @@ export default function BoldSignManager() {
 
     setSaving(true);
     try {
-      // TODO: Save to Firestore
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Save to Firestore
+      const configRef = doc(getDb(), 'boldsignConfig', 'settings');
+      await setDoc(configRef, {
+        apiKey: config.apiKey,
+        webhookSecret: config.webhookSecret,
+        notificationEmail: config.notificationEmail,
+        notificationPhone: config.notificationPhone,
+        reminderSchedule: config.reminderSchedule,
+        updatedAt: new Date(),
+      });
       setMessage({ type: 'success', text: 'BoldSign configuration saved successfully!' });
     } catch (error) {
+      console.error('Error saving config:', error);
       setMessage({ type: 'error', text: 'Failed to save configuration' });
     } finally {
       setSaving(false);
@@ -176,6 +240,12 @@ export default function BoldSignManager() {
           isActive: true,
         }));
 
+        // Save templates to Firestore
+        for (const template of syncedTemplates) {
+          const templateRef = doc(getDb(), 'boldsignTemplates', template.templateId);
+          await setDoc(templateRef, template);
+        }
+
         setTemplates(syncedTemplates);
         setMessage({ type: 'success', text: `Synced ${syncedTemplates.length} templates from BoldSign. Now map them to procedures.` });
       } else {
@@ -188,23 +258,52 @@ export default function BoldSignManager() {
     }
   };
 
-  const handleToggleTemplate = (id: string) => {
-    setTemplates(prev => prev.map(t => 
+  const handleToggleTemplate = async (id: string) => {
+    const updatedTemplates = templates.map(t => 
       t.id === id ? { ...t, isActive: !t.isActive } : t
-    ));
+    );
+    setTemplates(updatedTemplates);
+    
+    // Save to Firestore
+    const template = updatedTemplates.find(t => t.id === id);
+    if (template) {
+      const templateRef = doc(getDb(), 'boldsignTemplates', template.templateId);
+      await setDoc(templateRef, template);
+    }
   };
 
-  const handleUpdateTemplate = (template: BoldSignTemplate) => {
+  const handleUpdateTemplate = async (template: BoldSignTemplate) => {
     setTemplates(prev => prev.map(t => 
       t.id === template.id ? template : t
     ));
     setEditingTemplate(null);
-    setMessage({ type: 'success', text: 'Template updated successfully' });
+    
+    // Save to Firestore
+    try {
+      const templateRef = doc(getDb(), 'boldsignTemplates', template.templateId);
+      await setDoc(templateRef, template);
+      setMessage({ type: 'success', text: 'Template updated and saved successfully' });
+    } catch (error) {
+      console.error('Error saving template:', error);
+      setMessage({ type: 'error', text: 'Template updated locally but failed to save to database' });
+    }
   };
 
   const webhookUrl = typeof window !== 'undefined' 
     ? `${window.location.origin}/api/webhooks/boldsign`
     : '/api/webhooks/boldsign';
+
+  // Show loading state while config is being loaded
+  if (loadingConfig) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="flex items-center gap-3 text-gray-500">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading BoldSign configuration...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
