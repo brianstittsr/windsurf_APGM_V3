@@ -185,6 +185,7 @@ export default function Header() {
                       <UserAvatar
                         firstName={userProfile?.profile?.firstName || 'User'}
                         lastName={userProfile?.profile?.lastName || ''}
+                        profilePicture={(userProfile?.profile as any)?.profilePicture || (userProfile as any)?.photoURL}
                         size="sm"
                         showDropdown={true}
                         onLogout={handleLogout}
@@ -292,6 +293,7 @@ export default function Header() {
                                 <UserAvatar
                                   firstName={userProfile?.profile?.firstName || 'User'}
                                   lastName={userProfile?.profile?.lastName || ''}
+                                  profilePicture={(userProfile?.profile as any)?.profilePicture || (userProfile as any)?.photoURL}
                                   size="sm"
                                   showDropdown={false}
                                   userRole={userProfile?.role || 'client'}

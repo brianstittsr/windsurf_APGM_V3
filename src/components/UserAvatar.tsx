@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 interface UserAvatarProps {
   firstName: string;
   lastName: string;
+  profilePicture?: string;
   size?: 'sm' | 'md' | 'lg';
   showDropdown?: boolean;
   onLogout?: () => void;
@@ -14,12 +15,14 @@ interface UserAvatarProps {
 export default function UserAvatar({ 
   firstName, 
   lastName, 
+  profilePicture,
   size = 'md', 
   showDropdown = false,
   onLogout,
   userRole = 'client'
 }: UserAvatarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   // Get initials from first and last name
   const getInitials = () => {
@@ -68,23 +71,42 @@ export default function UserAvatar({
 
   return (
     <div className="position-relative">
-      <div
-        style={avatarStyle}
-        onClick={handleAvatarClick}
-        onMouseEnter={(e) => {
-          if (showDropdown) {
-            e.currentTarget.style.backgroundColor = '#8B4A52';
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (showDropdown) {
-            e.currentTarget.style.backgroundColor = '#AD6269';
-          }
-        }}
-        title={`${firstName} ${lastName}`}
-      >
-        {getInitials()}
-      </div>
+      {profilePicture && !imageError ? (
+        <img
+          src={profilePicture}
+          alt={`${firstName} ${lastName}`}
+          style={{
+            width: config.width,
+            height: config.height,
+            borderRadius: '50%',
+            objectFit: 'cover',
+            cursor: showDropdown ? 'pointer' : 'default',
+            border: '2px solid rgba(173, 98, 105, 0.2)',
+            transition: 'all 0.2s ease'
+          }}
+          onClick={handleAvatarClick}
+          onError={() => setImageError(true)}
+          title={`${firstName} ${lastName}`}
+        />
+      ) : (
+        <div
+          style={avatarStyle}
+          onClick={handleAvatarClick}
+          onMouseEnter={(e) => {
+            if (showDropdown) {
+              e.currentTarget.style.backgroundColor = '#8B4A52';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (showDropdown) {
+              e.currentTarget.style.backgroundColor = '#AD6269';
+            }
+          }}
+          title={`${firstName} ${lastName}`}
+        >
+          {getInitials()}
+        </div>
+      )}
 
       {/* Dropdown Menu */}
       {showDropdown && isDropdownOpen && (
