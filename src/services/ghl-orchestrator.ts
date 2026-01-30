@@ -69,6 +69,10 @@ export class GHLOrchestrator {
     return this.makeRequest(`/calendars/${calendarId}/appointments`, 'POST', appointmentData);
   }
 
+  async updateAppointment(appointmentId: string, appointmentData: any) {
+    return this.makeRequest(`/calendars/events/appointments/${appointmentId}`, 'PUT', appointmentData);
+  }
+
   async getCalendarGroups() {
     return this.makeRequest('/calendars/groups');
   }

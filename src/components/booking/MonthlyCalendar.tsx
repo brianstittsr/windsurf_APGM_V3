@@ -13,12 +13,14 @@ interface MonthlyCalendarProps {
   selectedDate: string;
   onDateSelect: (date: string) => void;
   maxBookingsPerDay?: number;
+  maxDaysInFuture?: number;
 }
 
 export default function MonthlyCalendar({ 
   selectedDate, 
   onDateSelect,
-  maxBookingsPerDay = 2 
+  maxBookingsPerDay = 2,
+  maxDaysInFuture = 90
 }: MonthlyCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [dateAvailability, setDateAvailability] = useState<Record<string, DateAvailability>>({});
@@ -27,6 +29,9 @@ export default function MonthlyCalendar({
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  const maxDate = new Date();
+  maxDate.setDate(today.getDate() + maxDaysInFuture);
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -156,8 +161,14 @@ export default function MonthlyCalendar({
     }
   };
 
+  const isDateSelectable = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return date >= today && date <= maxDate;
+  };
+
   const isDateDisabled = (date: Date): boolean => {
-    const dateString = date.toISOString().split('T')[0];
     const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     
     // Past dates are disabled
@@ -165,7 +176,18 @@ export default function MonthlyCalendar({
       return true;
     }
 
+    // Future dates beyond max range are disabled
+    if (normalizedDate > maxDate) {
+      return true;
+    }
+
+    // Check if date is not selectable
+    if (!isDateSelectable(date)) {
+      return true;
+    }
+
     // Check if date is unavailable (all slots disabled)
+    const dateString = date.toISOString().split('T')[0];
     const availability = dateAvailability[dateString];
     if (availability && availability.isAvailable === false) {
       return true;
@@ -179,7 +201,7 @@ export default function MonthlyCalendar({
     return false;
   };
 
-  const getDateStatus = (date: Date): 'past' | 'full' | 'unavailable' | 'available' | 'selected' | 'today' => {
+  const getDateStatus = (date: Date): 'past' | 'future' | 'full' | 'unavailable' | 'available' | 'selected' | 'today' => {
     const dateString = date.toISOString().split('T')[0];
     const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     
@@ -193,6 +215,10 @@ export default function MonthlyCalendar({
 
     if (normalizedDate.toDateString() === today.toDateString()) {
       return 'today';
+    }
+
+    if (normalizedDate > maxDate) {
+      return 'future';
     }
 
     const availability = dateAvailability[dateString];
@@ -209,9 +235,29 @@ export default function MonthlyCalendar({
     return 'available';
   };
 
+  const dateCellClasses = (status: string) => {
+    return `
+      ${status === 'future' 
+        ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
+        : status === 'selected' 
+        ? 'bg-[#AD6269] text-white ring-2 ring-[#AD6269] ring-offset-2' 
+        : status === 'today'
+        ? 'bg-yellow-100 text-yellow-800 border-2 border-yellow-400 hover:bg-yellow-200'
+        : status === 'past' || status === 'full' || status === 'unavailable'
+        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+        : 'bg-white border border-gray-200 text-gray-900 hover:bg-[#AD6269]/10 hover:border-[#AD6269]'
+      }
+    `;
+  };
+
   const calendarDays = generateCalendarDays();
   const isPreviousMonthDisabled = currentMonth.getFullYear() === today.getFullYear() && 
-                                   currentMonth.getMonth() <= today.getMonth();
+                                 currentMonth.getMonth() <= today.getMonth();
+  const isNextMonthDisabled = new Date(
+    currentMonth.getFullYear(), 
+    currentMonth.getMonth() + 1, 
+    1
+  ) > maxDate;
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -235,6 +281,7 @@ export default function MonthlyCalendar({
           variant="outline"
           size="sm"
           onClick={goToNextMonth}
+          disabled={isNextMonthDisabled}
           className="p-2"
         >
           <i className="fas fa-chevron-right"></i>
@@ -288,18 +335,7 @@ export default function MonthlyCalendar({
                 type="button"
                 disabled={isDisabled}
                 onClick={() => !isDisabled && onDateSelect(dateString)}
-                className={`
-                  aspect-square flex flex-col items-center justify-center rounded-lg text-sm font-medium
-                  transition-all duration-200 relative
-                  ${status === 'selected' 
-                    ? 'bg-[#AD6269] text-white ring-2 ring-[#AD6269] ring-offset-2' 
-                    : status === 'today'
-                    ? 'bg-yellow-100 text-yellow-800 border-2 border-yellow-400 hover:bg-yellow-200'
-                    : status === 'past' || status === 'full' || status === 'unavailable'
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white border border-gray-200 text-gray-900 hover:bg-[#AD6269]/10 hover:border-[#AD6269]'
-                  }
-                `}
+                className={dateCellClasses(status)}
               >
                 <span className="text-base">{date.getDate()}</span>
                 {status === 'today' && (
@@ -336,6 +372,10 @@ export default function MonthlyCalendar({
             <span className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>
           </div>
           <span>Partial</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 bg-gray-50 rounded"></div>
+          <span>Future</span>
         </div>
       </div>
     </div>

@@ -90,15 +90,19 @@ export interface Appointment {
   serviceId: string;
   serviceName: string;
   artistId: string;
-  scheduledDate: string;
-  scheduledTime: string;
+  date: string; // YYYY-MM-DD format
+  time: string; // HH:MM format
+  scheduledDate: string; // Legacy field - can be removed after migration
+  scheduledTime: string; // Legacy field - can be removed after migration
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'rescheduled';
-  totalAmount: number;
+  price: number;
+  depositPaid: boolean;
   depositAmount: number;
   remainingAmount: number;
   paymentStatus: 'pending' | 'deposit_paid' | 'paid_in_full' | 'refunded';
   paymentIntentId: string;
   specialRequests: string;
+  notes?: string;
   giftCardCode?: string;
   giftCardAmount?: number;
   couponCode?: string;
@@ -110,6 +114,12 @@ export interface Appointment {
   rescheduleCount: number;
   confirmationSent: boolean;
   reminderSent: boolean;
+  googleEventId?: string;
+  ghlAppointmentId?: string;
+  lastSyncedAt?: Timestamp;
+  syncStatus?: 'pending' | 'synced' | 'failed';
+  syncError?: string;
+  calendarId?: string; // ID of the Google Calendar
 }
 
 // Health Form Types
@@ -453,6 +463,12 @@ export interface BusinessSettings {
   };
 }
 
+// Booking Range Settings Types
+export interface BookingSettings {
+  maxDaysInFuture: number; // Maximum days in future for bookings
+  minDaysNotice: number; // Minimum days notice required for bookings
+}
+
 // Analytics Types
 export interface DayAnalytics {
   appointments: {
@@ -479,4 +495,3 @@ export interface DayAnalytics {
     assessments: number;
   };
 }
-

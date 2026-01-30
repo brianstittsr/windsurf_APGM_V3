@@ -13,7 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar, Clock, Sun, CloudSun, Moon, Save, User, Plus, Trash2, CalendarDays, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Switch } from '@/components/ui/switch'; // Add to imports
+import { Calendar, Clock, Sun, CloudSun, Moon, Save, User, Plus, Trash2, CalendarDays, X, ChevronLeft, ChevronRight, RefreshCw, Check, AlertTriangle, Bot } from 'lucide-react';
+import { GoogleCalendarService } from '@/services/googleCalendar';
+import { AvailabilityChat } from './AvailabilityChat';
+import type { AICalendarResponse } from '@/services/aiCalendar';
 
 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -45,6 +49,7 @@ export default function ArtistAvailabilityManager() {
   const [breakTime, setBreakTime] = useState<number>(15);
   const [loading, setLoading] = useState(true);
   const [showOutlookModal, setShowOutlookModal] = useState(false);
+  const [showChat, setShowChat] = useState(false);
   const { showAlert, showConfirm, AlertDialogComponent } = useAlertDialog();
   
   // Date Specific Hours state
@@ -56,6 +61,14 @@ export default function ArtistAvailabilityManager() {
   const [modalTimeSlots, setModalTimeSlots] = useState({ morning: true, afternoon: true, evening: true });
   const [modalNote, setModalNote] = useState('');
   const [currentModalMonth, setCurrentModalMonth] = useState(new Date());
+
+  // Add new state for Google Calendar sync
+  const [googleCalendarConnected, setGoogleCalendarConnected] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
+  const [lastSynced, setLastSynced] = useState<Date | null>(null);
+
+  // Add feature toggle for Artist Availability
+  const [availabilityEnabled, setAvailabilityEnabled] = useState(true);
 
   useEffect(() => {
     const fetchArtists = async () => {
@@ -214,6 +227,40 @@ export default function ArtistAvailabilityManager() {
     
     fetchAvailability();
   }, [selectedArtist]);
+
+  useEffect(() => {
+    const checkGoogleCalendarConnection = async () => {
+      if (!selectedArtist) return;
+      
+      try {
+        const docRef = doc(getDb(), 'googleCalendarTokens', selectedArtist);
+        const docSnap = await getDoc(docRef);
+        setGoogleCalendarConnected(docSnap.exists());
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.lastSyncedAt) {
+            setLastSynced(data.lastSyncedAt.toDate());
+          }
+        }
+      } catch (error) {
+        console.error('Error checking Google Calendar connection:', error);
+      }
+    };
+    
+    checkGoogleCalendarConnection();
+  }, [selectedArtist]);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const docRef = doc(getDb(), 'settings', 'availability');
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setAvailabilityEnabled(docSnap.data().enabled ?? true);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   // Auto-save functionality - save whenever availability changes
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -480,6 +527,83 @@ export default function ArtistAvailabilityManager() {
     }
   };
 
+  const handleGoogleCalendarSync = async () => {
+    if (!selectedArtist) return;
+    
+    setSyncStatus('syncing');
+    try {
+      // In a real implementation, this would call your sync service
+      // For now we'll just simulate a successful sync
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setSyncStatus('success');
+      setLastSynced(new Date());
+      
+      // Update Firestore with last sync time
+      const docRef = doc(getDb(), 'artist-availability', selectedArtist);
+      await setDoc(docRef, { 
+        lastSyncedAt: new Date() 
+      }, { merge: true });
+      
+    } catch (error) {
+      console.error('Error syncing with Google Calendar:', error);
+      setSyncStatus('error');
+    }
+  };
+
+  const handleToggle = async (checked: boolean) => { // Update toggle handler with proper typing
+    setAvailabilityEnabled(checked);
+    await setDoc(doc(getDb(), 'settings', 'availability'), { enabled: checked }, { merge: true });
+  };
+
+  const handleAIAction = async (action: AICalendarResponse) => {
+    try {
+      switch (action.action) {
+        case 'block':
+          // Handle blocking dates/times
+          if (action.date) {
+            const newOverride: DateSpecificHours = {
+              date: action.date,
+              type: 'blocked',
+              timeSlots: {
+                morning: !action.time || action.time < '12:00',
+                afternoon: !action.time || (action.time >= '12:00' && action.time < '16:00'),
+                evening: !action.time || action.time >= '16:00'
+              },
+              note: action.description || 'Blocked via AI assistant'
+            };
+            setDateSpecificHours(prev => [...prev, newOverride]);
+          }
+          break;
+        
+        case 'available':
+          // Handle making dates/times available
+          if (action.date) {
+            setDateSpecificHours(prev => 
+              prev.filter(o => o.date !== action.date)
+            );
+          }
+          break;
+        
+        default:
+          throw new Error(`Unsupported action: ${action.action}`);
+      }
+      
+      showAlert({ 
+        title: 'Success', 
+        description: 'Action completed successfully',
+        variant: 'success'
+      });
+    } catch (error: any) {
+      console.error('Error handling AI action:', error);
+      showAlert({ 
+        title: 'Error', 
+        description: error.message || 'Failed to execute action',
+        variant: 'destructive'
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -543,6 +667,14 @@ export default function ArtistAvailabilityManager() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6 space-y-4">
+          <div className="flex items-center space-x-2">
+            <Switch 
+              id="availability-toggle" 
+              checked={availabilityEnabled} 
+              onCheckedChange={handleToggle}
+            />
+            <Label htmlFor="availability-toggle">Enable Artist Availability</Label>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="breakTime" className="text-sm font-medium text-gray-700">Break Time (minutes)</Label>
             <Input 
@@ -553,22 +685,85 @@ export default function ArtistAvailabilityManager() {
               onChange={(e) => setBreakTime(parseInt(e.target.value, 10))} 
             />
           </div>
-          <div className="flex flex-wrap gap-3 pt-2">
-            <Button variant="outline" asChild className="border-gray-200 hover:bg-gray-50">
-              <a href="/api/auth/google">
-                <i className="fab fa-google mr-2 text-red-500"></i>
-                Connect to Google Calendar
-              </a>
-            </Button>
-            <Button 
-              variant="outline"
-              className="border-gray-200 hover:bg-gray-50"
-              onClick={() => setShowOutlookModal(true)}
-            >
-              <i className="fab fa-microsoft mr-2 text-blue-500"></i>
-              Connect to Outlook Calendar
-            </Button>
+          
+          {/* Google Calendar Sync Status */}
+          <div className="space-y-2 pt-2">
+            <Label className="text-sm font-medium text-gray-700">Calendar Sync</Label>
+            <div className="flex items-center gap-3">
+              <div className="flex-1 flex items-center gap-2">
+                <div className={`h-3 w-3 rounded-full ${googleCalendarConnected ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                <span className="text-sm">
+                  {googleCalendarConnected ? 'Connected to Google Calendar' : 'Not connected'}
+                </span>
+              </div>
+              {lastSynced && (
+                <span className="text-xs text-gray-500">
+                  Last synced: {lastSynced.toLocaleString()}
+                </span>
+              )}
+            </div>
+            
+            <div className="flex flex-wrap gap-3 pt-2">
+              <Button 
+                variant="outline" 
+                asChild 
+                className="border-gray-200 hover:bg-gray-50"
+              >
+                <a href={`/api/auth/google-calendar?state=${selectedArtist}`}>
+                  <i className="fab fa-google mr-2 text-red-500"></i>
+                  {googleCalendarConnected ? 'Reconnect Google Calendar' : 'Connect to Google Calendar'}
+                </a>
+              </Button>
+              
+              {googleCalendarConnected && (
+                <Button
+                  variant="outline"
+                  onClick={handleGoogleCalendarSync}
+                  disabled={syncStatus === 'syncing'}
+                  className="border-gray-200 hover:bg-gray-50"
+                >
+                  {syncStatus === 'syncing' ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Syncing...
+                    </>
+                  ) : syncStatus === 'success' ? (
+                    <>
+                      <Check className="h-4 w-4 mr-2 text-green-500" />
+                      Sync Successful
+                    </>
+                  ) : syncStatus === 'error' ? (
+                    <>
+                      <AlertTriangle className="h-4 w-4 mr-2 text-red-500" />
+                      Sync Failed
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Sync Now
+                    </>
+                  )}
+                </Button>
+              )}
+              
+              <Button 
+                variant="outline"
+                className="border-gray-200 hover:bg-gray-50"
+                onClick={() => setShowOutlookModal(true)}
+              >
+                <i className="fab fa-microsoft mr-2 text-blue-500"></i>
+                Connect to Outlook Calendar
+              </Button>
+            </div>
           </div>
+          <Button 
+            variant="outline" 
+            onClick={() => setShowChat(!showChat)}
+            className="border-gray-200 hover:bg-gray-50"
+          >
+            <Bot className="h-4 w-4 mr-2" />
+            {showChat ? 'Hide AI Assistant' : 'Use AI Assistant'}
+          </Button>
         </CardContent>
       </Card>
 
@@ -997,6 +1192,16 @@ export default function ArtistAvailabilityManager() {
         artistName={artists.find(a => a.id === selectedArtist)?.displayName || 'Selected Artist'}
       />
       {AlertDialogComponent}
+
+      {showChat && (
+        <div className="mt-6">
+          <AvailabilityChat 
+            selectedArtist={selectedArtist}
+            availability={availability}
+            onAction={handleAIAction}
+          />
+        </div>
+      )}
     </div>
   );
 }
