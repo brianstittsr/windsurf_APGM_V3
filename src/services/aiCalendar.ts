@@ -1,9 +1,9 @@
-import { Configuration, OpenAIApi } from 'openai';
+import OpenAI from 'openai';
 import { Appointment } from '@/types/database';
 import { GoogleCalendarService } from './googleCalendar';
 import { GHLOrchestrator } from './ghl-orchestrator';
 
-export type AICalendarResponse = {
+type AICalendarResponse = {
   action: 'create' | 'update' | 'delete' | 'block' | 'available';
   target: 'event' | 'availability';
   date?: string;
@@ -14,17 +14,16 @@ export type AICalendarResponse = {
 };
 
 export class AICalendarService {
-  private static aiClient: OpenAIApi;
+  private static aiClient: OpenAI;
 
-  static async initialize() {
+  static async initialize(): Promise<OpenAI> {
     if (!this.aiClient) {
       if (!process.env.OPENAI_API_KEY) {
         throw new Error('Missing OpenAI API key');
       }
-      const configuration = new Configuration({
-        apiKey: process.env.OPENAI_API_KEY,
+      this.aiClient = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
       });
-      this.aiClient = new OpenAIApi(configuration);
     }
     return this.aiClient;
   }
@@ -55,7 +54,7 @@ Respond with JSON in this format:
   "description": "event details"
 }`;
 
-      const response = await this.aiClient.createChatCompletion({
+      const response = await client.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
           { role: 'system', content: systemPrompt },
@@ -64,7 +63,7 @@ Respond with JSON in this format:
         temperature: 0.3,
       });
 
-      const result = response.data.choices[0]?.message?.content;
+      const result = response.choices[0]?.message?.content;
       if (!result) throw new Error('No response from AI');
       
       return JSON.parse(result) as AICalendarResponse;
@@ -80,7 +79,7 @@ Respond with JSON in this format:
     const client = await this.initialize();
     
     try {
-      const response = await this.aiClient.createChatCompletion({
+      const response = await client.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
           {
@@ -95,7 +94,7 @@ Respond with JSON in this format:
         temperature: 0.7,
       });
 
-      return response.data.choices[0]?.message?.content || 'No summary available';
+      return response.choices[0]?.message?.content || 'No summary available';
     } catch (error) {
       console.error('AI summary error:', error);
       return 'Failed to generate summary';
