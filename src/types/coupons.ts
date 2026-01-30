@@ -24,7 +24,7 @@ export interface CouponCode {
   id: string;
   code: string;
   description: string;
-  type: 'percentage' | 'fixed' | 'free_service' | 'exact_amount';
+  type: 'percentage' | 'fixed' | 'free_service' | 'exact_amount' | 'price_override';
   value: number;
   exactAmount?: number;
   minOrderAmount?: number;

@@ -64,7 +64,7 @@ export interface GiftCard {
 export interface CouponCode {
   id: string;
   code: string;
-  type: 'percentage' | 'fixed' | 'free_service' | 'exact_amount';
+  type: 'percentage' | 'fixed' | 'free_service' | 'exact_amount' | 'price_override';
   value: number; // percentage (0-100) or fixed amount in cents
   exactAmount?: number; // Override service price with this exact amount
   description: string;

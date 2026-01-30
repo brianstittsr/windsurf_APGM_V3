@@ -46,7 +46,7 @@ const safeFormatDate = (date: any, format: 'localDate' | 'isoDate' = 'localDate'
 interface CouponFormData {
   code: string;
   description: string;
-  type: 'percentage' | 'fixed' | 'free_service' | 'exact_amount';
+  type: 'percentage' | 'fixed' | 'free_service' | 'exact_amount' | 'price_override';
   value: number;
   exactAmount?: number;
   minOrderAmount?: number;
@@ -404,6 +404,7 @@ export default function CouponsGiftCardsManager() {
       case 'fixed': return 'bg-green-100 text-green-800';
       case 'free_service': return 'bg-yellow-100 text-yellow-800';
       case 'exact_amount': return 'bg-cyan-100 text-cyan-800';
+      case 'price_override': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -686,6 +687,7 @@ export default function CouponsGiftCardsManager() {
                       <option value="fixed">Fixed Amount</option>
                       <option value="free_service">Free Service</option>
                       <option value="exact_amount">Exact Amount</option>
+                      <option value="price_override">Price Override</option>
                     </select>
                   </div>
                 </div>
@@ -708,7 +710,8 @@ export default function CouponsGiftCardsManager() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {couponFormData.type === 'percentage' ? 'Percentage (%)' : 
-                       couponFormData.type === 'exact_amount' ? 'Set Price To ($)' : 'Amount ($)'}
+                       couponFormData.type === 'exact_amount' ? 'Set Price To ($)' : 
+                       couponFormData.type === 'price_override' ? 'New Price ($)' : 'Amount ($)'}
                     </label>
                     <Input
                       type="number"
@@ -728,6 +731,9 @@ export default function CouponsGiftCardsManager() {
                     />
                     {couponFormData.type === 'exact_amount' && (
                       <p className="text-xs text-gray-500 mt-1">This will set the service price to this exact amount</p>
+                    )}
+                    {couponFormData.type === 'price_override' && (
+                      <p className="text-xs text-gray-500 mt-1">This will override the service price to the amount entered above</p>
                     )}
                   </div>
                   <div>

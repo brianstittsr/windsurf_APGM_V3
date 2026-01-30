@@ -97,6 +97,8 @@ export default function CouponInput({ serviceId, orderAmount, onCouponApplied, a
                   ? `${appliedCoupon.value}% discount`
                   : appliedCoupon.type === 'exact_amount'
                   ? `Service price set to $${appliedCoupon.exactAmount || appliedCoupon.value}`
+                  : appliedCoupon.type === 'price_override'
+                  ? `Price override: $${appliedCoupon.value}`
                   : appliedCoupon.type === 'free_service'
                   ? 'Free service'
                   : `$${appliedCoupon.value} discount`

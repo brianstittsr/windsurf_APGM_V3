@@ -21,7 +21,7 @@ export class CouponService {
   static async createCoupon(couponData: {
     code: string;
     description: string;
-    type: 'percentage' | 'fixed' | 'free_service' | 'exact_amount';
+    type: 'percentage' | 'fixed' | 'free_service' | 'exact_amount' | 'price_override';
     value: number;
     exactAmount?: number;
     minOrderAmount?: number;
@@ -162,6 +162,10 @@ export class CouponService {
         : coupon.value;
       // e.g., if service is $600 and targetPrice is $400, discount is $200
       return Math.max(0, orderAmount - targetPrice);
+    } else if (coupon.type === 'price_override') {
+      // For price_override coupons, set the service price to the value in the Amount field
+      // e.g., if service is $600 and value is $400, discount is $200
+      return Math.max(0, orderAmount - coupon.value);
     }
     return 0;
   }
