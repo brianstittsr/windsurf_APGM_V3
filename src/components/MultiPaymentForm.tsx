@@ -299,7 +299,15 @@ export default function MultiPaymentForm({
     const { error, paymentIntent } = await stripe!.confirmKlarnaPayment(client_secret, {
       payment_method: {
         billing_details: {
-          address: billingAddress,
+          name: cardholderName || 'Customer',
+          email: billingAddress.email,
+          address: {
+            line1: billingAddress.line1,
+            city: billingAddress.city,
+            state: billingAddress.state,
+            postal_code: billingAddress.postal_code,
+            country: billingAddress.country || 'US',
+          },
         },
       },
       return_url: `${window.location.origin}/payment-success`,
@@ -314,8 +322,15 @@ export default function MultiPaymentForm({
     const { error, paymentIntent } = await stripe!.confirmAffirmPayment(client_secret, {
       payment_method: {
         billing_details: {
-          name: cardholderName || 'Customer Name',
-          address: billingAddress,
+          name: cardholderName || 'Customer',
+          email: billingAddress.email,
+          address: {
+            line1: billingAddress.line1,
+            city: billingAddress.city,
+            state: billingAddress.state,
+            postal_code: billingAddress.postal_code,
+            country: billingAddress.country || 'US',
+          },
         },
       },
       return_url: `${window.location.origin}/payment-success`,
@@ -520,6 +535,8 @@ export default function MultiPaymentForm({
   );
 
   const isKlarnaFormValid = selectedPaymentMethod !== 'klarna' || (
+    cardholderName.trim() !== '' &&
+    billingAddress.email.trim() !== '' &&
     billingAddress.line1.trim() !== '' && 
     billingAddress.city.trim() !== '' && 
     billingAddress.state.trim() !== '' && 
@@ -528,6 +545,16 @@ export default function MultiPaymentForm({
 
   const isAffirmFormValid = selectedPaymentMethod !== 'affirm' || (
     cardholderName.trim() !== '' &&
+    billingAddress.email.trim() !== '' &&
+    billingAddress.line1.trim() !== '' && 
+    billingAddress.city.trim() !== '' && 
+    billingAddress.state.trim() !== '' && 
+    billingAddress.postal_code.trim() !== ''
+  );
+
+  const isAfterpayFormValid = selectedPaymentMethod !== 'afterpay' || (
+    cardholderName.trim() !== '' &&
+    billingAddress.email.trim() !== '' &&
     billingAddress.line1.trim() !== '' && 
     billingAddress.city.trim() !== '' && 
     billingAddress.state.trim() !== '' && 
@@ -540,7 +567,7 @@ export default function MultiPaymentForm({
   const isKlarnaApprovalValid = selectedPaymentMethod !== 'klarna' || klarnaApproved === true;
   const isAffirmApprovalValid = selectedPaymentMethod !== 'affirm' || affirmApproved === true;
 
-  const isFormValid = isCardFormValid && isKlarnaFormValid && isAffirmFormValid && isCherryFormValid && isKlarnaApprovalValid && isAffirmApprovalValid;
+  const isFormValid = isCardFormValid && isKlarnaFormValid && isAffirmFormValid && isAfterpayFormValid && isCherryFormValid && isKlarnaApprovalValid && isAffirmApprovalValid;
 
   // Show loading state if Stripe hasn't loaded yet
   if (!stripe) {
@@ -738,24 +765,99 @@ export default function MultiPaymentForm({
         </div>
       )}
 
-      {/* Name field for Klarna and Affirm */}
-      {(selectedPaymentMethod === 'klarna' || selectedPaymentMethod === 'affirm') && (
+      {/* Name and Email fields for Klarna and Affirm */}
+      {(selectedPaymentMethod === 'klarna' || selectedPaymentMethod === 'affirm' || selectedPaymentMethod === 'afterpay') && (
         <Card className="border-0 shadow-md">
           <CardContent className="p-6">
             <h4 className="font-bold text-gray-900 mb-4">Customer Information</h4>
-            <div>
-              <label htmlFor="customer-name" className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name <span className="text-red-500">*</span>
-              </label>
-              <Input
-                id="customer-name"
-                type="text"
-                value={cardholderName}
-                onChange={(e) => setCardholderName(e.target.value)}
-                placeholder="Full name"
-                required
-                className="h-11"
-              />
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="customer-name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Name <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  id="customer-name"
+                  type="text"
+                  value={cardholderName}
+                  onChange={(e) => setCardholderName(e.target.value)}
+                  placeholder="Full name"
+                  required
+                  className="h-11"
+                />
+              </div>
+              <div>
+                <label htmlFor="customer-email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Address <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  id="customer-email"
+                  type="email"
+                  value={billingAddress.email}
+                  onChange={(e) => setBillingAddress(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="your@email.com"
+                  required
+                  className="h-11"
+                />
+              </div>
+              <div>
+                <label htmlFor="billing-address" className="block text-sm font-medium text-gray-700 mb-1">
+                  Street Address <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  id="billing-address"
+                  type="text"
+                  value={billingAddress.line1}
+                  onChange={(e) => setBillingAddress(prev => ({ ...prev, line1: e.target.value }))}
+                  placeholder="123 Main St"
+                  required
+                  className="h-11"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="billing-city" className="block text-sm font-medium text-gray-700 mb-1">
+                    City <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    id="billing-city"
+                    type="text"
+                    value={billingAddress.city}
+                    onChange={(e) => setBillingAddress(prev => ({ ...prev, city: e.target.value }))}
+                    placeholder="City"
+                    required
+                    className="h-11"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="billing-state" className="block text-sm font-medium text-gray-700 mb-1">
+                    State <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    id="billing-state"
+                    type="text"
+                    value={billingAddress.state}
+                    onChange={(e) => setBillingAddress(prev => ({ ...prev, state: e.target.value }))}
+                    placeholder="NC"
+                    maxLength={2}
+                    required
+                    className="h-11"
+                  />
+                </div>
+              </div>
+              <div>
+                <label htmlFor="billing-zip" className="block text-sm font-medium text-gray-700 mb-1">
+                  ZIP Code <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  id="billing-zip"
+                  type="text"
+                  value={billingAddress.postal_code}
+                  onChange={(e) => setBillingAddress(prev => ({ ...prev, postal_code: e.target.value }))}
+                  placeholder="12345"
+                  required
+                  className="h-11 w-32"
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
