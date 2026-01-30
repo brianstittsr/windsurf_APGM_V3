@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 
 interface BusinessSettings {
   id?: string;
+  depositEnabled: boolean;
   depositPercentage: number;
   taxRate: number;
   cancellationPolicy: string;
@@ -22,6 +23,7 @@ interface BusinessSettings {
 
 export default function BusinessSettingsManager() {
   const [settings, setSettings] = useState<BusinessSettings>({
+    depositEnabled: false, // Deposits disabled by default - full payment required
     depositPercentage: 33.33, // Default 33.33% (equivalent to $200 on $600 service)
     taxRate: 7.75,
     cancellationPolicy: '24 hours notice required',
@@ -115,10 +117,39 @@ export default function BusinessSettingsManager() {
             </h5>
           </div>
           <div className="p-6 space-y-4">
+            {/* Deposit Toggle */}
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700">
+                    <i className="fas fa-toggle-on mr-1 text-[#AD6269]"></i>Enable Deposit Payments
+                  </label>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {settings.depositEnabled 
+                      ? 'Customers pay a deposit now and the remaining balance at their appointment' 
+                      : 'Customers pay the full amount at checkout (deposits disabled)'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSettings(prev => ({ ...prev, depositEnabled: !prev.depositEnabled }))}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    settings.depositEnabled ? 'bg-[#AD6269]' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      settings.depositEnabled ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+              <div className={settings.depositEnabled ? '' : 'opacity-50'}>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  <i className="fas fa-percentage mr-1 text-green-600"></i>Deposit Percentage *
+                  <i className="fas fa-percentage mr-1 text-green-600"></i>Deposit Percentage {settings.depositEnabled && '*'}
                 </label>
                 <div className="flex">
                   <Input
@@ -128,12 +159,17 @@ export default function BusinessSettingsManager() {
                     min="0"
                     max="100"
                     step="0.01"
-                    required
+                    required={settings.depositEnabled}
+                    disabled={!settings.depositEnabled}
                     className="rounded-r-none"
                   />
                   <span className="inline-flex items-center px-3 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md">%</span>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Percentage of service price required as deposit</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {settings.depositEnabled 
+                    ? 'Percentage of service price required as deposit' 
+                    : 'Enable deposits above to configure this setting'}
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">

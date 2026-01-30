@@ -49,6 +49,7 @@ export async function calculateTotalWithStripeFees(
   // Get business settings if not provided
   const settings = await BusinessSettingsService.getSettings();
   const finalTaxRate = taxRate ?? (settings.taxRate / 100);
+  const depositEnabled = settings.depositEnabled ?? false;
   const finalDepositAmount = depositAmount ?? await BusinessSettingsService.calculateDepositAmount(servicePrice);
   
   // Base calculations - servicePrice should already have discounts applied
@@ -60,8 +61,9 @@ export async function calculateTotalWithStripeFees(
   const isCherry = paymentMethod.toLowerCase() === 'cherry';
   const isCreditCard = paymentMethod.toLowerCase() === 'card';
   
-  // Only credit cards can use deposits, all other methods require full payment
-  const requiresFullPayment = !isCreditCard;
+  // Deposits only allowed if: enabled in settings AND using credit card
+  // If deposits disabled, require full payment
+  const requiresFullPayment = !isCreditCard || !depositEnabled;
   let deposit = requiresFullPayment ? subtotal + tax : finalDepositAmount;
   
   // Apply deposit reduction if applicable (only for credit cards)

@@ -42,7 +42,8 @@ export function calculateTotalWithStripeFeesSync(
   servicePrice: number,
   taxRate: number = 0.0775,
   depositAmount?: number,
-  paymentMethod: string = 'card'
+  paymentMethod: string = 'card',
+  depositEnabled: boolean = false
 ): StripeFeeCalculation {
   // Base calculations - servicePrice should already have discounts applied
   const subtotal = servicePrice;
@@ -56,8 +57,9 @@ export function calculateTotalWithStripeFeesSync(
   const isCherry = paymentMethod.toLowerCase() === 'cherry';
   const isCreditCard = paymentMethod.toLowerCase() === 'card';
   
-  // Only credit cards can use deposits, all other methods require full payment
-  const requiresFullPayment = !isCreditCard;
+  // Deposits only allowed if: enabled in settings AND using credit card
+  // If deposits disabled, require full payment
+  const requiresFullPayment = !isCreditCard || !depositEnabled;
   const deposit = requiresFullPayment ? subtotal + tax : finalDepositAmount;
   
   let stripeFee: number;
