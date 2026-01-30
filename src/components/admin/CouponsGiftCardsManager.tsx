@@ -707,17 +707,28 @@ export default function CouponsGiftCardsManager() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {couponFormData.type === 'percentage' ? 'Percentage (%)' : 'Amount ($)'}
+                      {couponFormData.type === 'percentage' ? 'Percentage (%)' : 
+                       couponFormData.type === 'exact_amount' ? 'Set Price To ($)' : 'Amount ($)'}
                     </label>
                     <Input
                       type="number"
-                      value={couponFormData.value}
-                      onChange={(e) => setCouponFormData({ ...couponFormData, value: parseFloat(e.target.value) || 0 })}
+                      value={couponFormData.type === 'exact_amount' ? couponFormData.exactAmount : couponFormData.value}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value) || 0;
+                        if (couponFormData.type === 'exact_amount') {
+                          setCouponFormData({ ...couponFormData, exactAmount: val, value: 0 });
+                        } else {
+                          setCouponFormData({ ...couponFormData, value: val });
+                        }
+                      }}
                       disabled={couponFormData.type === 'free_service'}
                       min="0"
                       step={couponFormData.type === 'percentage' ? '1' : '0.01'}
                       className="w-full"
                     />
+                    {couponFormData.type === 'exact_amount' && (
+                      <p className="text-xs text-gray-500 mt-1">This will set the service price to this exact amount</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">

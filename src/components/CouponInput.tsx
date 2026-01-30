@@ -95,8 +95,8 @@ export default function CouponInput({ serviceId, orderAmount, onCouponApplied, a
               <p className="text-green-600 text-sm mt-1">
                 {appliedCoupon.type === 'percentage' 
                   ? `${appliedCoupon.value}% discount`
-                  : appliedCoupon.type === 'exact_amount' && appliedCoupon.exactAmount
-                  ? `Service price set to $${appliedCoupon.exactAmount}`
+                  : appliedCoupon.type === 'exact_amount'
+                  ? `Service price set to $${appliedCoupon.exactAmount || appliedCoupon.value}`
                   : appliedCoupon.type === 'free_service'
                   ? 'Free service'
                   : `$${appliedCoupon.value} discount`
