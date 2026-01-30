@@ -1024,7 +1024,7 @@ export default function MultiPaymentForm({
         ) : selectedPaymentMethod === 'cherry' ? (
           `Continue with Cherry - Full Payment Required`
         ) : (
-          `Pay $${currentPaymentAmount.toFixed(2)} Deposit`
+          `Pay $${currentPaymentAmount.toFixed(2)}`
         )}
       </Button>
 

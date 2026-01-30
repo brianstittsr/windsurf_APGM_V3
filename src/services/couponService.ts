@@ -154,8 +154,10 @@ export class CouponService {
       return Math.min(coupon.value, orderAmount);
     } else if (coupon.type === 'free_service') {
       return orderAmount; // 100% discount
-    } else if (coupon.type === 'exact_amount' && coupon.exactAmount) {
-      return Math.min(coupon.exactAmount, orderAmount);
+    } else if (coupon.type === 'exact_amount' && coupon.exactAmount !== undefined) {
+      // For exact_amount coupons, the discount is the difference between the order amount and the exact price
+      // e.g., if service is $600 and exactAmount is $400, discount is $200
+      return Math.max(0, orderAmount - coupon.exactAmount);
     }
     return 0;
   }

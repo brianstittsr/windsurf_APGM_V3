@@ -1,0 +1,31 @@
+# robots.txt for A Pretty Girl Matter
+# https://www.aprettygirlmatter.com
+
+User-agent: *
+Allow: /
+
+# Disallow admin and API routes
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /debug-admin/
+Disallow: /admin-test/
+Disallow: /test-stripe/
+Disallow: /test-ghl-key/
+
+# Allow search engines to access important pages
+Allow: /contact
+Allow: /book-now
+Allow: /book-now-custom
+Allow: /services
+Allow: /about
+Allow: /financing
+Allow: /privacy-policy
+Allow: /terms-of-service
+Allow: /cancellation-policy
+
+# Sitemap location
+Sitemap: https://www.aprettygirlmatter.com/sitemap.xml
+
+# Crawl-delay for polite crawling
+Crawl-delay: 1
