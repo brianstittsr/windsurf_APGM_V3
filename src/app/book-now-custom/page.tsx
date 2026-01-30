@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
+import { useState, useEffect, useCallback, useMemo, Suspense, startTransition } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Timestamp } from 'firebase/firestore';
@@ -211,7 +211,26 @@ function BookNowCustomContent() {
       }
     }
     
-    // Profile auto-population removed - users must manually enter their information
+    // Auto-populate profile data from authenticated user
+    if (isAuthenticated && userProfile) {
+      const profile = userProfile.profile;
+      if (profile) {
+        setClientProfile(prev => ({
+          ...prev,
+          firstName: profile.firstName || prev.firstName || '',
+          lastName: profile.lastName || prev.lastName || '',
+          email: profile.email || prev.email || '',
+          phone: profile.phone || prev.phone || '',
+          address: profile.address || prev.address || '',
+          city: profile.city || prev.city || '',
+          state: profile.state || prev.state || '',
+          zip: profile.zipCode || prev.zip || '',
+          birthDate: profile.dateOfBirth || prev.birthDate || '',
+          emergencyContactName: profile.emergencyContactName || prev.emergencyContactName || '',
+          emergencyContactPhone: profile.emergencyContactPhone || prev.emergencyContactPhone || ''
+        }));
+      }
+    }
   }, [searchParams, services, isAuthenticated, userProfile, getClientProfileData]);
 
   // Initialize currentWeekStart on mount
@@ -374,12 +393,16 @@ function BookNowCustomContent() {
 
   const handleServiceSelect = (service: ServiceItem) => {
     setSelectedService(service);
-    // Skip account suggestion step if user is already authenticated
-    if (isAuthenticated) {
-      setCurrentStep('calendar');
-    } else {
-      setCurrentStep('account-suggestion');
-    }
+    // Use startTransition to prevent blocking the main thread during navigation
+    // This improves INP by allowing the browser to paint interaction feedback first
+    startTransition(() => {
+      // Skip account suggestion step if user is already authenticated
+      if (isAuthenticated) {
+        setCurrentStep('calendar');
+      } else {
+        setCurrentStep('account-suggestion');
+      }
+    });
   };
 
   const handleDateTimeSelect = (date: string, time: string) => {

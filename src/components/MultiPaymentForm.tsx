@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   useStripe,
   useElements,
@@ -15,6 +15,17 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { CreditCard, Loader2, Lock, AlertTriangle, Info, Calendar, Heart, ExternalLink, CheckCircle } from 'lucide-react';
 
+interface UserProfile {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+}
+
 interface MultiPaymentFormProps {
   amount: number;
   totalAmount?: number;
@@ -23,6 +34,9 @@ interface MultiPaymentFormProps {
   loading?: boolean;
   setLoading?: (loading: boolean) => void;
   onPaymentMethodChange?: (method: PaymentMethod) => void;
+  userProfile?: UserProfile;
+  clientName?: string;
+  clientEmail?: string;
 }
 
 export type PaymentMethod = 'card' | 'klarna' | 'affirm' | 'cherry' | 'afterpay';
@@ -50,7 +64,10 @@ export default function MultiPaymentForm({
   onError,
   loading = false,
   setLoading,
-  onPaymentMethodChange
+  onPaymentMethodChange,
+  userProfile,
+  clientName,
+  clientEmail
 }: MultiPaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
@@ -83,7 +100,7 @@ export default function MultiPaymentForm({
   
   const currentPaymentAmount = getPaymentAmount(selectedPaymentMethod);
   
-  // Card payment states
+  // Card payment states - initialize with user profile data if available
   const [cardholderName, setCardholderName] = useState('');
   const [billingAddress, setBillingAddress] = useState({
     line1: '',
@@ -93,6 +110,28 @@ export default function MultiPaymentForm({
     country: 'US',
     email: ''
   });
+
+  // Pre-populate form fields from user profile
+  useEffect(() => {
+    // Build full name from profile or use clientName prop
+    const fullName = userProfile?.firstName && userProfile?.lastName
+      ? `${userProfile.firstName} ${userProfile.lastName}`
+      : clientName || '';
+    
+    if (fullName && !cardholderName) {
+      setCardholderName(fullName);
+    }
+
+    // Pre-populate billing address from user profile
+    setBillingAddress(prev => ({
+      ...prev,
+      email: userProfile?.email || clientEmail || prev.email,
+      line1: userProfile?.address || prev.line1,
+      city: userProfile?.city || prev.city,
+      state: userProfile?.state || prev.state,
+      postal_code: userProfile?.zipCode || prev.postal_code,
+    }));
+  }, [userProfile, clientName, clientEmail]);
 
   const createPaymentIntent = async (paymentMethodTypes: string[]) => {
     console.log('📡 Creating payment intent for methods:', paymentMethodTypes);
