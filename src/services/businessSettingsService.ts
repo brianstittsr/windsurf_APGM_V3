@@ -4,6 +4,7 @@ import { Timestamp } from 'firebase/firestore';
 export interface BusinessSettings {
   id?: string;
   depositEnabled: boolean;
+  processingFeesEnabled: boolean;
   depositPercentage: number;
   taxRate: number;
   cancellationPolicy: string;
@@ -44,6 +45,7 @@ export class BusinessSettingsService {
       // Return default settings if none exist
       const defaultSettings: BusinessSettings = {
         depositEnabled: false, // Deposits disabled by default - full payment required
+        processingFeesEnabled: false, // Processing fees disabled by default - business absorbs costs
         depositPercentage: 33.33, // Default 33.33% (equivalent to $200 on $600 service)
         taxRate: 7.75,
         cancellationPolicy: '24 hours notice required',
@@ -63,6 +65,7 @@ export class BusinessSettingsService {
       // Return default settings on error
       const defaultSettings: BusinessSettings = {
         depositEnabled: false,
+        processingFeesEnabled: false,
         depositPercentage: 33.33,
         taxRate: 7.75,
         cancellationPolicy: '24 hours notice required',
@@ -149,6 +152,7 @@ export class BusinessSettingsService {
       if (existingSettings.length === 0) {
         const defaultSettings: BusinessSettings = {
           depositEnabled: false,
+          processingFeesEnabled: false,
           depositPercentage: 33.33,
           taxRate: 7.75,
           cancellationPolicy: '24 hours notice required',

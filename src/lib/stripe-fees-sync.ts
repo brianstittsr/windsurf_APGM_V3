@@ -43,11 +43,12 @@ export function calculateTotalWithStripeFeesSync(
   taxRate: number = 0.0775,
   depositAmount?: number,
   paymentMethod: string = 'card',
-  depositEnabled: boolean = false
+  depositEnabled: boolean = false,
+  processingFeesEnabled: boolean = false
 ): StripeFeeCalculation {
   // Base calculations - servicePrice should already have discounts applied
   const subtotal = servicePrice;
-  // Tax and fees removed - customer pays service price only
+  // Tax removed - customer pays service price only
   const tax = 0;
   
   // Use provided deposit amount or calculate 33.33% default
@@ -63,27 +64,30 @@ export function calculateTotalWithStripeFeesSync(
   const requiresFullPayment = !isCreditCard || !depositEnabled;
   const deposit = requiresFullPayment ? subtotal + tax : finalDepositAmount;
   
-  let stripeFee: number;
+  let stripeFee: number = 0;
   
-  if (isPayLater || requiresFullPayment) {
-    // For pay-later methods or non-credit card payments, calculate fee on full service amount
-    const fullAmount = subtotal;
-    
-    if (isCherry) {
-      // Cherry uses 1.90% with no fixed fee
-      stripeFee = Math.round(fullAmount * CHERRY_PERCENTAGE_FEE * 100) / 100;
+  // Only calculate processing fees if enabled in settings
+  if (processingFeesEnabled) {
+    if (isPayLater || requiresFullPayment) {
+      // For pay-later methods or non-credit card payments, calculate fee on full service amount
+      const fullAmount = subtotal;
+      
+      if (isCherry) {
+        // Cherry uses 1.90% with no fixed fee
+        stripeFee = Math.round(fullAmount * CHERRY_PERCENTAGE_FEE * 100) / 100;
+      } else {
+        // Affirm and Klarna use Stripe fees
+        const chargedAmount = (fullAmount + STRIPE_FIXED_FEE) / (1 - STRIPE_PERCENTAGE_FEE);
+        stripeFee = Math.round((chargedAmount - fullAmount) * 100) / 100;
+      }
     } else {
-      // Affirm and Klarna use Stripe fees
-      const chargedAmount = (fullAmount + STRIPE_FIXED_FEE) / (1 - STRIPE_PERCENTAGE_FEE);
-      stripeFee = Math.round((chargedAmount - fullAmount) * 100) / 100;
+      // For credit cards with deposit, calculate fee on deposit amount only
+      const chargedAmount = (deposit + STRIPE_FIXED_FEE) / (1 - STRIPE_PERCENTAGE_FEE);
+      stripeFee = Math.round((chargedAmount - deposit) * 100) / 100;
     }
-  } else {
-    // For credit cards with deposit, calculate fee on deposit amount only
-    const chargedAmount = (deposit + STRIPE_FIXED_FEE) / (1 - STRIPE_PERCENTAGE_FEE);
-    stripeFee = Math.round((chargedAmount - deposit) * 100) / 100;
   }
   
-  // Total includes service price and processing fee (no tax)
+  // Total includes service price and processing fee (if enabled)
   const total = subtotal + stripeFee;
   
   // Remaining balance (discounted service + tax - deposit)

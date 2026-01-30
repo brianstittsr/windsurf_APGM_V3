@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 interface BusinessSettings {
   id?: string;
   depositEnabled: boolean;
+  processingFeesEnabled: boolean;
   depositPercentage: number;
   taxRate: number;
   cancellationPolicy: string;
@@ -24,6 +25,7 @@ interface BusinessSettings {
 export default function BusinessSettingsManager() {
   const [settings, setSettings] = useState<BusinessSettings>({
     depositEnabled: false, // Deposits disabled by default - full payment required
+    processingFeesEnabled: false, // Processing fees disabled by default - business absorbs costs
     depositPercentage: 33.33, // Default 33.33% (equivalent to $200 on $600 service)
     taxRate: 7.75,
     cancellationPolicy: '24 hours notice required',
@@ -140,6 +142,35 @@ export default function BusinessSettingsManager() {
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
                       settings.depositEnabled ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Processing Fees Toggle */}
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700">
+                    <i className="fas fa-receipt mr-1 text-blue-600"></i>Charge Processing Fees to Customer
+                  </label>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {settings.processingFeesEnabled 
+                      ? 'Processing fees (2.9% + $0.30 for cards, 1.9% for Cherry) are added to customer total' 
+                      : 'Business absorbs processing fees - customers pay service price only'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSettings(prev => ({ ...prev, processingFeesEnabled: !prev.processingFeesEnabled }))}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    settings.processingFeesEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      settings.processingFeesEnabled ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
                 </button>
