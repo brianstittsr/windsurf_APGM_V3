@@ -457,6 +457,70 @@ export default function CheckoutCart({
             appliedCoupon={appliedCoupon}
           />
 
+      {/* Price Breakdown Section */}
+      <Card className="mb-6 border-0 shadow-md">
+        <CardContent className="p-6">
+          <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
+            <FileText className="w-5 h-5 text-[#AD6269]" />
+            Price Breakdown
+          </h3>
+          
+          <div className="space-y-3">
+            {/* Service Price */}
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">{service.name}</span>
+              <span className="font-medium text-gray-900">{formatCurrency(service.price)}</span>
+            </div>
+            
+            {/* Coupon Discount */}
+            {couponDiscount > 0 && (
+              <div className="flex justify-between items-center text-green-600">
+                <span className="flex items-center gap-1">
+                  <CheckCircle className="w-4 h-4" />
+                  Coupon: {appliedCoupon?.code}
+                </span>
+                <span>-{formatCurrency(couponDiscount)}</span>
+              </div>
+            )}
+            
+            {/* Gift Card Discount */}
+            {giftCardDiscount > 0 && (
+              <div className="flex justify-between items-center text-green-600">
+                <span className="flex items-center gap-1">
+                  <Gift className="w-4 h-4" />
+                  Gift Card: {appliedGiftCard?.code}
+                </span>
+                <span>-{formatCurrency(giftCardDiscount)}</span>
+              </div>
+            )}
+            
+            {/* Divider */}
+            <div className="border-t border-gray-200 pt-3 mt-3">
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-gray-900 text-lg">Total</span>
+                <span className="font-bold text-[#AD6269] text-xl">{formatCurrency(totalAmount)}</span>
+              </div>
+            </div>
+            
+            {/* Payment Amount Info */}
+            {!isFreeService && !is100PercentDiscount && !isPayAfterProcedure && (
+              <div className="bg-[#AD6269]/5 p-3 rounded-lg mt-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-700 font-medium">Amount Due Now</span>
+                  <span className="font-bold text-[#AD6269]">{formatCurrency(chargeAmount)}</span>
+                </div>
+                {remainingAmount > 0 && (
+                  <div className="flex justify-between items-center mt-2 text-sm text-gray-500">
+                    <span>Remaining Balance (due at appointment)</span>
+                    <span>{formatCurrency(remainingAmount)}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Payment Section */}
       {!isPayAfterProcedure && !isFreeService && !is100PercentDiscount && (
         <Card className="mb-6 border-0 shadow-md">

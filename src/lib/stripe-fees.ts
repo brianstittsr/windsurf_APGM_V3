@@ -54,7 +54,8 @@ export async function calculateTotalWithStripeFees(
   
   // Base calculations - servicePrice should already have discounts applied
   const subtotal = servicePrice;
-  const tax = Math.round(subtotal * finalTaxRate * 100) / 100;
+  // Tax and fees removed - customer pays service price only
+  const tax = 0;
   
   // Determine if this is a pay-later method that requires full payment upfront
   const isPayLater = ['affirm', 'klarna', 'cherry'].includes(paymentMethod.toLowerCase());
@@ -71,28 +72,11 @@ export async function calculateTotalWithStripeFees(
     deposit = Math.max(0, deposit - depositReduction);
   }
   
-  let stripeFee: number;
+  // Processing fees removed - business absorbs these costs
+  const stripeFee = 0;
   
-  if (isPayLater || requiresFullPayment) {
-    // For pay-later methods or non-credit card payments, calculate fee on full service amount + tax
-    const fullAmount = subtotal + tax;
-    
-    if (isCherry) {
-      // Cherry uses 1.90% with no fixed fee
-      stripeFee = Math.round(fullAmount * CHERRY_PERCENTAGE_FEE * 100) / 100;
-    } else {
-      // Affirm and Klarna use Stripe fees
-      const chargedAmount = (fullAmount + STRIPE_FIXED_FEE) / (1 - STRIPE_PERCENTAGE_FEE);
-      stripeFee = Math.round((chargedAmount - fullAmount) * 100) / 100;
-    }
-  } else {
-    // For credit cards with deposit, calculate fee on deposit amount only
-    const chargedAmount = (deposit + STRIPE_FIXED_FEE) / (1 - STRIPE_PERCENTAGE_FEE);
-    stripeFee = Math.round((chargedAmount - deposit) * 100) / 100;
-  }
-  
-  // Total includes discounted service price, tax, and processing fee
-  const total = subtotal + tax + stripeFee;
+  // Total is just the service price (no tax, no fees)
+  const total = subtotal;
   
   // Remaining balance (discounted service + tax - deposit)
   // For pay-later methods or non-credit cards, remaining is 0 since full amount is paid upfront
