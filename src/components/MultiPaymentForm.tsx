@@ -285,7 +285,14 @@ export default function MultiPaymentForm({
         card: cardElement,
         billing_details: {
           name: cardholderName,
-          address: billingAddress,
+          email: billingAddress.email,
+          address: {
+            line1: billingAddress.line1,
+            city: billingAddress.city,
+            state: billingAddress.state,
+            postal_code: billingAddress.postal_code,
+            country: billingAddress.country || 'US',
+          },
         },
       },
     });
@@ -528,6 +535,7 @@ export default function MultiPaymentForm({
 
   const isCardFormValid = selectedPaymentMethod !== 'card' || (
     cardholderName.trim() !== '' && 
+    billingAddress.email.trim() !== '' &&
     billingAddress.line1.trim() !== '' && 
     billingAddress.city.trim() !== '' && 
     billingAddress.state.trim() !== '' && 
@@ -706,6 +714,21 @@ export default function MultiPaymentForm({
                 </div>
 
                 <div>
+                  <label htmlFor="card-email" className="block text-sm font-medium text-gray-700 mb-1">
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    id="card-email"
+                    type="email"
+                    value={billingAddress.email}
+                    onChange={(e) => setBillingAddress(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="your@email.com"
+                    required
+                    className="h-11"
+                  />
+                </div>
+
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Card Number <span className="text-red-500">*</span>
                   </label>
@@ -731,6 +754,67 @@ export default function MultiPaymentForm({
                     <div className="border border-gray-200 rounded-lg px-4 py-3 bg-white focus-within:ring-2 focus-within:ring-[#AD6269] focus-within:border-[#AD6269]">
                       <CardCvcElement options={CARD_ELEMENT_OPTIONS} />
                     </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="card-address" className="block text-sm font-medium text-gray-700 mb-1">
+                    Billing Address <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    id="card-address"
+                    type="text"
+                    value={billingAddress.line1}
+                    onChange={(e) => setBillingAddress(prev => ({ ...prev, line1: e.target.value }))}
+                    placeholder="123 Main St"
+                    required
+                    className="h-11"
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label htmlFor="card-city" className="block text-sm font-medium text-gray-700 mb-1">
+                      City <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      id="card-city"
+                      type="text"
+                      value={billingAddress.city}
+                      onChange={(e) => setBillingAddress(prev => ({ ...prev, city: e.target.value }))}
+                      placeholder="City"
+                      required
+                      className="h-11"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="card-state" className="block text-sm font-medium text-gray-700 mb-1">
+                      State <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      id="card-state"
+                      type="text"
+                      value={billingAddress.state}
+                      onChange={(e) => setBillingAddress(prev => ({ ...prev, state: e.target.value }))}
+                      placeholder="NC"
+                      maxLength={2}
+                      required
+                      className="h-11"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="card-zip" className="block text-sm font-medium text-gray-700 mb-1">
+                      ZIP <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      id="card-zip"
+                      type="text"
+                      value={billingAddress.postal_code}
+                      onChange={(e) => setBillingAddress(prev => ({ ...prev, postal_code: e.target.value }))}
+                      placeholder="12345"
+                      required
+                      className="h-11"
+                    />
                   </div>
                 </div>
               </div>
