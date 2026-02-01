@@ -3,8 +3,7 @@
  * Manages all GHL API interactions with comprehensive scope support
  */
 
-const GHL_BASE_URL = 'https://services.leadconnectorhq.com';
-const GHL_API_VERSION = '2021-07-28';
+import { ApiConfigService } from '@/config/apiConfig';
 
 export interface GHLConfig {
   apiKey: string;
@@ -21,10 +20,10 @@ export class GHLOrchestrator {
   }
 
   private async makeRequest(endpoint: string, method: string = 'GET', body?: any) {
-    const url = `${GHL_BASE_URL}${endpoint}`;
+    const url = `${ApiConfigService.getGhlBaseUrl()}${endpoint}`;
     const headers: HeadersInit = {
       'Authorization': `Bearer ${this.apiKey}`,
-      'Version': GHL_API_VERSION,
+      'Version': ApiConfigService.getGhlApiVersion(),
       'Content-Type': 'application/json'
     };
 
@@ -323,11 +322,11 @@ export class GHLOrchestrator {
     formData.append('file', file);
     formData.append('locationId', locationId);
     
-    const response = await fetch(`${GHL_BASE_URL}/medias/upload`, {
+    const response = await fetch(`${ApiConfigService.getGhlBaseUrl()}/medias/upload`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.apiKey}`,
-        'Version': GHL_API_VERSION
+        'Version': ApiConfigService.getGhlApiVersion()
       },
       body: formData
     });

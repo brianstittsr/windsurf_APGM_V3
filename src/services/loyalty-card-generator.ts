@@ -65,8 +65,8 @@ const TIER_COLORS: Record<string, CardStyle> = {
 export class LoyaltyCardGenerator {
   private baseUrl: string;
 
-  constructor(baseUrl: string = 'https://atlantaglamourpmu.com') {
-    this.baseUrl = baseUrl;
+  constructor(baseUrl?: string) {
+    this.baseUrl = baseUrl || process.env.NEXT_PUBLIC_WEBSITE_URL || 'https://atlantaglamourpmu.com';
   }
 
   // --------------------------------------------------------------------------

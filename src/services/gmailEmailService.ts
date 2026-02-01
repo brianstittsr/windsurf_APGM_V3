@@ -58,10 +58,15 @@ export class SMTPEmailService {
   static async sendEmail(
     to: string,
     template: InvoiceEmailTemplate,
-    fromEmail: string = process.env.NEXT_PUBLIC_BUSINESS_EMAIL || 'victoria@aprettygirlmatter.com',
+    fromEmail?: string,
     cc?: string[],
     bcc?: string[]
   ): Promise<boolean> {
+    // Use centralized configuration for default email
+    if (!fromEmail) {
+      const { ConfigService } = await import('@/config/businessConfig');
+      fromEmail = ConfigService.getBusinessEmail();
+    }
     try {
       console.log('📧 Sending email via SMTP...');
       console.log(`   From: ${fromEmail}`);

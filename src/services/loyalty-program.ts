@@ -179,8 +179,8 @@ export const POINTS_CONFIG = {
 export class LoyaltyProgramService {
   private baseUrl: string;
 
-  constructor(baseUrl: string = 'https://atlantaglamourpmu.com') {
-    this.baseUrl = baseUrl;
+  constructor(baseUrl?: string) {
+    this.baseUrl = baseUrl || process.env.NEXT_PUBLIC_WEBSITE_URL || 'https://atlantaglamourpmu.com';
   }
 
   // --------------------------------------------------------------------------

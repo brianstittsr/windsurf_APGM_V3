@@ -385,8 +385,9 @@ Questions? Contact us: ${data.businessPhone} | ${data.businessEmail}
         console.log('📧 Using SMTP service...');
         // Use SMTP_USER as from email to avoid authentication issues
         const fromEmail = smtpUser || data.businessEmail;
-        // Add CC to Victoria
-        const ccEmails = ['victoria@aprettygirlmatter.com'];
+        // Add CC to admin emails using centralized configuration
+        const { ConfigService } = await import('@/config/businessConfig');
+        const ccEmails = ConfigService.getAdminEmails();
         return await SMTPEmailService.sendEmailWithAttachments(data.clientEmail, template, fromEmail, ccEmails);
       }
       

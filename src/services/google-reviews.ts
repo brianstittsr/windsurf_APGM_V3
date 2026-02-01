@@ -396,8 +396,8 @@ export class GoogleReviewsService {
     
     return randomTemplate
       .replace(/{name}/g, reviewerName)
-      .replace(/\[phone\]/g, businessPhone || '(404) 555-1234')
-      .replace(/\[email\]/g, businessEmail || 'info@atlantaglamourpmu.com');
+      .replace(/\[phone\]/g, businessPhone || process.env.NEXT_PUBLIC_BUSINESS_PHONE || '(404) 555-1234')
+      .replace(/\[email\]/g, businessEmail || process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'info@atlantaglamourpmu.com');
   }
 
   // --------------------------------------------------------------------------

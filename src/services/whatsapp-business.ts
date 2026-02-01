@@ -183,7 +183,7 @@ export const PMU_TEMPLATES = {
       {
         type: 'BUTTONS' as const,
         buttons: [
-          { type: 'URL' as const, text: 'Pay Deposit', url: 'https://atlantaglamourpmu.com/deposit' }
+          { type: 'URL' as const, text: 'Pay Deposit', url: process.env.NEXT_PUBLIC_DEPOSIT_URL || 'https://atlantaglamourpmu.com/deposit' }
         ]
       }
     ]
@@ -229,7 +229,7 @@ export const PMU_TEMPLATES = {
       {
         type: 'BUTTONS' as const,
         buttons: [
-          { type: 'URL' as const, text: 'Book Touch-Up', url: 'https://atlantaglamourpmu.com/book' },
+          { type: 'URL' as const, text: 'Book Touch-Up', url: process.env.NEXT_PUBLIC_BOOKING_URL || 'https://atlantaglamourpmu.com/book' },
           { type: 'QUICK_REPLY' as const, text: 'Call Me' }
         ]
       }
@@ -254,7 +254,7 @@ export const PMU_TEMPLATES = {
       {
         type: 'BUTTONS' as const,
         buttons: [
-          { type: 'URL' as const, text: 'Leave Review', url: 'https://g.page/r/atlantaglamourpmu/review' }
+          { type: 'URL' as const, text: 'Leave Review', url: process.env.NEXT_PUBLIC_REVIEWS_URL || 'https://g.page/r/atlantaglamourpmu/review' }
         ]
       }
     ]
