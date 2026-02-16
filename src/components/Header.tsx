@@ -200,12 +200,7 @@ export default function Header() {
                     </Button>
                   )}
                   
-                  {/* Book Now button - always show */}
-                  <Button asChild className="rounded-full h-8 px-4 text-xs bg-[#AD6269] hover:bg-[#9d5860]">
-                    <Link href="/book-now-custom">
-                      Book Now
-                    </Link>
-                  </Button>
+                  {/* Book Now button - hidden */}
                 </>
               )}
               
@@ -217,11 +212,7 @@ export default function Header() {
                       Login
                     </Link>
                   </Button>
-                  <Button asChild className="rounded-full h-8 px-4 text-xs bg-[#AD6269] hover:bg-[#9d5860]">
-                    <Link href="/book-now-custom">
-                      Book Now
-                    </Link>
-                  </Button>
+                  {/* Book Now button - hidden */}
                 </>
               )}
             </div>
@@ -338,11 +329,7 @@ export default function Header() {
                       </Button>
                     )}
                     
-                    <Button asChild className="w-full bg-[#AD6269] hover:bg-[#9d5860]">
-                      <Link href="/book-now-custom" onClick={() => setIsMenuOpen(false)}>
-                        Book Now
-                      </Link>
-                    </Button>
+                    {/* Book Now button - hidden */}
                   </div>
                 </nav>
               </SheetContent>
