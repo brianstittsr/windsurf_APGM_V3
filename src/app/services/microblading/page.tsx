@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -174,10 +175,16 @@ export default function MicrobladingPage() {
                   At A Pretty Girl Matter in Raleigh, NC, Victoria uses advanced microblading techniques learned from top PMU academies to create customized brows that complement your unique facial features and personal style.
                 </p>
               </div>
-              <div className="h-80 md:h-96 bg-gradient-to-br from-[#AD6269]/20 to-[#8B4A52]/20 rounded-2xl shadow-lg flex items-center justify-center">
-                <div className="text-center">
-                  <Eye className="w-20 h-20 text-[#AD6269] mx-auto mb-4" />
-                  <p className="font-bold text-[#AD6269]">Before &amp; After Gallery</p>
+              <div className="relative h-80 md:h-96 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl shadow-lg overflow-hidden">
+                <Image
+                  src="/images/services/STROKES.png"
+                  alt="Microblading Before & After Gallery"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end justify-center pb-6">
+                  <p className="font-bold text-white text-lg">Before &amp; After Gallery</p>
                 </div>
               </div>
             </div>
