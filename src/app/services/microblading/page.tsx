@@ -183,9 +183,6 @@ export default function MicrobladingPage() {
                   className="object-contain"
                   sizes="(max-width: 1024px) 100vw, 50vw"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end justify-center pb-6">
-                  <p className="font-bold text-white text-lg">Before &amp; After Gallery</p>
-                </div>
               </div>
             </div>
           </div>
