@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CardElement, useStripe, useElements } from '@stripe/stripe-react';
+import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
