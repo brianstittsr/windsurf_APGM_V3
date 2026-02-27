@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
@@ -19,7 +20,7 @@ const services = [
     name: 'Microblading',
     slug: 'microblading',
     description: 'Natural-looking eyebrow enhancement using fine hair-like strokes that mimic real brow hairs.',
-    image: '/images/services/microblading.jpg',
+    image: '/images/services/STROKES.png',
     duration: '2-3 hours',
     healing: '4-6 weeks',
     lasts: '1-3 years',
@@ -28,7 +29,7 @@ const services = [
     name: 'Ombré Powder Brows',
     slug: 'ombre-brows',
     description: 'Soft, natural gradient effect that gives a powdered makeup look. Perfect for all skin types.',
-    image: '/images/services/ombre-brows.jpg',
+    image: '/images/services/OMBRE.png',
     duration: '2-3 hours',
     healing: '4-6 weeks',
     lasts: '1-3 years',
@@ -37,7 +38,7 @@ const services = [
     name: 'Combo Brows',
     slug: 'combo-brows',
     description: 'The best of both worlds - microblading strokes combined with powder shading for a fuller look.',
-    image: '/images/services/combo-brows.jpg',
+    image: '/images/services/COMBO.png',
     duration: '2.5-3 hours',
     healing: '4-6 weeks',
     lasts: '1-3 years',
@@ -46,7 +47,7 @@ const services = [
     name: 'Lip Blushing',
     slug: 'lip-blushing',
     description: 'Enhance your natural lip color and define lip shape with this beautiful permanent lip tattoo.',
-    image: '/images/services/lip-blushing.jpg',
+    image: '/images/services/POWDER.png',
     duration: '2-3 hours',
     healing: '4-6 weeks',
     lasts: '2-5 years',
@@ -55,7 +56,7 @@ const services = [
     name: 'Permanent Eyeliner',
     slug: 'permanent-eyeliner',
     description: 'Wake up with perfectly defined eyes every day. Lash line enhancement for a natural or dramatic look.',
-    image: '/images/services/permanent-eyeliner.jpg',
+    image: '/images/services/STROKES.png',
     duration: '1.5-2 hours',
     healing: '4-6 weeks',
     lasts: '2-5 years',
@@ -90,8 +91,14 @@ export default function ServicesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {services.map((service) => (
                 <Card key={service.slug} className="h-full border-0 shadow-lg overflow-hidden flex flex-col">
-                  <div className="h-48 bg-gradient-to-br from-[#AD6269]/80 to-[#8B4A52]/80 flex items-center justify-center">
-                    <Sparkles className="w-16 h-16 text-white" />
+                  <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+                    <Image
+                      src={service.image}
+                      alt={service.name}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    />
                   </div>
                   <CardHeader className="pb-2">
                     <h2 className="text-xl font-bold text-[#AD6269]">
