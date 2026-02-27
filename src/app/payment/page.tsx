@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { PaymentForm } from '@/components/ui/PaymentForm';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-export default function PaymentPage() {
+function PaymentContent() {
   const searchParams = useSearchParams();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [amount, setAmount] = useState<number | null>(null);
@@ -59,5 +59,22 @@ export default function PaymentPage() {
         />
       </CardContent>
     </Card>
+  );
+}
+
+export default function PaymentPage() {
+  return (
+    <Suspense fallback={
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle>Payment</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Loading payment details...</p>
+        </CardContent>
+      </Card>
+    }>
+      <PaymentContent />
+    </Suspense>
   );
 }
