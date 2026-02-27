@@ -44,6 +44,15 @@ const services = [
     lasts: '1-3 years',
   },
   {
+    name: 'Blade & Shade',
+    slug: 'blade-shade',
+    description: 'Microblading strokes with added shading for enhanced texture, depth, and a bolder, more defined look.',
+    image: '/images/services/BLADE+SHADE.png',
+    duration: '3-4 hours',
+    healing: '4-6 weeks',
+    lasts: '1-3 years',
+  },
+  {
     name: 'Lip Blushing',
     slug: 'lip-blushing',
     description: 'Enhance your natural lip color and define lip shape with this beautiful permanent lip tattoo.',
