@@ -7,27 +7,32 @@ export default function TheProcess() {
     {
       number: "01",
       title: "Book Now",
-      description: "Book now and complete the Online Consultation Form. We'll discuss your goals, evaluate your features, and design a personalized plan that fits your lifestyle and enhances your natural beauty."
+      description: "Book now and complete the Online Consultation Form. We'll discuss your goals, evaluate your features, and design a personalized plan that fits your lifestyle and enhances your natural beauty.",
+      image: "BookNow.png"
     },
     {
       number: "02",
       title: "Numbing",
-      description: "An anaesthetic will be applied during your procedure to keep you as comfortable as possible. Most clients report feeling pressure, but minimal to no pain. Many fall asleep during the process!"
+      description: "An anaesthetic will be applied during your procedure to keep you as comfortable as possible. Most clients report feeling pressure, but minimal to no pain. Many fall asleep during the process!",
+      image: "numbing.jpg"
     },
     {
       number: "03",
       title: "Shaping",
-      description: "Your brows will be mapped out according to your facial proportions and measurements. I'll draw in a shape that fits well. We'll adjust the shape until it looks good to you!"
+      description: "Your brows will be mapped out according to your facial proportions and measurements. I'll draw in a shape that fits well. We'll adjust the shape until it looks good to you!",
+      image: "shaping.jpg"
     },
     {
       number: "04",
       title: "Color",
-      description: "We will choose the perfect pigment color based to match your brow hair. Your hair color and skin tone will also be considered when selecting a color. I have a range of high quality pigments with a color for everyone!"
+      description: "We will choose the perfect pigment color based to match your brow hair. Your hair color and skin tone will also be considered when selecting a color. I have a range of high quality pigments with a color for everyone!",
+      image: "color.png"
     },
     {
       number: "05",
       title: "Touch-Up Session",
-      description: "After 4-6 weeks, we perform any necessary touch-ups to perfect your results and ensure long-lasting beauty."
+      description: "After 4-6 weeks, we perform any necessary touch-ups to perfect your results and ensure long-lasting beauty.",
+      image: "touchup.png"
     }
   ];
 
@@ -63,7 +68,7 @@ export default function TheProcess() {
                     {/* Step Image */}
                     <div className="mb-3">
                       <img
-                        src={`/images/theprocess/${step.title.replace(/\s+/g, '')}.${index === 0 ? 'png' : 'jpg'}`}
+                        src={`/images/theprocess/${step.image}`}
                         alt={`${step.title} process`}
                         className="w-full h-[180px] object-contain shadow-sm rounded-lg"
                       />
