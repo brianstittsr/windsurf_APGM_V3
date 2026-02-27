@@ -25,6 +25,8 @@ export function getServiceImagePath(service: ServiceItem): string {
     'ombre-eyebrows': '/images/services/OMBRE.png',
     'blade-shade': '/images/services/BLADE+SHADE.png',
     'bold-combo': '/images/services/BOLD-COMBO.png',
+    'lip-blushing': '/images/services/POWDER.png', // Use powder image for lip blushing
+    'permanent-eyeliner': '/images/services/STROKES.png', // Use strokes image for eyeliner
   };
 
   // Check by service ID first
@@ -38,6 +40,12 @@ export function getServiceImagePath(service: ServiceItem): string {
   }
   if (service.name === 'Bold Combo Eyebrows' || service.name === 'Bold Combo') {
     return '/images/services/BOLD-COMBO.png';
+  }
+  if (service.name === 'Lip Blushing') {
+    return '/images/services/POWDER.png';
+  }
+  if (service.name === 'Permanent Eyeliner') {
+    return '/images/services/STROKES.png';
   }
 
   // Check by service name patterns
@@ -59,6 +67,12 @@ export function getServiceImagePath(service: ServiceItem): string {
   }
   if (serviceName.includes('bold')) {
     return '/images/services/BOLD-COMBO.png';
+  }
+  if (serviceName.includes('lip')) {
+    return '/images/services/POWDER.png';
+  }
+  if (serviceName.includes('eyeliner')) {
+    return '/images/services/STROKES.png';
   }
 
   // Fall back to service.image from database if available
