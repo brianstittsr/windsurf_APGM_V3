@@ -180,7 +180,7 @@ export default function MicrobladingPage() {
                   src="/images/services/STROKES.png"
                   alt="Microblading Before & After Gallery"
                   fill
-                  className="object-cover"
+                  className="object-contain"
                   sizes="(max-width: 1024px) 100vw, 50vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end justify-center pb-6">
