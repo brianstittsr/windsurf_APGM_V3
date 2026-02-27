@@ -3,28 +3,6 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useEffect, useState } from 'react';
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: 'Book Your Appointment - Permanent Makeup Raleigh NC',
-  description: 'Schedule your permanent makeup consultation in Raleigh, NC. Book microblading, lip blushing, eyeliner & more with Victoria. Free consultation available.',
-  keywords: [
-    'book appointment permanent makeup Raleigh NC',
-    'schedule microblading consultation Raleigh',
-    'book PMU artist Raleigh NC',
-    'permanent makeup booking Raleigh NC',
-    'consultation booking Raleigh NC'
-  ],
-  alternates: {
-    canonical: '/book-now'
-  },
-  openGraph: {
-    title: 'Book Your Appointment - A Pretty Girl Matter',
-    description: 'Schedule your permanent makeup consultation in Raleigh, NC. Expert microblading, lip blushing & eyeliner services.',
-    url: '/book-now',
-    type: 'website'
-  }
-};
 
 export default function BookNow() {
   const [isClient, setIsClient] = useState(false);

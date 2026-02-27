@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
+import { getDb } from '@/lib/firebase';
 import { collection, addDoc, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 
 interface TryOnSession {
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Save session to Firestore
-    const docRef = await addDoc(collection(db, 'tryon_sessions'), sessionData);
+    const docRef = await addDoc(collection(getDb(), 'tryon_sessions'), sessionData);
 
     return NextResponse.json({
       success: true,
@@ -92,14 +92,14 @@ export async function GET(request: NextRequest) {
     let q;
     if (sessionId) {
       q = query(
-        collection(db, 'tryon_sessions'),
+        collection(getDb(), 'tryon_sessions'),
         where('sessionId', '==', sessionId),
         orderBy('createdAt', 'desc'),
         limit(1)
       );
     } else {
       q = query(
-        collection(db, 'tryon_sessions'),
+        collection(getDb(), 'tryon_sessions'),
         where('clientId', '==', clientId),
         orderBy('createdAt', 'desc'),
         limit(limitSessions)

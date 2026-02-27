@@ -4,28 +4,6 @@ import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { VirtualTryOn } from '@/components/virtual-tryon/VirtualTryOn';
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: 'Virtual Try-On - Permanent Makeup Raleigh NC',
-  description: 'Try on different permanent makeup eyebrow styles virtually. Upload your photo and see microblading, ombré, combo, and powder styles.',
-  keywords: [
-    'virtual try-on permanent makeup Raleigh NC',
-    'eyebrow style try-on Raleigh',
-    'microblading virtual try-on',
-    'permanent makeup style preview',
-    'eyebrow virtual consultation Raleigh'
-  ],
-  alternates: {
-    canonical: '/virtual-tryon'
-  },
-  openGraph: {
-    title: 'Virtual Try-On - A Pretty Girl Matter',
-    description: 'Try on different permanent makeup eyebrow styles virtually. See how microblading, ombré, and combo brows look on you.',
-    url: '/virtual-tryon',
-    type: 'website'
-  }
-};
 
 export default function VirtualTryOnPage() {
   const [isClient, setIsClient] = useState(false);

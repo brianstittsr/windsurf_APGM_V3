@@ -9,28 +9,6 @@ import { auth, isFirebaseConfigured } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, updateProfile, Auth } from 'firebase/auth';
 import type { Auth as AuthType } from 'firebase/auth';
 import { UserService } from '@/services/database';
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: 'Create Account - A Pretty Girl Matter Permanent Makeup',
-  description: 'Create your account for A Pretty Girl Matter permanent makeup services in Raleigh, NC. Book consultations and manage appointments.',
-  keywords: [
-    'create account permanent makeup Raleigh NC',
-    'register PMU services Raleigh',
-    'client account creation permanent makeup',
-    'A Pretty Girl Matter account registration',
-    'permanent makeup client portal Raleigh'
-  ],
-  alternates: {
-    canonical: '/register'
-  },
-  openGraph: {
-    title: 'Create Account - A Pretty Girl Matter',
-    description: 'Create your account for A Pretty Girl Matter permanent makeup services. Book consultations and manage appointments.',
-    url: '/register',
-    type: 'website'
-  }
-};
 
 function RegisterForm() {
   const router = useRouter();

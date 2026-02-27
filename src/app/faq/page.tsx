@@ -1,30 +1,5 @@
-'use client';
-
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: 'Frequently Asked Questions - Permanent Makeup Raleigh NC',
-  description: 'Comprehensive FAQ for permanent makeup services in Raleigh, NC. Learn about microblading, lip blushing, eyeliner, aftercare, and more.',
-  keywords: [
-    'permanent makeup FAQ Raleigh NC',
-    'microblading questions answers Raleigh',
-    'PMU artist FAQ Raleigh NC',
-    'permanent makeup aftercare FAQ',
-    'cosmetic tattooing FAQ Raleigh',
-    'microblading healing FAQ'
-  ],
-  alternates: {
-    canonical: '/faq'
-  },
-  openGraph: {
-    title: 'FAQ - A Pretty Girl Matter Permanent Makeup',
-    description: 'Frequently asked questions about permanent makeup services in Raleigh, NC. Everything you need to know about PMU.',
-    url: '/faq',
-    type: 'website'
-  }
-};
 
 export default function FAQPage() {
   return (
