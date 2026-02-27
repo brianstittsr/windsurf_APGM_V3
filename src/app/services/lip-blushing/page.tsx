@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -156,11 +157,14 @@ export default function LipBlushingPage() {
                   At A Pretty Girl Matter in Raleigh, NC, Victoria specializes in creating customized lip colors that complement your skin tone and personal style. Whether you want a subtle nude enhancement or a more vibrant color, we can achieve your perfect look.
                 </p>
               </div>
-              <div className="h-80 md:h-96 bg-gradient-to-br from-[#AD6269]/20 to-[#8B4A52]/20 rounded-2xl shadow-lg flex items-center justify-center">
-                <div className="text-center">
-                  <Heart className="w-20 h-20 text-[#AD6269] mx-auto mb-4" />
-                  <p className="font-bold text-[#AD6269]">Before & After Gallery</p>
-                </div>
+              <div className="relative h-80 md:h-96 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl shadow-lg overflow-hidden">
+                <Image
+                  src="/images/services/POWDER.png"
+                  alt="Lip Blushing"
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                />
               </div>
             </div>
           </div>
