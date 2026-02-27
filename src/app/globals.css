@@ -341,7 +341,7 @@ a, button, .btn {
 .main-heading {
   font-family: 'Playfair Display', serif !important;
   font-weight: 700 !important;
-  font-size: 2.5rem !important; /* 40px */
+  font-size: 5rem !important; /* 80px - increased by 200% */
   line-height: 1.2;
 }
 
@@ -355,7 +355,7 @@ a, button, .btn {
 .paragraph-text {
   font-family: 'Poppins', sans-serif !important;
   font-weight: 400 !important;
-  font-size: 1rem !important; /* 16px */
+  font-size: 2rem !important; /* 32px - increased by 200% */
   line-height: 1.6;
 }
 
@@ -369,7 +369,7 @@ a, button, .btn {
 /* Responsive adjustments for smaller screens */
 @media (max-width: 768px) {
   .main-heading {
-    font-size: 2rem !important; /* 32px */
+    font-size: 4rem !important; /* 64px - increased by 200% */
   }
   
   .sub-heading {
@@ -377,7 +377,7 @@ a, button, .btn {
   }
   
   .paragraph-text {
-    font-size: 0.9375rem !important; /* 15px */
+    font-size: 1.875rem !important; /* 30px - increased by 200% */
   }
   
   .book-now-text {
@@ -387,7 +387,7 @@ a, button, .btn {
 
 @media (max-width: 480px) {
   .main-heading {
-    font-size: 1.75rem !important; /* 28px */
+    font-size: 3.5rem !important; /* 56px - increased by 200% */
   }
   
   .sub-heading {
@@ -395,7 +395,7 @@ a, button, .btn {
   }
   
   .paragraph-text {
-    font-size: 0.875rem !important; /* 14px */
+    font-size: 1.75rem !important; /* 28px - increased by 200% */
   }
   
   .book-now-text {
