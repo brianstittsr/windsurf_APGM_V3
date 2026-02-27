@@ -3,6 +3,8 @@
 import MultiPaymentForm from '@/components/MultiPaymentForm';
 import { Card } from '@/components/ui/card';
 
+export const dynamic = 'force-dynamic';
+
 export default function TestPaymentPage() {
   return (
     <div className="container max-w-2xl py-8">
