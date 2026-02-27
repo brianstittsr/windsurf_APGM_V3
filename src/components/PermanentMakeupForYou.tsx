@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 
 export default function PermanentMakeupForYou() {
@@ -49,48 +50,105 @@ export default function PermanentMakeupForYou() {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Link href="/services/microblading" className="group">
-              <div className="bg-white rounded-xl shadow-md p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100">
-                <div className="w-12 h-12 rounded-full bg-[#AD6269]/10 flex items-center justify-center mb-4">
-                  <i className="fas fa-eye text-[#AD6269] text-xl"></i>
+              <div className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100">
+                <div className="relative h-32 bg-gradient-to-br from-gray-50 to-gray-100">
+                  <Image
+                    src="/images/services/STROKES.png"
+                    alt="Microblading"
+                    fill
+                    className="object-contain p-4"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
                 </div>
-                <h4 className="font-bold text-gray-900 mb-2 group-hover:text-[#AD6269] transition-colors">Microblading</h4>
-                <p className="text-gray-600 text-sm">Natural hair-like strokes for beautifully defined brows</p>
+                <div className="p-6">
+                  <h4 className="font-bold text-gray-900 mb-2 group-hover:text-[#AD6269] transition-colors">Microblading</h4>
+                  <p className="text-gray-600 text-sm">Natural hair-like strokes for beautifully defined brows</p>
+                </div>
               </div>
             </Link>
             <Link href="/services/ombre-brows" className="group">
-              <div className="bg-white rounded-xl shadow-md p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100">
-                <div className="w-12 h-12 rounded-full bg-[#AD6269]/10 flex items-center justify-center mb-4">
-                  <i className="fas fa-spa text-[#AD6269] text-xl"></i>
+              <div className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100">
+                <div className="relative h-32 bg-gradient-to-br from-gray-50 to-gray-100">
+                  <Image
+                    src="/images/services/OMBRE.png"
+                    alt="Ombré Powder Brows"
+                    fill
+                    className="object-contain p-4"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
                 </div>
-                <h4 className="font-bold text-gray-900 mb-2 group-hover:text-[#AD6269] transition-colors">Ombré Powder Brows</h4>
-                <p className="text-gray-600 text-sm">Soft, powdered effect for a makeup-ready look</p>
+                <div className="p-6">
+                  <h4 className="font-bold text-gray-900 mb-2 group-hover:text-[#AD6269] transition-colors">Ombré Powder Brows</h4>
+                  <p className="text-gray-600 text-sm">Soft, powdered effect for a makeup-ready look</p>
+                </div>
               </div>
             </Link>
             <Link href="/services/combo-brows" className="group">
-              <div className="bg-white rounded-xl shadow-md p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100">
-                <div className="w-12 h-12 rounded-full bg-[#AD6269]/10 flex items-center justify-center mb-4">
-                  <i className="fas fa-magic text-[#AD6269] text-xl"></i>
+              <div className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100">
+                <div className="relative h-32 bg-gradient-to-br from-gray-50 to-gray-100">
+                  <Image
+                    src="/images/services/COMBO.png"
+                    alt="Combo Brows"
+                    fill
+                    className="object-contain p-4"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
                 </div>
-                <h4 className="font-bold text-gray-900 mb-2 group-hover:text-[#AD6269] transition-colors">Combo Brows</h4>
-                <p className="text-gray-600 text-sm">Best of both - strokes and shading combined</p>
+                <div className="p-6">
+                  <h4 className="font-bold text-gray-900 mb-2 group-hover:text-[#AD6269] transition-colors">Combo Brows</h4>
+                  <p className="text-gray-600 text-sm">Best of both - strokes and shading combined</p>
+                </div>
+              </div>
+            </Link>
+            <Link href="/services/blade-shade" className="group">
+              <div className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100">
+                <div className="relative h-32 bg-gradient-to-br from-gray-50 to-gray-100">
+                  <Image
+                    src="/images/services/BLADE+SHADE.png"
+                    alt="Blade & Shade"
+                    fill
+                    className="object-contain p-4"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
+                </div>
+                <div className="p-6">
+                  <h4 className="font-bold text-gray-900 mb-2 group-hover:text-[#AD6269] transition-colors">Blade & Shade</h4>
+                  <p className="text-gray-600 text-sm">Microblading strokes with added shading for enhanced texture, depth, and a bolder, more defined look</p>
+                </div>
               </div>
             </Link>
             <Link href="/services/lip-blushing" className="group">
-              <div className="bg-white rounded-xl shadow-md p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100">
-                <div className="w-12 h-12 rounded-full bg-[#AD6269]/10 flex items-center justify-center mb-4">
-                  <i className="fas fa-kiss-wink-heart text-[#AD6269] text-xl"></i>
+              <div className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100">
+                <div className="relative h-32 bg-gradient-to-br from-gray-50 to-gray-100">
+                  <Image
+                    src="/images/services/POWDER.png"
+                    alt="Lip Blushing"
+                    fill
+                    className="object-contain p-4"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
                 </div>
-                <h4 className="font-bold text-gray-900 mb-2 group-hover:text-[#AD6269] transition-colors">Lip Blushing</h4>
-                <p className="text-gray-600 text-sm">Enhance natural lip color and definition</p>
+                <div className="p-6">
+                  <h4 className="font-bold text-gray-900 mb-2 group-hover:text-[#AD6269] transition-colors">Lip Blushing</h4>
+                  <p className="text-gray-600 text-sm">Enhance natural lip color and definition</p>
+                </div>
               </div>
             </Link>
             <Link href="/services/permanent-eyeliner" className="group">
-              <div className="bg-white rounded-xl shadow-md p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100">
-                <div className="w-12 h-12 rounded-full bg-[#AD6269]/10 flex items-center justify-center mb-4">
-                  <i className="fas fa-pencil-alt text-[#AD6269] text-xl"></i>
+              <div className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100">
+                <div className="relative h-32 bg-gradient-to-br from-gray-50 to-gray-100">
+                  <Image
+                    src="/images/services/STROKES.png"
+                    alt="Permanent Eyeliner"
+                    fill
+                    className="object-contain p-4"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
                 </div>
-                <h4 className="font-bold text-gray-900 mb-2 group-hover:text-[#AD6269] transition-colors">Permanent Eyeliner</h4>
-                <p className="text-gray-600 text-sm">Wake up with perfectly defined eyes</p>
+                <div className="p-6">
+                  <h4 className="font-bold text-gray-900 mb-2 group-hover:text-[#AD6269] transition-colors">Permanent Eyeliner</h4>
+                  <p className="text-gray-600 text-sm">Wake up with perfectly defined eyes</p>
+                </div>
               </div>
             </Link>
             <Link href="/services" className="group">
