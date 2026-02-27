@@ -2,6 +2,9 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Clock, Heart, Calendar, ArrowRight, Medal, Flag, Sparkles } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Permanent Makeup Services Raleigh NC',
@@ -42,7 +45,7 @@ const services = [
   {
     name: 'Lip Blushing',
     slug: 'lip-blushing',
-    description: 'Enhance your natural lip color and define lip shape with this beautiful semi-permanent lip tattoo.',
+    description: 'Enhance your natural lip color and define lip shape with this beautiful permanent lip tattoo.',
     image: '/images/services/lip-blushing.jpg',
     duration: '2-3 hours',
     healing: '4-6 weeks',
@@ -63,145 +66,135 @@ export default function ServicesPage() {
   return (
     <>
       <Header />
-      <main style={{ paddingTop: '80px' }}>
+      <main className="pt-header">
         {/* Hero Section */}
-        <section className="py-5" style={{ background: 'linear-gradient(135deg, #AD6269, #8B4A52)', color: 'white' }}>
-          <div className="container">
-            <div className="row justify-content-center">
-              <div className="col-lg-10 text-center">
-                <h1 className="display-3 fw-bold mb-3">Our Permanent Makeup Services</h1>
-                <p className="lead fs-4 mb-4">
-                  Expert permanent makeup services in Raleigh, NC. Each treatment is customized to enhance your natural beauty.
-                </p>
-                <p className="mb-0">
-                  Serving Raleigh, Cary, Durham, Chapel Hill, and Wake Forest
-                </p>
-              </div>
+        <section className="py-12 md:py-16 bg-gradient-to-br from-[#AD6269] to-[#8B4A52] text-white">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto text-center">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+                Our Permanent Makeup Services
+              </h1>
+              <p className="text-lg md:text-xl mb-4 text-white/90">
+                Expert permanent makeup services in Raleigh, NC. Each treatment is customized to enhance your natural beauty.
+              </p>
+              <p className="text-white/80">
+                Serving Raleigh, Cary, Durham, Chapel Hill, and Wake Forest
+              </p>
             </div>
           </div>
         </section>
 
         {/* Services Grid */}
-        <section className="py-5">
-          <div className="container">
-            <div className="row g-4">
-              {services.map((service, index) => (
-                <div key={index} className="col-md-6 col-lg-4">
-                  <div className="card h-100 border-0 shadow-lg">
-                    <div 
-                      className="card-img-top" 
-                      style={{ 
-                        height: '200px', 
-                        background: `linear-gradient(135deg, rgba(173, 98, 105, 0.8), rgba(139, 74, 82, 0.8))`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      <i className="fas fa-spa fa-4x text-white"></i>
-                    </div>
-                    <div className="card-body p-4">
-                      <h2 className="h4 fw-bold mb-3" style={{ color: '#AD6269' }}>
-                        {service.name}
-                      </h2>
-                      <p className="text-muted mb-3">{service.description}</p>
-                      <div className="d-flex flex-wrap gap-2 mb-3">
-                        <span className="badge bg-light text-dark">
-                          <i className="fas fa-clock me-1"></i> {service.duration}
-                        </span>
-                        <span className="badge bg-light text-dark">
-                          <i className="fas fa-heart me-1"></i> Heals in {service.healing}
-                        </span>
-                        <span className="badge bg-light text-dark">
-                          <i className="fas fa-calendar me-1"></i> Lasts {service.lasts}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="card-footer bg-white border-0 p-4 pt-0">
-                      <Link 
-                        href={`/services/${service.slug}`}
-                        className="btn w-100 rounded-pill"
-                        style={{ 
-                          background: 'linear-gradient(135deg, #AD6269, #8B4A52)',
-                          color: 'white'
-                        }}
-                      >
-                        Learn More <i className="fas fa-arrow-right ms-2"></i>
-                      </Link>
-                    </div>
+        <section className="py-12 md:py-16">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {services.map((service) => (
+                <Card key={service.slug} className="h-full border-0 shadow-lg overflow-hidden flex flex-col">
+                  <div className="h-48 bg-gradient-to-br from-[#AD6269]/80 to-[#8B4A52]/80 flex items-center justify-center">
+                    <Sparkles className="w-16 h-16 text-white" />
                   </div>
-                </div>
+                  <CardHeader className="pb-2">
+                    <h2 className="text-xl font-bold text-[#AD6269]">
+                      {service.name}
+                    </h2>
+                  </CardHeader>
+                  <CardContent className="flex-grow">
+                    <p className="text-muted-foreground mb-4">{service.description}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-muted text-muted-foreground text-xs rounded-md">
+                        <Clock className="w-3 h-3" />
+                        {service.duration}
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-muted text-muted-foreground text-xs rounded-md">
+                        <Heart className="w-3 h-3" />
+                        Heals in {service.healing}
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-muted text-muted-foreground text-xs rounded-md">
+                        <Calendar className="w-3 h-3" />
+                        Lasts {service.lasts}
+                      </span>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="pt-0">
+                    <Button
+                      asChild
+                      className="w-full rounded-full bg-gradient-to-r from-[#AD6269] to-[#8B4A52] text-white hover:opacity-90"
+                    >
+                      <Link href={`/services/${service.slug}`}>
+                        Learn More
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Link>
+                    </Button>
+                  </CardFooter>
+                </Card>
               ))}
             </div>
           </div>
         </section>
 
         {/* CTA Section */}
-        <section className="py-5" style={{ backgroundColor: 'rgba(173, 98, 105, 0.1)' }}>
-          <div className="container">
-            <div className="row justify-content-center">
-              <div className="col-lg-8 text-center">
-                <h2 className="h3 fw-bold mb-4" style={{ color: '#AD6269' }}>
-                  Not Sure Which Service is Right for You?
-                </h2>
-                <p className="lead mb-4">
-                  Book a free consultation and let Victoria help you choose the perfect permanent makeup solution for your unique features and lifestyle.
-                </p>
-                <Link 
-                  href="/book-now-custom"
-                  className="btn btn-lg rounded-pill px-5"
-                  style={{ 
-                    background: 'linear-gradient(135deg, #AD6269, #8B4A52)',
-                    color: 'white'
-                  }}
-                >
-                  <i className="fas fa-calendar-plus me-2"></i>
+        <section className="py-12 md:py-16 bg-[#AD6269]/10">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto text-center">
+              <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
+                Not Sure Which Service is Right for You?
+              </h2>
+              <p className="text-lg text-muted-foreground mb-6">
+                Book a free consultation and let Victoria help you choose the perfect permanent makeup solution for your unique features and lifestyle.
+              </p>
+              <Button
+                asChild
+                size="lg"
+                className="rounded-full px-8 bg-gradient-to-r from-[#AD6269] to-[#8B4A52] text-white hover:opacity-90"
+              >
+                <Link href="/book-now-custom">
+                  <Calendar className="w-5 h-5 mr-2" />
                   Book Free Consultation
                 </Link>
-              </div>
+              </Button>
             </div>
           </div>
         </section>
 
         {/* Why Choose Us */}
-        <section className="py-5">
-          <div className="container">
-            <h2 className="h3 fw-bold text-center mb-5" style={{ color: '#AD6269' }}>
+        <section className="py-12 md:py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
               Why Choose A Pretty Girl Matter?
             </h2>
-            <div className="row g-4">
-              <div className="col-md-4">
-                <div className="text-center">
-                  <div className="mb-3">
-                    <i className="fas fa-medal fa-3x" style={{ color: '#AD6269' }}></i>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="mb-4 flex justify-center">
+                  <div className="w-16 h-16 rounded-full bg-[#AD6269]/10 flex items-center justify-center">
+                    <Medal className="w-8 h-8 text-[#AD6269]" />
                   </div>
-                  <h3 className="h5 fw-bold">Certified Expert</h3>
-                  <p className="text-muted">
-                    Trained by top PMU academies including The Collective, Beauty Slesh, and Beauty Angels.
-                  </p>
                 </div>
+                <h3 className="text-lg font-bold mb-2">Certified Expert</h3>
+                <p className="text-muted-foreground">
+                  Trained by top PMU academies including The Collective, Beauty Slesh, and Beauty Angels.
+                </p>
               </div>
-              <div className="col-md-4">
-                <div className="text-center">
-                  <div className="mb-3">
-                    <i className="fas fa-flag-usa fa-3x" style={{ color: '#AD6269' }}></i>
+              <div className="text-center">
+                <div className="mb-4 flex justify-center">
+                  <div className="w-16 h-16 rounded-full bg-[#AD6269]/10 flex items-center justify-center">
+                    <Flag className="w-8 h-8 text-[#AD6269]" />
                   </div>
-                  <h3 className="h5 fw-bold">Veteran-Owned</h3>
-                  <p className="text-muted">
-                    Proudly veteran-owned business dedicated to service, excellence, and empowering others.
-                  </p>
                 </div>
+                <h3 className="text-lg font-bold mb-2">Veteran-Owned</h3>
+                <p className="text-muted-foreground">
+                  Proudly veteran-owned business dedicated to service, excellence, and empowering others.
+                </p>
               </div>
-              <div className="col-md-4">
-                <div className="text-center">
-                  <div className="mb-3">
-                    <i className="fas fa-heart fa-3x" style={{ color: '#AD6269' }}></i>
+              <div className="text-center">
+                <div className="mb-4 flex justify-center">
+                  <div className="w-16 h-16 rounded-full bg-[#AD6269]/10 flex items-center justify-center">
+                    <Heart className="w-8 h-8 text-[#AD6269]" />
                   </div>
-                  <h3 className="h5 fw-bold">Personalized Care</h3>
-                  <p className="text-muted">
-                    Every treatment is customized to your unique features, skin type, and personal style preferences.
-                  </p>
                 </div>
+                <h3 className="text-lg font-bold mb-2">Personalized Care</h3>
+                <p className="text-muted-foreground">
+                  Every treatment is customized to your unique features, skin type, and personal style preferences.
+                </p>
               </div>
             </div>
           </div>

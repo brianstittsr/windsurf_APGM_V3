@@ -45,9 +45,14 @@ import PPCCampaignsDashboard from '../../components/admin/PPCCampaignsDashboard'
 import CanvaIntegration from '../../components/admin/CanvaIntegration';
 import FAQsManager from '../../components/admin/FAQsManager';
 import GHLSyncStatus from '../../components/admin/GHLSyncStatus';
+import { ProcessCarouselManager } from '@/components/admin/ProcessCarouselManager';
+import GoogleCalendarIntegration from '../../components/admin/GoogleCalendarIntegration';
+import AlexaSkillsManager from '../../components/admin/AlexaSkillsManager';
+import OpenClawManager from '../../components/admin/OpenClawManager';
+import OpenClawWizardManager from '../../components/admin/OpenClawWizardManager';
 import { cn } from '@/lib/utils';
 
-type TabType = 'overview' | 'users' | 'clients' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'ghl-migration' | 'ghl-workflow-builder' | 'boldsign' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'alexa' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation' | 'hero-carousel' | 'documents' | 'canva' | 'faqs';
+type TabType = 'overview' | 'users' | 'clients' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'ghl-migration' | 'ghl-workflow-builder' | 'boldsign' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'alexa' | 'openclaw' | 'openclaw-wizard' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation' | 'hero-carousel' | 'documents' | 'canva' | 'faqs' | 'process-carousel' | 'integrations';
 
 interface BookingMetrics {
   total: number;
@@ -136,50 +141,54 @@ export default function DashboardPage() {
   }, []);
 
   const getPageTitle = (tab: TabType): string => {
-    const titles: Record<TabType, string> = {
+    const pageTitles: Record<TabType, string> = {
       'overview': 'Dashboard Overview',
       'users': 'User Management',
       'clients': 'Client Management',
-      'reviews': 'Reviews Management',
-      'services': 'Services Management',
+      'reviews': 'Review Management',
+      'services': 'Service Catalog',
       'coupons': 'Coupons & Gift Cards',
       'business': 'Business Settings',
       'artists': 'Artist Management',
-      'bookings': 'Bookings',
+      'bookings': 'Booking Management',
       'forms': 'Registration Forms',
-      'gohighlevel': 'GoHighLevel Integration',
-      'gohighlevel-mcp': 'GoHighLevel MCP',
-      'ghl-migration': 'GHL Migration Tool',
+      'gohighlevel': 'GoHighLevel CRM',
+      'gohighlevel-mcp': 'GHL MCP Protocol',
+      'ghl-migration': 'GHL Migration',
       'ghl-workflow-builder': 'AI Workflow Builder',
       'boldsign': 'BoldSign Forms',
       'bmad-orchestrator': 'BMAD Orchestrator',
       'availability': 'Artist Availability',
       'calendar': 'Booking Calendar',
       'alexa': 'Alexa Skills',
-      'qrcodes': 'QR Code Manager',
+      'openclaw': 'OpenClaw AI',
+      'openclaw-wizard': 'AI Wizard Journeys',
+      'qrcodes': 'QR Code Management',
       'seo-competitor': 'SEO Competitor Analysis',
-      'seo-pagespeed': 'PageSpeed Insights',
+      'seo-pagespeed': 'SEO PageSpeed Analysis',
       'google-reviews': 'Google Reviews',
       'whatsapp': 'WhatsApp Business',
       'loyalty': 'Loyalty Program',
-      'geo-competitors': 'Geographical Competitor Analysis',
-      'paid-traffic': 'Paid Traffic Management',
-      'retargeting': 'Customer Retargeting',
-      'reputation': 'Reputation Marketing',
-      'social-media': 'Social Media Management',
+      'geo-competitors': 'Local Competitors',
+      'paid-traffic': 'Paid Traffic',
+      'retargeting': 'Retargeting Campaigns',
+      'reputation': 'Reputation Management',
+      'social-media': 'Social Media',
       'email-marketing': 'Email Marketing',
       'video-marketing': 'Video Marketing',
       'lead-generation': 'Lead Generation',
       'online-offers': 'Online Offers',
       'ppc-campaigns': 'PPC Campaigns',
-      'website-convert': 'Conversion Optimization',
+      'website-convert': 'Website Conversion',
       'marketing-automation': 'Marketing Automation',
       'hero-carousel': 'Hero Carousel',
-      'documents': 'Documents & Agreements',
+      'documents': 'Documents',
       'canva': 'Canva Integration',
-      'faqs': 'FAQs & Instructions',
+      'faqs': 'FAQs & Help',
+      'process-carousel': 'Process Carousel',
+      'integrations': 'Integrations'
     };
-    return titles[tab] || 'Dashboard';
+    return pageTitles[tab] || 'Dashboard';
   };
 
   useEffect(() => {
@@ -426,6 +435,18 @@ export default function DashboardPage() {
                   <h3 className="font-semibold text-gray-900 mb-1">Documents</h3>
                   <p className="text-gray-500 text-sm">Agreements & forms</p>
                 </div>
+
+                {/* Process Carousel */}
+                <div 
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:border-[#AD6269] hover:shadow-lg transition-all cursor-pointer group text-center"
+                  onClick={() => setActiveTab('process-carousel')}
+                >
+                  <div className="w-16 h-16 bg-gray-100 group-hover:bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
+                    <i className="fas fa-images text-3xl text-gray-600 group-hover:text-[#AD6269] transition-colors"></i>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Process Carousel</h3>
+                  <p className="text-gray-500 text-sm">Process slides</p>
+                </div>
               </div>
             </div>
 
@@ -518,6 +539,12 @@ export default function DashboardPage() {
         return <ArtistAvailabilityManager />;
       case 'calendar':
         return <BookingCalendar />;
+      case 'alexa':
+        return <AlexaSkillsManager />;
+      case 'openclaw':
+        return <OpenClawManager />;
+      case 'openclaw-wizard':
+        return <OpenClawWizardManager />;
       case 'qrcodes':
         return <QRCodeManager />;
       case 'seo-competitor':
@@ -562,6 +589,10 @@ export default function DashboardPage() {
         return <CanvaIntegration />;
       case 'faqs':
         return <FAQsManager />;
+      case 'process-carousel':
+        return <ProcessCarouselManager />;
+      case 'integrations':
+        return <GoogleCalendarIntegration />;
       default:
         return null;
     }

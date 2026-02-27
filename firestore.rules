@@ -43,15 +43,21 @@ service cloud.firestore {
 
     // Appointments collection - Users can manage their own, artists/admins can manage all
     match /appointments/{appointmentId} {
-      allow read: if isAuthenticated() &&
+      // Allow list/query operations for authenticated users (filtered by clientId in query)
+      allow list: if isAuthenticated();
+      // Allow get for own appointments or admin/artist
+      allow get: if isAuthenticated() &&
         (resource.data.clientId == request.auth.uid ||
          resource.data.artistId == request.auth.uid ||
          isAdminOrArtist());
-      allow write: if isAuthenticated() &&
+      // Allow update for own appointments or admin/artist
+      allow update: if isAuthenticated() &&
         (resource.data.clientId == request.auth.uid ||
          resource.data.artistId == request.auth.uid ||
          isAdminOrArtist());
+      // Allow create for any authenticated user
       allow create: if isAuthenticated();
+      // Allow delete for admin/artist only
       allow delete: if isAdminOrArtist();
     }
 
@@ -339,6 +345,52 @@ service cloud.firestore {
 
     // BoldSign documents collection - Admin manage, track sent documents
     match /boldsignDocuments/{documentId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Google Calendar tokens collection - Artists/Admins can manage their own tokens
+    match /googleCalendarTokens/{artistId} {
+      allow read: if isAuthenticated() && (request.auth.uid == artistId || isAdmin());
+      allow write: if isAuthenticated() && (request.auth.uid == artistId || isAdmin());
+      allow delete: if isAuthenticated() && (request.auth.uid == artistId || isAdmin());
+    }
+
+    // Settings collection - Admin manage, authenticated read
+    match /settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Integration settings collection - Admin only
+    match /integrationSettings/{integrationId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // SMS messages collection - Admin and system access
+    match /smsMessages/{messageId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+      allow create: if true; // Allow system to create SMS logs
+    }
+
+    // OpenClaw conversation logs - Admin and system access
+    match /openclawLogs/{logId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+      allow create: if true; // Allow system to create conversation logs
+    }
+
+    // OpenClaw wizard logs - Admin and system access
+    match /openclawWizardLogs/{logId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+      allow create: if true; // Allow system to create wizard logs
+    }
+
+    // OpenClaw wizard configuration - Admin access only
+    match /integrationSettings/openclaw_wizards {
       allow read: if isAdmin();
       allow write: if isAdmin();
     }

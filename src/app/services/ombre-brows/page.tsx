@@ -2,10 +2,32 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import {
+  Sparkles,
+  Droplets,
+  Palette,
+  Clock,
+  Sun,
+  CheckCircle,
+  CalendarPlus,
+  Phone,
+  MapPin,
+  UserCheck,
+  ChevronRight,
+  Eye,
+} from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Ombré Powder Brows Raleigh NC | Soft Eyebrow Tattoo',
-  description: 'Beautiful ombré powder brows in Raleigh, NC. Soft, natural gradient effect that lasts 1-3 years. Certified PMU artist. Book your appointment today!',
+  title: 'Ombre Powder Brows Raleigh NC | Soft Eyebrow Tattoo',
+  description: 'Beautiful ombre powder brows in Raleigh, NC. Soft, natural gradient effect that lasts 1-3 years. Certified PMU artist. Book your appointment today!',
   keywords: ['ombre brows Raleigh', 'powder brows Raleigh NC', 'ombre eyebrow tattoo', 'soft brow tattoo', 'PMU Raleigh'],
   alternates: {
     canonical: 'https://www.aprettygirlmatter.com/services/ombre-brows',
@@ -14,19 +36,19 @@ export const metadata: Metadata = {
 
 const faqs = [
   {
-    question: 'What are ombré powder brows?',
-    answer: 'Ombré powder brows are a semi-permanent makeup technique that creates a soft, powdered makeup look. The technique uses a machine to deposit pigment in a gradient pattern - lighter at the front and darker at the tail - mimicking the look of filled-in brows with makeup.',
+    question: 'What are ombre powder brows?',
+    answer: 'Ombre powder brows are a permanent makeup technique that creates a soft, powdered makeup look. The technique uses a machine to deposit pigment in a gradient pattern - lighter at the front and darker at the tail - mimicking the look of filled-in brows with makeup.',
   },
   {
-    question: 'How long do ombré brows last?',
-    answer: 'Ombré powder brows typically last 1-3 years depending on your skin type, lifestyle, and aftercare. They tend to last longer than microblading, especially on oily skin types.',
+    question: 'How long do ombre brows last?',
+    answer: 'Ombre powder brows typically last 1-3 years depending on your skin type, lifestyle, and aftercare. They tend to last longer than microblading, especially on oily skin types.',
   },
   {
-    question: 'Are ombré brows better than microblading?',
-    answer: 'Neither is "better" - they\'re different techniques for different preferences. Ombré brows create a soft, makeup-like finish and work well on all skin types including oily skin. Microblading creates hair-like strokes for a more natural look. Many clients choose combo brows to get the best of both.',
+    question: 'Are ombre brows better than microblading?',
+    answer: 'Neither is "better" - they are different techniques for different preferences. Ombre brows create a soft, makeup-like finish and work well on all skin types including oily skin. Microblading creates hair-like strokes for a more natural look. Many clients choose combo brows to get the best of both.',
   },
   {
-    question: 'Does getting ombré brows hurt?',
+    question: 'Does getting ombre brows hurt?',
     answer: 'Most clients experience minimal discomfort. We apply a topical numbing cream before and during the procedure. Many describe the sensation as a light scratching or vibration.',
   },
   {
@@ -35,91 +57,107 @@ const faqs = [
   },
 ];
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": faqs.map(faq => ({
-    "@type": "Question",
-    "name": faq.question,
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": faq.answer
-    }
-  }))
-};
+const benefits = [
+  {
+    icon: Sparkles,
+    title: 'Soft Powdered Look',
+    description: 'Achieve a beautiful, filled-in brow look that mimics perfectly applied makeup.',
+  },
+  {
+    icon: Droplets,
+    title: 'Great for Oily Skin',
+    description: 'Powder brows last longer on oily skin types where microblading may fade faster.',
+  },
+  {
+    icon: Palette,
+    title: 'Customizable Gradient',
+    description: 'The ombre effect is tailored to your preferences - from subtle to dramatic.',
+  },
+  {
+    icon: Clock,
+    title: 'Long-Lasting Results',
+    description: 'Enjoy beautiful brows for 1-3 years with proper care and occasional touch-ups.',
+  },
+  {
+    icon: Sun,
+    title: 'Smudge-Proof',
+    description: 'Your brows stay perfect through workouts, swimming, and hot weather.',
+  },
+  {
+    icon: CheckCircle,
+    title: 'Low Maintenance',
+    description: 'Wake up with perfect brows every day - no daily filling required.',
+  },
+];
+
+const candidates = [
+  { title: 'Oily skin types', description: 'Powder technique holds up better on oily skin' },
+  { title: 'Those who fill in brows daily', description: 'Replicate your makeup routine permanently' },
+  { title: 'Anyone wanting defined brows', description: 'More polished, makeup-like finish' },
+  { title: 'Active lifestyles', description: 'Smudge-proof through any activity' },
+  { title: 'Mature skin', description: 'Soft shading works beautifully on all skin textures' },
+];
 
 export default function OmbreBrowsPage() {
   return (
     <>
       <Header />
-      <main style={{ paddingTop: '80px' }}>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-        />
-        
+      <main className="pt-header">
         {/* Hero Section */}
-        <section className="py-5" style={{ background: 'linear-gradient(135deg, #AD6269, #8B4A52)', color: 'white' }}>
-          <div className="container">
-            <div className="row justify-content-center">
-              <div className="col-lg-10 text-center">
-                <nav aria-label="breadcrumb" className="mb-3">
-                  <ol className="breadcrumb justify-content-center mb-0" style={{ fontSize: '0.9rem' }}>
-                    <li className="breadcrumb-item"><Link href="/" className="text-white-50">Home</Link></li>
-                    <li className="breadcrumb-item"><Link href="/services" className="text-white-50">Services</Link></li>
-                    <li className="breadcrumb-item active text-white" aria-current="page">Ombré Brows</li>
-                  </ol>
-                </nav>
-                <h1 className="display-4 fw-bold mb-3">Ombré Powder Brows in Raleigh, NC</h1>
-                <p className="lead fs-4 mb-4">
-                  Soft, natural gradient effect that gives a beautiful powdered makeup look
-                </p>
-                <Link 
-                  href="/book-now-custom"
-                  className="btn btn-light btn-lg rounded-pill px-5"
-                  style={{ color: '#AD6269' }}
-                >
-                  <i className="fas fa-calendar-plus me-2"></i>
+        <section className="py-12 md:py-16 bg-gradient-to-br from-[#AD6269] to-[#8B4A52] text-white">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto text-center">
+              {/* Breadcrumb */}
+              <nav className="flex justify-center items-center gap-2 text-sm text-white/70 mb-6">
+                <Link href="/" className="hover:text-white transition-colors">Home</Link>
+                <ChevronRight className="w-4 h-4" />
+                <Link href="/services" className="hover:text-white transition-colors">Services</Link>
+                <ChevronRight className="w-4 h-4" />
+                <span className="text-white">Ombre Powder Brows</span>
+              </nav>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+                Ombre Powder Brows in Raleigh, NC
+              </h1>
+              <p className="text-lg md:text-xl mb-6 text-white/90">
+                Soft, natural gradient effect that gives you perfectly polished brows every day
+              </p>
+              <Button
+                asChild
+                size="lg"
+                variant="secondary"
+                className="rounded-full px-8 bg-white text-[#AD6269] hover:bg-white/90"
+              >
+                <Link href="/book-now-custom">
+                  <CalendarPlus className="w-5 h-5 mr-2" />
                   Book Free Consultation
                 </Link>
-              </div>
+              </Button>
             </div>
           </div>
         </section>
 
-        {/* What are Ombré Brows */}
-        <section className="py-5">
-          <div className="container">
-            <div className="row align-items-center g-5">
-              <div className="col-lg-6">
-                <h2 className="h3 fw-bold mb-4" style={{ color: '#AD6269' }}>
-                  What are Ombré Powder Brows?
+        {/* What are Ombre Brows */}
+        <section className="py-12 md:py-16">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
+                  What are Ombre Powder Brows?
                 </h2>
-                <p className="lead mb-4">
-                  Ombré powder brows are a semi-permanent eyebrow technique that creates a soft, powdered makeup effect using a specialized machine.
+                <p className="text-lg text-muted-foreground mb-4">
+                  Ombre powder brows create a soft, powdered makeup look that is always perfectly applied. This technique uses a specialized machine to deposit pigment in a gradient pattern.
                 </p>
-                <p className="mb-4">
-                  Unlike microblading which creates individual hair strokes, ombré brows use a shading technique that deposits thousands of tiny dots of pigment into the skin. The result is a soft, gradient effect that's lighter at the front of the brow and gradually darkens toward the tail.
+                <p className="text-muted-foreground mb-4">
+                  The result is lighter at the front of the brow (near the nose) and gradually darker toward the tail, creating a beautiful, natural-looking dimension that frames your face perfectly.
                 </p>
-                <p className="mb-0">
-                  This technique is perfect for achieving that "just filled in my brows" look without the daily effort. At A Pretty Girl Matter in Raleigh, NC, Victoria customizes the intensity and shape to match your desired look - from subtle and natural to bold and defined.
+                <p className="text-muted-foreground">
+                  At A Pretty Girl Matter in Raleigh, NC, Victoria customizes the intensity and gradient to match your desired look - from a subtle, natural enhancement to a more defined, makeup-like finish.
                 </p>
               </div>
-              <div className="col-lg-6">
-                <div 
-                  className="rounded-4 shadow-lg"
-                  style={{ 
-                    height: '400px', 
-                    background: 'linear-gradient(135deg, rgba(173, 98, 105, 0.2), rgba(139, 74, 82, 0.2))',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <div className="text-center">
-                    <i className="fas fa-spa fa-5x mb-3" style={{ color: '#AD6269' }}></i>
-                    <p className="fw-bold" style={{ color: '#AD6269' }}>Before & After Gallery</p>
-                  </div>
+              <div className="h-80 md:h-96 bg-gradient-to-br from-[#AD6269]/20 to-[#8B4A52]/20 rounded-2xl shadow-lg flex items-center justify-center">
+                <div className="text-center">
+                  <Sparkles className="w-20 h-20 text-[#AD6269] mx-auto mb-4" />
+                  <p className="font-bold text-[#AD6269]">Before & After Gallery</p>
                 </div>
               </div>
             </div>
@@ -127,241 +165,147 @@ export default function OmbreBrowsPage() {
         </section>
 
         {/* Benefits */}
-        <section className="py-5" style={{ backgroundColor: 'rgba(173, 98, 105, 0.1)' }}>
-          <div className="container">
-            <h2 className="h3 fw-bold text-center mb-5" style={{ color: '#AD6269' }}>
-              Benefits of Ombré Powder Brows
+        <section className="py-12 md:py-16 bg-[#AD6269]/10">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
+              Benefits of Ombre Powder Brows
             </h2>
-            <div className="row g-4">
-              <div className="col-md-6 col-lg-4">
-                <div className="card h-100 border-0 shadow-sm">
-                  <div className="card-body p-4 text-center">
-                    <i className="fas fa-tint fa-2x mb-3" style={{ color: '#AD6269' }}></i>
-                    <h3 className="h5 fw-bold">Great for Oily Skin</h3>
-                    <p className="text-muted mb-0">
-                      Unlike microblading, ombré brows hold up beautifully on oily skin types and last longer.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6 col-lg-4">
-                <div className="card h-100 border-0 shadow-sm">
-                  <div className="card-body p-4 text-center">
-                    <i className="fas fa-feather fa-2x mb-3" style={{ color: '#AD6269' }}></i>
-                    <h3 className="h5 fw-bold">Soft, Natural Look</h3>
-                    <p className="text-muted mb-0">
-                      Achieve a soft, powdered finish that looks like perfectly applied brow makeup.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6 col-lg-4">
-                <div className="card h-100 border-0 shadow-sm">
-                  <div className="card-body p-4 text-center">
-                    <i className="fas fa-calendar-check fa-2x mb-3" style={{ color: '#AD6269' }}></i>
-                    <h3 className="h5 fw-bold">Long-Lasting Results</h3>
-                    <p className="text-muted mb-0">
-                      Results typically last 1-3 years, often longer than microblading on most skin types.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6 col-lg-4">
-                <div className="card h-100 border-0 shadow-sm">
-                  <div className="card-body p-4 text-center">
-                    <i className="fas fa-hand-holding-heart fa-2x mb-3" style={{ color: '#AD6269' }}></i>
-                    <h3 className="h5 fw-bold">Less Trauma to Skin</h3>
-                    <p className="text-muted mb-0">
-                      The machine technique is gentler on the skin, resulting in faster healing.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6 col-lg-4">
-                <div className="card h-100 border-0 shadow-sm">
-                  <div className="card-body p-4 text-center">
-                    <i className="fas fa-sliders-h fa-2x mb-3" style={{ color: '#AD6269' }}></i>
-                    <h3 className="h5 fw-bold">Customizable Intensity</h3>
-                    <p className="text-muted mb-0">
-                      From subtle and natural to bold and dramatic - we customize to your preference.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6 col-lg-4">
-                <div className="card h-100 border-0 shadow-sm">
-                  <div className="card-body p-4 text-center">
-                    <i className="fas fa-sync-alt fa-2x mb-3" style={{ color: '#AD6269' }}></i>
-                    <h3 className="h5 fw-bold">Fades Evenly</h3>
-                    <p className="text-muted mb-0">
-                      Ombré brows fade more evenly over time compared to microblading strokes.
-                    </p>
-                  </div>
-                </div>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {benefits.map((benefit, index) => (
+                <Card key={index} className="h-full border-0 shadow-sm">
+                  <CardContent className="p-6 text-center">
+                    <benefit.icon className="w-10 h-10 text-[#AD6269] mx-auto mb-4" />
+                    <h3 className="text-lg font-bold mb-2">{benefit.title}</h3>
+                    <p className="text-muted-foreground text-sm">{benefit.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* Who It's For */}
-        <section className="py-5">
-          <div className="container">
-            <div className="row align-items-center g-5">
-              <div className="col-lg-6 order-lg-2">
-                <h2 className="h3 fw-bold mb-4" style={{ color: '#AD6269' }}>
-                  Who Should Get Ombré Powder Brows?
-                </h2>
-                <p className="mb-4">
-                  Ombré powder brows are versatile and work well for most people. They're especially recommended for:
-                </p>
-                <ul className="list-unstyled">
-                  <li className="mb-3 d-flex align-items-start">
-                    <i className="fas fa-check-circle me-3 mt-1" style={{ color: '#AD6269' }}></i>
-                    <span><strong>Oily skin types</strong> - The technique holds up better on oily skin than microblading</span>
-                  </li>
-                  <li className="mb-3 d-flex align-items-start">
-                    <i className="fas fa-check-circle me-3 mt-1" style={{ color: '#AD6269' }}></i>
-                    <span><strong>Mature skin</strong> - Works beautifully on aging skin with larger pores</span>
-                  </li>
-                  <li className="mb-3 d-flex align-items-start">
-                    <i className="fas fa-check-circle me-3 mt-1" style={{ color: '#AD6269' }}></i>
-                    <span><strong>Those who fill in brows daily</strong> - Replicate your makeup look permanently</span>
-                  </li>
-                  <li className="mb-3 d-flex align-items-start">
-                    <i className="fas fa-check-circle me-3 mt-1" style={{ color: '#AD6269' }}></i>
-                    <span><strong>Anyone wanting defined brows</strong> - Perfect for a polished, put-together look</span>
-                  </li>
-                  <li className="mb-0 d-flex align-items-start">
-                    <i className="fas fa-check-circle me-3 mt-1" style={{ color: '#AD6269' }}></i>
-                    <span><strong>Previous PMU clients</strong> - Great for covering old, faded permanent makeup</span>
-                  </li>
-                </ul>
-              </div>
-              <div className="col-lg-6 order-lg-1">
-                <div 
-                  className="rounded-4 shadow-lg"
-                  style={{ 
-                    height: '400px', 
-                    background: 'linear-gradient(135deg, rgba(173, 98, 105, 0.2), rgba(139, 74, 82, 0.2))',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <div className="text-center">
-                    <i className="fas fa-user-check fa-5x mb-3" style={{ color: '#AD6269' }}></i>
-                    <p className="fw-bold" style={{ color: '#AD6269' }}>Perfect for All Skin Types</p>
-                  </div>
+        {/* Who It is For */}
+        <section className="py-12 md:py-16">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div className="order-2 lg:order-1 h-80 md:h-96 bg-gradient-to-br from-[#AD6269]/20 to-[#8B4A52]/20 rounded-2xl shadow-lg flex items-center justify-center">
+                <div className="text-center">
+                  <UserCheck className="w-20 h-20 text-[#AD6269] mx-auto mb-4" />
+                  <p className="font-bold text-[#AD6269]">Perfect for All Skin Types</p>
                 </div>
+              </div>
+              <div className="order-1 lg:order-2">
+                <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
+                  Who are Ombre Brows Best For?
+                </h2>
+                <p className="text-muted-foreground mb-6">
+                  Ombre powder brows are incredibly versatile and work beautifully for almost everyone. They are especially ideal for:
+                </p>
+                <ul className="space-y-4">
+                  {candidates.map((candidate, index) => (
+                    <li key={index} className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-[#AD6269] mt-0.5 shrink-0" />
+                      <span>
+                        <strong>{candidate.title}</strong> — {candidate.description}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </div>
         </section>
 
         {/* FAQ Section */}
-        <section className="py-5" style={{ backgroundColor: 'rgba(173, 98, 105, 0.1)' }}>
-          <div className="container">
-            <h2 className="h3 fw-bold text-center mb-5" style={{ color: '#AD6269' }}>
-              Frequently Asked Questions About Ombré Brows
+        <section className="py-12 md:py-16 bg-[#AD6269]/10">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
+              Frequently Asked Questions About Ombre Brows
             </h2>
-            <div className="row justify-content-center">
-              <div className="col-lg-8">
-                <div className="accordion" id="ombreFAQ">
-                  {faqs.map((faq, index) => (
-                    <div key={index} className="accordion-item border-0 shadow-sm mb-3">
-                      <h3 className="accordion-header">
-                        <button 
-                          className={`accordion-button ${index !== 0 ? 'collapsed' : ''} fw-semibold`}
-                          type="button" 
-                          data-bs-toggle="collapse" 
-                          data-bs-target={`#faq${index}`}
-                        >
-                          {faq.question}
-                        </button>
-                      </h3>
-                      <div 
-                        id={`faq${index}`} 
-                        className={`accordion-collapse collapse ${index === 0 ? 'show' : ''}`}
-                        data-bs-parent="#ombreFAQ"
-                      >
-                        <div className="accordion-body text-muted">
-                          {faq.answer}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <div className="max-w-3xl mx-auto">
+              <Accordion type="single" collapsible className="space-y-3">
+                {faqs.map((faq, index) => (
+                  <AccordionItem key={index} value={`item-${index}`} className="border-0 shadow-sm bg-white rounded-lg px-6">
+                    <AccordionTrigger className="text-left font-semibold hover:no-underline py-4">
+                      {faq.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground pb-4">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </div>
           </div>
         </section>
 
         {/* CTA Section */}
-        <section className="py-5" style={{ background: 'linear-gradient(135deg, #AD6269, #8B4A52)', color: 'white' }}>
-          <div className="container">
-            <div className="row justify-content-center">
-              <div className="col-lg-8 text-center">
-                <h2 className="h3 fw-bold mb-4">
-                  Ready for Effortlessly Beautiful Brows?
-                </h2>
-                <p className="lead mb-4">
-                  Book your free consultation today and discover how ombré powder brows can give you the perfect, low-maintenance brows you've always wanted.
-                </p>
-                <div className="d-flex flex-wrap justify-content-center gap-3">
-                  <Link 
-                    href="/book-now-custom"
-                    className="btn btn-light btn-lg rounded-pill px-5"
-                    style={{ color: '#AD6269' }}
-                  >
-                    <i className="fas fa-calendar-plus me-2"></i>
+        <section className="py-12 md:py-16 bg-gradient-to-br from-[#AD6269] to-[#8B4A52] text-white">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto text-center">
+              <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                Ready for Perfect, Powdered Brows?
+              </h2>
+              <p className="text-lg mb-6 text-white/90">
+                Book your free consultation today and discover how ombre powder brows can give you beautiful, low-maintenance brows.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button
+                  asChild
+                  size="lg"
+                  variant="secondary"
+                  className="rounded-full px-8 bg-white text-[#AD6269] hover:bg-white/90"
+                >
+                  <Link href="/book-now-custom">
+                    <CalendarPlus className="w-5 h-5 mr-2" />
                     Book Consultation
                   </Link>
-                  <Link 
-                    href="/contact"
-                    className="btn btn-outline-light btn-lg rounded-pill px-5"
-                  >
-                    <i className="fas fa-phone me-2"></i>
+                </Button>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full px-8 border-white text-white hover:bg-white/10"
+                >
+                  <Link href="/contact">
+                    <Phone className="w-5 h-5 mr-2" />
                     Contact Us
                   </Link>
-                </div>
-                <p className="mt-4 mb-0">
-                  <i className="fas fa-map-marker-alt me-2"></i>
-                  Serving Raleigh, Cary, Durham, Chapel Hill & Wake Forest, NC
-                </p>
+                </Button>
               </div>
+              <p className="mt-6 text-white/80 flex items-center justify-center gap-2">
+                <MapPin className="w-4 h-4" />
+                Serving Raleigh, Cary, Durham, Chapel Hill & Wake Forest, NC
+              </p>
             </div>
           </div>
         </section>
 
         {/* Related Services */}
-        <section className="py-5">
-          <div className="container">
-            <h2 className="h4 fw-bold text-center mb-4" style={{ color: '#AD6269' }}>
+        <section className="py-12 md:py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-xl md:text-2xl font-bold text-center mb-8 text-[#AD6269]">
               Related Services You May Like
             </h2>
-            <div className="row g-4 justify-content-center">
-              <div className="col-md-4">
-                <Link href="/services/microblading" className="text-decoration-none">
-                  <div className="card h-100 border-0 shadow-sm">
-                    <div className="card-body p-4 text-center">
-                      <i className="fas fa-eye fa-2x mb-3" style={{ color: '#AD6269' }}></i>
-                      <h3 className="h5 fw-bold text-dark">Microblading</h3>
-                      <p className="text-muted mb-0">Natural hair-like strokes</p>
-                    </div>
-                  </div>
-                </Link>
-              </div>
-              <div className="col-md-4">
-                <Link href="/services/combo-brows" className="text-decoration-none">
-                  <div className="card h-100 border-0 shadow-sm">
-                    <div className="card-body p-4 text-center">
-                      <i className="fas fa-magic fa-2x mb-3" style={{ color: '#AD6269' }}></i>
-                      <h3 className="h5 fw-bold text-dark">Combo Brows</h3>
-                      <p className="text-muted mb-0">Best of both techniques</p>
-                    </div>
-                  </div>
-                </Link>
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
+              <Link href="/services/microblading" className="group">
+                <Card className="h-full border-0 shadow-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-6 text-center">
+                    <Eye className="w-8 h-8 text-[#AD6269] mx-auto mb-3" />
+                    <h3 className="font-bold text-foreground group-hover:text-[#AD6269] transition-colors">Microblading</h3>
+                    <p className="text-sm text-muted-foreground">Natural hair-like strokes</p>
+                  </CardContent>
+                </Card>
+              </Link>
+              <Link href="/services/combo-brows" className="group">
+                <Card className="h-full border-0 shadow-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-6 text-center">
+                    <Sparkles className="w-8 h-8 text-[#AD6269] mx-auto mb-3" />
+                    <h3 className="font-bold text-foreground group-hover:text-[#AD6269] transition-colors">Combo Brows</h3>
+                    <p className="text-sm text-muted-foreground">Best of both techniques</p>
+                  </CardContent>
+                </Card>
+              </Link>
             </div>
           </div>
         </section>

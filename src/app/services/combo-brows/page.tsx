@@ -2,6 +2,30 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import {
+  Layers,
+  Droplets,
+  CalendarCheck,
+  Feather,
+  Paintbrush,
+  SlidersHorizontal,
+  CheckCircle,
+  CalendarPlus,
+  Phone,
+  MapPin,
+  Sparkles,
+  UserCheck,
+  ChevronRight,
+  Eye,
+} from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Combo Brows Raleigh NC | Microblading + Powder Brows',
@@ -27,7 +51,7 @@ const faqs = [
   },
   {
     question: 'Who are combo brows best for?',
-    answer: 'Combo brows are ideal for those who want the most natural-looking yet defined brows. They\'re especially great for those with oily skin, sparse brows, or anyone who wants fuller, more dimensional brows that last longer than microblading alone.',
+    answer: 'Combo brows are ideal for those who want the most natural-looking yet defined brows. They are especially great for those with oily skin, sparse brows, or anyone who wants fuller, more dimensional brows that last longer than microblading alone.',
   },
   {
     question: 'What is the healing process like?',
@@ -35,91 +59,125 @@ const faqs = [
   },
 ];
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": faqs.map(faq => ({
-    "@type": "Question",
-    "name": faq.question,
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": faq.answer
-    }
-  }))
-};
+const howItWorks = [
+  {
+    number: '1',
+    title: 'Microblading at the Front',
+    description: 'Delicate hair strokes are created at the inner portion of the brow for a soft, natural, feathered start.',
+  },
+  {
+    number: '2',
+    title: 'Powder Shading in Body',
+    description: 'Soft powder shading is applied through the body and tail, adding depth and a polished, filled-in look.',
+  },
+  {
+    number: '3',
+    title: 'Seamless Blend',
+    description: 'The two techniques are expertly blended together for a seamless, natural, dimensional result.',
+  },
+];
+
+const benefits = [
+  {
+    icon: Layers,
+    title: 'Most Dimensional Look',
+    description: 'Combines texture and depth for the most realistic, multidimensional brow result.',
+  },
+  {
+    icon: Droplets,
+    title: 'Works on All Skin Types',
+    description: 'The powder shading component makes combo brows suitable for oily skin types too.',
+  },
+  {
+    icon: CalendarCheck,
+    title: 'Longer Lasting',
+    description: 'The powder portion lasts longer than microblading alone, extending your results.',
+  },
+  {
+    icon: Feather,
+    title: 'Natural Front',
+    description: 'Hair strokes at the front create a soft, natural start that mimics real brow hairs.',
+  },
+  {
+    icon: Paintbrush,
+    title: 'Fuller Appearance',
+    description: 'The shading adds density and fullness that microblading alone cannot achieve.',
+  },
+  {
+    icon: SlidersHorizontal,
+    title: 'Customizable',
+    description: 'Adjust the ratio of strokes to shading based on your preferences and brow goals.',
+  },
+];
+
+const candidates = [
+  { title: 'Those who want the best of both', description: 'Natural strokes AND defined fullness' },
+  { title: 'Oily skin types', description: 'The powder component holds up better on oily skin' },
+  { title: 'Sparse or thin brows', description: 'Creates maximum fullness and definition' },
+  { title: 'Those who fill in brows daily', description: 'Replicate your makeup look permanently' },
+  { title: 'Anyone wanting long-lasting results', description: 'Combo brows tend to last longer' },
+];
 
 export default function ComboBrowsPage() {
   return (
     <>
       <Header />
-      <main style={{ paddingTop: '80px' }}>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-        />
-        
+      <main className="pt-header">
         {/* Hero Section */}
-        <section className="py-5" style={{ background: 'linear-gradient(135deg, #AD6269, #8B4A52)', color: 'white' }}>
-          <div className="container">
-            <div className="row justify-content-center">
-              <div className="col-lg-10 text-center">
-                <nav aria-label="breadcrumb" className="mb-3">
-                  <ol className="breadcrumb justify-content-center mb-0" style={{ fontSize: '0.9rem' }}>
-                    <li className="breadcrumb-item"><Link href="/" className="text-white-50">Home</Link></li>
-                    <li className="breadcrumb-item"><Link href="/services" className="text-white-50">Services</Link></li>
-                    <li className="breadcrumb-item active text-white" aria-current="page">Combo Brows</li>
-                  </ol>
-                </nav>
-                <h1 className="display-4 fw-bold mb-3">Combo Brows in Raleigh, NC</h1>
-                <p className="lead fs-4 mb-4">
-                  The best of both worlds - microblading strokes combined with powder shading for the most natural, dimensional brows
-                </p>
-                <Link 
-                  href="/book-now-custom"
-                  className="btn btn-light btn-lg rounded-pill px-5"
-                  style={{ color: '#AD6269' }}
-                >
-                  <i className="fas fa-calendar-plus me-2"></i>
+        <section className="py-12 md:py-16 bg-gradient-to-br from-[#AD6269] to-[#8B4A52] text-white">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto text-center">
+              {/* Breadcrumb */}
+              <nav className="flex justify-center items-center gap-2 text-sm text-white/70 mb-6">
+                <Link href="/" className="hover:text-white transition-colors">Home</Link>
+                <ChevronRight className="w-4 h-4" />
+                <Link href="/services" className="hover:text-white transition-colors">Services</Link>
+                <ChevronRight className="w-4 h-4" />
+                <span className="text-white">Combo Brows</span>
+              </nav>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+                Combo Brows in Raleigh, NC
+              </h1>
+              <p className="text-lg md:text-xl mb-6 text-white/90">
+                The best of both worlds - microblading strokes combined with powder shading for the most natural, dimensional brows
+              </p>
+              <Button
+                asChild
+                size="lg"
+                variant="secondary"
+                className="rounded-full px-8 bg-white text-[#AD6269] hover:bg-white/90"
+              >
+                <Link href="/book-now-custom">
+                  <CalendarPlus className="w-5 h-5 mr-2" />
                   Book Free Consultation
                 </Link>
-              </div>
+              </Button>
             </div>
           </div>
         </section>
 
         {/* What are Combo Brows */}
-        <section className="py-5">
-          <div className="container">
-            <div className="row align-items-center g-5">
-              <div className="col-lg-6">
-                <h2 className="h3 fw-bold mb-4" style={{ color: '#AD6269' }}>
+        <section className="py-12 md:py-16">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
                   What are Combo Brows?
                 </h2>
-                <p className="lead mb-4">
-                  Combo brows (also called hybrid brows) combine the best features of microblading and ombré powder brows into one stunning technique.
+                <p className="text-lg text-muted-foreground mb-4">
+                  Combo brows (also called hybrid brows) combine the best features of microblading and ombre powder brows into one stunning technique.
                 </p>
-                <p className="mb-4">
+                <p className="text-muted-foreground mb-4">
                   The front of the brow features delicate microblading hair strokes for a soft, natural, feathered appearance. The body and tail of the brow are filled with powder shading, adding depth, dimension, and a polished finish.
                 </p>
-                <p className="mb-0">
+                <p className="text-muted-foreground">
                   This combination creates the most realistic, multidimensional brow result possible. At A Pretty Girl Matter in Raleigh, NC, Victoria expertly blends these techniques to create brows that look naturally full and beautifully defined.
                 </p>
               </div>
-              <div className="col-lg-6">
-                <div 
-                  className="rounded-4 shadow-lg"
-                  style={{ 
-                    height: '400px', 
-                    background: 'linear-gradient(135deg, rgba(173, 98, 105, 0.2), rgba(139, 74, 82, 0.2))',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <div className="text-center">
-                    <i className="fas fa-magic fa-5x mb-3" style={{ color: '#AD6269' }}></i>
-                    <p className="fw-bold" style={{ color: '#AD6269' }}>Before & After Gallery</p>
-                  </div>
+              <div className="h-80 md:h-96 bg-gradient-to-br from-[#AD6269]/20 to-[#8B4A52]/20 rounded-2xl shadow-lg flex items-center justify-center">
+                <div className="text-center">
+                  <Sparkles className="w-20 h-20 text-[#AD6269] mx-auto mb-4" />
+                  <p className="font-bold text-[#AD6269]">Before & After Gallery</p>
                 </div>
               </div>
             </div>
@@ -127,291 +185,169 @@ export default function ComboBrowsPage() {
         </section>
 
         {/* How It Works */}
-        <section className="py-5" style={{ backgroundColor: 'rgba(173, 98, 105, 0.1)' }}>
-          <div className="container">
-            <h2 className="h3 fw-bold text-center mb-5" style={{ color: '#AD6269' }}>
+        <section className="py-12 md:py-16 bg-[#AD6269]/10">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
               How Combo Brows Work
             </h2>
-            <div className="row g-4">
-              <div className="col-md-4">
-                <div className="card h-100 border-0 shadow-sm">
-                  <div className="card-body p-4 text-center">
-                    <div className="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style={{ width: '60px', height: '60px', backgroundColor: '#AD6269', color: 'white' }}>
-                      <span className="h4 fw-bold mb-0">1</span>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {howItWorks.map((step, index) => (
+                <Card key={index} className="h-full border-0 shadow-sm">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-14 h-14 rounded-full bg-[#AD6269] text-white flex items-center justify-center mx-auto mb-4">
+                      <span className="text-xl font-bold">{step.number}</span>
                     </div>
-                    <h3 className="h5 fw-bold">Microblading at the Front</h3>
-                    <p className="text-muted mb-0">
-                      Delicate hair strokes are created at the inner portion of the brow for a soft, natural, feathered start.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="card h-100 border-0 shadow-sm">
-                  <div className="card-body p-4 text-center">
-                    <div className="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style={{ width: '60px', height: '60px', backgroundColor: '#AD6269', color: 'white' }}>
-                      <span className="h4 fw-bold mb-0">2</span>
-                    </div>
-                    <h3 className="h5 fw-bold">Powder Shading in Body</h3>
-                    <p className="text-muted mb-0">
-                      Soft powder shading is applied through the body and tail, adding depth and a polished, filled-in look.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="card h-100 border-0 shadow-sm">
-                  <div className="card-body p-4 text-center">
-                    <div className="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style={{ width: '60px', height: '60px', backgroundColor: '#AD6269', color: 'white' }}>
-                      <span className="h4 fw-bold mb-0">3</span>
-                    </div>
-                    <h3 className="h5 fw-bold">Seamless Blend</h3>
-                    <p className="text-muted mb-0">
-                      The two techniques are expertly blended together for a seamless, natural, dimensional result.
-                    </p>
-                  </div>
-                </div>
-              </div>
+                    <h3 className="text-lg font-bold mb-2">{step.title}</h3>
+                    <p className="text-muted-foreground text-sm">{step.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </section>
 
         {/* Benefits */}
-        <section className="py-5">
-          <div className="container">
-            <h2 className="h3 fw-bold text-center mb-5" style={{ color: '#AD6269' }}>
+        <section className="py-12 md:py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
               Benefits of Combo Brows
             </h2>
-            <div className="row g-4">
-              <div className="col-md-6 col-lg-4">
-                <div className="card h-100 border-0 shadow-sm">
-                  <div className="card-body p-4 text-center">
-                    <i className="fas fa-layer-group fa-2x mb-3" style={{ color: '#AD6269' }}></i>
-                    <h3 className="h5 fw-bold">Most Dimensional Look</h3>
-                    <p className="text-muted mb-0">
-                      Combines texture and depth for the most realistic, multidimensional brow result.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6 col-lg-4">
-                <div className="card h-100 border-0 shadow-sm">
-                  <div className="card-body p-4 text-center">
-                    <i className="fas fa-tint fa-2x mb-3" style={{ color: '#AD6269' }}></i>
-                    <h3 className="h5 fw-bold">Works on All Skin Types</h3>
-                    <p className="text-muted mb-0">
-                      The powder shading component makes combo brows suitable for oily skin types too.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6 col-lg-4">
-                <div className="card h-100 border-0 shadow-sm">
-                  <div className="card-body p-4 text-center">
-                    <i className="fas fa-calendar-check fa-2x mb-3" style={{ color: '#AD6269' }}></i>
-                    <h3 className="h5 fw-bold">Longer Lasting</h3>
-                    <p className="text-muted mb-0">
-                      The powder portion lasts longer than microblading alone, extending your results.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6 col-lg-4">
-                <div className="card h-100 border-0 shadow-sm">
-                  <div className="card-body p-4 text-center">
-                    <i className="fas fa-feather fa-2x mb-3" style={{ color: '#AD6269' }}></i>
-                    <h3 className="h5 fw-bold">Natural Front</h3>
-                    <p className="text-muted mb-0">
-                      Hair strokes at the front create a soft, natural start that mimics real brow hairs.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6 col-lg-4">
-                <div className="card h-100 border-0 shadow-sm">
-                  <div className="card-body p-4 text-center">
-                    <i className="fas fa-fill-drip fa-2x mb-3" style={{ color: '#AD6269' }}></i>
-                    <h3 className="h5 fw-bold">Fuller Appearance</h3>
-                    <p className="text-muted mb-0">
-                      The shading adds density and fullness that microblading alone can't achieve.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6 col-lg-4">
-                <div className="card h-100 border-0 shadow-sm">
-                  <div className="card-body p-4 text-center">
-                    <i className="fas fa-sliders-h fa-2x mb-3" style={{ color: '#AD6269' }}></i>
-                    <h3 className="h5 fw-bold">Customizable</h3>
-                    <p className="text-muted mb-0">
-                      Adjust the ratio of strokes to shading based on your preferences and brow goals.
-                    </p>
-                  </div>
-                </div>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {benefits.map((benefit, index) => (
+                <Card key={index} className="h-full border-0 shadow-sm">
+                  <CardContent className="p-6 text-center">
+                    <benefit.icon className="w-10 h-10 text-[#AD6269] mx-auto mb-4" />
+                    <h3 className="text-lg font-bold mb-2">{benefit.title}</h3>
+                    <p className="text-muted-foreground text-sm">{benefit.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* Who It's For */}
-        <section className="py-5" style={{ backgroundColor: 'rgba(173, 98, 105, 0.1)' }}>
-          <div className="container">
-            <div className="row align-items-center g-5">
-              <div className="col-lg-6 order-lg-2">
-                <h2 className="h3 fw-bold mb-4" style={{ color: '#AD6269' }}>
+        {/* Who Should Get Combo Brows */}
+        <section className="py-12 md:py-16 bg-[#AD6269]/10">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div className="order-2 lg:order-1 h-80 md:h-96 bg-gradient-to-br from-[#AD6269]/20 to-[#8B4A52]/20 rounded-2xl shadow-lg flex items-center justify-center">
+                <div className="text-center">
+                  <UserCheck className="w-20 h-20 text-[#AD6269] mx-auto mb-4" />
+                  <p className="font-bold text-[#AD6269]">The Gold Standard</p>
+                </div>
+              </div>
+              <div className="order-1 lg:order-2">
+                <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
                   Who Should Get Combo Brows?
                 </h2>
-                <p className="mb-4">
-                  Combo brows are often considered the "gold standard" of permanent brows because they work for almost everyone. They're especially ideal for:
+                <p className="text-muted-foreground mb-6">
+                  Combo brows are often considered the "gold standard" of permanent brows because they work for almost everyone. They are especially ideal for:
                 </p>
-                <ul className="list-unstyled">
-                  <li className="mb-3 d-flex align-items-start">
-                    <i className="fas fa-check-circle me-3 mt-1" style={{ color: '#AD6269' }}></i>
-                    <span><strong>Those who want the best of both</strong> - Natural strokes AND defined fullness</span>
-                  </li>
-                  <li className="mb-3 d-flex align-items-start">
-                    <i className="fas fa-check-circle me-3 mt-1" style={{ color: '#AD6269' }}></i>
-                    <span><strong>Oily skin types</strong> - The powder component holds up better on oily skin</span>
-                  </li>
-                  <li className="mb-3 d-flex align-items-start">
-                    <i className="fas fa-check-circle me-3 mt-1" style={{ color: '#AD6269' }}></i>
-                    <span><strong>Sparse or thin brows</strong> - Creates maximum fullness and definition</span>
-                  </li>
-                  <li className="mb-3 d-flex align-items-start">
-                    <i className="fas fa-check-circle me-3 mt-1" style={{ color: '#AD6269' }}></i>
-                    <span><strong>Those who fill in brows daily</strong> - Replicate your makeup look permanently</span>
-                  </li>
-                  <li className="mb-0 d-flex align-items-start">
-                    <i className="fas fa-check-circle me-3 mt-1" style={{ color: '#AD6269' }}></i>
-                    <span><strong>Anyone wanting long-lasting results</strong> - Combo brows tend to last longer</span>
-                  </li>
+                <ul className="space-y-4">
+                  {candidates.map((candidate, index) => (
+                    <li key={index} className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-[#AD6269] mt-0.5 shrink-0" />
+                      <span>
+                        <strong>{candidate.title}</strong> — {candidate.description}
+                      </span>
+                    </li>
+                  ))}
                 </ul>
-              </div>
-              <div className="col-lg-6 order-lg-1">
-                <div 
-                  className="rounded-4 shadow-lg"
-                  style={{ 
-                    height: '400px', 
-                    background: 'linear-gradient(135deg, rgba(173, 98, 105, 0.2), rgba(139, 74, 82, 0.2))',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <div className="text-center">
-                    <i className="fas fa-user-check fa-5x mb-3" style={{ color: '#AD6269' }}></i>
-                    <p className="fw-bold" style={{ color: '#AD6269' }}>The Gold Standard</p>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
         </section>
 
         {/* FAQ Section */}
-        <section className="py-5">
-          <div className="container">
-            <h2 className="h3 fw-bold text-center mb-5" style={{ color: '#AD6269' }}>
+        <section className="py-12 md:py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
               Frequently Asked Questions About Combo Brows
             </h2>
-            <div className="row justify-content-center">
-              <div className="col-lg-8">
-                <div className="accordion" id="comboFAQ">
-                  {faqs.map((faq, index) => (
-                    <div key={index} className="accordion-item border-0 shadow-sm mb-3">
-                      <h3 className="accordion-header">
-                        <button 
-                          className={`accordion-button ${index !== 0 ? 'collapsed' : ''} fw-semibold`}
-                          type="button" 
-                          data-bs-toggle="collapse" 
-                          data-bs-target={`#faq${index}`}
-                        >
-                          {faq.question}
-                        </button>
-                      </h3>
-                      <div 
-                        id={`faq${index}`} 
-                        className={`accordion-collapse collapse ${index === 0 ? 'show' : ''}`}
-                        data-bs-parent="#comboFAQ"
-                      >
-                        <div className="accordion-body text-muted">
-                          {faq.answer}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <div className="max-w-3xl mx-auto">
+              <Accordion type="single" collapsible className="space-y-3">
+                {faqs.map((faq, index) => (
+                  <AccordionItem key={index} value={`item-${index}`} className="border-0 shadow-sm bg-white rounded-lg px-6">
+                    <AccordionTrigger className="text-left font-semibold hover:no-underline py-4">
+                      {faq.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground pb-4">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </div>
           </div>
         </section>
 
         {/* CTA Section */}
-        <section className="py-5" style={{ background: 'linear-gradient(135deg, #AD6269, #8B4A52)', color: 'white' }}>
-          <div className="container">
-            <div className="row justify-content-center">
-              <div className="col-lg-8 text-center">
-                <h2 className="h3 fw-bold mb-4">
-                  Ready for the Best Brows of Your Life?
-                </h2>
-                <p className="lead mb-4">
-                  Book your free consultation today and discover why combo brows are the most popular choice for natural, dimensional, long-lasting results.
-                </p>
-                <div className="d-flex flex-wrap justify-content-center gap-3">
-                  <Link 
-                    href="/book-now-custom"
-                    className="btn btn-light btn-lg rounded-pill px-5"
-                    style={{ color: '#AD6269' }}
-                  >
-                    <i className="fas fa-calendar-plus me-2"></i>
+        <section className="py-12 md:py-16 bg-gradient-to-br from-[#AD6269] to-[#8B4A52] text-white">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto text-center">
+              <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                Ready for the Best Brows of Your Life?
+              </h2>
+              <p className="text-lg mb-6 text-white/90">
+                Book your free consultation today and discover why combo brows are the most popular choice for natural, dimensional, long-lasting results.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button
+                  asChild
+                  size="lg"
+                  variant="secondary"
+                  className="rounded-full px-8 bg-white text-[#AD6269] hover:bg-white/90"
+                >
+                  <Link href="/book-now-custom">
+                    <CalendarPlus className="w-5 h-5 mr-2" />
                     Book Consultation
                   </Link>
-                  <Link 
-                    href="/contact"
-                    className="btn btn-outline-light btn-lg rounded-pill px-5"
-                  >
-                    <i className="fas fa-phone me-2"></i>
+                </Button>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full px-8 border-white text-white hover:bg-white/10"
+                >
+                  <Link href="/contact">
+                    <Phone className="w-5 h-5 mr-2" />
                     Contact Us
                   </Link>
-                </div>
-                <p className="mt-4 mb-0">
-                  <i className="fas fa-map-marker-alt me-2"></i>
-                  Serving Raleigh, Cary, Durham, Chapel Hill & Wake Forest, NC
-                </p>
+                </Button>
               </div>
+              <p className="mt-6 text-white/80 flex items-center justify-center gap-2">
+                <MapPin className="w-4 h-4" />
+                Serving Raleigh, Cary, Durham, Chapel Hill & Wake Forest, NC
+              </p>
             </div>
           </div>
         </section>
 
         {/* Related Services */}
-        <section className="py-5">
-          <div className="container">
-            <h2 className="h4 fw-bold text-center mb-4" style={{ color: '#AD6269' }}>
+        <section className="py-12 md:py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-xl md:text-2xl font-bold text-center mb-8 text-[#AD6269]">
               Related Services You May Like
             </h2>
-            <div className="row g-4 justify-content-center">
-              <div className="col-md-4">
-                <Link href="/services/microblading" className="text-decoration-none">
-                  <div className="card h-100 border-0 shadow-sm">
-                    <div className="card-body p-4 text-center">
-                      <i className="fas fa-eye fa-2x mb-3" style={{ color: '#AD6269' }}></i>
-                      <h3 className="h5 fw-bold text-dark">Microblading</h3>
-                      <p className="text-muted mb-0">Natural hair-like strokes</p>
-                    </div>
-                  </div>
-                </Link>
-              </div>
-              <div className="col-md-4">
-                <Link href="/services/ombre-brows" className="text-decoration-none">
-                  <div className="card h-100 border-0 shadow-sm">
-                    <div className="card-body p-4 text-center">
-                      <i className="fas fa-spa fa-2x mb-3" style={{ color: '#AD6269' }}></i>
-                      <h3 className="h5 fw-bold text-dark">Ombré Powder Brows</h3>
-                      <p className="text-muted mb-0">Soft powdered effect</p>
-                    </div>
-                  </div>
-                </Link>
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
+              <Link href="/services/microblading" className="group">
+                <Card className="h-full border-0 shadow-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-6 text-center">
+                    <Eye className="w-8 h-8 text-[#AD6269] mx-auto mb-3" />
+                    <h3 className="font-bold text-foreground group-hover:text-[#AD6269] transition-colors">Microblading</h3>
+                    <p className="text-sm text-muted-foreground">Natural hair-like strokes</p>
+                  </CardContent>
+                </Card>
+              </Link>
+              <Link href="/services/ombre-brows" className="group">
+                <Card className="h-full border-0 shadow-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-6 text-center">
+                    <Sparkles className="w-8 h-8 text-[#AD6269] mx-auto mb-3" />
+                    <h3 className="font-bold text-foreground group-hover:text-[#AD6269] transition-colors">Ombre Powder Brows</h3>
+                    <p className="text-sm text-muted-foreground">Soft powdered effect</p>
+                  </CardContent>
+                </Card>
+              </Link>
             </div>
           </div>
         </section>

@@ -147,6 +147,7 @@ const navigationGroups: NavGroup[] = [
     label: 'Integrations',
     icon: Globe,
     items: [
+      { id: 'integrations', label: 'Calendar Integrations', icon: Calendar },
       { id: 'gohighlevel', label: 'GoHighLevel', icon: Zap },
       { id: 'gohighlevel-mcp', label: 'GHL MCP', icon: Zap },
       { id: 'ghl-migration', label: 'GHL Migration', icon: ArrowLeftRight },
@@ -154,6 +155,8 @@ const navigationGroups: NavGroup[] = [
       { id: 'boldsign', label: 'BoldSign Forms', icon: PenTool },
       { id: 'canva', label: 'Canva', icon: Palette },
       { id: 'alexa', label: 'Alexa Skills', icon: Mic },
+      { id: 'openclaw', label: 'OpenClaw AI', icon: Bot },
+      { id: 'openclaw-wizard', label: 'AI Wizards', icon: Bot },
     ],
   },
   {

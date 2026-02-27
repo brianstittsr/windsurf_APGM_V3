@@ -1,5 +1,27 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Terms of Service - A Pretty Girl Matter Permanent Makeup',
+  description: 'Terms of service for A Pretty Girl Matter permanent makeup services in Raleigh, NC. Legal terms and conditions for PMU services.',
+  keywords: [
+    'terms of service permanent makeup Raleigh NC',
+    'PMU artist terms conditions Raleigh',
+    'permanent makeup legal terms NC',
+    'A Pretty Girl Matter terms service',
+    'cosmetic tattooing terms conditions'
+  ],
+  alternates: {
+    canonical: '/terms-of-service'
+  },
+  openGraph: {
+    title: 'Terms of Service - A Pretty Girl Matter',
+    description: 'Terms of service for A Pretty Girl Matter permanent makeup services. Legal terms and conditions.',
+    url: '/terms-of-service',
+    type: 'website'
+  }
+};
 
 export default function TermsOfService() {
   return (

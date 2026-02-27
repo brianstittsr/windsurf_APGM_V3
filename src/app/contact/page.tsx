@@ -16,8 +16,6 @@ export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
-    service: '',
     message: ''
   });
   const [loading, setLoading] = useState(false);
@@ -32,8 +30,6 @@ export default function ContactPage() {
       setFormData({
         name: '',
         email: '',
-        phone: '',
-        service: '',
         message: ''
       });
     }
@@ -77,35 +73,34 @@ export default function ContactPage() {
     setError(null);
     setSuccess(false);
     
-    // Direct form submission to FormSubmit (guaranteed to work)
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = 'https://formsubmit.co/victoria@aprettygirlmatter.com';
-    form.style.display = 'none';
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          message: formData.message
+        }),
+      });
 
-    // Add form fields
-    const fields = [
-      { name: 'name', value: formData.name },
-      { name: 'email', value: formData.email },
-      { name: 'phone', value: formData.phone || 'Not provided' },
-      { name: 'service', value: formData.service || 'Not specified' },
-      { name: 'message', value: formData.message },
-      { name: '_subject', value: `New Contact Form Submission from ${formData.name}` },
-      { name: '_cc', value: 'brianstittsr@gmail.com' },
-      { name: '_template', value: 'table' },
-      { name: '_next', value: window.location.origin + '/contact?success=true' }
-    ];
-
-    fields.forEach(field => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = field.name;
-      input.value = field.value;
-      form.appendChild(input);
-    });
-
-    document.body.appendChild(form);
-    form.submit();
+      if (response.ok) {
+        alert('Message sent successfully!');
+        setFormData({
+          name: '',
+          email: '',
+          message: ''
+        });
+      } else {
+        throw new Error('Failed to send message');
+      }
+    } catch (error) {
+      alert('Error sending message. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -196,43 +191,6 @@ export default function ContactPage() {
                             />
                             <label htmlFor="email" className="fw-semibold" style={{ color: '#AD6269' }}>
                               <i className="fas fa-envelope me-2"></i>Email Address *
-                            </label>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="form-floating">
-                            <input
-                              type="tel"
-                              className="form-control form-control-lg border-2"
-                              id="phone"
-                              name="phone"
-                              value={formData.phone}
-                              onChange={handleInputChange}
-                              placeholder="Phone Number"
-                              style={{ borderColor: '#AD6269' }}
-                            />
-                            <label htmlFor="phone" className="fw-semibold" style={{ color: '#AD6269' }}>
-                              <i className="fas fa-phone me-2"></i>Phone Number
-                            </label>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="form-floating">
-                            <select
-                              className="form-select form-select-lg border-2"
-                              id="service"
-                              name="service"
-                              value={formData.service}
-                              onChange={handleInputChange}
-                              style={{ borderColor: '#AD6269' }}
-                            >
-                              <option value="">Select a service...</option>
-                              {services.map((service, index) => (
-                                <option key={index} value={service}>{service}</option>
-                              ))}
-                            </select>
-                            <label htmlFor="service" className="fw-semibold" style={{ color: '#AD6269' }}>
-                              <i className="fas fa-palette me-2"></i>Service of Interest
                             </label>
                           </div>
                         </div>
@@ -481,10 +439,23 @@ export default function ContactPage() {
                   <div className="accordion-item border-0 shadow-sm mb-3">
                     <h3 className="accordion-header">
                       <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
-                        How do you choose a shape?
+                        Will I still have to keep up with waxing, tweezing, threading, etc?
                       </button>
                     </h3>
                     <div id="faq6" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
+                      <div className="accordion-body paragraph-text text-start">
+                        Yes, hair will continue to grow on your brows as it did before your brow procedure. Whatever maintenance you regularly do, you can continue once your brows have healed.
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="accordion-item border-0 shadow-sm mb-3">
+                    <h3 className="accordion-header">
+                      <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                        How do you choose a shape?
+                      </button>
+                    </h3>
+                    <div id="faq7" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
                       <div className="accordion-body paragraph-text text-start">
                         We will map your brows out according to your face shape and proportions. We&apos;ll talk about your preferences and I&apos;ll draw a shape that I think is a good fit. We can adjust the shape until it looks just right for you.
                       </div>
@@ -493,11 +464,11 @@ export default function ContactPage() {
                   
                   <div className="accordion-item border-0 shadow-sm mb-3">
                     <h3 className="accordion-header">
-                      <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                      <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq8">
                         How do you choose the right brow color?
                       </button>
                     </h3>
-                    <div id="faq7" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
+                    <div id="faq8" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
                       <div className="accordion-body paragraph-text text-start">
                         We will select the perfect pigment for your brows based on your current brow hair color, hair color, skin tone, and desired results. You will always get to approve the color before beginning! Keep in mind, your brows will usually heal a bit lighter than they look immediately after the procedure.
                       </div>
@@ -506,11 +477,11 @@ export default function ContactPage() {
                   
                   <div className="accordion-item border-0 shadow-sm mb-3">
                     <h3 className="accordion-header">
-                      <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq8">
+                      <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq9">
                         Can I have this procedure done while I&apos;m pregnant?
                       </button>
                     </h3>
-                    <div id="faq8" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
+                    <div id="faq9" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
                       <div className="accordion-body paragraph-text text-start">
                         You may not have any permanent makeup done while you are pregnant or breastfeeding.
                       </div>
@@ -519,11 +490,11 @@ export default function ContactPage() {
                   
                   <div className="accordion-item border-0 shadow-sm mb-3">
                     <h3 className="accordion-header">
-                      <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq9">
+                      <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq10">
                         I get botox regularly, can I still have this done?
                       </button>
                     </h3>
-                    <div id="faq9" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
+                    <div id="faq10" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
                       <div className="accordion-body paragraph-text text-start">
                         Yes, you can get permanent makeup and botox! You&apos;ll just need to space out the appointments. A month before/after each is ideal.
                       </div>
@@ -532,11 +503,11 @@ export default function ContactPage() {
                   
                   <div className="accordion-item border-0 shadow-sm">
                     <h3 className="accordion-header">
-                      <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq10">
+                      <button className="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#faq11">
                         Will I still have to keep up with waxing, tweezing, threading, etc?
                       </button>
                     </h3>
-                    <div id="faq10" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
+                    <div id="faq11" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
                       <div className="accordion-body paragraph-text text-start">
                         Yes, hair will continue to grow on your brows as it did before your brow procedure. Whatever maintenance you regularly do, you can continue once your brows have healed.
                       </div>

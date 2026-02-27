@@ -1,5 +1,27 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy - A Pretty Girl Matter Permanent Makeup',
+  description: 'Privacy policy for A Pretty Girl Matter permanent makeup services in Raleigh, NC. Learn how we protect your personal and health information.',
+  keywords: [
+    'privacy policy permanent makeup Raleigh NC',
+    'HIPAA privacy policy PMU artist',
+    'personal information protection Raleigh NC',
+    'health information privacy policy',
+    'A Pretty Girl Matter privacy policy'
+  ],
+  alternates: {
+    canonical: '/privacy-policy'
+  },
+  openGraph: {
+    title: 'Privacy Policy - A Pretty Girl Matter',
+    description: 'Privacy policy for A Pretty Girl Matter permanent makeup services. Your privacy and health information protection.',
+    url: '/privacy-policy',
+    type: 'website'
+  }
+};
 
 export default function PrivacyPolicy() {
   return (

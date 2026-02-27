@@ -258,23 +258,7 @@ export default function ClientReviews() {
           </div>
         </div>
 
-        {/* CTA Section */}
-        <div className="text-center mt-16">
-          <div className="bg-[#AD6269] rounded-xl p-8 text-white mx-auto max-w-4xl">
-            <h3 className="main-heading font-bold text-white mb-4">
-              Book Now
-            </h3>
-            <p className="paragraph-text mb-6" style={{ color: 'white' }}>
-              Experience the confidence and convenience of permanent makeup. 
-              Book your free consultation today and start your transformation journey.
-            </p>
-            <div className="flex justify-center">
-              <Link href="/book-now-custom" className="inline-block bg-white text-[#AD6269] rounded-full px-8 py-3 font-semibold hover:bg-gray-100 transition-colors">
-                Book Now
-              </Link>
-            </div>
-          </div>
-        </div>
+        {/* CTA Section Removed */}
       </div>
     </section>
   );

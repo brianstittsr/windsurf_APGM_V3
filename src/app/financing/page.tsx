@@ -8,6 +8,28 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Financing Options - Permanent Makeup Raleigh NC',
+  description: 'Flexible financing options for permanent makeup services in Raleigh, NC. Payment plans available for microblading, lip blushing & eyeliner.',
+  keywords: [
+    'financing permanent makeup Raleigh NC',
+    'payment plans PMU services Raleigh',
+    'permanent makeup financing NC',
+    'microblading payment plans Raleigh',
+    'cosmetic tattooing financing options'
+  ],
+  alternates: {
+    canonical: '/financing'
+  },
+  openGraph: {
+    title: 'Financing Options - A Pretty Girl Matter',
+    description: 'Flexible financing options for permanent makeup services in Raleigh, NC. Make your PMU investment affordable.',
+    url: '/financing',
+    type: 'website'
+  }
+};
 
 export default function FinancingPage() {
   const [purchaseAmount, setPurchaseAmount] = useState('500');

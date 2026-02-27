@@ -1,6 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { StripeService } from '@/services/stripeService';
+import { toast } from 'sonner';
 import {
   useStripe,
   useElements,
@@ -10,9 +16,6 @@ import {
   CardCvcElement,
   PaymentElement,
 } from '@stripe/react-stripe-js';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
 import { CreditCard, Loader2, Lock, AlertTriangle, Info, Calendar, Heart, ExternalLink, CheckCircle } from 'lucide-react';
 
 interface UserProfile {
@@ -71,6 +74,7 @@ export default function MultiPaymentForm({
 }: MultiPaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
+  const router = useRouter();
   const [processing, setProcessing] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('card');
   const [clientSecret, setClientSecret] = useState<string>('');
@@ -133,6 +137,8 @@ export default function MultiPaymentForm({
     }));
   }, [userProfile, clientName, clientEmail]);
 
+  const stripeService = new StripeService();
+
   const createPaymentIntent = async (paymentMethodTypes: string[]) => {
     console.log('📡 Creating payment intent for methods:', paymentMethodTypes);
     console.log('📡 Payment amount (cents):', Math.round(currentPaymentAmount * 100));
@@ -146,51 +152,19 @@ export default function MultiPaymentForm({
       
       console.log('📡 Request body:', JSON.stringify(requestBody));
       
-      const response = await fetch('/api/create-payment-intent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
+      const response = await stripeService.createPaymentIntent(requestBody);
 
-      console.log('📡 API Response status:', response.status);
-      console.log('📡 API Response headers:', Object.fromEntries(response.headers.entries()));
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ API Error Response:', errorText);
-        
-        // Try to parse error as JSON for more details
-        let errorDetails = errorText;
-        try {
-          const errorJson = JSON.parse(errorText);
-          errorDetails = errorJson.error || errorJson.message || errorText;
-          if (errorJson.details) {
-            console.error('❌ Error details:', errorJson.details);
-          }
-        } catch (parseError) {
-          console.error('❌ Could not parse error response as JSON');
-        }
-        
-        throw new Error(`Payment session creation failed: ${response.status} - ${errorDetails}`);
-      }
-
-      const responseData = await response.json();
-      console.log('📡 API Response data:', responseData);
+      console.log('📡 API Response data:', response);
       
-      if (responseData.error) {
-        console.error('❌ API returned error:', responseData.error);
-        if (responseData.details) {
-          console.error('❌ Error details:', responseData.details);
-        }
-        throw new Error(responseData.error);
+      if (response.error) {
+        console.error('❌ API returned error:', response.error);
+        throw new Error(response.error);
       }
       
-      const { client_secret, payment_intent_id } = responseData;
+      const { client_secret, payment_intent_id } = response;
 
       if (!client_secret) {
-        console.error('❌ No client_secret in response:', responseData);
+        console.error('❌ No client_secret in response:', response);
         throw new Error('Failed to create payment intent - no client_secret returned');
       }
 
@@ -634,6 +608,33 @@ export default function MultiPaymentForm({
     );
   }
 
+  const handleRedirect = async () => {
+    if (!amount || isNaN(Number(amount))) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+
+    setProcessing(true);
+    try {
+      const stripeService = new StripeService();
+      const { clientSecret, paymentId } = await stripeService.createPaymentIntent({
+        amount: Math.round(Number(amount) * 100),
+        description: 'Custom payment'
+      });
+      
+      // Store payment ID in session storage for retrieval
+      sessionStorage.setItem('currentPaymentId', paymentId);
+      
+      // Redirect to payment form with client secret
+      router.push(`/payment?client_secret=${encodeURIComponent(clientSecret || '')}`);
+    } catch (error) {
+      console.error('Payment initialization error:', error);
+      toast.error('Payment failed to initialize');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Payment Method Selection */}
@@ -978,7 +979,7 @@ export default function MultiPaymentForm({
                   onChange={(e) => setBillingAddress(prev => ({ ...prev, postal_code: e.target.value }))}
                   placeholder="12345"
                   required
-                  className="h-11 w-32"
+                  className="h-11"
                 />
               </div>
             </div>
@@ -1250,6 +1251,21 @@ export default function MultiPaymentForm({
           `Continue with Cherry - Full Payment Required`
         ) : (
           `Pay $${currentPaymentAmount.toFixed(2)}`
+        )}
+      </Button>
+
+      <Button
+        onClick={handleRedirect}
+        disabled={processing || loading}
+        className="w-full py-6 text-lg bg-[#AD6269] hover:bg-[#9d5860] gap-2"
+      >
+        {processing || loading ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            Processing...
+          </>
+        ) : (
+          `Redirect to Payment Form`
         )}
       </Button>
 

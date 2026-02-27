@@ -686,76 +686,6 @@ export default function ArtistAvailabilityManager() {
             />
           </div>
           
-          {/* Google Calendar Sync Status */}
-          <div className="space-y-2 pt-2">
-            <Label className="text-sm font-medium text-gray-700">Calendar Sync</Label>
-            <div className="flex items-center gap-3">
-              <div className="flex-1 flex items-center gap-2">
-                <div className={`h-3 w-3 rounded-full ${googleCalendarConnected ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                <span className="text-sm">
-                  {googleCalendarConnected ? 'Connected to Google Calendar' : 'Not connected'}
-                </span>
-              </div>
-              {lastSynced && (
-                <span className="text-xs text-gray-500">
-                  Last synced: {lastSynced.toLocaleString()}
-                </span>
-              )}
-            </div>
-            
-            <div className="flex flex-wrap gap-3 pt-2">
-              <Button 
-                variant="outline" 
-                asChild 
-                className="border-gray-200 hover:bg-gray-50"
-              >
-                <a href={`/api/auth/google-calendar?state=${selectedArtist}`}>
-                  <i className="fab fa-google mr-2 text-red-500"></i>
-                  {googleCalendarConnected ? 'Reconnect Google Calendar' : 'Connect to Google Calendar'}
-                </a>
-              </Button>
-              
-              {googleCalendarConnected && (
-                <Button
-                  variant="outline"
-                  onClick={handleGoogleCalendarSync}
-                  disabled={syncStatus === 'syncing'}
-                  className="border-gray-200 hover:bg-gray-50"
-                >
-                  {syncStatus === 'syncing' ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Syncing...
-                    </>
-                  ) : syncStatus === 'success' ? (
-                    <>
-                      <Check className="h-4 w-4 mr-2 text-green-500" />
-                      Sync Successful
-                    </>
-                  ) : syncStatus === 'error' ? (
-                    <>
-                      <AlertTriangle className="h-4 w-4 mr-2 text-red-500" />
-                      Sync Failed
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Sync Now
-                    </>
-                  )}
-                </Button>
-              )}
-              
-              <Button 
-                variant="outline"
-                className="border-gray-200 hover:bg-gray-50"
-                onClick={() => setShowOutlookModal(true)}
-              >
-                <i className="fab fa-microsoft mr-2 text-blue-500"></i>
-                Connect to Outlook Calendar
-              </Button>
-            </div>
-          </div>
           <Button 
             variant="outline" 
             onClick={() => setShowChat(!showChat)}
@@ -764,6 +694,12 @@ export default function ArtistAvailabilityManager() {
             <Bot className="h-4 w-4 mr-2" />
             {showChat ? 'Hide AI Assistant' : 'Use AI Assistant'}
           </Button>
+          
+          <div className="pt-2 border-t border-gray-200">
+            <p className="text-sm text-gray-600">
+              <strong>Note:</strong> Calendar integrations have been moved to the <a href="/dashboard?tab=integrations" className="text-[#AD6269] hover:underline">Integrations</a> section.
+            </p>
+          </div>
         </CardContent>
       </Card>
 

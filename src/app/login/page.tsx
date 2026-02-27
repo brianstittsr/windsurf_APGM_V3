@@ -11,6 +11,28 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { auth, isFirebaseConfigured } from '@/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Login - A Pretty Girl Matter Permanent Makeup',
+  description: 'Login to your A Pretty Girl Matter account for permanent makeup services in Raleigh, NC. Access your consultations and appointments.',
+  keywords: [
+    'login permanent makeup Raleigh NC',
+    'client login PMU services Raleigh',
+    'A Pretty Girl Matter account login',
+    'permanent makeup client portal',
+    'login consultation booking Raleigh'
+  ],
+  alternates: {
+    canonical: '/login'
+  },
+  openGraph: {
+    title: 'Login - A Pretty Girl Matter',
+    description: 'Login to your A Pretty Girl Matter account for permanent makeup services. Access consultations and manage appointments.',
+    url: '/login',
+    type: 'website'
+  }
+};
 
 function LoginForm() {
   const router = useRouter();

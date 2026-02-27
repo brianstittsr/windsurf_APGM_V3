@@ -262,17 +262,7 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
                     "{currentSlide.reviewText}"
                   </p>
                 </div>
-                <div className="flex justify-center gap-4 mt-8 fade-in-3">
-                  <Button 
-                    asChild 
-                    size="lg" 
-                    className="rounded-full px-8 text-base font-semibold bg-[#AD6269] hover:bg-[#9d5860]"
-                  >
-                    <Link href={currentSlide.buttonLink}>
-                      {currentSlide.buttonText}
-                    </Link>
-                  </Button>
-                </div>
+                <div className="flex justify-center gap-4 mt-8 fade-in-3" />
               </div>
             ) : currentSlide.styleType === 'certification' ? (
               /* Certification Style */
@@ -307,17 +297,7 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
                     {currentSlide.description}
                   </p>
                 )}
-                <div className="flex justify-center gap-4 mt-8 fade-in-3">
-                  <Button 
-                    asChild 
-                    size="lg" 
-                    className="rounded-full px-8 text-base font-semibold bg-[#AD6269] hover:bg-[#9d5860]"
-                  >
-                    <Link href={currentSlide.buttonLink}>
-                      {currentSlide.buttonText}
-                    </Link>
-                  </Button>
-                </div>
+                <div className="flex justify-center gap-4 mt-8 fade-in-3" />
               </div>
             ) : (
               /* Standard Style */
@@ -343,23 +323,7 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
                   )}
                 </div>
 
-                <div className="flex justify-center gap-4 fade-in-3">
-                  <Button 
-                    asChild 
-                    size="lg" 
-                    className={`rounded-full px-8 text-base font-semibold ${
-                      currentSlide.buttonStyle === 'secondary' 
-                        ? 'bg-white text-gray-900 hover:bg-gray-100' 
-                        : currentSlide.buttonStyle === 'outline'
-                        ? 'bg-transparent border-2 border-white text-white hover:bg-white/10'
-                        : 'bg-[#AD6269] hover:bg-[#9d5860]'
-                    }`}
-                  >
-                    <Link href={currentSlide.buttonLink}>
-                      {currentSlide.buttonText}
-                    </Link>
-                  </Button>
-                </div>
+                <div className="flex justify-center gap-4 fade-in-3" />
               </>
             )}
           </div>

@@ -114,11 +114,6 @@ export default function PermanentMakeupForYou() {
             <p className="paragraph-text text-gray-600 mb-6">
               Book now to complete your free online consultation, and let&apos;s explore the best options tailored to your unique features and lifestyle.
             </p>
-            <Button asChild size="lg" className="rounded-full px-8 bg-[#AD6269] hover:bg-[#9d5860] text-base font-semibold">
-              <Link href="/book-now-custom">
-                Book Now
-              </Link>
-            </Button>
           </div>
         </div>
       </div>
