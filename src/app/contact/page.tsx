@@ -378,7 +378,7 @@ export default function ContactPage() {
                       </button>
                     </h3>
                     <div id="faq1" className="accordion-collapse collapse show" data-bs-parent="#contactFAQ" aria-labelledby="heading1">
-                      <div className="accordion-body paragraph-text text-start">
+                      <div className="accordion-body text-start">
                         Permanent brows are great for anyone who has no brows, thinning brows or is simply tired of filling in their brows every day. Please refer to the list on the right for contraindications (if viewing on mobile, it will be at the bottom of the page).
                       </div>
                     </div>
@@ -391,7 +391,7 @@ export default function ContactPage() {
                       </button>
                     </h3>
                     <div id="faq2" className="accordion-collapse collapse" data-bs-parent="#contactFAQ" aria-labelledby="heading2">
-                      <div className="accordion-body paragraph-text text-start">
+                      <div className="accordion-body text-start">
                         Appointments average around two and a half hours. This allows time for paperwork, consultation, brow mapping, pigment selection and the procedure itself. They may be shorter or longer depending on the current state of your brows and your desired look. However long it takes to have you leaving happy!
                       </div>
                     </div>
@@ -404,7 +404,7 @@ export default function ContactPage() {
                       </button>
                     </h3>
                     <div id="faq3" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
-                      <div className="accordion-body paragraph-text text-start">
+                      <div className="accordion-body text-start">
                         Each client&apos;s pain tolerance is different, however, the majority of my clients report that the procedure is nowhere near as painful as they expected it to be. A LOT of clients are able to fall asleep and some even have told me it is relaxing! Numbing is provided during the procedure to keep pain at a minimum. This IS a form of tattooing, so discomfort is associated with the procedure, but the numbing agent does a good job minimizing it.
                       </div>
                     </div>
@@ -417,7 +417,7 @@ export default function ContactPage() {
                       </button>
                     </h3>
                     <div id="faq4" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
-                      <div className="accordion-body paragraph-text text-start">
+                      <div className="accordion-body text-start">
                         There is no immediate downtime after the procedure, though you will need to wash and put ointment on your brows for two weeks (check out the aftercare instructions here). Your brows will go through a few phases while healing. They tend to get darker and then lighter before settling into their true healed color. It is also common to have some flaking and itchiness while healing.
                       </div>
                     </div>
@@ -430,7 +430,7 @@ export default function ContactPage() {
                       </button>
                     </h3>
                     <div id="faq5" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
-                      <div className="accordion-body paragraph-text text-start">
+                      <div className="accordion-body text-start">
                         This is different for everyone. The pigment may never fade out completely but will get lighter over time. Your skin type, lifestyle and many other factors can affect how quickly your brows begin to fade. It is recommended to get touchups to maintain the color and shape over time. A year is standard, but I advise my clients to wait longer if their brows still look good. Some go 2 or 3 years before needing a touchup!
                       </div>
                     </div>
@@ -443,7 +443,7 @@ export default function ContactPage() {
                       </button>
                     </h3>
                     <div id="faq6" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
-                      <div className="accordion-body paragraph-text text-start">
+                      <div className="accordion-body text-start">
                         Yes, hair will continue to grow on your brows as it did before your brow procedure. Whatever maintenance you regularly do, you can continue once your brows have healed.
                       </div>
                     </div>
@@ -456,7 +456,7 @@ export default function ContactPage() {
                       </button>
                     </h3>
                     <div id="faq7" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
-                      <div className="accordion-body paragraph-text text-start">
+                      <div className="accordion-body text-start">
                         We will map your brows out according to your face shape and proportions. We&apos;ll talk about your preferences and I&apos;ll draw a shape that I think is a good fit. We can adjust the shape until it looks just right for you.
                       </div>
                     </div>
@@ -469,7 +469,7 @@ export default function ContactPage() {
                       </button>
                     </h3>
                     <div id="faq8" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
-                      <div className="accordion-body paragraph-text text-start">
+                      <div className="accordion-body text-start">
                         We will select the perfect pigment for your brows based on your current brow hair color, hair color, skin tone, and desired results. You will always get to approve the color before beginning! Keep in mind, your brows will usually heal a bit lighter than they look immediately after the procedure.
                       </div>
                     </div>
@@ -482,7 +482,7 @@ export default function ContactPage() {
                       </button>
                     </h3>
                     <div id="faq9" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
-                      <div className="accordion-body paragraph-text text-start">
+                      <div className="accordion-body text-start">
                         You may not have any permanent makeup done while you are pregnant or breastfeeding.
                       </div>
                     </div>
@@ -495,7 +495,7 @@ export default function ContactPage() {
                       </button>
                     </h3>
                     <div id="faq10" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
-                      <div className="accordion-body paragraph-text text-start">
+                      <div className="accordion-body text-start">
                         Yes, you can get permanent makeup and botox! You&apos;ll just need to space out the appointments. A month before/after each is ideal.
                       </div>
                     </div>
@@ -508,7 +508,7 @@ export default function ContactPage() {
                       </button>
                     </h3>
                     <div id="faq11" className="accordion-collapse collapse" data-bs-parent="#contactFAQ">
-                      <div className="accordion-body paragraph-text text-start">
+                      <div className="accordion-body text-start">
                         Yes, hair will continue to grow on your brows as it did before your brow procedure. Whatever maintenance you regularly do, you can continue once your brows have healed.
                       </div>
                     </div>
