@@ -1,7 +1,3 @@
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-
 export default function TheProcess() {
   const steps = [
     {
@@ -51,44 +47,31 @@ export default function TheProcess() {
           </p>
         </div>
 
-        {/* Process Steps - Carousel */}
-        <div className="max-w-4xl mx-auto">
-          <Carousel opts={{ align: 'start', loop: true }}>
-            <CarouselContent>
-              {steps.map((step, index) => (
-                <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
-                  <div className="bg-white border-0 shadow-custom rounded-custom p-4 h-full text-center flex flex-col">
-                    {/* Step Number */}
-                    <div className="mb-3">
-                      <div className="rounded-full flex items-center justify-center font-bold shadow-custom mx-auto w-12 h-12 text-xl bg-[#AD6269] text-white" style={{fontFamily: 'Playfair Display, serif'}}>
-                        {step.number}
-                      </div>
-                    </div>
+        {/* Process Steps - Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          {steps.map((step, index) => (
+            <div key={index} className="bg-white border-0 shadow-custom rounded-custom p-4 text-center flex flex-col">
+              {/* Step Number */}
+              <div className="mb-3">
+                <div className="rounded-full flex items-center justify-center font-bold shadow-custom mx-auto w-12 h-12 text-xl bg-[#AD6269] text-white" style={{fontFamily: 'Playfair Display, serif'}}>
+                  {step.number}
+                </div>
+              </div>
 
-                    {/* Step Image */}
-                    <div className="mb-3">
-                      <img
-                        src={`/images/theprocess/${step.image}`}
-                        alt={`${step.title} process`}
-                        className="w-full h-[180px] object-contain shadow-sm rounded-lg"
-                      />
-                    </div>
+              {/* Step Image */}
+              <div className="mb-3">
+                <img
+                  src={`/images/theprocess/${step.image}`}
+                  alt={`${step.title} process`}
+                  className="w-full h-[180px] object-contain shadow-sm rounded-lg"
+                />
+              </div>
 
-                    {/* Step Content */}
-                    <h3 className="text-base font-bold text-gray-900 mb-2">{step.title}</h3>
-                    <p className="text-sm text-gray-700 leading-relaxed mb-3 flex-grow">{step.description}</p>
-                    
-                    {/* Button for Book Now step */}
-                    {index === 0 && (
-                      <div className="flex flex-col gap-2 mt-auto" />
-                    )}
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="left-0" />
-            <CarouselNext className="right-0" />
-          </Carousel>
+              {/* Step Content */}
+              <h3 className="text-base font-bold text-gray-900 mb-2">{step.title}</h3>
+              <p className="text-sm text-gray-700 leading-relaxed mb-3 flex-grow">{step.description}</p>
+            </div>
+          ))}
         </div>
 
         {/* Bottom Section */}
