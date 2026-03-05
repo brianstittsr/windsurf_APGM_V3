@@ -2,8 +2,8 @@ export default function TheProcess() {
   const steps = [
     {
       number: "01",
-      title: "Book Now",
-      description: "Book now and complete the Online Consultation Form. We'll discuss your goals, evaluate your features, and design a personalized plan that fits your lifestyle and enhances your natural beauty.",
+      title: "Schedule Consultation",
+      description: "Call to schedule an initial consultation. We'll discuss your goals, evaluate your features, and design a personalized plan that fits your lifestyle and enhances your natural beauty.",
       image: "BookNow.png"
     },
     {
