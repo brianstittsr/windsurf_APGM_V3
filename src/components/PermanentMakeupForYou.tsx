@@ -121,7 +121,7 @@ export default function PermanentMakeupForYou() {
               <div className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100">
                 <div className="relative h-32 bg-gradient-to-br from-gray-50 to-gray-100">
                   <Image
-                    src="/images/services/POWDER.png"
+                    src="/images/services/lipsBlush.png"
                     alt="Lip Blushing"
                     fill
                     className="object-contain p-4"
@@ -138,7 +138,7 @@ export default function PermanentMakeupForYou() {
               <div className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100">
                 <div className="relative h-32 bg-gradient-to-br from-gray-50 to-gray-100">
                   <Image
-                    src="/images/services/STROKES.png"
+                    src="/images/services/eyeliner_enhancement.png"
                     alt="Permanent Eyeliner"
                     fill
                     className="object-contain p-4"

@@ -159,7 +159,7 @@ export default function LipBlushingPage() {
               </div>
               <div className="relative h-80 md:h-96 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl shadow-lg overflow-hidden">
                 <Image
-                  src="/images/services/POWDER.png"
+                  src="/images/services/lipsBlush.png"
                   alt="Lip Blushing"
                   fill
                   className="object-contain"

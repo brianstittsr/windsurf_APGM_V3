@@ -157,7 +157,7 @@ export default function PermanentEyelinerPage() {
               </div>
               <div className="relative h-80 md:h-96 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl shadow-lg overflow-hidden">
                 <Image
-                  src="/images/services/STROKES.png"
+                  src="/images/services/eyeliner_enhancement.png"
                   alt="Permanent Eyeliner"
                   fill
                   className="object-contain"
