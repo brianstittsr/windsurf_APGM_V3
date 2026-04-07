@@ -28,9 +28,13 @@ export async function POST(request: Request) {
     // Calculate the deposit amount (fixed at $50)
     const depositAmount = 5000; // In cents
 
-    // Create the Stripe Checkout Session with all enabled payment methods
+    // Create the Stripe Checkout Session
     let session;
+    let bnplFailed = false;
+    let bnplErrorMessage = '';
+    
     try {
+      // Try with BNPL options first
       session = await stripe.checkout.sessions.create({
         payment_method_types: ['card', 'klarna', 'afterpay_clearpay', 'affirm'],
         line_items: [
@@ -39,7 +43,7 @@ export async function POST(request: Request) {
               currency: 'usd',
               product_data: {
                 name: `Deposit for ${serviceName || 'Permanent Makeup Service'}`,
-                description: 'Secure your appointment and receive the GRANDOPEN250 coupon code',
+                description: 'Secure your appointment',
               },
               unit_amount: depositAmount,
             },
@@ -55,32 +59,62 @@ export async function POST(request: Request) {
           serviceId,
           type: 'quick-deposit',
         },
-        // BNPL methods require customer address collection
+        // BNPL requires address collection
         billing_address_collection: 'required',
-        shipping_address_collection: {
-          allowed_countries: ['US'],
-        },
         customer_email: email,
         mode: 'payment',
         success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/quick-deposit/success?bookingId=${bookingId}&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/quick-deposit?canceled=true`,
       });
-    } catch (stripeError: any) {
-      console.error('Stripe error details:', {
-        message: stripeError.message,
-        code: stripeError.code,
-        type: stripeError.type,
-        decline_code: stripeError.decline_code,
-        param: stripeError.param,
-      });
-      return NextResponse.json(
-        { 
-          error: 'Failed to create checkout session', 
-          details: stripeError.message,
-          code: stripeError.code,
-        },
-        { status: 500 }
-      );
+    } catch (bnplError: any) {
+      bnplFailed = true;
+      bnplErrorMessage = bnplError.message;
+      console.log('BNPL failed, trying card-only:', bnplError.message);
+      
+      // Fallback to card-only
+      try {
+        session = await stripe.checkout.sessions.create({
+          payment_method_types: ['card'],
+          line_items: [
+            {
+              price_data: {
+                currency: 'usd',
+                product_data: {
+                  name: `Deposit for ${serviceName || 'Permanent Makeup Service'}`,
+                  description: 'Secure your appointment',
+                },
+                unit_amount: depositAmount,
+              },
+              quantity: 1,
+            },
+          ],
+          metadata: {
+            bookingId,
+            email,
+            name,
+            phone,
+            serviceName,
+            serviceId,
+            type: 'quick-deposit',
+            bnplFailed: 'true',
+            bnplError: bnplError.message,
+          },
+          customer_email: email,
+          mode: 'payment',
+          success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/quick-deposit/success?bookingId=${bookingId}&session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/quick-deposit?canceled=true`,
+        });
+      } catch (cardError: any) {
+        console.error('Card-only also failed:', cardError.message);
+        return NextResponse.json(
+          { 
+            error: 'Failed to create checkout session', 
+            details: cardError.message,
+            bnplError: bnplErrorMessage,
+          },
+          { status: 500 }
+        );
+      }
     }
 
     // Store the booking details in Firestore
@@ -108,6 +142,8 @@ export async function POST(request: Request) {
       sessionId: session.id,
       url: session.url,
       bookingId,
+      bnplFailed,
+      bnplError: bnplFailed ? bnplErrorMessage : undefined,
     });
   } catch (error) {
     console.error('Error creating checkout session:', error);
