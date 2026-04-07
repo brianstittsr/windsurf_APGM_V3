@@ -94,20 +94,11 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
   const [notes, setNotes] = useState('');
   
   // Payment state
-  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'zelle' | 'external' | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'klarna' | 'afterpay' | 'affirm' | 'zelle' | 'external' | null>(null);
   const [depositAmount, setDepositAmount] = useState(50);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [zelleConfirmed, setZelleConfirmed] = useState(false);
-  
-  // Credit card form state
-  const [creditCardForm, setCreditCardForm] = useState({
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
-    cardholderName: ''
-  });
-  const [saveCardForFuture, setSaveCardForFuture] = useState(false);
   const [externalPaymentNote, setExternalPaymentNote] = useState('');
   
   // Final booking state
@@ -421,10 +412,10 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
     await fetchAvailableSlots(mode);
   };
 
-  const handleStripePayment = async () => {
+  const handleStripePayment = async (paymentType: 'card' | 'klarna' | 'afterpay' | 'affirm') => {
     setProcessingPayment(true);
     try {
-      // Create Stripe checkout session - API expects email, name, phone, serviceName
+      // Create Stripe checkout session with specific payment method
       const response = await fetch('/api/create-deposit-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -433,7 +424,8 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
           name: selectedClient?.displayName || `${selectedClient?.firstName} ${selectedClient?.lastName}`,
           phone: selectedClient?.phone || '',
           serviceName: serviceName || 'PMU Appointment',
-          servicePrice: depositAmount
+          servicePrice: depositAmount,
+          paymentMethodType: paymentType,
         })
       });
 
@@ -1148,28 +1140,78 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                   <div className="space-y-4">
                     <h4 className="font-medium text-gray-900">Select Payment Method</h4>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {/* Credit Card */}
                       <button
-                        onClick={() => setPaymentMethod('stripe')}
+                        onClick={() => setPaymentMethod('card')}
                         className={`p-4 border-2 rounded-xl transition-all ${
-                          paymentMethod === 'stripe'
+                          paymentMethod === 'card'
                             ? 'border-[#AD6269] bg-[#AD6269]/10'
                             : 'border-gray-200 hover:border-[#AD6269]'
                         }`}
                       >
                         <div className="flex items-center justify-center mb-2">
-                          <svg className="w-12 h-8" viewBox="0 0 60 25" fill="none">
-                            <path d="M59.64 14.28c0-4.8-2.32-8.6-6.76-8.6-4.48 0-7.16 3.8-7.16 8.56 0 5.64 3.2 8.48 7.76 8.48 2.24 0 3.92-.52 5.2-1.24v-3.76c-1.28.64-2.76 1.04-4.64 1.04-1.84 0-3.48-.64-3.68-2.88h9.24c0-.24.04-1.2.04-1.6zm-9.32-1.8c0-2.12 1.32-3.04 2.52-3.04 1.16 0 2.4.92 2.4 3.04h-4.92z" fill="#635BFF"/>
-                            <path d="M40.8 5.68h-5.16v16.6h5.16v-16.6z" fill="#635BFF"/>
-                            <path d="M30.28 5.68h-5.16v16.6h5.16v-16.6z" fill="#635BFF"/>
-                            <path d="M18.24 14.28c0-4.8-2.32-8.6-6.76-8.6-4.48 0-7.16 3.8-7.16 8.56 0 5.64 3.2 8.48 7.76 8.48 2.24 0 3.92-.52 5.2-1.24v-3.76c-1.28.64-2.76 1.04-4.64 1.04-1.84 0-3.48-.64-3.68-2.88h9.24c0-.24.04-1.2.04-1.6zm-9.32-1.8c0-2.12 1.32-3.04 2.52-3.04 1.16 0 2.4.92 2.4 3.04h-4.92z" fill="#635BFF"/>
-                            <path d="M0 22.28h5.16V5.68H0v16.6z" fill="#635BFF"/>
-                          </svg>
+                          <CreditCard className="w-10 h-10 text-gray-400" />
                         </div>
-                        <h4 className="font-semibold text-gray-900">Pay with Stripe</h4>
-                        <p className="text-xs text-gray-500 mt-1">Card, Klarna, Afterpay, Affirm</p>
+                        <h4 className="font-semibold text-gray-900">Credit Card</h4>
+                        <p className="text-xs text-gray-500 mt-1">Visa, Mastercard, Amex</p>
                       </button>
 
+                      {/* Klarna */}
+                      <button
+                        onClick={() => setPaymentMethod('klarna')}
+                        className={`p-4 border-2 rounded-xl transition-all ${
+                          paymentMethod === 'klarna'
+                            ? 'border-[#AD6269] bg-[#AD6269]/10'
+                            : 'border-gray-200 hover:border-[#AD6269]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-center mb-2">
+                          <div className="w-10 h-10 bg-pink-500 rounded flex items-center justify-center text-white font-bold text-sm">
+                            K
+                          </div>
+                        </div>
+                        <h4 className="font-semibold text-gray-900">Klarna</h4>
+                        <p className="text-xs text-gray-500 mt-1">Pay in 4 or 30 days</p>
+                      </button>
+
+                      {/* Afterpay */}
+                      <button
+                        onClick={() => setPaymentMethod('afterpay')}
+                        className={`p-4 border-2 rounded-xl transition-all ${
+                          paymentMethod === 'afterpay'
+                            ? 'border-[#AD6269] bg-[#AD6269]/10'
+                            : 'border-gray-200 hover:border-[#AD6269]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-center mb-2">
+                          <div className="w-10 h-10 bg-black rounded flex items-center justify-center text-white font-bold text-xs">
+                            afterpay
+                          </div>
+                        </div>
+                        <h4 className="font-semibold text-gray-900">Afterpay</h4>
+                        <p className="text-xs text-gray-500 mt-1">Pay in 4 installments</p>
+                      </button>
+
+                      {/* Affirm */}
+                      <button
+                        onClick={() => setPaymentMethod('affirm')}
+                        className={`p-4 border-2 rounded-xl transition-all ${
+                          paymentMethod === 'affirm'
+                            ? 'border-[#AD6269] bg-[#AD6269]/10'
+                            : 'border-gray-200 hover:border-[#AD6269]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-center mb-2">
+                          <div className="w-10 h-10 bg-blue-600 rounded flex items-center justify-center text-white font-bold text-sm">
+                            Affirm
+                          </div>
+                        </div>
+                        <h4 className="font-semibold text-gray-900">Affirm</h4>
+                        <p className="text-xs text-gray-500 mt-1">Monthly payments</p>
+                      </button>
+
+                      {/* Zelle */}
                       <button
                         onClick={() => setPaymentMethod('zelle')}
                         className={`p-4 border-2 rounded-xl transition-all ${
@@ -1179,14 +1221,15 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                         }`}
                       >
                         <div className="flex items-center justify-center mb-2">
-                          <div className="w-12 h-8 bg-purple-600 rounded flex items-center justify-center text-white font-bold text-sm">
+                          <div className="w-10 h-10 bg-purple-600 rounded flex items-center justify-center text-white font-bold text-sm">
                             Zelle
                           </div>
                         </div>
-                        <h4 className="font-semibold text-gray-900">Pay with Zelle</h4>
+                        <h4 className="font-semibold text-gray-900">Zelle</h4>
                         <p className="text-xs text-gray-500 mt-1">Bank Transfer</p>
                       </button>
 
+                      {/* External */}
                       <button
                         onClick={() => setPaymentMethod('external')}
                         className={`p-4 border-2 rounded-xl transition-all ${
@@ -1196,122 +1239,27 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                         }`}
                       >
                         <div className="flex items-center justify-center mb-2">
-                          <div className="w-12 h-8 bg-gray-600 rounded flex items-center justify-center">
+                          <div className="w-10 h-10 bg-gray-600 rounded flex items-center justify-center">
                             <DollarSign className="w-6 h-6 text-white" />
                           </div>
                         </div>
-                        <h4 className="font-semibold text-gray-900">External Payment</h4>
+                        <h4 className="font-semibold text-gray-900">External</h4>
                         <p className="text-xs text-gray-500 mt-1">Cash, Check, Other</p>
                       </button>
                     </div>
 
-                    {/* Stripe Payment Form */}
-                    {paymentMethod === 'stripe' && (
+                    {/* Credit Card Payment */}
+                    {paymentMethod === 'card' && (
                       <div className="space-y-4">
-                        {/* Credit Card Form */}
-                        <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
-                          <h4 className="font-medium text-gray-900 flex items-center gap-2">
-                            <CreditCard className="w-5 h-5" />
-                            Credit Card Information
-                          </h4>
-                          
-                          {/* Card Number */}
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
-                            <input
-                              type="text"
-                              maxLength={19}
-                              value={creditCardForm.cardNumber}
-                              onChange={(e) => {
-                                const value = e.target.value.replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 ');
-                                setCreditCardForm({ ...creditCardForm, cardNumber: value });
-                              }}
-                              placeholder="1234 5678 9012 3456"
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
-                            />
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-4">
-                            {/* Expiry Date */}
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
-                              <input
-                                type="text"
-                                maxLength={5}
-                                value={creditCardForm.expiryDate}
-                                onChange={(e) => {
-                                  let value = e.target.value.replace(/\D/g, '');
-                                  if (value.length >= 2) {
-                                    value = value.slice(0, 2) + '/' + value.slice(2, 4);
-                                  }
-                                  setCreditCardForm({ ...creditCardForm, expiryDate: value });
-                                }}
-                                placeholder="MM/YY"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
-                              />
-                            </div>
-                            
-                            {/* CVV */}
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
-                              <input
-                                type="text"
-                                maxLength={4}
-                                value={creditCardForm.cvv}
-                                onChange={(e) => {
-                                  const value = e.target.value.replace(/\D/g, '');
-                                  setCreditCardForm({ ...creditCardForm, cvv: value });
-                                }}
-                                placeholder="123"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
-                              />
-                            </div>
-                          </div>
-                          
-                          {/* Cardholder Name */}
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Cardholder Name</label>
-                            <input
-                              type="text"
-                              value={creditCardForm.cardholderName}
-                              onChange={(e) => setCreditCardForm({ ...creditCardForm, cardholderName: e.target.value })}
-                              placeholder="Name as it appears on card"
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
-                            />
-                          </div>
-                          
-                          {/* Save Card for Future */}
-                          <label className="flex items-center gap-3 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={saveCardForFuture}
-                              onChange={(e) => setSaveCardForFuture(e.target.checked)}
-                              className="w-5 h-5 rounded border-gray-300 text-[#AD6269] focus:ring-[#AD6269]"
-                            />
-                            <span className="text-sm text-gray-700">Save card for future payments</span>
-                          </label>
-                        </div>
-
-                        {/* BNPL Info */}
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <h4 className="font-semibold text-blue-900 mb-2">Credit Card Payment</h4>
                           <p className="text-blue-800 text-sm">
-                            <strong>Includes:</strong> Credit/Debit Card,
-                            <span className="inline-flex items-center mx-1">
-                              <span className="bg-pink-100 text-pink-800 px-2 py-0.5 rounded text-xs font-medium">Klarna</span>
-                            </span>,
-                            <span className="inline-flex items-center mx-1">
-                              <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs font-medium">Afterpay</span>
-                            </span>,
-                            <span className="inline-flex items-center mx-1">
-                              <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-medium">Affirm</span>
-                            </span>
+                            Secure payment processed via Stripe. You'll be redirected to Stripe's secure checkout to enter your card details.
                           </p>
-                          <p className="text-blue-600 text-xs mt-1">Buy Now, Pay Later options available at checkout</p>
                         </div>
-                        
                         <Button 
-                          onClick={handleStripePayment}
-                          disabled={processingPayment || !creditCardForm.cardNumber || !creditCardForm.expiryDate || !creditCardForm.cvv || !creditCardForm.cardholderName}
+                          onClick={() => handleStripePayment('card')}
+                          disabled={processingPayment}
                           className="w-full bg-[#635BFF] hover:bg-[#5851db] text-white"
                         >
                           {processingPayment ? (
@@ -1321,7 +1269,100 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                             </>
                           ) : (
                             <>
-                              Pay ${depositAmount} with Stripe
+                              Pay ${depositAmount} with Credit Card
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Klarna Payment */}
+                    {paymentMethod === 'klarna' && (
+                      <div className="space-y-4">
+                        <div className="bg-pink-50 border border-pink-200 rounded-lg p-4">
+                          <h4 className="font-semibold text-pink-900 mb-2">Klarna Payment</h4>
+                          <p className="text-pink-800 text-sm mb-2">
+                            Pay in 4 interest-free payments or in 30 days. You'll be redirected to Klarna to complete your payment.
+                          </p>
+                          <p className="text-pink-700 text-xs">
+                            Requires billing and shipping address. Available for eligible customers.
+                          </p>
+                        </div>
+                        <Button 
+                          onClick={() => handleStripePayment('klarna')}
+                          disabled={processingPayment}
+                          className="w-full bg-pink-600 hover:bg-pink-700 text-white"
+                        >
+                          {processingPayment ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              Pay ${depositAmount} with Klarna
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Afterpay Payment */}
+                    {paymentMethod === 'afterpay' && (
+                      <div className="space-y-4">
+                        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
+                          <h4 className="font-semibold text-white mb-2">Afterpay Payment</h4>
+                          <p className="text-gray-300 text-sm mb-2">
+                            Pay in 4 equal installments, due every 2 weeks. You'll be redirected to Afterpay to complete your payment.
+                          </p>
+                          <p className="text-gray-400 text-xs">
+                            US customers only. Requires billing and shipping address. First payment due at checkout.
+                          </p>
+                        </div>
+                        <Button 
+                          onClick={() => handleStripePayment('afterpay')}
+                          disabled={processingPayment}
+                          className="w-full bg-black hover:bg-gray-800 text-white"
+                        >
+                          {processingPayment ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              Pay ${depositAmount} with Afterpay
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Affirm Payment */}
+                    {paymentMethod === 'affirm' && (
+                      <div className="space-y-4">
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <h4 className="font-semibold text-blue-900 mb-2">Affirm Payment</h4>
+                          <p className="text-blue-800 text-sm mb-2">
+                            Pay in monthly installments over 3, 6, or 12 months. You'll be redirected to Affirm to complete your payment.
+                          </p>
+                          <p className="text-blue-700 text-xs">
+                            US and Canada only. Requires billing and shipping address. Rates from 10% to 36% APR.
+                          </p>
+                        </div>
+                        <Button 
+                          onClick={() => handleStripePayment('affirm')}
+                          disabled={processingPayment}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          {processingPayment ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              Pay ${depositAmount} with Affirm
                             </>
                           )}
                         </Button>
@@ -1407,7 +1448,15 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                         ? 'Zelle payment will be verified before appointment.'
                         : paymentMethod === 'external'
                         ? 'External payment noted. Booking will be created.'
-                        : 'Stripe payment has been processed.'}
+                        : paymentMethod === 'card'
+                        ? 'Credit card payment has been processed via Stripe.'
+                        : paymentMethod === 'klarna'
+                        ? 'Klarna payment has been processed.'
+                        : paymentMethod === 'afterpay'
+                        ? 'Afterpay payment has been processed.'
+                        : paymentMethod === 'affirm'
+                        ? 'Affirm payment has been processed.'
+                        : 'Payment has been processed.'}
                     </p>
                     {paymentMethod === 'external' && externalPaymentNote && (
                       <p className="text-green-600 text-xs mt-2">

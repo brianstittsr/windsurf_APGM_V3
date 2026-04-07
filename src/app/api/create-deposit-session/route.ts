@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   try {
     // Parse the request body
     const body = await request.json();
-    const { email, name, phone, serviceName, servicePrice, serviceId } = body;
+    const { email, name, phone, serviceName, servicePrice, serviceId, paymentMethodType = 'card' } = body;
 
     if (!email || !name) {
       return NextResponse.json(
@@ -28,15 +28,40 @@ export async function POST(request: Request) {
     // Calculate the deposit amount (fixed at $50)
     const depositAmount = 5000; // In cents
 
-    // Create the Stripe Checkout Session
+    // Determine payment method types based on selection
+    let paymentMethodTypes: string[] = [];
+    let billingAddressRequired = false;
+    let shippingAddressRequired = false;
+
+    switch (paymentMethodType) {
+      case 'klarna':
+        paymentMethodTypes = ['klarna'];
+        billingAddressRequired = true;
+        shippingAddressRequired = true;
+        break;
+      case 'afterpay':
+        paymentMethodTypes = ['afterpay_clearpay'];
+        billingAddressRequired = true;
+        shippingAddressRequired = true;
+        break;
+      case 'affirm':
+        paymentMethodTypes = ['affirm'];
+        billingAddressRequired = true;
+        shippingAddressRequired = true;
+        break;
+      case 'card':
+      default:
+        paymentMethodTypes = ['card'];
+        billingAddressRequired = false;
+        shippingAddressRequired = false;
+        break;
+    }
+
+    // Create the Stripe Checkout Session with specific payment method
     let session;
-    let bnplFailed = false;
-    let bnplErrorMessage = '';
-    
     try {
-      // Try with BNPL options first
-      session = await stripe.checkout.sessions.create({
-        payment_method_types: ['card', 'klarna', 'afterpay_clearpay', 'affirm'],
+      const sessionConfig: any = {
+        payment_method_types: paymentMethodTypes,
         line_items: [
           {
             price_data: {
@@ -58,63 +83,35 @@ export async function POST(request: Request) {
           serviceName,
           serviceId,
           type: 'quick-deposit',
+          paymentMethodType,
         },
-        // BNPL requires address collection
-        billing_address_collection: 'required',
         customer_email: email,
         mode: 'payment',
         success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/quick-deposit/success?bookingId=${bookingId}&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/quick-deposit?canceled=true`,
-      });
-    } catch (bnplError: any) {
-      bnplFailed = true;
-      bnplErrorMessage = bnplError.message;
-      console.log('BNPL failed, trying card-only:', bnplError.message);
-      
-      // Fallback to card-only
-      try {
-        session = await stripe.checkout.sessions.create({
-          payment_method_types: ['card'],
-          line_items: [
-            {
-              price_data: {
-                currency: 'usd',
-                product_data: {
-                  name: `Deposit for ${serviceName || 'Permanent Makeup Service'}`,
-                  description: 'Secure your appointment',
-                },
-                unit_amount: depositAmount,
-              },
-              quantity: 1,
-            },
-          ],
-          metadata: {
-            bookingId,
-            email,
-            name,
-            phone,
-            serviceName,
-            serviceId,
-            type: 'quick-deposit',
-            bnplFailed: 'true',
-            bnplError: bnplError.message,
-          },
-          customer_email: email,
-          mode: 'payment',
-          success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/quick-deposit/success?bookingId=${bookingId}&session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/quick-deposit?canceled=true`,
-        });
-      } catch (cardError: any) {
-        console.error('Card-only also failed:', cardError.message);
-        return NextResponse.json(
-          { 
-            error: 'Failed to create checkout session', 
-            details: cardError.message,
-            bnplError: bnplErrorMessage,
-          },
-          { status: 500 }
-        );
+      };
+
+      // Add address collection for BNPL methods
+      if (billingAddressRequired) {
+        sessionConfig.billing_address_collection = 'required';
       }
+      if (shippingAddressRequired) {
+        sessionConfig.shipping_address_collection = {
+          allowed_countries: ['US'],
+        };
+      }
+
+      session = await stripe.checkout.sessions.create(sessionConfig);
+    } catch (stripeError: any) {
+      console.error('Stripe error:', stripeError.message);
+      return NextResponse.json(
+        { 
+          error: 'Failed to create checkout session', 
+          details: stripeError.message,
+          paymentMethodType,
+        },
+        { status: 500 }
+      );
     }
 
     // Store the booking details in Firestore
@@ -142,8 +139,7 @@ export async function POST(request: Request) {
       sessionId: session.id,
       url: session.url,
       bookingId,
-      bnplFailed,
-      bnplError: bnplFailed ? bnplErrorMessage : undefined,
+      paymentMethodType,
     });
   } catch (error) {
     console.error('Error creating checkout session:', error);
