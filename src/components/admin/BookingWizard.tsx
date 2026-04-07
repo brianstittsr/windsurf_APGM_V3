@@ -257,7 +257,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
       const todayStr = now.toISOString().split('T')[0];
       
       let searchDate = new Date();
-      const maxDaysToSearch = 60; // Search up to 60 days ahead
+      const maxDaysToSearch = 60;
       let daysSearched = 0;
       let foundSlots: TimeSlot[] = [];
 
@@ -266,7 +266,6 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
         if (mode === 'weekend') {
           const dayOfWeek = searchDate.getDay();
           if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-            // Skip to Saturday
             const daysUntilSaturday = 6 - dayOfWeek;
             searchDate.setDate(searchDate.getDate() + daysUntilSaturday);
           }
@@ -274,38 +273,43 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
 
         const dateStr = searchDate.toISOString().split('T')[0];
         
-        // Fetch slots from GHL
-        const response = await fetch(`/api/availability/ghl?date=${dateStr}`);
+        // Check existing bookings from Firestore for conflicts
+        const existingBookings = await getExistingBookingsForDate(dateStr);
+        const bookedTimes = existingBookings.map(b => b.time);
         
-        if (response.ok) {
-          const data = await response.json();
+        // Generate slots from 9 AM to 3 PM (3-hour appointments)
+        const slots: TimeSlot[] = [];
+        for (let hour = 9; hour <= 15; hour++) {
+          const time = `${String(hour).padStart(2, '0')}:00`;
+          const endTime = `${String(hour + 3).padStart(2, '0')}:00`;
           
-          if (data.timeSlots && data.timeSlots.length > 0) {
-            // Filter for available slots only
-            let available = data.timeSlots.filter((slot: TimeSlot) => slot.available);
-            
-            // If searching today, filter out past time slots
-            if (dateStr === todayStr) {
-              available = available.filter((slot: TimeSlot) => {
-                const slotHour = parseInt(slot.time.split(':')[0]);
-                // Only show slots that are at least 1 hour in the future
-                return slotHour > currentHour;
-              });
-            }
-            
-            if (available.length > 0) {
-              foundSlots = available.map((slot: TimeSlot) => ({
-                ...slot,
-                date: dateStr
-              }));
-              setSelectedDate(dateStr);
-            }
+          // Skip if this time is already booked
+          const isBooked = bookedTimes.some(bookedTime => {
+            const bookedHour = parseInt(bookedTime.split(':')[0]);
+            return bookedHour >= hour && bookedHour < hour + 3;
+          });
+          
+          // Skip past times for today
+          const isPast = dateStr === todayStr && hour <= currentHour;
+          
+          if (!isBooked && !isPast) {
+            slots.push({
+              time,
+              endTime,
+              available: true,
+              calendarId: calendars[0]?.id || 'website-calendar',
+              calendarName: calendars[0]?.name || 'Website Calendar'
+            });
           }
         }
+        
+        if (slots.length > 0) {
+          foundSlots = slots;
+          setSelectedDate(dateStr);
+        }
 
-        // Move to next day (or next weekend day for weekend mode)
+        // Move to next day
         if (mode === 'weekend') {
-          // If Saturday, try Sunday. If Sunday, skip to next Saturday
           if (searchDate.getDay() === 6) {
             searchDate.setDate(searchDate.getDate() + 1);
           } else {
@@ -323,7 +327,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
       if (foundSlots.length === 0) {
         await showAlert({
           title: 'No Availability',
-          description: `No available slots found in the next ${maxDaysToSearch} days. Try using Calendar Override.`,
+          description: `No available slots found in the next ${maxDaysToSearch} days. Try using Calendar Override with manual time entry.`,
           variant: 'warning'
         });
       }
@@ -339,46 +343,56 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
     }
   };
 
+  // Helper function to get existing bookings for a date
+  const getExistingBookingsForDate = async (date: string): Promise<Array<{time: string}>> => {
+    try {
+      const db = getDb();
+      const bookingsRef = collection(db, 'bookings');
+      const q = query(bookingsRef, where('date', '==', date));
+      const snapshot = await getDocs(q);
+      
+      return snapshot.docs.map(doc => ({
+        time: doc.data().time || '00:00'
+      }));
+    } catch (error) {
+      console.error('Error fetching existing bookings:', error);
+      return [];
+    }
+  };
+
   const fetchSlotsForDate = async (date: string) => {
     setLoadingSlots(true);
     setAvailableSlots([]);
     setSelectedSlot(null);
     
     try {
-      // For calendar override, we fetch GHL appointments but ignore availability settings
-      const response = await fetch(`/api/availability/ghl?date=${date}`);
+      // Check existing bookings from Firestore for conflicts
+      const existingBookings = await getExistingBookingsForDate(date);
+      const bookedTimes = existingBookings.map(b => b.time);
       
-      if (response.ok) {
-        const data = await response.json();
+      // Generate slots from 9 AM to 3 PM (3-hour appointments)
+      const slots: TimeSlot[] = [];
+      for (let hour = 9; hour <= 15; hour++) {
+        const time = `${String(hour).padStart(2, '0')}:00`;
+        const endTime = `${String(hour + 3).padStart(2, '0')}:00`;
         
-        // For calendar override, show all time slots (9 AM - 6 PM) that don't conflict with existing appointments
-        const slots: TimeSlot[] = [];
-        const existingTimesArray: string[] = data.timeSlots?.filter((s: TimeSlot) => !s.available).map((s: TimeSlot) => s.time) || [];
+        // Check if this slot conflicts with existing appointments
+        const hasConflict = bookedTimes.some(bookedTime => {
+          const bookedHour = parseInt(bookedTime.split(':')[0]);
+          return bookedHour >= hour && bookedHour < hour + 3;
+        });
         
-        // Generate slots from 9 AM to 6 PM
-        for (let hour = 9; hour <= 15; hour++) { // Last slot at 3 PM for 3-hour appointments
-          const time = `${String(hour).padStart(2, '0')}:00`;
-          const endTime = `${String(hour + 3).padStart(2, '0')}:00`;
-          
-          // Check if this slot conflicts with existing appointments
-          const hasConflict = existingTimesArray.some((existingTime) => {
-            const existingHour = parseInt(existingTime.split(':')[0]);
-            return existingHour >= hour && existingHour < hour + 3;
-          });
-          
-          slots.push({
-            time,
-            endTime,
-            available: !hasConflict,
-            calendarId: calendars[0]?.id || '',
-            calendarName: calendars[0]?.name || 'Default Calendar',
-            date
-          } as TimeSlot & { date: string });
-        }
-        
-        setAvailableSlots(slots.filter(s => s.available));
-        setSelectedDate(date);
+        slots.push({
+          time,
+          endTime,
+          available: !hasConflict,
+          calendarId: calendars[0]?.id || 'website-calendar',
+          calendarName: calendars[0]?.name || 'Website Calendar'
+        });
       }
+      
+      setAvailableSlots(slots.filter(s => s.available));
+      setSelectedDate(date);
     } catch (error) {
       console.error('Error fetching slots for date:', error);
     } finally {
@@ -464,44 +478,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
 
     setCreatingBooking(true);
     try {
-      // Create appointment in GHL
-      const startDateTime = new Date(`${selectedDate}T${selectedSlot.time}:00`);
-      const endDateTime = new Date(startDateTime.getTime() + duration * 60000);
-
-      const appointmentData = {
-        name: selectedClient.displayName,
-        email: selectedClient.email,
-        phone: selectedClient.phone,
-        calendarId: selectedSlot.calendarId || calendars[0]?.id,
-        serviceName: serviceName || 'PMU Appointment',
-        title: serviceName || 'PMU Appointment',
-        startTime: startDateTime.toISOString(),
-        endTime: endDateTime.toISOString(),
-        notes: notes + (paymentMethod === 'zelle' 
-          ? '\n[Deposit: Zelle - Pending Confirmation]' 
-          : paymentMethod === 'external' 
-          ? `\n[Deposit: External Payment${externalPaymentNote ? ' - ' + externalPaymentNote : ''}]`
-          : '\n[Deposit: Stripe - Paid]'),
-        status: 'new'
-      };
-
-      const ghlResponse = await fetch('/api/appointments/create-ghl', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(appointmentData)
-      });
-
-      if (!ghlResponse.ok) {
-        const errorData = await ghlResponse.json();
-        throw new Error(errorData.error || 'Failed to create GHL appointment');
-      }
-
-      const ghlResult = await ghlResponse.json();
-
-      // Create booking in Firestore
-      // Extract appointment ID from GHL response - it can be in different places
-      const ghlAppointmentId = ghlResult.appointment?.id || ghlResult.appointmentId || ghlResult.appointment?.event?.id || null;
-      
+      // Create booking directly in Firestore (skip GHL sync)
       const bookingData = {
         clientName: selectedClient.displayName,
         clientEmail: selectedClient.email,
@@ -512,6 +489,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
         serviceName: serviceName || 'PMU Appointment',
         date: selectedDate,
         time: selectedSlot.time,
+        endTime: selectedSlot.endTime,
         status: 'confirmed',
         price: 0, // Set based on service
         depositPaid: paymentComplete,
@@ -519,8 +497,9 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
         depositAmount: depositAmount,
         notes: notes + (externalPaymentNote ? ` | Payment Note: ${externalPaymentNote}` : ''),
         externalPaymentNote: paymentMethod === 'external' ? externalPaymentNote : null,
-        ghlContactId: ghlResult.contactId || null,
-        ghlAppointmentId: ghlAppointmentId,
+        // No GHL IDs - website only booking
+        ghlContactId: null,
+        ghlAppointmentId: null,
         createdAt: new Date(),
         createdBy: currentUser?.uid || null
       };
@@ -957,7 +936,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                   <div className="space-y-4">
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                       <p className="text-yellow-800 text-sm">
-                        <strong>Calendar Override:</strong> This ignores availability settings but respects existing GHL bookings.
+                        <strong>Calendar Override:</strong> This allows booking at any time, ignoring standard availability. Existing website bookings will still be respected.
                       </p>
                     </div>
                     <div>
