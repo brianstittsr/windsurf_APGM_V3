@@ -415,6 +415,10 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
   const handleStripePayment = async (paymentType: 'card' | 'klarna' | 'afterpay' | 'affirm') => {
     setProcessingPayment(true);
     try {
+      // BNPL methods require full payment, card uses deposit
+      const isBNPL = ['klarna', 'afterpay', 'affirm'].includes(paymentType);
+      const paymentAmount = isBNPL ? servicePrice : depositAmount;
+
       // Create Stripe checkout session with specific payment method
       const response = await fetch('/api/create-deposit-session', {
         method: 'POST',
@@ -424,7 +428,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
           name: selectedClient?.displayName || `${selectedClient?.firstName} ${selectedClient?.lastName}`,
           phone: selectedClient?.phone || '',
           serviceName: serviceName || 'PMU Appointment',
-          servicePrice: depositAmount,
+          servicePrice: paymentAmount,
           paymentMethodType: paymentType,
         })
       });
@@ -1282,7 +1286,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                         <div className="bg-pink-50 border border-pink-200 rounded-lg p-4">
                           <h4 className="font-semibold text-pink-900 mb-2">Klarna Payment</h4>
                           <p className="text-pink-800 text-sm mb-2">
-                            Pay in 4 interest-free payments or in 30 days. You'll be redirected to Klarna to complete your payment.
+                            Pay the full service price (${servicePrice}) in 4 interest-free payments or in 30 days. You'll be redirected to Klarna to complete your payment.
                           </p>
                           <p className="text-pink-700 text-xs">
                             Requires billing and shipping address. Available for eligible customers.
@@ -1300,7 +1304,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                             </>
                           ) : (
                             <>
-                              Pay ${depositAmount} with Klarna
+                              Pay ${servicePrice} with Klarna
                             </>
                           )}
                         </Button>
@@ -1313,7 +1317,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                         <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
                           <h4 className="font-semibold text-white mb-2">Afterpay Payment</h4>
                           <p className="text-gray-300 text-sm mb-2">
-                            Pay in 4 equal installments, due every 2 weeks. You'll be redirected to Afterpay to complete your payment.
+                            Pay the full service price (${servicePrice}) in 4 equal installments, due every 2 weeks. You'll be redirected to Afterpay to complete your payment.
                           </p>
                           <p className="text-gray-400 text-xs">
                             US customers only. Requires billing and shipping address. First payment due at checkout.
@@ -1331,7 +1335,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                             </>
                           ) : (
                             <>
-                              Pay ${depositAmount} with Afterpay
+                              Pay ${servicePrice} with Afterpay
                             </>
                           )}
                         </Button>
@@ -1344,7 +1348,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                           <h4 className="font-semibold text-blue-900 mb-2">Affirm Payment</h4>
                           <p className="text-blue-800 text-sm mb-2">
-                            Pay in monthly installments over 3, 6, or 12 months. You'll be redirected to Affirm to complete your payment.
+                            Pay the full service price (${servicePrice}) in monthly installments over 3, 6, or 12 months. You'll be redirected to Affirm to complete your payment.
                           </p>
                           <p className="text-blue-700 text-xs">
                             US and Canada only. Requires billing and shipping address. Rates from 10% to 36% APR.
@@ -1362,7 +1366,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                             </>
                           ) : (
                             <>
-                              Pay ${depositAmount} with Affirm
+                              Pay ${servicePrice} with Affirm
                             </>
                           )}
                         </Button>

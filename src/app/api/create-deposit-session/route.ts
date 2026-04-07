@@ -25,8 +25,12 @@ export async function POST(request: Request) {
     // Create a unique booking ID
     const bookingId = `QD-${uuidv4().substring(0, 8).toUpperCase()}`;
 
-    // Calculate the deposit amount (fixed at $50)
-    const depositAmount = 5000; // In cents
+    // Calculate the payment amount
+    // BNPL methods require full payment, card payments use deposit
+    const isBNPL = ['klarna', 'afterpay', 'affirm'].includes(paymentMethodType);
+    const paymentAmount = isBNPL 
+      ? (servicePrice || 500) * 100 // Full service price in cents
+      : 5000; // $50 deposit in cents for card payments
 
     // Determine payment method types based on selection
     let paymentMethodTypes: string[] = [];
@@ -67,10 +71,14 @@ export async function POST(request: Request) {
             price_data: {
               currency: 'usd',
               product_data: {
-                name: `Deposit for ${serviceName || 'Permanent Makeup Service'}`,
-                description: 'Secure your appointment',
+                name: isBNPL 
+                  ? `Payment for ${serviceName || 'Permanent Makeup Service'}`
+                  : `Deposit for ${serviceName || 'Permanent Makeup Service'}`,
+                description: isBNPL 
+                  ? 'Full payment for service'
+                  : 'Secure your appointment',
               },
-              unit_amount: depositAmount,
+              unit_amount: paymentAmount,
             },
             quantity: 1,
           },
@@ -125,7 +133,7 @@ export async function POST(request: Request) {
         serviceId: serviceId || 'quick-deposit',
         status: 'pending_deposit',
         price: servicePrice || 500,
-        depositAmount: depositAmount / 100, // Convert from cents to dollars
+        depositAmount: paymentAmount / 100, // Convert from cents to dollars
         depositPaid: false, // Will be updated after payment confirmation
         stripeSessionId: session.id,
         createdAt: serverTimestamp(),
