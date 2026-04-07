@@ -28,19 +28,9 @@ export async function POST(request: Request) {
     // Calculate the deposit amount (fixed at $50)
     const depositAmount = 5000; // In cents
 
-    // Check if BNPL is enabled via request parameter
-    // BNPL methods (Klarna, Afterpay, Affirm) must be enabled in Stripe Dashboard first
-    const enableBNPL = body.enableBNPL === true;
-
-    // Build payment methods array
-    // Default to card-only since BNPL requires explicit Stripe Dashboard setup
-    const paymentMethods: ('card' | 'klarna' | 'afterpay_clearpay' | 'affirm')[] = enableBNPL 
-      ? ['card', 'klarna', 'afterpay_clearpay', 'affirm']
-      : ['card'];
-
-    // Create the Stripe Checkout Session
+    // Create the Stripe Checkout Session with all enabled payment methods
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: paymentMethods,
+      payment_method_types: ['card', 'klarna', 'afterpay_clearpay', 'affirm'],
       line_items: [
         {
           price_data: {
@@ -63,7 +53,6 @@ export async function POST(request: Request) {
         serviceName,
         serviceId,
         type: 'quick-deposit',
-        bnplEnabled: String(enableBNPL),
       },
       mode: 'payment',
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/quick-deposit/success?bookingId=${bookingId}&session_id={CHECKOUT_SESSION_ID}`,

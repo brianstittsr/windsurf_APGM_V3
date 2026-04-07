@@ -1136,7 +1136,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                           </svg>
                         </div>
                         <h4 className="font-semibold text-gray-900">Pay with Stripe</h4>
-                        <p className="text-xs text-gray-500 mt-1">Credit/Debit Card</p>
+                        <p className="text-xs text-gray-500 mt-1">Card, Klarna, Afterpay, Affirm</p>
                       </button>
 
                       <button
@@ -1179,11 +1179,18 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                       <div className="space-y-3">
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                           <p className="text-blue-800 text-sm">
-                            <strong>Payment:</strong> Credit/Debit Card via Stripe
+                            <strong>Includes:</strong> Credit/Debit Card,
+                            <span className="inline-flex items-center mx-1">
+                              <span className="bg-pink-100 text-pink-800 px-2 py-0.5 rounded text-xs font-medium">Klarna</span>
+                            </span>,
+                            <span className="inline-flex items-center mx-1">
+                              <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs font-medium">Afterpay</span>
+                            </span>,
+                            <span className="inline-flex items-center mx-1">
+                              <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-medium">Affirm</span>
+                            </span>
                           </p>
-                          <p className="text-blue-600 text-xs mt-1">
-                            Buy Now Pay Later (Klarna, Afterpay, Affirm) can be enabled in Stripe Dashboard
-                          </p>
+                          <p className="text-blue-600 text-xs mt-1">Buy Now, Pay Later options available at checkout</p>
                         </div>
                         <Button 
                           onClick={handleStripePayment}
