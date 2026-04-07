@@ -28,9 +28,9 @@ export async function POST(request: Request) {
     // Calculate the deposit amount (fixed at $50)
     const depositAmount = 5000; // In cents
 
-    // Create the Stripe Checkout Session
+    // Create the Stripe Checkout Session with BNPL options
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
+      payment_method_types: ['card', 'klarna', 'afterpay_clearpay', 'affirm'],
       line_items: [
         {
           price_data: {

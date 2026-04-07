@@ -1129,15 +1129,14 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                         <div className="flex items-center justify-center mb-2">
                           <svg className="w-12 h-8" viewBox="0 0 60 25" fill="none">
                             <path d="M59.64 14.28c0-4.8-2.32-8.6-6.76-8.6-4.48 0-7.16 3.8-7.16 8.56 0 5.64 3.2 8.48 7.76 8.48 2.24 0 3.92-.52 5.2-1.24v-3.76c-1.28.64-2.76 1.04-4.64 1.04-1.84 0-3.48-.64-3.68-2.88h9.24c0-.24.04-1.2.04-1.6zm-9.32-1.8c0-2.12 1.32-3.04 2.52-3.04 1.16 0 2.4.92 2.4 3.04h-4.92z" fill="#635BFF"/>
-                            <path d="M39.88 5.72c-1.84 0-3.04.88-3.72 1.48l-.24-1.16h-4.16v21.92l4.72-1v-5.32c.68.48 1.68 1.2 3.36 1.2 3.4 0 6.52-2.72 6.52-8.72-.04-5.48-3.16-8.4-6.48-8.4zm-1.12 12.92c-1.12 0-1.8-.4-2.24-.88v-7c.48-.52 1.16-.92 2.24-.92 1.72 0 2.92 1.92 2.92 4.4 0 2.52-1.16 4.4-2.92 4.4z" fill="#635BFF"/>
-                            <path d="M25.48 4.36l4.76-1.04V0l-4.76 1v3.36zM25.48 5.96h4.76v16.56h-4.76V5.96z" fill="#635BFF"/>
-                            <path d="M20.44 7.24l-.28-1.28h-4.12v16.56h4.72V11.2c1.12-1.44 3-1.2 3.6-.96V5.96c-.64-.24-2.96-.68-3.92 1.28z" fill="#635BFF"/>
-                            <path d="M10.76 2.68l-4.6 1-.04 15.16c0 2.8 2.12 4.88 4.92 4.88 1.56 0 2.72-.28 3.36-.64v-3.84c-.6.24-3.6 1.12-3.6-1.68V9.72h3.6V5.96h-3.6l-.04-3.28z" fill="#635BFF"/>
-                            <path d="M4.24 10.12c0-.72.6-1 1.6-1 1.44 0 3.24.44 4.68 1.2V5.96c-1.56-.64-3.12-.88-4.68-.88C2.32 5.08 0 6.88 0 9.96c0 4.84 6.68 4.08 6.68 6.16 0 .84-.72 1.12-1.76 1.12-1.52 0-3.48-.64-5.04-1.48v4.4c1.72.72 3.44 1.04 5.04 1.04 3.6 0 6.08-1.76 6.08-4.92-.04-5.24-6.76-4.32-6.76-6.16z" fill="#635BFF"/>
+                            <path d="M40.8 5.68h-5.16v16.6h5.16v-16.6z" fill="#635BFF"/>
+                            <path d="M30.28 5.68h-5.16v16.6h5.16v-16.6z" fill="#635BFF"/>
+                            <path d="M18.24 14.28c0-4.8-2.32-8.6-6.76-8.6-4.48 0-7.16 3.8-7.16 8.56 0 5.64 3.2 8.48 7.76 8.48 2.24 0 3.92-.52 5.2-1.24v-3.76c-1.28.64-2.76 1.04-4.64 1.04-1.84 0-3.48-.64-3.68-2.88h9.24c0-.24.04-1.2.04-1.6zm-9.32-1.8c0-2.12 1.32-3.04 2.52-3.04 1.16 0 2.4.92 2.4 3.04h-4.92z" fill="#635BFF"/>
+                            <path d="M0 22.28h5.16V5.68H0v16.6z" fill="#635BFF"/>
                           </svg>
                         </div>
                         <h4 className="font-semibold text-gray-900">Pay with Stripe</h4>
-                        <p className="text-xs text-gray-500 mt-1">Credit/Debit Card</p>
+                        <p className="text-xs text-gray-500 mt-1">Card, Klarna, Afterpay, Affirm</p>
                       </button>
 
                       <button
@@ -1177,22 +1176,39 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
 
                     {/* Stripe Payment Button */}
                     {paymentMethod === 'stripe' && (
-                      <Button 
-                        onClick={handleStripePayment}
-                        disabled={processingPayment}
-                        className="w-full bg-[#635BFF] hover:bg-[#5851db] text-white"
-                      >
-                        {processingPayment ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Processing...
-                          </>
-                        ) : (
-                          <>
-                            Pay ${depositAmount} with Stripe
-                          </>
-                        )}
-                      </Button>
+                      <div className="space-y-3">
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <p className="text-blue-800 text-sm">
+                            <strong>Includes:</strong> Credit/Debit Card, 
+                            <span className="inline-flex items-center mx-1">
+                              <span className="bg-pink-100 text-pink-800 px-2 py-0.5 rounded text-xs font-medium">Klarna</span>
+                            </span>,
+                            <span className="inline-flex items-center mx-1">
+                              <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs font-medium">Afterpay</span>
+                            </span>,
+                            <span className="inline-flex items-center mx-1">
+                              <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-medium">Affirm</span>
+                            </span>
+                          </p>
+                          <p className="text-blue-600 text-xs mt-1">Buy Now, Pay Later options available at checkout</p>
+                        </div>
+                        <Button 
+                          onClick={handleStripePayment}
+                          disabled={processingPayment}
+                          className="w-full bg-[#635BFF] hover:bg-[#5851db] text-white"
+                        >
+                          {processingPayment ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              Pay ${depositAmount} with Stripe
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     )}
 
                     {/* Zelle Instructions */}
