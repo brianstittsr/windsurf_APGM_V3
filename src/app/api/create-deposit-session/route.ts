@@ -28,36 +28,72 @@ export async function POST(request: Request) {
     // Calculate the deposit amount (fixed at $50)
     const depositAmount = 5000; // In cents
 
-    // Create the Stripe Checkout Session with BNPL options
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card', 'klarna', 'afterpay_clearpay', 'affirm'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: `Deposit for ${serviceName || 'Permanent Makeup Service'}`,
-              description: 'Secure your appointment and receive the GRANDOPEN250 coupon code',
-              images: ['https://example.com/pmu-service.jpg'], // Replace with your service image
+    // Create the Stripe Checkout Session
+    let session;
+    try {
+      // Try with BNPL options first
+      session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card', 'klarna', 'afterpay_clearpay', 'affirm'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `Deposit for ${serviceName || 'Permanent Makeup Service'}`,
+                description: 'Secure your appointment and receive the GRANDOPEN250 coupon code',
+                images: ['https://example.com/pmu-service.jpg'], // Replace with your service image
+              },
+              unit_amount: depositAmount,
             },
-            unit_amount: depositAmount,
+            quantity: 1,
           },
-          quantity: 1,
+        ],
+        metadata: {
+          bookingId,
+          email,
+          name,
+          phone,
+          serviceName,
+          serviceId,
+          type: 'quick-deposit',
         },
-      ],
-      metadata: {
-        bookingId,
-        email,
-        name,
-        phone,
-        serviceName,
-        serviceId,
-        type: 'quick-deposit',
-      },
-      mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/quick-deposit/success?bookingId=${bookingId}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/quick-deposit?canceled=true`,
-    });
+        mode: 'payment',
+        success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/quick-deposit/success?bookingId=${bookingId}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/quick-deposit?canceled=true`,
+      });
+    } catch (bnplError: any) {
+      // If BNPL fails (not enabled in Stripe), fall back to card only
+      console.log('BNPL payment methods not available, falling back to card only:', bnplError.message);
+      session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `Deposit for ${serviceName || 'Permanent Makeup Service'}`,
+                description: 'Secure your appointment and receive the GRANDOPEN250 coupon code',
+                images: ['https://example.com/pmu-service.jpg'],
+              },
+              unit_amount: depositAmount,
+            },
+            quantity: 1,
+          },
+        ],
+        metadata: {
+          bookingId,
+          email,
+          name,
+          phone,
+          serviceName,
+          serviceId,
+          type: 'quick-deposit',
+        },
+        mode: 'payment',
+        success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/quick-deposit/success?bookingId=${bookingId}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/quick-deposit?canceled=true`,
+      });
+    }
 
     // Store the booking details in Firestore
     try {
