@@ -96,6 +96,8 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
   // Payment state
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'klarna' | 'afterpay' | 'affirm' | 'zelle' | 'external' | null>(null);
   const [depositAmount, setDepositAmount] = useState(50);
+  const [cardPaymentAmount, setCardPaymentAmount] = useState<'deposit' | 'full' | 'custom'>('deposit');
+  const [customCardAmount, setCustomCardAmount] = useState<number>(50);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [zelleConfirmed, setZelleConfirmed] = useState(false);
@@ -415,9 +417,22 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
   const handleStripePayment = async (paymentType: 'card' | 'klarna' | 'afterpay' | 'affirm') => {
     setProcessingPayment(true);
     try {
-      // BNPL methods require full payment, card uses deposit
+      // BNPL methods require full payment, card uses selected amount
       const isBNPL = ['klarna', 'afterpay', 'affirm'].includes(paymentType);
-      const paymentAmount = isBNPL ? servicePrice : depositAmount;
+      let paymentAmount: number;
+
+      if (isBNPL) {
+        paymentAmount = servicePrice;
+      } else {
+        // Card payment: use selected amount option
+        if (cardPaymentAmount === 'full') {
+          paymentAmount = servicePrice;
+        } else if (cardPaymentAmount === 'custom') {
+          paymentAmount = customCardAmount;
+        } else {
+          paymentAmount = depositAmount;
+        }
+      }
 
       // Create Stripe checkout session with specific payment method
       const response = await fetch('/api/create-deposit-session', {
@@ -589,6 +604,8 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
     setServicePrice(500);
     setNotes('');
     setPaymentMethod(null);
+    setCardPaymentAmount('deposit');
+    setCustomCardAmount(50);
     setPaymentComplete(false);
     setZelleConfirmed(false);
     setBookingCreated(false);
@@ -1261,6 +1278,71 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                             Secure payment processed via Stripe. You'll be redirected to Stripe's secure checkout to enter your card details.
                           </p>
                         </div>
+
+                        {/* Payment Amount Selection */}
+                        <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+                          <h4 className="font-medium text-gray-900">Select Payment Amount</h4>
+                          
+                          <div className="space-y-2">
+                            <label className="flex items-center gap-3 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="cardAmount"
+                                value="deposit"
+                                checked={cardPaymentAmount === 'deposit'}
+                                onChange={(e) => setCardPaymentAmount(e.target.value as 'deposit' | 'full' | 'custom')}
+                                className="w-5 h-5 text-[#AD6269] focus:ring-[#AD6269]"
+                              />
+                              <span className="text-sm text-gray-700">
+                                Deposit Only - <strong>${depositAmount}</strong> (to secure appointment)
+                              </span>
+                            </label>
+
+                            <label className="flex items-center gap-3 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="cardAmount"
+                                value="full"
+                                checked={cardPaymentAmount === 'full'}
+                                onChange={(e) => setCardPaymentAmount(e.target.value as 'deposit' | 'full' | 'custom')}
+                                className="w-5 h-5 text-[#AD6269] focus:ring-[#AD6269]"
+                              />
+                              <span className="text-sm text-gray-700">
+                                Full Payment - <strong>${servicePrice}</strong> (complete payment for service)
+                              </span>
+                            </label>
+
+                            <label className="flex items-center gap-3 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="cardAmount"
+                                value="custom"
+                                checked={cardPaymentAmount === 'custom'}
+                                onChange={(e) => setCardPaymentAmount(e.target.value as 'deposit' | 'full' | 'custom')}
+                                className="w-5 h-5 text-[#AD6269] focus:ring-[#AD6269]"
+                              />
+                              <span className="text-sm text-gray-700">Custom Amount</span>
+                            </label>
+
+                            {cardPaymentAmount === 'custom' && (
+                              <div className="ml-8 mt-2">
+                                <div className="relative">
+                                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    value={customCardAmount}
+                                    onChange={(e) => setCustomCardAmount(Number(e.target.value))}
+                                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
+                                    placeholder="Enter custom amount"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
                         <Button 
                           onClick={() => handleStripePayment('card')}
                           disabled={processingPayment}
@@ -1273,7 +1355,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                             </>
                           ) : (
                             <>
-                              Pay ${depositAmount} with Credit Card
+                              Pay ${cardPaymentAmount === 'full' ? servicePrice : cardPaymentAmount === 'custom' ? customCardAmount : depositAmount} with Credit Card
                             </>
                           )}
                         </Button>

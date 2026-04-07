@@ -26,11 +26,14 @@ export async function POST(request: Request) {
     const bookingId = `QD-${uuidv4().substring(0, 8).toUpperCase()}`;
 
     // Calculate the payment amount
-    // BNPL methods require full payment, card payments use deposit
+    // The servicePrice parameter now contains the actual payment amount
+    // For BNPL methods: full service price
+    // For card payments: could be deposit, full, or custom amount
+    const paymentAmount = (servicePrice || 500) * 100; // Convert to cents
+
+    // Determine if this is a full payment or deposit for product naming
     const isBNPL = ['klarna', 'afterpay', 'affirm'].includes(paymentMethodType);
-    const paymentAmount = isBNPL 
-      ? (servicePrice || 500) * 100 // Full service price in cents
-      : 5000; // $50 deposit in cents for card payments
+    const isFullPayment = isBNPL || paymentAmount > 5000; // Assume full payment if amount > $50
 
     // Determine payment method types based on selection
     let paymentMethodTypes: string[] = [];
@@ -71,10 +74,10 @@ export async function POST(request: Request) {
             price_data: {
               currency: 'usd',
               product_data: {
-                name: isBNPL 
+                name: isFullPayment 
                   ? `Payment for ${serviceName || 'Permanent Makeup Service'}`
                   : `Deposit for ${serviceName || 'Permanent Makeup Service'}`,
-                description: isBNPL 
+                description: isFullPayment 
                   ? 'Full payment for service'
                   : 'Secure your appointment',
               },
