@@ -29,35 +29,59 @@ export async function POST(request: Request) {
     const depositAmount = 5000; // In cents
 
     // Create the Stripe Checkout Session with all enabled payment methods
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card', 'klarna', 'afterpay_clearpay', 'affirm'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: `Deposit for ${serviceName || 'Permanent Makeup Service'}`,
-              description: 'Secure your appointment and receive the GRANDOPEN250 coupon code',
-              images: ['https://example.com/pmu-service.jpg'],
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card', 'klarna', 'afterpay_clearpay', 'affirm'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `Deposit for ${serviceName || 'Permanent Makeup Service'}`,
+                description: 'Secure your appointment and receive the GRANDOPEN250 coupon code',
+              },
+              unit_amount: depositAmount,
             },
-            unit_amount: depositAmount,
+            quantity: 1,
           },
-          quantity: 1,
+        ],
+        metadata: {
+          bookingId,
+          email,
+          name,
+          phone,
+          serviceName,
+          serviceId,
+          type: 'quick-deposit',
         },
-      ],
-      metadata: {
-        bookingId,
-        email,
-        name,
-        phone,
-        serviceName,
-        serviceId,
-        type: 'quick-deposit',
-      },
-      mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/quick-deposit/success?bookingId=${bookingId}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/quick-deposit?canceled=true`,
-    });
+        // BNPL methods require customer address collection
+        billing_address_collection: 'required',
+        shipping_address_collection: {
+          allowed_countries: ['US'],
+        },
+        customer_email: email,
+        mode: 'payment',
+        success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/quick-deposit/success?bookingId=${bookingId}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/quick-deposit?canceled=true`,
+      });
+    } catch (stripeError: any) {
+      console.error('Stripe error details:', {
+        message: stripeError.message,
+        code: stripeError.code,
+        type: stripeError.type,
+        decline_code: stripeError.decline_code,
+        param: stripeError.param,
+      });
+      return NextResponse.json(
+        { 
+          error: 'Failed to create checkout session', 
+          details: stripeError.message,
+          code: stripeError.code,
+        },
+        { status: 500 }
+      );
+    }
 
     // Store the booking details in Firestore
     try {
