@@ -87,6 +87,8 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
   const [selectedDate, setSelectedDate] = useState('');
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [calendarOverrideDate, setCalendarOverrideDate] = useState('');
+  const [calendarOverrideTime, setCalendarOverrideTime] = useState('');
+  const [useManualTime, setUseManualTime] = useState(false);
   const [duration, setDuration] = useState(180); // 3 hours default
   const [notes, setNotes] = useState('');
   
@@ -596,6 +598,8 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
     setSelectedSlot(null);
     setSelectedDate('');
     setCalendarOverrideDate('');
+    setCalendarOverrideTime('');
+    setUseManualTime(false);
     setServiceName('');
     setNotes('');
     setPaymentMethod(null);
@@ -966,13 +970,63 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
                       />
                     </div>
-                    <Button 
-                      onClick={() => fetchSlotsForDate(calendarOverrideDate)}
-                      disabled={!calendarOverrideDate}
-                      className="w-full bg-[#AD6269] hover:bg-[#9d5860]"
-                    >
-                      Find Available Times
-                    </Button>
+                    
+                    {/* Manual Time Entry Option */}
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="useManualTime"
+                        checked={useManualTime}
+                        onChange={(e) => setUseManualTime(e.target.checked)}
+                        className="w-5 h-5 rounded border-gray-300 text-[#AD6269] focus:ring-[#AD6269]"
+                      />
+                      <label htmlFor="useManualTime" className="text-sm font-medium text-gray-700 cursor-pointer">
+                        Enter time manually (skip availability check)
+                      </label>
+                    </div>
+                    
+                    {useManualTime && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Enter Time</label>
+                        <input
+                          type="time"
+                          value={calendarOverrideTime}
+                          onChange={(e) => setCalendarOverrideTime(e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
+                        />
+                      </div>
+                    )}
+                    
+                    {useManualTime ? (
+                      <Button 
+                        onClick={() => {
+                          if (calendarOverrideDate && calendarOverrideTime) {
+                            const endHour = parseInt(calendarOverrideTime.split(':')[0]) + 3;
+                            const endTime = `${String(endHour).padStart(2, '0')}:${calendarOverrideTime.split(':')[1]}`;
+                            setSelectedSlot({
+                              time: calendarOverrideTime,
+                              endTime: endTime,
+                              available: true,
+                              calendarId: calendars[0]?.id || '',
+                              calendarName: calendars[0]?.name || 'Default Calendar'
+                            });
+                            setSelectedDate(calendarOverrideDate);
+                          }
+                        }}
+                        disabled={!calendarOverrideDate || !calendarOverrideTime}
+                        className="w-full bg-[#AD6269] hover:bg-[#9d5860]"
+                      >
+                        Use This Time
+                      </Button>
+                    ) : (
+                      <Button 
+                        onClick={() => fetchSlotsForDate(calendarOverrideDate)}
+                        disabled={!calendarOverrideDate}
+                        className="w-full bg-[#AD6269] hover:bg-[#9d5860]"
+                      >
+                        Find Available Times
+                      </Button>
+                    )}
                   </div>
                 )}
 
