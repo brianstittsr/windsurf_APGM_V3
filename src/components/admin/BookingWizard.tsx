@@ -81,6 +81,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
   // Appointment state
   const [selectedCalendar, setSelectedCalendar] = useState('');
   const [serviceName, setServiceName] = useState('');
+  const [servicePrice, setServicePrice] = useState<number>(500); // Custom service price
   const [dateSelectionMode, setDateSelectionMode] = useState<DateSelectionMode | null>(null);
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
@@ -98,6 +99,15 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [zelleConfirmed, setZelleConfirmed] = useState(false);
+  
+  // Credit card form state
+  const [creditCardForm, setCreditCardForm] = useState({
+    cardNumber: '',
+    expiryDate: '',
+    cvv: '',
+    cardholderName: ''
+  });
+  const [saveCardForFuture, setSaveCardForFuture] = useState(false);
   const [externalPaymentNote, setExternalPaymentNote] = useState('');
   
   // Final booking state
@@ -491,7 +501,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
         time: selectedSlot.time,
         endTime: selectedSlot.endTime,
         status: 'confirmed',
-        price: 0, // Set based on service
+        price: servicePrice, // Use custom service price
         depositPaid: paymentComplete,
         depositMethod: paymentMethod,
         depositAmount: depositAmount,
@@ -580,6 +590,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
     setCalendarOverrideTime('');
     setUseManualTime(false);
     setServiceName('');
+    setServicePrice(500);
     setNotes('');
     setPaymentMethod(null);
     setPaymentComplete(false);
@@ -899,6 +910,26 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                   </select>
                 </div>
 
+                {/* Custom Price Input */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Service Price ($)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={servicePrice}
+                      onChange={(e) => setServicePrice(Number(e.target.value))}
+                      className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
+                      placeholder="Enter service price"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Enter the total price for this service</p>
+                </div>
+
                 {/* Date Selection Mode Buttons */}
                 {!dateSelectionMode && (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1174,9 +1205,94 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                       </button>
                     </div>
 
-                    {/* Stripe Payment Button */}
+                    {/* Stripe Payment Form */}
                     {paymentMethod === 'stripe' && (
-                      <div className="space-y-3">
+                      <div className="space-y-4">
+                        {/* Credit Card Form */}
+                        <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
+                          <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                            <CreditCard className="w-5 h-5" />
+                            Credit Card Information
+                          </h4>
+                          
+                          {/* Card Number */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
+                            <input
+                              type="text"
+                              maxLength={19}
+                              value={creditCardForm.cardNumber}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 ');
+                                setCreditCardForm({ ...creditCardForm, cardNumber: value });
+                              }}
+                              placeholder="1234 5678 9012 3456"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
+                            />
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            {/* Expiry Date */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                              <input
+                                type="text"
+                                maxLength={5}
+                                value={creditCardForm.expiryDate}
+                                onChange={(e) => {
+                                  let value = e.target.value.replace(/\D/g, '');
+                                  if (value.length >= 2) {
+                                    value = value.slice(0, 2) + '/' + value.slice(2, 4);
+                                  }
+                                  setCreditCardForm({ ...creditCardForm, expiryDate: value });
+                                }}
+                                placeholder="MM/YY"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
+                              />
+                            </div>
+                            
+                            {/* CVV */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
+                              <input
+                                type="text"
+                                maxLength={4}
+                                value={creditCardForm.cvv}
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(/\D/g, '');
+                                  setCreditCardForm({ ...creditCardForm, cvv: value });
+                                }}
+                                placeholder="123"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
+                              />
+                            </div>
+                          </div>
+                          
+                          {/* Cardholder Name */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Cardholder Name</label>
+                            <input
+                              type="text"
+                              value={creditCardForm.cardholderName}
+                              onChange={(e) => setCreditCardForm({ ...creditCardForm, cardholderName: e.target.value })}
+                              placeholder="Name as it appears on card"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
+                            />
+                          </div>
+                          
+                          {/* Save Card for Future */}
+                          <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={saveCardForFuture}
+                              onChange={(e) => setSaveCardForFuture(e.target.checked)}
+                              className="w-5 h-5 rounded border-gray-300 text-[#AD6269] focus:ring-[#AD6269]"
+                            />
+                            <span className="text-sm text-gray-700">Save card for future payments</span>
+                          </label>
+                        </div>
+
+                        {/* BNPL Info */}
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                           <p className="text-blue-800 text-sm">
                             <strong>Includes:</strong> Credit/Debit Card,
@@ -1192,9 +1308,10 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                           </p>
                           <p className="text-blue-600 text-xs mt-1">Buy Now, Pay Later options available at checkout</p>
                         </div>
+                        
                         <Button 
                           onClick={handleStripePayment}
-                          disabled={processingPayment}
+                          disabled={processingPayment || !creditCardForm.cardNumber || !creditCardForm.expiryDate || !creditCardForm.cvv || !creditCardForm.cardholderName}
                           className="w-full bg-[#635BFF] hover:bg-[#5851db] text-white"
                         >
                           {processingPayment ? (
@@ -1360,6 +1477,10 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                     <div>
                       <span className="text-gray-500">Time:</span>
                       <p className="font-medium text-gray-900">{selectedSlot?.time} - {selectedSlot?.endTime}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Service Price:</span>
+                      <p className="font-medium text-gray-900">${servicePrice}</p>
                     </div>
                     <div>
                       <span className="text-gray-500">Deposit:</span>
