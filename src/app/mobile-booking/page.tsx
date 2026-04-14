@@ -88,7 +88,9 @@ export default function MobileBookingPage() {
   
   // Payment state
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'zelle' | 'external' | null>(null);
-  const [depositAmount] = useState(50);
+  const [stripeSubMethod, setStripeSubMethod] = useState<'card' | 'klarna' | 'afterpay' | 'affirm'>('card');
+  const [depositAmount, setDepositAmount] = useState(50);
+  const [customAmountInput, setCustomAmountInput] = useState<string>('50');
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [zelleConfirmed, setZelleConfirmed] = useState(false);
@@ -352,6 +354,8 @@ export default function MobileBookingPage() {
   const handleStripePayment = async () => {
     setProcessingPayment(true);
     try {
+      const isBNPL = ['klarna', 'afterpay', 'affirm'].includes(stripeSubMethod);
+      const paymentAmount = isBNPL ? depositAmount : depositAmount;
       const response = await fetch('/api/create-deposit-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -360,7 +364,8 @@ export default function MobileBookingPage() {
           name: selectedClient?.displayName || `${selectedClient?.firstName} ${selectedClient?.lastName}`,
           phone: selectedClient?.phone || '',
           serviceName: serviceName || 'PMU Appointment',
-          servicePrice: depositAmount
+          servicePrice: paymentAmount,
+          paymentMethodType: stripeSubMethod
         })
       });
 
@@ -975,6 +980,7 @@ export default function MobileBookingPage() {
               <div className="space-y-3">
                 <p className="text-sm font-medium text-gray-700">Payment Method</p>
                 
+                {/* Pay with Stripe option */}
                 <button
                   onClick={() => setPaymentMethod('stripe')}
                   className={`w-full p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${
@@ -984,11 +990,81 @@ export default function MobileBookingPage() {
                   <div className="w-12 h-12 bg-[#635BFF] rounded-lg flex items-center justify-center">
                     <CreditCard className="w-6 h-6 text-white" />
                   </div>
-                  <div className="text-left">
-                    <h4 className="font-semibold text-gray-900">Card Payment</h4>
-                    <p className="text-xs text-gray-500">Stripe Checkout</p>
+                  <div className="text-left flex-1">
+                    <h4 className="font-semibold text-gray-900">Pay with Stripe</h4>
+                    <p className="text-xs text-gray-500">Card, Klarna, Afterpay, Affirm</p>
                   </div>
                 </button>
+
+                {/* Stripe expanded panel */}
+                {paymentMethod === 'stripe' && (
+                  <div className="border border-[#635BFF]/30 rounded-xl p-4 bg-[#635BFF]/5 space-y-4">
+                    {/* Sub-method selection */}
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 mb-2">Select payment type:</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { id: 'card' as const, label: 'Credit/Debit Card', color: 'bg-[#635BFF]', text: '💳' },
+                          { id: 'klarna' as const, label: 'Klarna', color: 'bg-pink-500', text: 'K' },
+                          { id: 'afterpay' as const, label: 'Afterpay', color: 'bg-black', text: 'AP' },
+                          { id: 'affirm' as const, label: 'Affirm', color: 'bg-blue-600', text: 'A' },
+                        ].map(method => (
+                          <button
+                            key={method.id}
+                            type="button"
+                            onClick={() => setStripeSubMethod(method.id)}
+                            className={`p-3 rounded-lg border-2 flex items-center gap-2 transition-all text-left ${
+                              stripeSubMethod === method.id
+                                ? 'border-[#635BFF] bg-white shadow-sm'
+                                : 'border-gray-200 bg-white hover:border-gray-300'
+                            }`}
+                          >
+                            <div className={`w-8 h-8 ${method.color} rounded flex items-center justify-center text-white text-xs font-bold flex-shrink-0`}>
+                              {method.text}
+                            </div>
+                            <span className="text-xs font-medium text-gray-800">{method.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Amount input */}
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 mb-1">Payment amount:</p>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={customAmountInput}
+                          onChange={(e) => {
+                            setCustomAmountInput(e.target.value);
+                            const val = parseFloat(e.target.value);
+                            if (!isNaN(val) && val > 0) setDepositAmount(val);
+                          }}
+                          className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#635BFF] text-sm"
+                          placeholder="50"
+                        />
+                      </div>
+                      {['klarna', 'afterpay', 'affirm'].includes(stripeSubMethod) && (
+                        <p className="text-xs text-blue-600 mt-1">Buy Now, Pay Later — full amount split into installments</p>
+                      )}
+                    </div>
+
+                    <Button 
+                      onClick={handleStripePayment}
+                      disabled={processingPayment || !depositAmount || depositAmount <= 0}
+                      className="w-full h-12 bg-[#635BFF] hover:bg-[#5851db] text-white"
+                    >
+                      {processingPayment ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        `Pay $${depositAmount} with ${stripeSubMethod === 'card' ? 'Stripe' : stripeSubMethod.charAt(0).toUpperCase() + stripeSubMethod.slice(1)}`
+                      )}
+                    </Button>
+                  </div>
+                )}
 
                 <button
                   onClick={() => setPaymentMethod('zelle')}
@@ -1015,25 +1091,10 @@ export default function MobileBookingPage() {
                     <DollarSign className="w-6 h-6 text-white" />
                   </div>
                   <div className="text-left">
-                    <h4 className="font-semibold text-gray-900">External</h4>
+                    <h4 className="font-semibold text-gray-900">External Payment</h4>
                     <p className="text-xs text-gray-500">Cash, Check, Other</p>
                   </div>
                 </button>
-
-                {/* Stripe Button */}
-                {paymentMethod === 'stripe' && (
-                  <Button 
-                    onClick={handleStripePayment}
-                    disabled={processingPayment}
-                    className="w-full h-14 bg-[#635BFF] hover:bg-[#5851db] text-lg"
-                  >
-                    {processingPayment ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      `Pay $${depositAmount}`
-                    )}
-                  </Button>
-                )}
 
                 {/* Zelle */}
                 {paymentMethod === 'zelle' && (
