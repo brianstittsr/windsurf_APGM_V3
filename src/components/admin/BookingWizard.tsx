@@ -1184,8 +1184,25 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#AD6269]/10 mb-4">
                     <CreditCard className="w-8 h-8 text-[#AD6269]" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900">Deposit Payment</h3>
-                  <p className="text-gray-500 mt-2">Collect ${depositAmount} deposit to confirm booking</p>
+                  <h3 className="text-xl font-semibold text-gray-900">Payment</h3>
+                  <p className="text-gray-500 mt-1 text-sm">Enter the amount to collect and select a payment method</p>
+                  <div className="mt-3 inline-flex items-center gap-2 bg-white border-2 border-[#AD6269]/30 rounded-xl px-4 py-2 focus-within:border-[#AD6269]">
+                    <span className="text-[#AD6269] font-bold text-lg">$</span>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={customDepositInput}
+                      onChange={(e) => {
+                        setCustomDepositInput(e.target.value);
+                        const v = parseFloat(e.target.value);
+                        if (!isNaN(v) && v > 0) setDepositAmount(v);
+                        setStripeClientSecret(null);
+                      }}
+                      className="w-24 text-center text-2xl font-bold text-[#AD6269] border-none outline-none bg-transparent"
+                      placeholder="50"
+                    />
+                  </div>
                 </div>
 
                 {/* Booking Summary */}
@@ -1315,69 +1332,23 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                     {/* Stripe Payment (card / Klarna / Afterpay / Affirm) */}
                     {(paymentMethod === 'card' || paymentMethod === 'klarna' || paymentMethod === 'afterpay' || paymentMethod === 'affirm') && (
                       <div className="space-y-4">
-                        {/* Amount selector — only for card */}
+                        {/* Full payment override for card — amount above is the default */}
                         {paymentMethod === 'card' && !stripeClientSecret && (
-                          <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
-                            <h4 className="font-medium text-gray-900">Payment Amount</h4>
-                            <div className="space-y-2">
-                              <label className="flex items-center gap-3 cursor-pointer">
-                                <input type="radio" name="cardAmount" value="deposit"
-                                  checked={cardPaymentAmount === 'deposit'}
-                                  onChange={(e) => { setCardPaymentAmount('deposit'); setStripeClientSecret(null); }}
-                                  className="w-4 h-4 text-[#AD6269] focus:ring-[#AD6269]"
-                                />
-                                <span className="text-sm text-gray-700">
-                                  Deposit — <strong className="text-[#AD6269]">${depositAmount}</strong>
-                                  <span className="ml-2 text-gray-400 text-xs">(editable below)</span>
-                                </span>
-                              </label>
-                              {cardPaymentAmount === 'deposit' && (
-                                <div className="ml-7 relative w-40">
-                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
-                                  <input
-                                    type="number" min="1" step="1"
-                                    value={customDepositInput}
-                                    onChange={(e) => {
-                                      setCustomDepositInput(e.target.value);
-                                      const v = parseFloat(e.target.value);
-                                      if (!isNaN(v) && v > 0) setDepositAmount(v);
-                                      setStripeClientSecret(null);
-                                    }}
-                                    className="w-full pl-7 pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
-                                  />
-                                </div>
-                              )}
-                              <label className="flex items-center gap-3 cursor-pointer">
-                                <input type="radio" name="cardAmount" value="full"
-                                  checked={cardPaymentAmount === 'full'}
-                                  onChange={(e) => { setCardPaymentAmount('full'); setStripeClientSecret(null); }}
-                                  className="w-4 h-4 text-[#AD6269] focus:ring-[#AD6269]"
-                                />
-                                <span className="text-sm text-gray-700">
-                                  Full Payment — <strong className="text-[#AD6269]">${servicePrice}</strong>
-                                </span>
-                              </label>
-                              <label className="flex items-center gap-3 cursor-pointer">
-                                <input type="radio" name="cardAmount" value="custom"
-                                  checked={cardPaymentAmount === 'custom'}
-                                  onChange={(e) => { setCardPaymentAmount('custom'); setStripeClientSecret(null); }}
-                                  className="w-4 h-4 text-[#AD6269] focus:ring-[#AD6269]"
-                                />
-                                <span className="text-sm text-gray-700">Custom Amount</span>
-                              </label>
-                              {cardPaymentAmount === 'custom' && (
-                                <div className="ml-7 relative w-40">
-                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
-                                  <input
-                                    type="number" min="1" step="1"
-                                    value={customCardAmount}
-                                    onChange={(e) => { setCustomCardAmount(Number(e.target.value)); setStripeClientSecret(null); }}
-                                    className="w-full pl-7 pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
-                                    placeholder="0"
-                                  />
-                                </div>
-                              )}
-                            </div>
+                          <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-4 py-3">
+                            <input
+                              type="checkbox"
+                              id="fullPaymentToggle"
+                              checked={cardPaymentAmount === 'full'}
+                              onChange={(e) => {
+                                setCardPaymentAmount(e.target.checked ? 'full' : 'deposit');
+                                setStripeClientSecret(null);
+                              }}
+                              className="w-4 h-4 text-[#AD6269] rounded focus:ring-[#AD6269]"
+                            />
+                            <label htmlFor="fullPaymentToggle" className="text-sm text-gray-700 cursor-pointer">
+                              Charge full service price instead —{' '}
+                              <strong className="text-[#AD6269]">${servicePrice}</strong>
+                            </label>
                           </div>
                         )}
 
