@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { collection, getDocs, addDoc, query, where, orderBy } from 'firebase/firestore';
 import { getDb } from '../../lib/firebase';
 import { useAuth } from '../../hooks/useAuth';
@@ -24,6 +26,8 @@ import {
   CalendarClock,
   DollarSign
 } from 'lucide-react';
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string);
 
 interface Client {
   id: string;
@@ -51,6 +55,57 @@ interface BookingWizardProps {
 
 type WizardStep = 'client-type' | 'client-selection' | 'new-client' | 'date-selection' | 'payment' | 'confirmation';
 type DateSelectionMode = 'next-available' | 'weekend' | 'calendar-override';
+
+interface InlineStripeFormProps {
+  onSuccess: () => void;
+  onError: (msg: string) => void;
+}
+
+function InlineStripeForm({ onSuccess, onError }: InlineStripeFormProps) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+    setSubmitting(true);
+    setErrorMsg(null);
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: { return_url: window.location.href },
+      redirect: 'if_required',
+    });
+    if (error) {
+      setErrorMsg(error.message ?? 'Payment failed');
+      onError(error.message ?? 'Payment failed');
+      setSubmitting(false);
+    } else {
+      onSuccess();
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <PaymentElement options={{ layout: 'tabs' }} />
+      {errorMsg && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{errorMsg}</p>
+      )}
+      <Button
+        type="submit"
+        disabled={!stripe || submitting}
+        className="w-full bg-[#635BFF] hover:bg-[#5851db] text-white h-12"
+      >
+        {submitting ? (
+          <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processing...</>
+        ) : (
+          <><CreditCard className="w-4 h-4 mr-2" />Confirm Payment</>
+        )}
+      </Button>
+    </form>
+  );
+}
 
 export default function BookingWizard({ isOpen, onClose, onBookingCreated, calendars }: BookingWizardProps) {
   const { user: currentUser } = useAuth();
@@ -96,12 +151,18 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
   // Payment state
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'klarna' | 'afterpay' | 'affirm' | 'zelle' | 'external' | null>(null);
   const [depositAmount, setDepositAmount] = useState(50);
+  const [customDepositInput, setCustomDepositInput] = useState<string>('50');
   const [cardPaymentAmount, setCardPaymentAmount] = useState<'deposit' | 'full' | 'custom'>('deposit');
   const [customCardAmount, setCustomCardAmount] = useState<number>(50);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [zelleConfirmed, setZelleConfirmed] = useState(false);
   const [externalPaymentNote, setExternalPaymentNote] = useState('');
+  // Inline Stripe payment state
+  const [stripeClientSecret, setStripeClientSecret] = useState<string | null>(null);
+  const [stripePaymentMethodTypes, setStripePaymentMethodTypes] = useState<string[]>(['card']);
+  const [stripePaymentError, setStripePaymentError] = useState<string | null>(null);
+  const [loadingPaymentIntent, setLoadingPaymentIntent] = useState(false);
   
   // Final booking state
   const [creatingBooking, setCreatingBooking] = useState(false);
@@ -414,72 +475,54 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
     await fetchAvailableSlots(mode);
   };
 
-  const handleStripePayment = async (paymentType: 'card' | 'klarna' | 'afterpay' | 'affirm') => {
-    setProcessingPayment(true);
+  const computeStripeAmount = useCallback((paymentType: 'card' | 'klarna' | 'afterpay' | 'affirm'): number => {
+    const isBNPL = ['klarna', 'afterpay', 'affirm'].includes(paymentType);
+    if (isBNPL) return servicePrice;
+    if (cardPaymentAmount === 'full') return servicePrice;
+    if (cardPaymentAmount === 'custom') return customCardAmount;
+    return depositAmount;
+  }, [servicePrice, cardPaymentAmount, customCardAmount, depositAmount]);
+
+  const handleInitStripePayment = async (paymentType: 'card' | 'klarna' | 'afterpay' | 'affirm') => {
+    setLoadingPaymentIntent(true);
+    setStripeClientSecret(null);
+    setStripePaymentError(null);
     try {
-      // BNPL methods require full payment, card uses selected amount
-      const isBNPL = ['klarna', 'afterpay', 'affirm'].includes(paymentType);
-      let paymentAmount: number;
+      const paymentAmount = computeStripeAmount(paymentType);
+      const methodTypes = paymentType === 'card' ? ['card'] :
+        paymentType === 'klarna' ? ['klarna'] :
+        paymentType === 'afterpay' ? ['afterpay_clearpay'] : ['affirm'];
 
-      if (isBNPL) {
-        paymentAmount = servicePrice;
-      } else {
-        // Card payment: use selected amount option
-        if (cardPaymentAmount === 'full') {
-          paymentAmount = servicePrice;
-        } else if (cardPaymentAmount === 'custom') {
-          paymentAmount = customCardAmount;
-        } else {
-          paymentAmount = depositAmount;
-        }
-      }
+      setStripePaymentMethodTypes(methodTypes);
 
-      // Create Stripe checkout session with specific payment method
-      const response = await fetch('/api/create-deposit-session', {
+      const response = await fetch('/api/create-payment-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: selectedClient?.email,
-          name: selectedClient?.displayName || `${selectedClient?.firstName} ${selectedClient?.lastName}`,
-          phone: selectedClient?.phone || '',
-          serviceName: serviceName || 'PMU Appointment',
-          servicePrice: paymentAmount,
-          paymentMethodType: paymentType,
-        })
+          amount: Math.round(paymentAmount * 100),
+          currency: 'usd',
+          payment_method_types: methodTypes,
+        }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create payment session');
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to create payment intent');
       }
 
-      const { url } = await response.json();
-      
-      // Redirect to Stripe checkout using the URL from the API
-      if (url) {
-        window.open(url, '_blank');
-      } else {
-        throw new Error('No checkout URL returned');
-      }
-      
-      // For now, mark as complete (in production, you'd use webhooks)
-      await showAlert({
-        title: 'Payment Window Opened',
-        description: 'Complete the payment in the new window. Click OK once payment is complete.',
-        variant: 'default'
-      });
-      
-      setPaymentComplete(true);
+      const { client_secret } = await response.json();
+      setStripeClientSecret(client_secret);
     } catch (error) {
-      console.error('Error processing payment:', error);
-      await showAlert({
-        title: 'Payment Error',
-        description: error instanceof Error ? error.message : 'Failed to process payment. Please try again.',
-        variant: 'destructive'
-      });
+      const msg = error instanceof Error ? error.message : 'Failed to initialize payment';
+      setStripePaymentError(msg);
     } finally {
-      setProcessingPayment(false);
+      setLoadingPaymentIntent(false);
     }
+  };
+
+  const handleStripePaymentSuccess = () => {
+    setPaymentComplete(true);
+    setStripeClientSecret(null);
   };
 
   const handleZellePayment = () => {
@@ -1164,7 +1207,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {/* Credit Card */}
                       <button
-                        onClick={() => setPaymentMethod('card')}
+                        onClick={() => { setPaymentMethod('card'); setStripeClientSecret(null); setStripePaymentError(null); }}
                         className={`p-4 border-2 rounded-xl transition-all ${
                           paymentMethod === 'card'
                             ? 'border-[#AD6269] bg-[#AD6269]/10'
@@ -1180,7 +1223,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
 
                       {/* Klarna */}
                       <button
-                        onClick={() => setPaymentMethod('klarna')}
+                        onClick={() => { setPaymentMethod('klarna'); setStripeClientSecret(null); setStripePaymentError(null); }}
                         className={`p-4 border-2 rounded-xl transition-all ${
                           paymentMethod === 'klarna'
                             ? 'border-[#AD6269] bg-[#AD6269]/10'
@@ -1198,7 +1241,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
 
                       {/* Afterpay */}
                       <button
-                        onClick={() => setPaymentMethod('afterpay')}
+                        onClick={() => { setPaymentMethod('afterpay'); setStripeClientSecret(null); setStripePaymentError(null); }}
                         className={`p-4 border-2 rounded-xl transition-all ${
                           paymentMethod === 'afterpay'
                             ? 'border-[#AD6269] bg-[#AD6269]/10'
@@ -1216,7 +1259,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
 
                       {/* Affirm */}
                       <button
-                        onClick={() => setPaymentMethod('affirm')}
+                        onClick={() => { setPaymentMethod('affirm'); setStripeClientSecret(null); setStripePaymentError(null); }}
                         className={`p-4 border-2 rounded-xl transition-all ${
                           paymentMethod === 'affirm'
                             ? 'border-[#AD6269] bg-[#AD6269]/10'
@@ -1269,189 +1312,146 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                       </button>
                     </div>
 
-                    {/* Credit Card Payment */}
-                    {paymentMethod === 'card' && (
+                    {/* Stripe Payment (card / Klarna / Afterpay / Affirm) */}
+                    {(paymentMethod === 'card' || paymentMethod === 'klarna' || paymentMethod === 'afterpay' || paymentMethod === 'affirm') && (
                       <div className="space-y-4">
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                          <h4 className="font-semibold text-blue-900 mb-2">Credit Card Payment</h4>
-                          <p className="text-blue-800 text-sm">
-                            Secure payment processed via Stripe. You'll be redirected to Stripe's secure checkout to enter your card details.
-                          </p>
-                        </div>
-
-                        {/* Payment Amount Selection */}
-                        <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
-                          <h4 className="font-medium text-gray-900">Select Payment Amount</h4>
-                          
-                          <div className="space-y-2">
-                            <label className="flex items-center gap-3 cursor-pointer">
-                              <input
-                                type="radio"
-                                name="cardAmount"
-                                value="deposit"
-                                checked={cardPaymentAmount === 'deposit'}
-                                onChange={(e) => setCardPaymentAmount(e.target.value as 'deposit' | 'full' | 'custom')}
-                                className="w-5 h-5 text-[#AD6269] focus:ring-[#AD6269]"
-                              />
-                              <span className="text-sm text-gray-700">
-                                Deposit Only - <strong>${depositAmount}</strong> (to secure appointment)
-                              </span>
-                            </label>
-
-                            <label className="flex items-center gap-3 cursor-pointer">
-                              <input
-                                type="radio"
-                                name="cardAmount"
-                                value="full"
-                                checked={cardPaymentAmount === 'full'}
-                                onChange={(e) => setCardPaymentAmount(e.target.value as 'deposit' | 'full' | 'custom')}
-                                className="w-5 h-5 text-[#AD6269] focus:ring-[#AD6269]"
-                              />
-                              <span className="text-sm text-gray-700">
-                                Full Payment - <strong>${servicePrice}</strong> (complete payment for service)
-                              </span>
-                            </label>
-
-                            <label className="flex items-center gap-3 cursor-pointer">
-                              <input
-                                type="radio"
-                                name="cardAmount"
-                                value="custom"
-                                checked={cardPaymentAmount === 'custom'}
-                                onChange={(e) => setCardPaymentAmount(e.target.value as 'deposit' | 'full' | 'custom')}
-                                className="w-5 h-5 text-[#AD6269] focus:ring-[#AD6269]"
-                              />
-                              <span className="text-sm text-gray-700">Custom Amount</span>
-                            </label>
-
-                            {cardPaymentAmount === 'custom' && (
-                              <div className="ml-8 mt-2">
-                                <div className="relative">
-                                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                        {/* Amount selector — only for card */}
+                        {paymentMethod === 'card' && !stripeClientSecret && (
+                          <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+                            <h4 className="font-medium text-gray-900">Payment Amount</h4>
+                            <div className="space-y-2">
+                              <label className="flex items-center gap-3 cursor-pointer">
+                                <input type="radio" name="cardAmount" value="deposit"
+                                  checked={cardPaymentAmount === 'deposit'}
+                                  onChange={(e) => { setCardPaymentAmount('deposit'); setStripeClientSecret(null); }}
+                                  className="w-4 h-4 text-[#AD6269] focus:ring-[#AD6269]"
+                                />
+                                <span className="text-sm text-gray-700">
+                                  Deposit — <strong className="text-[#AD6269]">${depositAmount}</strong>
+                                  <span className="ml-2 text-gray-400 text-xs">(editable below)</span>
+                                </span>
+                              </label>
+                              {cardPaymentAmount === 'deposit' && (
+                                <div className="ml-7 relative w-40">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
                                   <input
-                                    type="number"
-                                    min="0"
-                                    step="1"
-                                    value={customCardAmount}
-                                    onChange={(e) => setCustomCardAmount(Number(e.target.value))}
-                                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
-                                    placeholder="Enter custom amount"
+                                    type="number" min="1" step="1"
+                                    value={customDepositInput}
+                                    onChange={(e) => {
+                                      setCustomDepositInput(e.target.value);
+                                      const v = parseFloat(e.target.value);
+                                      if (!isNaN(v) && v > 0) setDepositAmount(v);
+                                      setStripeClientSecret(null);
+                                    }}
+                                    className="w-full pl-7 pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
                                   />
                                 </div>
-                              </div>
-                            )}
+                              )}
+                              <label className="flex items-center gap-3 cursor-pointer">
+                                <input type="radio" name="cardAmount" value="full"
+                                  checked={cardPaymentAmount === 'full'}
+                                  onChange={(e) => { setCardPaymentAmount('full'); setStripeClientSecret(null); }}
+                                  className="w-4 h-4 text-[#AD6269] focus:ring-[#AD6269]"
+                                />
+                                <span className="text-sm text-gray-700">
+                                  Full Payment — <strong className="text-[#AD6269]">${servicePrice}</strong>
+                                </span>
+                              </label>
+                              <label className="flex items-center gap-3 cursor-pointer">
+                                <input type="radio" name="cardAmount" value="custom"
+                                  checked={cardPaymentAmount === 'custom'}
+                                  onChange={(e) => { setCardPaymentAmount('custom'); setStripeClientSecret(null); }}
+                                  className="w-4 h-4 text-[#AD6269] focus:ring-[#AD6269]"
+                                />
+                                <span className="text-sm text-gray-700">Custom Amount</span>
+                              </label>
+                              {cardPaymentAmount === 'custom' && (
+                                <div className="ml-7 relative w-40">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
+                                  <input
+                                    type="number" min="1" step="1"
+                                    value={customCardAmount}
+                                    onChange={(e) => { setCustomCardAmount(Number(e.target.value)); setStripeClientSecret(null); }}
+                                    className="w-full pl-7 pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
+                                    placeholder="0"
+                                  />
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
+                        )}
 
-                        <Button 
-                          onClick={() => handleStripePayment('card')}
-                          disabled={processingPayment}
-                          className="w-full bg-[#635BFF] hover:bg-[#5851db] text-white"
-                        >
-                          {processingPayment ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Processing...
-                            </>
-                          ) : (
-                            <>
-                              Pay ${cardPaymentAmount === 'full' ? servicePrice : cardPaymentAmount === 'custom' ? customCardAmount : depositAmount} with Credit Card
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    )}
+                        {/* BNPL info banners */}
+                        {paymentMethod === 'klarna' && !stripeClientSecret && (
+                          <div className="bg-pink-50 border border-pink-200 rounded-lg p-3 text-sm text-pink-800">
+                            Pay <strong>${servicePrice}</strong> in 4 interest-free installments or in 30 days via Klarna.
+                          </div>
+                        )}
+                        {paymentMethod === 'afterpay' && !stripeClientSecret && (
+                          <div className="bg-gray-50 border border-gray-300 rounded-lg p-3 text-sm text-gray-800">
+                            Pay <strong>${servicePrice}</strong> in 4 equal fortnightly installments via Afterpay. US only.
+                          </div>
+                        )}
+                        {paymentMethod === 'affirm' && !stripeClientSecret && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+                            Pay <strong>${servicePrice}</strong> in monthly installments over 3–12 months via Affirm. US &amp; CA only.
+                          </div>
+                        )}
 
-                    {/* Klarna Payment */}
-                    {paymentMethod === 'klarna' && (
-                      <div className="space-y-4">
-                        <div className="bg-pink-50 border border-pink-200 rounded-lg p-4">
-                          <h4 className="font-semibold text-pink-900 mb-2">Klarna Payment</h4>
-                          <p className="text-pink-800 text-sm mb-2">
-                            Pay the full service price (${servicePrice}) in 4 interest-free payments or in 30 days. You'll be redirected to Klarna to complete your payment.
-                          </p>
-                          <p className="text-pink-700 text-xs">
-                            Requires billing and shipping address. Available for eligible customers.
-                          </p>
-                        </div>
-                        <Button 
-                          onClick={() => handleStripePayment('klarna')}
-                          disabled={processingPayment}
-                          className="w-full bg-pink-600 hover:bg-pink-700 text-white"
-                        >
-                          {processingPayment ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Processing...
-                            </>
-                          ) : (
-                            <>
-                              Pay ${servicePrice} with Klarna
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    )}
+                        {/* Error message */}
+                        {stripePaymentError && (
+                          <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">{stripePaymentError}</p>
+                        )}
 
-                    {/* Afterpay Payment */}
-                    {paymentMethod === 'afterpay' && (
-                      <div className="space-y-4">
-                        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
-                          <h4 className="font-semibold text-white mb-2">Afterpay Payment</h4>
-                          <p className="text-gray-300 text-sm mb-2">
-                            Pay the full service price (${servicePrice}) in 4 equal installments, due every 2 weeks. You'll be redirected to Afterpay to complete your payment.
-                          </p>
-                          <p className="text-gray-400 text-xs">
-                            US customers only. Requires billing and shipping address. First payment due at checkout.
-                          </p>
-                        </div>
-                        <Button 
-                          onClick={() => handleStripePayment('afterpay')}
-                          disabled={processingPayment}
-                          className="w-full bg-black hover:bg-gray-800 text-white"
-                        >
-                          {processingPayment ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Processing...
-                            </>
-                          ) : (
-                            <>
-                              Pay ${servicePrice} with Afterpay
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    )}
-
-                    {/* Affirm Payment */}
-                    {paymentMethod === 'affirm' && (
-                      <div className="space-y-4">
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                          <h4 className="font-semibold text-blue-900 mb-2">Affirm Payment</h4>
-                          <p className="text-blue-800 text-sm mb-2">
-                            Pay the full service price (${servicePrice}) in monthly installments over 3, 6, or 12 months. You'll be redirected to Affirm to complete your payment.
-                          </p>
-                          <p className="text-blue-700 text-xs">
-                            US and Canada only. Requires billing and shipping address. Rates from 10% to 36% APR.
-                          </p>
-                        </div>
-                        <Button 
-                          onClick={() => handleStripePayment('affirm')}
-                          disabled={processingPayment}
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                          {processingPayment ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Processing...
-                            </>
-                          ) : (
-                            <>
-                              Pay ${servicePrice} with Affirm
-                            </>
-                          )}
-                        </Button>
+                        {/* Inline Stripe payment form */}
+                        {stripeClientSecret ? (
+                          <div className="border border-[#635BFF]/30 rounded-xl p-4 bg-white space-y-4">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                                <CreditCard className="w-4 h-4 text-[#635BFF]" />
+                                Complete Payment
+                                <span className="text-[#AD6269] font-bold ml-1">
+                                  ${computeStripeAmount(paymentMethod as 'card' | 'klarna' | 'afterpay' | 'affirm')}
+                                </span>
+                              </h4>
+                              <button
+                                type="button"
+                                onClick={() => setStripeClientSecret(null)}
+                                className="text-xs text-gray-400 hover:text-gray-600 underline"
+                              >
+                                Change amount
+                              </button>
+                            </div>
+                            <Elements
+                              stripe={stripePromise}
+                              options={{
+                                clientSecret: stripeClientSecret,
+                                appearance: { theme: 'stripe', variables: { colorPrimary: '#635BFF' } },
+                              }}
+                            >
+                              <InlineStripeForm
+                                onSuccess={handleStripePaymentSuccess}
+                                onError={(msg) => setStripePaymentError(msg)}
+                              />
+                            </Elements>
+                          </div>
+                        ) : (
+                          <Button
+                            onClick={() => handleInitStripePayment(paymentMethod as 'card' | 'klarna' | 'afterpay' | 'affirm')}
+                            disabled={loadingPaymentIntent}
+                            className="w-full bg-[#635BFF] hover:bg-[#5851db] text-white h-12"
+                          >
+                            {loadingPaymentIntent ? (
+                              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Preparing payment form...</>
+                            ) : (
+                              <>
+                                <CreditCard className="w-4 h-4 mr-2" />
+                                Pay ${computeStripeAmount(paymentMethod as 'card' | 'klarna' | 'afterpay' | 'affirm')} with{' '}
+                                {paymentMethod === 'card' ? 'Credit Card' : paymentMethod === 'klarna' ? 'Klarna' : paymentMethod === 'afterpay' ? 'Afterpay' : 'Affirm'}
+                              </>
+                            )}
+                          </Button>
+                        )}
                       </div>
                     )}
 
