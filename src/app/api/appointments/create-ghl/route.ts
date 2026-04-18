@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Service Calendar ID (for MOELCALL200 coupon)
-    const SERVICE_CALENDAR_ID = 'JvcOyRMMYoIPbH5s1Bg1';
+    const SERVICE_CALENDAR_ID = process.env.GHL_CALENDAR_ID || 'C9kiOUUFTpnSSqGurWh1'; // APGM_Calendar
     
     // Check if MOELCALL200 coupon is applied
     const couponCode = appointmentData.couponCode?.toUpperCase();
@@ -96,32 +96,10 @@ export async function POST(request: NextRequest) {
     // Use Service Calendar if MOELCALL200 is applied, otherwise use provided calendarId
     let calendarId = useServiceCalendar ? SERVICE_CALENDAR_ID : appointmentData.calendarId;
     
-    // If no calendarId provided, fetch the first available calendar
+    // Default to APGM_Calendar when no calendarId provided
     if (!calendarId) {
-      console.log('No calendarId provided, fetching available calendars...');
-      const calendarsResponse = await fetch(
-        `https://services.leadconnectorhq.com/calendars/?locationId=${credentials.locationId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${credentials.apiKey}`,
-            'Version': '2021-07-28'
-          }
-        }
-      );
-      
-      if (calendarsResponse.ok) {
-        const calendarsData = await calendarsResponse.json();
-        if (calendarsData.calendars && calendarsData.calendars.length > 0) {
-          calendarId = calendarsData.calendars[0].id;
-          console.log('Using first available calendar:', calendarId);
-        }
-      }
-      
-      if (!calendarId) {
-        // Use the known Service Calendar as fallback
-        calendarId = SERVICE_CALENDAR_ID;
-        console.log('Using fallback Service Calendar:', calendarId);
-      }
+      calendarId = SERVICE_CALENDAR_ID;
+      console.log('Defaulting to APGM_Calendar:', calendarId);
     }
     
     // Create the appointment in GHL
@@ -158,8 +136,15 @@ export async function POST(request: NextRequest) {
       const errorText = await createAppointmentResponse.text();
       console.error('GHL appointment creation failed:', createAppointmentResponse.status, errorText);
       console.error('Appointment payload:', JSON.stringify(appointmentPayload, null, 2));
-      // Continue without GHL - we'll still create the booking in Firestore
-      console.log('Continuing without GHL appointment - will create local booking only');
+      // Surface error in response so caller knows GHL failed
+      return NextResponse.json({
+        success: true,
+        appointment: null,
+        appointmentId: null,
+        contactId: contactId || null,
+        ghlError: { status: createAppointmentResponse.status, message: errorText },
+        message: `Booking saved locally. GHL sync failed (${createAppointmentResponse.status}): ${errorText}`
+      });
     } else {
       appointmentResult = await createAppointmentResponse.json();
       ghlAppointmentId = appointmentResult?.event?.id || appointmentResult?.id || null;
@@ -210,35 +195,29 @@ export async function POST(request: NextRequest) {
 }
 
 async function getGHLCredentials() {
+  // Env vars take priority — Firestore values only used as last resort
+  const envApiKey = process.env.GHL_API_KEY || '';
+  const envLocationId = process.env.GHL_LOCATION_ID || '';
+
+  if (envApiKey && envLocationId) {
+    return { apiKey: envApiKey, locationId: envLocationId };
+  }
+
   try {
     const db = await getFirebaseDb();
     if (db) {
-      // First try to get from the collection (any document)
       const settingsSnapshot = await db.collection('crmSettings').limit(1).get();
       if (!settingsSnapshot.empty) {
         const data = settingsSnapshot.docs[0].data();
         return {
-          apiKey: data?.apiKey || process.env.GHL_API_KEY || '',
-          locationId: data?.locationId || process.env.GHL_LOCATION_ID || ''
-        };
-      }
-      
-      // Fallback: try specific document ID for backwards compatibility
-      const settingsDoc = await db.collection('crmSettings').doc('gohighlevel').get();
-      if (settingsDoc.exists) {
-        const data = settingsDoc.data();
-        return {
-          apiKey: data?.apiKey || process.env.GHL_API_KEY || '',
-          locationId: data?.locationId || process.env.GHL_LOCATION_ID || ''
+          apiKey: envApiKey || data?.apiKey || '',
+          locationId: envLocationId || data?.locationId || ''
         };
       }
     }
   } catch (error) {
     console.error('Error fetching GHL credentials:', error);
   }
-  
-  return {
-    apiKey: process.env.GHL_API_KEY || '',
-    locationId: process.env.GHL_LOCATION_ID || ''
-  };
+
+  return { apiKey: envApiKey, locationId: envLocationId };
 }

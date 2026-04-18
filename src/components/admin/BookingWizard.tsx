@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { collection, getDocs, addDoc, query, where, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { getDb } from '../../lib/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -542,43 +542,58 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
 
     setCreatingBooking(true);
     try {
-      // Create booking directly in Firestore (skip GHL sync)
-      const bookingData = {
-        clientName: selectedClient.displayName,
-        clientEmail: selectedClient.email,
-        clientPhone: selectedClient.phone,
-        clientId: selectedClient.id,
-        artistId: 'victoria',
-        artistName: 'Victoria',
+      // Build ISO start/end times for GHL
+      const startISO = new Date(`${selectedDate}T${selectedSlot.time}:00`).toISOString();
+      const endISO   = new Date(`${selectedDate}T${selectedSlot.endTime}:00`).toISOString();
+
+      const payload = {
+        // Contact fields
+        name: selectedClient.displayName || `${selectedClient.firstName} ${selectedClient.lastName}`,
+        firstName: selectedClient.firstName,
+        lastName:  selectedClient.lastName,
+        email: selectedClient.email,
+        phone: selectedClient.phone || '',
+        // Appointment fields
+        title: `${serviceName || 'PMU Appointment'} - ${selectedClient.displayName}`,
         serviceName: serviceName || 'PMU Appointment',
-        date: selectedDate,
-        time: selectedSlot.time,
-        endTime: selectedSlot.endTime,
+        startTime: startISO,
+        endTime:   endISO,
+        artistId:   'victoria',
+        artistName: 'Victoria',
         status: 'confirmed',
-        price: servicePrice, // Use custom service price
+        price: servicePrice,
         depositPaid: paymentComplete,
         depositMethod: paymentMethod,
         depositAmount: depositAmount,
         notes: notes + (externalPaymentNote ? ` | Payment Note: ${externalPaymentNote}` : ''),
-        externalPaymentNote: paymentMethod === 'external' ? externalPaymentNote : null,
-        // No GHL IDs - website only booking
-        ghlContactId: null,
-        ghlAppointmentId: null,
-        createdAt: new Date(),
-        createdBy: currentUser?.uid || null
+        createdBy: currentUser?.uid || null,
       };
 
-      await addDoc(collection(getDb(), 'bookings'), bookingData);
+      const response = await fetch('/api/appointments/create-ghl', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-      // Send confirmation emails
-      await sendConfirmationEmails(bookingData);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create booking');
+      }
+
+      // Send confirmation emails (non-blocking)
+      sendConfirmationEmails(payload).catch(console.error);
 
       setBookingCreated(true);
       setCurrentStep('confirmation');
-      
+
+      const ghlMsg = result.appointmentId
+        ? ` Also synced to GoHighLevel calendar (ID: ${result.appointmentId}).`
+        : ' Note: GHL calendar sync pending — check CRM settings.';
+
       await showAlert({
         title: 'Booking Created!',
-        description: 'The appointment has been created and confirmation emails have been sent.',
+        description: `The appointment has been created and confirmation emails have been sent.${ghlMsg}`,
         variant: 'success'
       });
 
