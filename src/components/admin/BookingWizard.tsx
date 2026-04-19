@@ -164,6 +164,9 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
   const [stripePaymentError, setStripePaymentError] = useState<string | null>(null);
   const [loadingPaymentIntent, setLoadingPaymentIntent] = useState(false);
   
+  // Consultation detection (derived — no price, skip payment)
+  const isConsultation = serviceName === 'Consultation';
+
   // Final booking state
   const [creatingBooking, setCreatingBooking] = useState(false);
   const [bookingCreated, setBookingCreated] = useState(false);
@@ -554,18 +557,19 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
         email: selectedClient.email,
         phone: selectedClient.phone || '',
         // Appointment fields
-        title: `${serviceName || 'PMU Appointment'} - ${selectedClient.displayName}`,
-        serviceName: serviceName || 'PMU Appointment',
+        title: `${isConsultation ? 'Consultation' : (serviceName || 'PMU Appointment')} - ${selectedClient.displayName}`,
+        serviceName: isConsultation ? 'Consultation' : (serviceName || 'PMU Appointment'),
+        appointmentType: isConsultation ? 'consultation' : 'appointment',
         startTime: startISO,
         endTime:   endISO,
         artistId:   'victoria',
         artistName: 'Victoria',
         status: 'confirmed',
-        price: servicePrice,
-        depositPaid: paymentComplete,
-        depositMethod: paymentMethod,
-        depositAmount: depositAmount,
-        notes: notes + (externalPaymentNote ? ` | Payment Note: ${externalPaymentNote}` : ''),
+        price: isConsultation ? 0 : servicePrice,
+        depositPaid: isConsultation ? true : paymentComplete,
+        depositMethod: isConsultation ? 'none' : paymentMethod,
+        depositAmount: isConsultation ? 0 : depositAmount,
+        notes: (isConsultation ? '[CONSULTATION - No payment required] ' : '') + notes + (externalPaymentNote ? ` | Payment Note: ${externalPaymentNote}` : ''),
         createdBy: currentUser?.uid || null,
       };
 
@@ -677,6 +681,8 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
     }
   };
 
+  const getTotalSteps = () => isConsultation ? 4 : 5;
+
   const getStepNumber = () => {
     switch (currentStep) {
       case 'client-type': return 1;
@@ -684,7 +690,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
       case 'new-client': return 2;
       case 'date-selection': return 3;
       case 'payment': return 4;
-      case 'confirmation': return 5;
+      case 'confirmation': return isConsultation ? 4 : 5;
       default: return 1;
     }
   };
@@ -699,8 +705,8 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
           <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl z-10">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Book Appointment</h2>
-                <p className="text-gray-500 text-sm mt-1">Step {getStepNumber()} of 5</p>
+                <h2 className="text-2xl font-bold text-gray-900">{isConsultation ? 'Book Consultation' : 'Book Appointment'}</h2>
+                <p className="text-gray-500 text-sm mt-1">Step {getStepNumber()} of {getTotalSteps()}</p>
               </div>
               <button onClick={handleClose} className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
                 <X className="w-6 h-6" />
@@ -709,7 +715,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
             
             {/* Progress Bar */}
             <div className="mt-4 flex gap-2">
-              {[1, 2, 3, 4, 5].map(step => (
+              {Array.from({ length: getTotalSteps() }, (_, i) => i + 1).map(step => (
                 <div 
                   key={step}
                   className={`h-2 flex-1 rounded-full transition-colors ${
@@ -981,7 +987,12 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                   </select>
                 </div>
 
-                {/* Custom Price Input */}
+                {/* Custom Price Input — hidden for consultations */}
+                {isConsultation ? (
+                  <div className="flex items-center gap-3 bg-purple-50 border border-purple-200 rounded-lg px-4 py-3">
+                    <span className="text-purple-700 text-sm font-medium">Consultation — Free of charge. No payment will be collected.</span>
+                  </div>
+                ) : (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Service Price ($)
@@ -1000,6 +1011,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                   </div>
                   <p className="text-xs text-gray-500 mt-1">Enter the total price for this service</p>
                 </div>
+                )}
 
                 {/* Date Selection Mode Buttons */}
                 {!dateSelectionMode && (
@@ -1180,14 +1192,31 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                     <ChevronLeft className="w-4 h-4 mr-2" />
                     Back
                   </Button>
-                  <Button 
-                    onClick={() => setCurrentStep('payment')}
-                    disabled={!selectedSlot}
-                    className="bg-[#AD6269] hover:bg-[#9d5860]"
-                  >
-                    Continue to Payment
-                    <ChevronRight className="w-4 h-4 ml-2" />
-                  </Button>
+                  {isConsultation ? (
+                    <Button
+                      onClick={async () => {
+                        setCurrentStep('confirmation');
+                        await createBooking();
+                      }}
+                      disabled={!selectedSlot || creatingBooking}
+                      className="bg-[#AD6269] hover:bg-[#9d5860]"
+                    >
+                      {creatingBooking ? (
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Booking...</>
+                      ) : (
+                        <>Book Consultation<ChevronRight className="w-4 h-4 ml-2" /></>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={() => setCurrentStep('payment')}
+                      disabled={!selectedSlot}
+                      className="bg-[#AD6269] hover:bg-[#9d5860]"
+                    >
+                      Continue to Payment
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
@@ -1572,10 +1601,21 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                   <CheckCircle className="w-12 h-12 text-green-600" />
                 </div>
                 
-                <h3 className="text-2xl font-bold text-gray-900">Booking Confirmed!</h3>
+                <h3 className="text-2xl font-bold text-gray-900">
+                  {isConsultation ? 'Consultation Booked!' : 'Booking Confirmed!'}
+                </h3>
+
+                {isConsultation && (
+                  <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-800 text-sm font-semibold px-4 py-1.5 rounded-full">
+                    <span className="w-2 h-2 rounded-full bg-purple-500 inline-block" />
+                    Consultation — No Payment Required
+                  </div>
+                )}
                 
                 <div className="bg-gray-50 rounded-lg p-6 text-left space-y-3">
-                  <h4 className="font-semibold text-gray-900 text-center mb-4">Appointment Details</h4>
+                  <h4 className="font-semibold text-gray-900 text-center mb-4">
+                    {isConsultation ? 'Consultation Details' : 'Appointment Details'}
+                  </h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-gray-500">Client:</span>
@@ -1586,8 +1626,8 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                       <p className="font-medium text-gray-900">{selectedClient?.email}</p>
                     </div>
                     <div>
-                      <span className="text-gray-500">Service:</span>
-                      <p className="font-medium text-gray-900">{serviceName || 'PMU Appointment'}</p>
+                      <span className="text-gray-500">Type:</span>
+                      <p className="font-medium text-gray-900">{isConsultation ? 'Consultation' : (serviceName || 'PMU Appointment')}</p>
                     </div>
                     <div>
                       <span className="text-gray-500">Date:</span>
@@ -1599,14 +1639,18 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                       <span className="text-gray-500">Time:</span>
                       <p className="font-medium text-gray-900">{selectedSlot?.time} - {selectedSlot?.endTime}</p>
                     </div>
-                    <div>
-                      <span className="text-gray-500">Service Price:</span>
-                      <p className="font-medium text-gray-900">${servicePrice}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Deposit:</span>
-                      <p className="font-medium text-gray-900">${depositAmount} ({paymentMethod})</p>
-                    </div>
+                    {!isConsultation && (
+                      <>
+                        <div>
+                          <span className="text-gray-500">Service Price:</span>
+                          <p className="font-medium text-gray-900">${servicePrice}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Deposit:</span>
+                          <p className="font-medium text-gray-900">${depositAmount} ({paymentMethod})</p>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
