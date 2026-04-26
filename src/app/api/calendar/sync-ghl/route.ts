@@ -166,36 +166,20 @@ async function createOrUpdateGHLAppointment(booking: Booking, contactId: string,
   try {
     const locationId = await getGHLLocationId();
     
-    // Service Calendar ID (for MOELCALL200 coupon and default)
-    const SERVICE_CALENDAR_ID = 'JvcOyRMMYoIPbH5s1Bg1';
+    // APGM Calendar ID (primary calendar for all bookings)
+    const APGM_CALENDAR_ID = process.env.GHL_CALENDAR_ID || 'C9kiOUUFTpnSSqGurWh1';
+    
+    // Alternative calendars
+    const SERVICE_CALENDAR_ID = 'JvcOyRMMYoIPbH5s1Bg1'; // For MOELCALL200 coupon
     
     // Check if booking has MOELCALL200 coupon
     const couponCode = (booking as any).couponCode?.toUpperCase();
     const useServiceCalendar = couponCode === 'MOELCALL200' || couponCode === 'MODELCALL200';
     
-    let calendarId = SERVICE_CALENDAR_ID; // Default to Service Calendar
+    // Use APGM Calendar by default, Service Calendar only for MOELCALL200
+    let calendarId = useServiceCalendar ? SERVICE_CALENDAR_ID : APGM_CALENDAR_ID;
     
-    // If not using MOELCALL200, fetch calendars and use first one
-    if (!useServiceCalendar) {
-      const calendarsResponse = await fetch(
-        `https://services.leadconnectorhq.com/calendars/?locationId=${locationId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Version': '2021-07-28'
-          }
-        }
-      );
-      
-      if (calendarsResponse.ok) {
-        const calendarsData = await calendarsResponse.json();
-        const calendars = calendarsData.calendars || [];
-        
-        if (calendars.length > 0) {
-          calendarId = calendars[0].id;
-        }
-      }
-    }
+    console.log(`[sync-ghl] Using calendar ID: ${calendarId} (${useServiceCalendar ? 'Service Calendar for MOELCALL200' : 'APGM Calendar'})`);
     
     // Parse date and add 3 hours for end time
     const startDateTime = new Date(`${booking.date}T${booking.time}:00`);
@@ -285,6 +269,16 @@ export async function POST(req: NextRequest) {
     }
 
     const apiKey = await getGHLApiKey();
+    const locationId = await getGHLLocationId();
+    
+    console.log('[sync-ghl] Starting sync:', {
+      bookingId,
+      serviceName: booking.serviceName,
+      hasApiKey: !!apiKey,
+      apiKeyPrefix: apiKey ? apiKey.substring(0, 10) + '...' : 'none',
+      locationId: locationId || 'not configured'
+    });
+    
     if (!apiKey) {
       return NextResponse.json(
         { error: 'GHL API key not configured' },
