@@ -145,7 +145,7 @@ export default function Footer() {
       <script
         src="https://widgets.leadconnectorhq.com/loader.js"
         data-resources-url="https://widgets.leadconnectorhq.com/chat-widget/loader.js"
-        data-widget-id="69ee52ca5ca8510fec0c5f01"
+        data-widget-id="69ee53f7bd8fe82da617587d"
         async
       />
     </footer>
