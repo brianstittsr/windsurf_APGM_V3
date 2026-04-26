@@ -42,7 +42,7 @@ interface CheckoutData {
 // Removed unused service imports - using hooks instead
 import { getServiceImagePath } from '@/utils/serviceImageUtils';
 import { calculateTotalWithStripeFees } from '@/lib/stripe-fees';
-import { useWorkflowTrigger } from '@/hooks/useWorkflowTrigger';
+// Using direct BMAD workflow API for GHL integration instead of useWorkflowTrigger
 import { Button } from '@/components/ui/button';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -160,8 +160,7 @@ function BookNowCustomContent() {
   // Auth hook for user profile auto-population
   const { isAuthenticated, userProfile, getClientProfileData } = useAuth();
   
-  // Workflow trigger hook
-  const { triggerNewClientWorkflow, triggerAppointmentBookedWorkflow } = useWorkflowTrigger();
+  // BMAD Workflow trigger via API - will be called directly in handleBookingComplete
   
   const [clientProfile, setClientProfile] = useState<ClientProfileData>({
     firstName: '',
@@ -656,10 +655,12 @@ function BookNowCustomContent() {
       
       // Create appointment in Firebase
       const profile = userProfile?.profile;
+      const clientPhone = profile?.phone || clientProfile.phone || '';
       const appointmentData = {
         clientId: userProfile?.id || 'temp-client-id', // Use authenticated user's ID if available
         clientName: profile ? `${profile.firstName} ${profile.lastName}` : 'Unknown Client',
         clientEmail: profile?.email || 'unknown@email.com',
+        clientPhone: clientPhone, // Added for GHL contact creation
         serviceId: selectedService.id,
         serviceName: selectedService.name,
         artistId: selectedArtistId || 'default-artist',
@@ -702,33 +703,46 @@ function BookNowCustomContent() {
       // Book the time slot
       await bookTimeSlot(selectedTime, appointmentId, 'default-artist');
       
-      // Trigger marketing workflows
+      // Trigger BMAD workflow with GHL integration
       try {
         const clientId = userProfile?.id || 'temp-client-id';
         const clientEmail = profile?.email;
-        
-        // Check if this is a new client (in production, you'd check if user exists in database)
-        const isNewClient = true; // This would be determined by checking user history
-        
-        if (isNewClient && clientEmail) {
-          // Trigger new client welcome workflow
-          await triggerNewClientWorkflow(clientId, clientEmail);
-        }
+        const clientPhone = profile?.phone || clientProfile.phone;
         
         if (clientEmail) {
-          // Trigger appointment booked workflow
-          await triggerAppointmentBookedWorkflow(clientId, clientEmail, {
-            appointmentId,
-            serviceType: selectedService.name,
-            appointmentDate: selectedDate,
-            artistId: selectedArtistId || 'default-artist'
+          // Trigger booking_created workflow via BMAD API (includes GHL contact creation, opportunities, etc.)
+          const workflowResponse = await fetch('/api/workflows/trigger', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              trigger: 'booking_created',
+              data: {
+                name: profile ? `${profile.firstName} ${profile.lastName}` : clientProfile.firstName + ' ' + clientProfile.lastName,
+                firstName: profile?.firstName || clientProfile.firstName,
+                lastName: profile?.lastName || clientProfile.lastName,
+                email: clientEmail,
+                phone: clientPhone,
+                serviceName: selectedService.name,
+                date: selectedDate,
+                time: selectedTime,
+                price: selectedService.price,
+                appointmentId: appointmentId,
+                artistId: selectedArtistId || 'default-artist'
+              }
+            })
           });
+          
+          if (workflowResponse.ok) {
+            const workflowResult = await workflowResponse.json();
+            console.log('✅ BMAD workflow triggered successfully:', workflowResult);
+          } else {
+            const errorText = await workflowResponse.text();
+            console.error('⚠️ BMAD workflow trigger failed:', errorText);
+          }
         }
-        
-        console.log('Marketing workflows triggered successfully');
       } catch (workflowError) {
-        console.error('Failed to trigger marketing workflows:', workflowError);
-        // Don't fail the booking if workflows fail
+        console.error('❌ Failed to trigger BMAD workflow:', workflowError);
+        // Don't fail the booking if workflow fails
       }
       
       // Generate booking confirmation PDF
