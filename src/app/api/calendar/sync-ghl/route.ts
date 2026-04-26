@@ -93,6 +93,10 @@ async function createOrUpdateGHLContact(booking: Booking, apiKey: string) {
     // Create new contact
     const locationId = await getGHLLocationId();
     
+    if (!locationId) {
+      throw new Error('GHL Location ID not configured. Please set GHL_LOCATION_ID environment variable or configure in Firebase crmSettings/gohighlevel');
+    }
+    
     // Split name into first and last name for GHL
     const nameParts = booking.clientName.trim().split(' ');
     const firstName = nameParts[0] || '';
