@@ -287,29 +287,74 @@ export async function POST(req: NextRequest) {
     }
 
     // Create or update contact in GHL
-    const contactId = await createOrUpdateGHLContact(booking, apiKey);
+    let contactId: string | null = null;
+    let appointmentId: string | null = null;
+    let syncErrors: string[] = [];
+    
+    try {
+      contactId = await createOrUpdateGHLContact(booking, apiKey);
+      console.log('[sync-ghl] Contact created/updated:', contactId);
+    } catch (contactError) {
+      const errorMsg = contactError instanceof Error ? contactError.message : 'Unknown contact error';
+      console.error('[sync-ghl] Contact creation failed:', errorMsg);
+      syncErrors.push(`Contact: ${errorMsg}`);
+    }
 
-    // Create or update appointment in GHL
-    const appointmentId = await createOrUpdateGHLAppointment(booking, contactId, apiKey);
+    // Create or update appointment in GHL (only if contact was created)
+    if (contactId) {
+      try {
+        appointmentId = await createOrUpdateGHLAppointment(booking, contactId, apiKey);
+        console.log('[sync-ghl] Appointment created/updated:', appointmentId);
+      } catch (apptError) {
+        const errorMsg = apptError instanceof Error ? apptError.message : 'Unknown appointment error';
+        console.error('[sync-ghl] Appointment creation failed:', errorMsg);
+        syncErrors.push(`Appointment: ${errorMsg}`);
+      }
+    } else {
+      syncErrors.push('Appointment: Skipped - no contact ID');
+    }
 
-    // Update booking in Firestore with GHL IDs
-    // Support both 'bookings' and 'appointments' collections
+    // Update booking in Firestore with GHL IDs (even if partial success)
     const db = getDb();
     const collectionName = collectionParam === 'appointments' ? 'appointments' : 'bookings';
     const bookingRef = doc(db, collectionName, bookingId);
-    await updateDoc(bookingRef, {
-      ghlContactId: contactId,
-      ghlAppointmentId: appointmentId,
-      lastSyncedAt: new Date().toISOString(),
-      ghlSyncError: null // Clear any previous sync errors
-    });
+    
+    const updateData: any = {
+      lastSyncedAt: new Date().toISOString()
+    };
+    
+    if (contactId) updateData.ghlContactId = contactId;
+    if (appointmentId) updateData.ghlAppointmentId = appointmentId;
+    if (syncErrors.length > 0) updateData.ghlSyncError = syncErrors.join('; ');
+    else updateData.ghlSyncError = null;
+    
+    await updateDoc(bookingRef, updateData);
 
-    return NextResponse.json({
-      success: true,
-      contactId,
-      appointmentId,
-      message: 'Booking synced with GHL successfully'
-    });
+    // Return appropriate response based on success/partial success/failure
+    if (contactId && appointmentId) {
+      return NextResponse.json({
+        success: true,
+        contactId,
+        appointmentId,
+        message: 'Booking synced with GHL successfully'
+      });
+    } else if (contactId && !appointmentId) {
+      return NextResponse.json({
+        success: true,
+        contactId,
+        appointmentId: null,
+        warning: 'Contact created but appointment failed',
+        errors: syncErrors,
+        message: 'Partial sync - contact created, appointment failed'
+      });
+    } else {
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to sync with GHL',
+        errors: syncErrors,
+        message: 'GHL sync failed - check errors array'
+      }, { status: 500 });
+    }
   } catch (error) {
     console.error('Error syncing booking with GHL:', error);
     return NextResponse.json(
