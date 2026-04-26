@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Script from 'next/script';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -143,11 +142,11 @@ export default function Footer() {
       </div>
 
       {/* LeadConnector Chat Widget */}
-      <Script
+      <script
         src="https://widgets.leadconnectorhq.com/loader.js"
         data-resources-url="https://widgets.leadconnectorhq.com/chat-widget/loader.js"
         data-widget-id="69ee52ca5ca8510fec0c5f01"
-        strategy="lazyOnload"
+        async
       />
     </footer>
   );
