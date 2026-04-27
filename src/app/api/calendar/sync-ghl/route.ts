@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, getDoc, updateDoc, collection, query, limit, getDocs } from 'firebase/firestore';
-import { getDb } from '../../../../lib/firebase';
+import { db } from '../../../../lib/firebase-admin';
 
 interface Booking {
   id: string;
@@ -23,19 +22,16 @@ interface Booking {
 
 async function getGHLApiKey() {
   try {
-    const db = getDb();
-    
     // First try to get from the collection (any document)
-    const settingsQuery = query(collection(db, 'crmSettings'), limit(1));
-    const settingsSnapshot = await getDocs(settingsQuery);
+    const settingsSnapshot = await db.collection('crmSettings').limit(1).get();
     if (!settingsSnapshot.empty) {
       return settingsSnapshot.docs[0].data().apiKey;
     }
     
     // Fallback: try specific document ID for backwards compatibility
-    const settingsDoc = await getDoc(doc(db, 'crmSettings', 'gohighlevel'));
-    if (settingsDoc.exists()) {
-      return settingsDoc.data().apiKey;
+    const settingsDoc = await db.collection('crmSettings').doc('gohighlevel').get();
+    if (settingsDoc.exists) {
+      return settingsDoc.data()?.apiKey;
     }
   } catch (error) {
     console.error('Error fetching GHL API key:', error);
@@ -45,19 +41,16 @@ async function getGHLApiKey() {
 
 async function getGHLLocationId() {
   try {
-    const db = getDb();
-    
     // First try to get from the collection (any document)
-    const settingsQuery = query(collection(db, 'crmSettings'), limit(1));
-    const settingsSnapshot = await getDocs(settingsQuery);
+    const settingsSnapshot = await db.collection('crmSettings').limit(1).get();
     if (!settingsSnapshot.empty) {
       return settingsSnapshot.docs[0].data().locationId;
     }
     
     // Fallback: try specific document ID for backwards compatibility
-    const settingsDoc = await getDoc(doc(db, 'crmSettings', 'gohighlevel'));
-    if (settingsDoc.exists()) {
-      return settingsDoc.data().locationId;
+    const settingsDoc = await db.collection('crmSettings').doc('gohighlevel').get();
+    if (settingsDoc.exists) {
+      return settingsDoc.data()?.locationId;
     }
   } catch (error) {
     console.error('Error fetching GHL location ID:', error);
@@ -280,12 +273,20 @@ export async function POST(req: NextRequest) {
       serviceName: booking.serviceName,
       hasApiKey: !!apiKey,
       apiKeyPrefix: apiKey ? apiKey.substring(0, 10) + '...' : 'none',
-      locationId: locationId || 'not configured'
+      locationId: locationId || 'not configured',
+      envLocationId: process.env.GHL_LOCATION_ID ? 'set' : 'not set'
     });
     
     if (!apiKey) {
       return NextResponse.json(
-        { error: 'GHL API key not configured' },
+        { error: 'GHL API key not configured. Set GHL_API_KEY environment variable or configure in Firebase crmSettings/gohighlevel' },
+        { status: 503 }
+      );
+    }
+    
+    if (!locationId) {
+      return NextResponse.json(
+        { error: 'GHL Location ID not configured. Set GHL_LOCATION_ID environment variable or configure in Firebase crmSettings/gohighlevel' },
         { status: 503 }
       );
     }
@@ -319,9 +320,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Update booking in Firestore with GHL IDs (even if partial success)
-    const db = getDb();
     const collectionName = collectionParam === 'appointments' ? 'appointments' : 'bookings';
-    const bookingRef = doc(db, collectionName, bookingId);
+    const bookingRef = db.collection(collectionName).doc(bookingId);
     
     const updateData: any = {
       lastSyncedAt: new Date().toISOString()
@@ -332,7 +332,7 @@ export async function POST(req: NextRequest) {
     if (syncErrors.length > 0) updateData.ghlSyncError = syncErrors.join('; ');
     else updateData.ghlSyncError = null;
     
-    await updateDoc(bookingRef, updateData);
+    await bookingRef.update(updateData);
 
     // Return appropriate response based on success/partial success/failure
     if (contactId && appointmentId) {
