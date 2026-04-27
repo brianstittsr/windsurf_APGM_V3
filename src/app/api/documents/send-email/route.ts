@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization of Resend to avoid build errors when API key is not set
+let resend: Resend | null = null;
+function getResend() {
+  if (!resend && process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 
 interface SendEmailRequest {
   documentId: string;
@@ -115,8 +122,18 @@ export async function POST(request: NextRequest) {
       </html>
     `;
 
+    // Check if Resend is configured
+    const resendClient = getResend();
+    if (!resendClient) {
+      console.warn('RESEND_API_KEY not configured, email not sent');
+      return NextResponse.json(
+        { error: 'Email service not configured. Set RESEND_API_KEY environment variable.' },
+        { status: 503 }
+      );
+    }
+
     // Send email via Resend
-    const { data: emailResult, error } = await resend.emails.send({
+    const { data: emailResult, error } = await resendClient.emails.send({
       from: 'A Pretty Girl Matter <noreply@aprettygirlmatter.com>',
       to: data.clientEmail,
       subject: `Your Signed ${data.templateName} - A Pretty Girl Matter`,
