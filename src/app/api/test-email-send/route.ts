@@ -5,6 +5,10 @@ export async function POST(request: NextRequest) {
   console.log('=== Test Email Send ===');
   
   try {
+    // Get target email from request body or use default
+    const body = await request.json().catch(() => ({}));
+    const targetEmail = body.email || 'victoria@aprettygirlmatter.com';
+    
     const smtpConfig = {
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || '587'),
@@ -25,21 +29,26 @@ export async function POST(request: NextRequest) {
     // Test actual email sending
     await transporter.sendMail({
       from: smtpConfig.user,
-      to: 'victoria@aprettygirlmatter.com',
-      subject: 'Test Email from Vercel',
+      to: targetEmail,
+      subject: 'Test Email from APGM Platform',
       html: `
         <h2>Test Email</h2>
-        <p>This is a test email sent from Vercel at ${new Date().toISOString()}</p>
-        <p>SMTP Host: ${smtpConfig.host}</p>
-        <p>SMTP Port: ${smtpConfig.port}</p>
+        <p>This is a test email sent from the APGM platform at ${new Date().toISOString()}</p>
+        <p><strong>To:</strong> ${targetEmail}</p>
+        <p><strong>From:</strong> ${smtpConfig.user}</p>
+        <p><strong>SMTP Host:</strong> ${smtpConfig.host}</p>
+        <p><strong>SMTP Port:</strong> ${smtpConfig.port}</p>
+        <hr>
+        <p style="color: #666; font-size: 12px;">If you received this email, your SMTP configuration is working correctly!</p>
       `
     });
 
-    console.log('Test email sent successfully!');
+    console.log(`Test email sent successfully to ${targetEmail}!`);
     
     return NextResponse.json({
       success: true,
-      message: 'Test email sent successfully to victoria@aprettygirlmatter.com',
+      message: `Test email sent successfully to ${targetEmail}`,
+      targetEmail,
       timestamp: new Date().toISOString()
     });
 
