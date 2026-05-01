@@ -23,6 +23,7 @@ import {
   Loader2,
   CalendarDays,
   CalendarRange,
+  AlertCircle,
   CalendarClock,
   DollarSign
 } from 'lucide-react';
@@ -166,6 +167,12 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
   
   // Consultation detection (derived — no price, skip payment)
   const isConsultation = serviceName === 'Consultation';
+
+  // GHL availability check state
+  const [ghlAvailability, setGhlAvailability] = useState<{ date: string; slots: Array<{ time: string; endTime: string; available: boolean; reason?: string }> }[]>([]);
+  const [checkingGhlAvailability, setCheckingGhlAvailability] = useState(false);
+  const [ghlAvailabilityError, setGhlAvailabilityError] = useState<string | null>(null);
+  const [useForceSync, setUseForceSync] = useState(false);
 
   // Final booking state
   const [creatingBooking, setCreatingBooking] = useState(false);
@@ -533,6 +540,53 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
     setPaymentComplete(true);
   };
 
+  // Check GHL availability for selected date range
+  const checkGhlAvailability = async () => {
+    if (!selectedDate) {
+      await showAlert({
+        title: 'Select a Date',
+        description: 'Please select a date first to check availability.',
+        variant: 'warning'
+      });
+      return;
+    }
+
+    setCheckingGhlAvailability(true);
+    setGhlAvailabilityError(null);
+    
+    try {
+      // Check 7 days starting from selected date
+      const start = new Date(selectedDate);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 6);
+
+      const response = await fetch('/api/calendar/ghl-availability', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          startDate: start.toISOString().split('T')[0],
+          endDate: end.toISOString().split('T')[0]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to check availability: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setGhlAvailability(data.availability || []);
+      
+      if (data.availability?.length === 0) {
+        setGhlAvailabilityError('No availability data returned from GHL');
+      }
+    } catch (error: any) {
+      console.error('Error checking GHL availability:', error);
+      setGhlAvailabilityError(error.message || 'Failed to check GHL availability');
+    } finally {
+      setCheckingGhlAvailability(false);
+    }
+  };
+
   const createBooking = async () => {
     if (!selectedClient || !selectedSlot || !selectedDate) {
       await showAlert({
@@ -573,7 +627,14 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
         createdBy: currentUser?.uid || null,
       };
 
-      const response = await fetch('/api/appointments/create-ghl', {
+      // Use force sync endpoint if enabled, otherwise use standard endpoint
+      const apiEndpoint = useForceSync 
+        ? '/api/appointments/create-ghl-force'
+        : '/api/appointments/create-ghl';
+
+      console.log(`[BookingWizard] Using ${useForceSync ? 'FORCE SYNC' : 'standard'} endpoint: ${apiEndpoint}`);
+
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -591,9 +652,24 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
       setBookingCreated(true);
       setCurrentStep('confirmation');
 
-      const ghlMsg = result.appointmentId
-        ? ` Also synced to GoHighLevel calendar (ID: ${result.appointmentId}).`
-        : ' Note: GHL calendar sync pending — check CRM settings.';
+      // Build message based on sync result
+      let ghlMsg = '';
+      if (result.appointmentId) {
+        if (result.creationMethod === 'task-fallback') {
+          ghlMsg = ` Created as task in GHL (fallback method) ID: ${result.appointmentId}.`;
+        } else {
+          ghlMsg = ` Also synced to GoHighLevel calendar (ID: ${result.appointmentId}).`;
+        }
+      } else if (useForceSync) {
+        ghlMsg = ` Force sync attempted but GHL creation failed. Booking saved locally only.`;
+      } else {
+        ghlMsg = ' Note: GHL calendar sync pending — check CRM settings.';
+      }
+
+      // Log detailed info if force sync was used
+      if (useForceSync && result.logs) {
+        console.log('[BookingWizard] Force sync logs:', result.logs);
+      }
 
       await showAlert({
         title: 'Booking Created!',
@@ -1171,6 +1247,83 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                       rows={3}
                       placeholder="Any special notes for this appointment..."
                     />
+                  </div>
+                )}
+
+                {/* GHL Availability Check */}
+                {selectedDate && (
+                  <div className="border border-blue-200 bg-blue-50 rounded-lg p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold text-blue-900">GoHighLevel Sync Check</h4>
+                        <p className="text-sm text-blue-700">Verify this slot is available in GHL before booking</p>
+                      </div>
+                      <Button
+                        onClick={checkGhlAvailability}
+                        disabled={checkingGhlAvailability}
+                        variant="outline"
+                        className="bg-white border-blue-300 hover:bg-blue-100 text-blue-700"
+                      >
+                        {checkingGhlAvailability ? (
+                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Checking...</>
+                        ) : (
+                          <><Search className="w-4 h-4 mr-2" />Check GHL Availability</>
+                        )}
+                      </Button>
+                    </div>
+
+                    {/* Availability Results */}
+                    {ghlAvailabilityError && (
+                      <div className="bg-red-100 border border-red-300 rounded p-3 text-red-800 text-sm">
+                        <AlertCircle className="w-4 h-4 inline mr-2" />
+                        {ghlAvailabilityError}
+                      </div>
+                    )}
+
+                    {ghlAvailability.length > 0 && (
+                      <div className="bg-white rounded-lg p-3 space-y-2 max-h-64 overflow-y-auto">
+                        <h5 className="font-medium text-gray-900 text-sm">GHL Availability (7 days):</h5>
+                        {ghlAvailability.map((day) => (
+                          <div key={day.date} className="text-sm">
+                            <div className="font-medium text-gray-700">
+                              {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                            </div>
+                            <div className="flex flex-wrap gap-2 mt-1">
+                              {day.slots.map((slot, idx) => (
+                                <span
+                                  key={idx}
+                                  className={`px-2 py-1 rounded text-xs ${
+                                    slot.available
+                                      ? 'bg-green-100 text-green-800'
+                                      : 'bg-red-100 text-red-800'
+                                  }`}
+                                  title={slot.reason}
+                                >
+                                  {slot.time} - {slot.available ? '✓' : '✗'}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Force Sync Option */}
+                    <div className="flex items-center gap-3 pt-2 border-t border-blue-200">
+                      <input
+                        type="checkbox"
+                        id="forceSync"
+                        checked={useForceSync}
+                        onChange={(e) => setUseForceSync(e.target.checked)}
+                        className="w-4 h-4 rounded border-gray-300 text-[#AD6269] focus:ring-[#AD6269]"
+                      />
+                      <label htmlFor="forceSync" className="text-sm text-blue-800 cursor-pointer">
+                        <span className="font-medium">Use Force Sync</span>
+                        <span className="block text-xs text-blue-600">
+                          Bypass GHL availability checks (may create task instead of appointment if slot is blocked)
+                        </span>
+                      </label>
+                    </div>
                   </div>
                 )}
 
