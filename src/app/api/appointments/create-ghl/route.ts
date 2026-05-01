@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
     
     if (!contactId) {
       // Search for existing contact by email
+      console.log(`[GHL] Searching for contact by email: ${appointmentData.email}`);
       const contactsResponse = await fetch(
         `https://services.leadconnectorhq.com/contacts/?locationId=${credentials.locationId}&query=${encodeURIComponent(appointmentData.email)}`,
         {
@@ -44,6 +45,30 @@ export async function POST(request: NextRequest) {
         const contactsData = await contactsResponse.json();
         if (contactsData.contacts && contactsData.contacts.length > 0) {
           contactId = contactsData.contacts[0].id;
+          console.log(`[GHL] Found existing contact by email: ${contactId}`);
+        }
+      }
+
+      // If not found by email, search by phone (GHL blocks duplicates by phone)
+      if (!contactId && appointmentData.phone) {
+        console.log(`[GHL] Searching for contact by phone: ${appointmentData.phone}`);
+        const phoneQuery = appointmentData.phone.replace(/\D/g, ''); // Remove non-digits
+        const phoneResponse = await fetch(
+          `https://services.leadconnectorhq.com/contacts/?locationId=${credentials.locationId}&query=${encodeURIComponent(phoneQuery)}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${credentials.apiKey}`,
+              'Version': '2021-07-28'
+            }
+          }
+        );
+
+        if (phoneResponse.ok) {
+          const phoneData = await phoneResponse.json();
+          if (phoneData.contacts && phoneData.contacts.length > 0) {
+            contactId = phoneData.contacts[0].id;
+            console.log(`[GHL] Found existing contact by phone: ${contactId}`);
+          }
         }
       }
 

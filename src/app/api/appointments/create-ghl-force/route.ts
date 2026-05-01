@@ -61,6 +61,33 @@ export async function POST(request: NextRequest) {
         log(`Contact search error: ${err}`);
       }
 
+      // If not found by email, search by phone (GHL blocks duplicates by phone)
+      if (!contactId && appointmentData.phone) {
+        log(`Searching for contact by phone: ${appointmentData.phone}...`);
+        try {
+          const phoneQuery = appointmentData.phone.replace(/\D/g, ''); // Remove non-digits
+          const phoneResponse = await fetch(
+            `https://services.leadconnectorhq.com/contacts/?locationId=${locationId}&query=${encodeURIComponent(phoneQuery)}`,
+            {
+              headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Version': '2021-07-28'
+              }
+            }
+          );
+
+          if (phoneResponse.ok) {
+            const phoneData = await phoneResponse.json();
+            if (phoneData.contacts?.length > 0) {
+              contactId = phoneData.contacts[0].id;
+              log(`Found existing contact by phone: ${contactId}`);
+            }
+          }
+        } catch (err) {
+          log(`Phone search error: ${err}`);
+        }
+      }
+
       // Create new contact if not found
       if (!contactId) {
         log('Creating new contact...');
