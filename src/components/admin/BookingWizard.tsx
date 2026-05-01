@@ -611,7 +611,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
         email: selectedClient.email,
         phone: selectedClient.phone || '',
         // Appointment fields
-        title: `${isConsultation ? 'Consultation' : (serviceName || 'PMU Appointment')} - ${selectedClient.displayName}`,
+        title: `${isConsultation ? 'Consult' : 'Appt'} - ${serviceName || 'PMU'} - ${selectedClient.displayName}`,
         serviceName: isConsultation ? 'Consultation' : (serviceName || 'PMU Appointment'),
         appointmentType: isConsultation ? 'consultation' : 'appointment',
         startTime: startISO,
