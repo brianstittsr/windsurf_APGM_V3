@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       title: appointmentData.title || appointmentData.serviceName,
       appointmentStatus: appointmentData.status || 'new',
       address: appointmentData.address || '',
-      ignoreDateRange: false,
+      ignoreDateRange: true,
       toNotify: true
     };
 
