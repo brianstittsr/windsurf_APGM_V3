@@ -136,14 +136,28 @@ export async function POST(request: NextRequest) {
       const errorText = await createAppointmentResponse.text();
       console.error('GHL appointment creation failed:', createAppointmentResponse.status, errorText);
       console.error('Appointment payload:', JSON.stringify(appointmentPayload, null, 2));
-      // Surface error in response so caller knows GHL failed
+      
+      // Parse error for better messaging
+      let errorMessage = errorText;
+      let userMessage = `GHL sync failed (${createAppointmentResponse.status}): ${errorText}`;
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.message?.includes('slot') || errorJson.message?.includes('available')) {
+          userMessage = 'This time slot is already booked in GoHighLevel. Please select a different date/time or check the GHL calendar directly.';
+        } else if (errorJson.message?.includes('contact')) {
+          userMessage = 'Contact creation failed in GoHighLevel. Please verify the client email and phone number.';
+        } else {
+          userMessage = `GHL sync failed: ${errorJson.message || errorText}`;
+        }
+      } catch {}
+      
       return NextResponse.json({
         success: true,
         appointment: null,
         appointmentId: null,
         contactId: contactId || null,
-        ghlError: { status: createAppointmentResponse.status, message: errorText },
-        message: `Booking saved locally. GHL sync failed (${createAppointmentResponse.status}): ${errorText}`
+        ghlError: { status: createAppointmentResponse.status, message: errorMessage },
+        message: userMessage
       });
     } else {
       appointmentResult = await createAppointmentResponse.json();
