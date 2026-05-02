@@ -11,6 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "test-email": "tsx src/scripts/testEmailSending.ts",
+    "test-resend": "tsx src/scripts/sendTestEmail.ts",
     "test-firebase": "tsx src/scripts/testFirebaseEnv.ts",
     "test-contact": "tsx src/scripts/testContactForm.ts",
     "test-ghl": "tsx src/scripts/testGHLConnection.ts",
