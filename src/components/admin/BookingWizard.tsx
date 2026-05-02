@@ -662,7 +662,10 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to create booking');
+        // Extract the most useful error message from the response
+        const errMsg = result.error || result.message || result.details || 'Failed to create booking';
+        console.error('[BookingWizard] GHL error response:', result);
+        throw new Error(errMsg);
       }
 
       // Send confirmation emails (non-blocking)

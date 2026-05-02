@@ -52,25 +52,27 @@ export async function POST(request: NextRequest) {
 
     const slotsByDate: Record<string, TimeSlot[]> = {};
 
-    // Generate time slots for each day (10am - 6pm, 3-hour blocks)
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    // Generate time slots for each day (10am - 7pm, 3-hour blocks)
+    // Initialize as AVAILABLE - we mark as unavailable only if an existing event blocks the slot
+    const start = new Date(startDate + 'T12:00:00');
+    const end = new Date(endDate + 'T12:00:00');
     
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       const dateStr = d.toISOString().split('T')[0];
       slotsByDate[dateStr] = [
-        { time: '10:00', endTime: '13:00', available: false },
-        { time: '13:00', endTime: '16:00', available: false },
-        { time: '16:00', endTime: '19:00', available: false }
+        { time: '10:00', endTime: '13:00', available: true },
+        { time: '13:00', endTime: '16:00', available: true },
+        { time: '16:00', endTime: '19:00', available: true }
       ];
     }
 
-    // Fetch existing appointments from GHL
-    const existingSlots: string[] = [];
+    // Fetch existing appointments/events from GHL to find which slots are blocked
+    const bookedIntervals: Array<{ start: Date; end: Date }> = [];
     
     try {
+      // Try the /calendars/events endpoint (location-level)
       const eventsResponse = await fetch(
-        `https://services.leadconnectorhq.com/calendars/${targetCalendarId}/events?startDate=${startDate}T00:00:00.000Z&endDate=${endDate}T23:59:59.000Z&includeWithoutLookup=true`,
+        `https://services.leadconnectorhq.com/calendars/events?locationId=${targetLocationId}&startTime=${startDate}T00:00:00.000Z&endTime=${endDate}T23:59:59.999Z`,
         {
           headers: {
             'Authorization': `Bearer ${apiKey}`,
@@ -87,89 +89,71 @@ export async function POST(request: NextRequest) {
         console.log('[GHL Availability] Found events:', events.length);
         
         for (const event of events) {
-          if (event.startTime && event.endTime) {
-            const eventDate = new Date(event.startTime);
-            const dateStr = eventDate.toISOString().split('T')[0];
-            const timeStr = eventDate.toISOString().split('T')[1].substring(0, 5);
-            existingSlots.push(`${dateStr}_${timeStr}`);
+          if (event.startTime) {
+            const s = new Date(event.startTime);
+            const e = event.endTime ? new Date(event.endTime) : new Date(s.getTime() + 3600000);
+            bookedIntervals.push({ start: s, end: e });
+            console.log(`[GHL Availability] Booked: ${s.toISOString()} - ${e.toISOString()}`);
+          }
+        }
+      } else {
+        const errText = await eventsResponse.text();
+        console.warn('[GHL Availability] Events API error:', eventsResponse.status, errText);
+      }
+    } catch (error) {
+      console.warn('[GHL Availability] Failed to fetch existing events:', error);
+    }
+
+    // Also fetch blocked slots from the calendar-specific endpoint
+    try {
+      const blockedResponse = await fetch(
+        `https://services.leadconnectorhq.com/calendars/${targetCalendarId}/events?startDate=${startDate}T00:00:00.000Z&endDate=${endDate}T23:59:59.999Z`,
+        {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Version': '2021-07-28'
+          }
+        }
+      );
+
+      if (blockedResponse.ok) {
+        const blockedData = await blockedResponse.json();
+        const blocked = blockedData.events || blockedData.blockedSlots || [];
+        console.log('[GHL Availability] Calendar-specific blocked events:', blocked.length);
+        for (const event of blocked) {
+          if (event.startTime) {
+            const s = new Date(event.startTime);
+            const e = event.endTime ? new Date(event.endTime) : new Date(s.getTime() + 3600000);
+            bookedIntervals.push({ start: s, end: e });
           }
         }
       }
     } catch (error) {
-      console.warn('Failed to fetch existing events:', error);
+      console.warn('[GHL Availability] Failed to fetch calendar blocked slots:', error);
     }
 
-    // Check each slot's availability by attempting to validate it
+    // Mark slots as blocked only if an existing event overlaps with them
     const results: DayAvailability[] = [];
 
     for (const [dateStr, slots] of Object.entries(slotsByDate)) {
       const dayResult: DayAvailability = { date: dateStr, slots: [] };
       
       for (const slot of slots) {
-        const startISO = `${dateStr}T${slot.time}:00.000Z`;
-        const endISO = `${dateStr}T${slot.endTime}:00.000Z`;
+        // Build UTC slot interval - GHL stores times in UTC
+        const slotStart = new Date(`${dateStr}T${slot.time}:00.000Z`);
+        const slotEnd = new Date(`${dateStr}T${slot.endTime}:00.000Z`);
         
-        // Check if this slot is already booked
-        const slotKey = `${dateStr}_${slot.time}`;
-        const isBooked = existingSlots.some(s => s.startsWith(slotKey.substring(0, 13)));
-        
-        if (isBooked) {
-          dayResult.slots.push({
-            ...slot,
-            available: false,
-            reason: 'Already booked in GHL'
-          });
-          continue;
-        }
+        // Check if any booked interval overlaps with this slot
+        const isBlocked = bookedIntervals.some(({ start, end }) => {
+          // Overlap if: bookedStart < slotEnd AND bookedEnd > slotStart
+          return start < slotEnd && end > slotStart;
+        });
 
-        // Try to validate the slot via GHL API
-        try {
-          const validateResponse = await fetch(
-            `https://services.leadconnectorhq.com/calendars/${targetCalendarId}/free-slots?startDate=${dateStr}&endDate=${dateStr}&timezone=America/New_York`,
-            {
-              headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Version': '2021-07-28'
-              }
-            }
-          );
-
-          console.log('[GHL Availability] Free-slots API status:', validateResponse.status, 'for', dateStr);
-          
-          if (validateResponse.ok) {
-            const slotsData = await validateResponse.json();
-            const freeSlots = slotsData.slots || [];
-            console.log('[GHL Availability] Free slots returned:', freeSlots.length, 'for', dateStr);
-            
-            // Check if our time range is in the free slots
-            const slotStart = new Date(startISO);
-            const slotEnd = new Date(endISO);
-            
-            const isAvailable = freeSlots.some((freeSlot: any) => {
-              const freeStart = new Date(freeSlot.startTime);
-              const freeEnd = new Date(freeSlot.endTime);
-              return slotStart >= freeStart && slotEnd <= freeEnd;
-            });
-
-            dayResult.slots.push({
-              ...slot,
-              available: isAvailable,
-              reason: isAvailable ? 'Available' : 'Outside business hours or blocked'
-            });
-          } else {
-            dayResult.slots.push({
-              ...slot,
-              available: false,
-              reason: `API error: ${validateResponse.status}`
-            });
-          }
-        } catch (error) {
-          dayResult.slots.push({
-            ...slot,
-            available: false,
-            reason: 'Failed to check availability'
-          });
-        }
+        dayResult.slots.push({
+          ...slot,
+          available: !isBlocked,
+          reason: isBlocked ? 'Already booked in GHL' : 'Available'
+        });
       }
       
       results.push(dayResult);

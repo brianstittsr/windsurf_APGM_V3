@@ -269,11 +269,14 @@ export async function POST(request: NextRequest) {
     // Step 3: Only save to Firestore if GHL appointment was created successfully
     if (!appointmentId) {
       log('✗ All GHL methods failed - not saving to Firestore');
+      const lastLog = logs[logs.length - 1] || 'Unknown GHL error';
+      const errorMsg = `GHL appointment creation failed. Last error: ${lastLog}. Check: (1) API key is valid, (2) Try a different time slot`;
       return NextResponse.json({
         success: false,
         appointmentId: null,
         contactId,
-        message: `Failed to create appointment in GoHighLevel. Please check: (1) The time slot is not already booked in GHL, (2) Your GHL API key is valid, (3) Try a different date/time`,
+        error: errorMsg,
+        message: errorMsg,
         logs,
         contactLogs,
         suggestion: 'Use "Check GHL Availability" to find available slots'
