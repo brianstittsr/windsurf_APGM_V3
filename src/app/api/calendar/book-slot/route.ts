@@ -55,6 +55,8 @@ async function createGHLContact(credentials: any, data: BookSlotRequest) {
       },
       body: JSON.stringify({
         locationId: credentials.locationId,
+        firstName: data.clientName.trim().split(' ')[0] || data.clientName,
+        lastName: data.clientName.trim().split(' ').slice(1).join(' ') || '',
         name: data.clientName,
         email: data.clientEmail,
         phone: data.clientPhone || '',
