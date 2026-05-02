@@ -200,12 +200,15 @@ export default function BookingCalendar() {
               artistId: data.artistId || '',
               artistName: data.artistId === 'victoria' ? 'Victoria Escobar' : (data.artistName || ''),
               serviceName: data.serviceName || '',
+              ghlTitle: data.ghlTitle,
               date: formattedDate,
               time: data.scheduledTime || data.appointmentTime || '',
               status: data.status || 'pending',
               price: data.totalAmount || 0,
               depositPaid: data.depositAmount > 0,
               notes: data.specialRequests || '',
+              ghlContactId: data.ghlContactId,
+              ghlAppointmentId: data.ghlAppointmentId,
               createdAt: data.createdAt,
               _collection: 'appointments'
             } as Booking;
@@ -894,17 +897,20 @@ export default function BookingCalendar() {
                 return (
                   <div key={i} className={`border-r border-gray-200 p-2 ${isToday ? 'bg-blue-50' : ''}`}>
                     <div className="space-y-2">
-                      {dayBookings.map(booking => (
+                      {dayBookings.map(booking => {
+                            const weekTitle = (booking as any).ghlTitle || `${booking.serviceName} - ${booking.clientName}`;
+                            return (
                         <div
                           key={booking.id}
                           className={`${getStatusColor(booking.status)} text-white text-xs px-2 py-2 rounded cursor-pointer hover:opacity-90 transition-opacity`}
                           onClick={() => handleBookingClick(booking)}
+                          title={`${booking.time} - ${weekTitle}`}
                         >
                           <div className="font-semibold">{booking.time}</div>
-                          <div className="truncate">{booking.clientName}</div>
-                          <div className="truncate text-white/80">{booking.serviceName}</div>
+                          <div className="truncate">{weekTitle}</div>
                         </div>
-                      ))}
+                            );
+                      })}
                     </div>
                   </div>
                 );
@@ -943,8 +949,7 @@ export default function BookingCalendar() {
                       <div className="flex justify-between items-start">
                         <div>
                           <div className="text-lg font-bold">{booking.time}</div>
-                          <div className="text-xl font-semibold">{booking.clientName}</div>
-                          <div className="text-white/80">{booking.serviceName}</div>
+                          <div className="text-xl font-semibold">{(booking as any).ghlTitle || `${booking.serviceName} - ${booking.clientName}`}</div>
                         </div>
                         <div className="text-right">
                           <div className="text-sm uppercase font-medium bg-white/20 px-2 py-1 rounded">{booking.status}</div>
@@ -989,7 +994,7 @@ export default function BookingCalendar() {
                 <div>
                   <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Appointment Details</h4>
                   <div className="space-y-2">
-                    <p className="text-gray-900"><span className="font-medium">Service:</span> {selectedBooking.serviceName}</p>
+                    <p className="text-gray-900"><span className="font-medium">Title:</span> {(selectedBooking as any).ghlTitle || selectedBooking.serviceName}</p>
                     <p className="text-gray-900"><span className="font-medium">Artist:</span> {selectedBooking.artistName}</p>
                     <p className="text-gray-900"><span className="font-medium">Date:</span> {selectedBooking.date}</p>
                     <p className="text-gray-900"><span className="font-medium">Time:</span> {selectedBooking.time}</p>
