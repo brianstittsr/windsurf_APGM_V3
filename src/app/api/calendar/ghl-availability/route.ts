@@ -27,6 +27,13 @@ export async function POST(request: NextRequest) {
     const envLocationId = process.env.GHL_LOCATION_ID;
     const envCalendarId = process.env.GHL_CALENDAR_ID || 'C9kiOUUFTpnSSqGurWh1';
 
+    console.log('[GHL Availability] Env vars check:', {
+      hasApiKey: !!apiKey,
+      apiKeyPrefix: apiKey ? apiKey.substring(0, 10) + '...' : 'none',
+      hasLocationId: !!envLocationId,
+      envCalendarId: envCalendarId
+    });
+
     if (!apiKey) {
       return NextResponse.json(
         { error: 'GHL_API_KEY not configured' },
@@ -36,6 +43,12 @@ export async function POST(request: NextRequest) {
 
     const targetLocationId = locationId || envLocationId;
     const targetCalendarId = calendarId || envCalendarId;
+
+    console.log('[GHL Availability] Using:', {
+      targetCalendarId,
+      targetLocationId,
+      dateRange: { startDate, endDate }
+    });
 
     const slotsByDate: Record<string, TimeSlot[]> = {};
 
@@ -66,9 +79,12 @@ export async function POST(request: NextRequest) {
         }
       );
 
+      console.log('[GHL Availability] Events API status:', eventsResponse.status);
+      
       if (eventsResponse.ok) {
         const eventsData = await eventsResponse.json();
         const events = eventsData.events || [];
+        console.log('[GHL Availability] Found events:', events.length);
         
         for (const event of events) {
           if (event.startTime && event.endTime) {
@@ -118,9 +134,12 @@ export async function POST(request: NextRequest) {
             }
           );
 
+          console.log('[GHL Availability] Free-slots API status:', validateResponse.status, 'for', dateStr);
+          
           if (validateResponse.ok) {
             const slotsData = await validateResponse.json();
             const freeSlots = slotsData.slots || [];
+            console.log('[GHL Availability] Free slots returned:', freeSlots.length, 'for', dateStr);
             
             // Check if our time range is in the free slots
             const slotStart = new Date(startISO);
