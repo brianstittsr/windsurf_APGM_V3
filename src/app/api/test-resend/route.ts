@@ -24,8 +24,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Send test email - use Resend's pre-verified sender until business domain is verified
-    const testFrom = 'onboarding@resend.dev';
+    // Send test email from contact subdomain
+    const testFrom = process.env.RESEND_FROM_EMAIL || 'noreply@contact.aprettygirlmatter.com';
     const result = await ResendEmailService.sendEmail(
       to,
       {
