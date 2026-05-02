@@ -24,7 +24,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Send test email
+    // Send test email - use Resend's pre-verified sender until business domain is verified
+    const testFrom = 'onboarding@resend.dev';
     const result = await ResendEmailService.sendEmail(
       to,
       {
@@ -78,8 +79,7 @@ Raleigh, NC
 victoria@aprettygirlmatter.com
 (919) 441-0932`
       },
-      undefined, // use default from email
-      ['victoria@aprettygirlmatter.com'] // cc
+      testFrom, // use onboarding@resend.dev until business domain is verified
     );
 
     if (result.success) {
