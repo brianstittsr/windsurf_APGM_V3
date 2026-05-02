@@ -157,37 +157,31 @@ export async function POST(req: NextRequest) {
 }
 
 async function getGHLCredentials() {
+  // Env vars always take priority to avoid stale Firestore credentials
+  const envApiKey = process.env.GHL_API_KEY || '';
+  const envLocationId = process.env.GHL_LOCATION_ID || '';
+
+  if (envApiKey && envLocationId) {
+    console.log('[ghl-sync] Using environment variable credentials');
+    return { apiKey: envApiKey, locationId: envLocationId };
+  }
+
+  // Fall back to Firestore only if env vars are missing
   try {
-    // First try to get from the collection (any document)
     const settingsSnapshot = await db.collection('crmSettings').limit(1).get();
     if (!settingsSnapshot.empty) {
       const data = settingsSnapshot.docs[0].data();
-      console.log('[ghl-sync] Found credentials in Firestore');
+      console.log('[ghl-sync] Using Firestore credentials (env vars missing)');
       return {
-        apiKey: data?.apiKey || process.env.GHL_API_KEY || '',
-        locationId: data?.locationId || process.env.GHL_LOCATION_ID || ''
-      };
-    }
-    
-    // Fallback: try specific document ID for backwards compatibility
-    const settingsDoc = await db.collection('crmSettings').doc('gohighlevel').get();
-    if (settingsDoc.exists) {
-      const data = settingsDoc.data();
-      console.log('[ghl-sync] Found credentials in Firestore (legacy doc)');
-      return {
-        apiKey: data?.apiKey || process.env.GHL_API_KEY || '',
-        locationId: data?.locationId || process.env.GHL_LOCATION_ID || ''
+        apiKey: envApiKey || data?.apiKey || '',
+        locationId: envLocationId || data?.locationId || ''
       };
     }
   } catch (error) {
-    console.error('Error fetching GHL credentials:', error);
+    console.error('Error fetching GHL credentials from Firestore:', error);
   }
   
-  console.log('[ghl-sync] Using environment variables for credentials');
-  return {
-    apiKey: process.env.GHL_API_KEY || '',
-    locationId: process.env.GHL_LOCATION_ID || ''
-  };
+  return { apiKey: envApiKey, locationId: envLocationId };
 }
 
 async function fetchGHLCalendars(apiKey: string, locationId: string) {
@@ -352,6 +346,14 @@ async function syncAppointmentToWebsite(ghlAppointment: any, apiKey: string) {
   const startTime = parseGHLDate(ghlAppointment.startTime);
   const endTime = parseGHLDate(ghlAppointment.endTime);
 
+  // Parse time using UTC to match what was booked in GHL
+  const utcHours = String(startTime.getUTCHours()).padStart(2, '0');
+  const utcMinutes = String(startTime.getUTCMinutes()).padStart(2, '0');
+  const utcTimeStr = `${utcHours}:${utcMinutes}`;
+
+  // Use the full GHL title as serviceName so the website calendar matches GHL
+  const ghlTitle = ghlAppointment.title || 'Appointment';
+
   // Create booking object
   const bookingData = {
     clientName: contactData.name || (contactData.firstName && contactData.lastName ? `${contactData.firstName} ${contactData.lastName}` : 'Unknown'),
@@ -359,15 +361,19 @@ async function syncAppointmentToWebsite(ghlAppointment: any, apiKey: string) {
     clientPhone: contactData.phone || '',
     artistId: ghlAppointment.assignedUserId || 'default-artist',
     artistName: 'Victoria Escobar',
-    serviceName: extractServiceName(ghlAppointment.title),
+    serviceName: extractServiceName(ghlTitle),
+    ghlTitle: ghlTitle,
     date: startTime.toISOString().split('T')[0],
-    time: startTime.toTimeString().slice(0, 5),
-    status: mapGHLStatus(ghlAppointment.appointmentStatus),
+    time: utcTimeStr,
+    startTimeISO: ghlAppointment.startTime,
+    endTimeISO: ghlAppointment.endTime,
+    status: mapGHLStatus(ghlAppointment.appointmentStatus || 'new'),
     price: extractPrice(ghlAppointment.notes) || 0,
     depositPaid: checkDepositPaid(ghlAppointment.notes),
     notes: ghlAppointment.notes || '',
     ghlContactId: contactId,
     ghlAppointmentId: ghlAppointment.id,
+    ghlCalendarId: ghlAppointment.calendarId || '',
     lastSyncedAt: new Date().toISOString(),
     createdAt: new Date(ghlAppointment.dateAdded || Date.now()),
     updatedAt: new Date(ghlAppointment.dateUpdated || Date.now())

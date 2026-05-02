@@ -38,6 +38,8 @@ interface Booking {
   notes?: string;
   ghlContactId?: string;
   ghlAppointmentId?: string;
+  ghlTitle?: string;
+  startTimeISO?: string;
   createdAt: any;
 }
 
@@ -158,6 +160,8 @@ export default function BookingCalendar() {
             notes: data.notes,
             ghlContactId: data.ghlContactId,
             ghlAppointmentId: data.ghlAppointmentId,
+            ghlTitle: data.ghlTitle,
+            startTimeISO: data.startTimeISO,
             createdAt: data.createdAt,
             _collection: 'bookings'
           } as Booking;
@@ -823,17 +827,20 @@ export default function BookingCalendar() {
                           {day}
                         </div>
                         <div className="space-y-1">
-                          {dayBookings.slice(0, 3).map(booking => (
+                          {dayBookings.slice(0, 3).map(booking => {
+                            const displayTitle = (booking as any).ghlTitle || `${booking.serviceName} - ${booking.clientName}`;
+                            return (
                             <div
                               key={booking.id}
                               className={`${getStatusColor(booking.status)} text-white text-xs px-2 py-1 rounded cursor-pointer hover:opacity-90 transition-opacity truncate`}
                               onClick={() => handleBookingClick(booking)}
-                              title={`${booking.time} - ${booking.clientName} - ${booking.serviceName}`}
+                              title={`${booking.time} - ${displayTitle}`}
                             >
                               <span className="font-semibold">{booking.time}</span>
-                              <span className="ml-1">{booking.clientName}</span>
+                              <span className="ml-1 truncate">{displayTitle}</span>
                             </div>
-                          ))}
+                            );
+                          })}
                           {dayBookings.length > 3 && (
                             <div 
                               className="text-xs text-gray-500 hover:text-[#AD6269] cursor-pointer text-center"
