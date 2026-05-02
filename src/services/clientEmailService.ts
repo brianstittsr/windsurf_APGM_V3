@@ -458,35 +458,27 @@ Thank you for choosing ${data.businessName}!
   }
 
   /**
-   * Send email using available service
+   * Send email using Resend API
    */
   private static async sendEmail(to: string, template: InvoiceEmailTemplate, fromEmail: string): Promise<boolean> {
     try {
-      // Try SMTP first if configured
-      const smtpHost = process.env.SMTP_HOST;
-      const smtpUser = process.env.SMTP_USER;
-      const smtpPass = process.env.SMTP_PASS;
+      // Try Resend API first
+      const { ResendEmailService } = await import('./resendEmailService');
+      const resendApiKey = process.env.RESEND_API_KEY;
       
-      if (smtpHost && smtpUser && smtpPass) {
-        console.log('📧 Using SMTP service...');
-        const ccEmails = ['victoria@aprettygirlmatter.com'];
-        return await SMTPEmailService.sendEmailWithAttachments(to, template, smtpUser, ccEmails);
-      }
-      
-      // Try external email service
-      const apiKey = process.env.NEXT_PUBLIC_EMAIL_API_KEY;
-      const apiUrl = process.env.NEXT_PUBLIC_EMAIL_API_URL;
-      
-      if (apiKey && apiUrl) {
-        console.log('📧 Using external email service...');
-        console.log('⚠️ External email service not implemented yet');
-        console.log('📧 Email content (HTML):', template.htmlContent.substring(0, 200) + '...');
-        console.log('📧 Email content (Text):', template.textContent.substring(0, 200) + '...');
-        return false;
+      if (resendApiKey) {
+        console.log('📧 Using Resend API service...');
+        const result = await ResendEmailService.sendEmail(
+          to,
+          template,
+          fromEmail,
+          ['victoria@aprettygirlmatter.com'] // cc
+        );
+        return result.success;
       }
       
       // Development mode - just log the email content
-      console.log('⚠️ No email service configured - logging content:');
+      console.log('⚠️ RESEND_API_KEY not configured - logging content:');
       console.log('📧 Subject:', template.subject);
       console.log('📧 HTML Content:', template.htmlContent.substring(0, 500) + '...');
       console.log('📧 Text Content:', template.textContent.substring(0, 500) + '...');

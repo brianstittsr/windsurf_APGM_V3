@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
+import { ResendEmailService } from '@/services/resendEmailService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,14 +13,15 @@ export async function POST(request: NextRequest) {
       message
     } = body;
 
-    // Create transporter
-    const transporter = nodemailer.createTransporter({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_APP_PASSWORD,
-      },
-    });
+    // Check if Resend is configured
+    const resendConfigured = !!process.env.RESEND_API_KEY;
+    if (!resendConfigured) {
+      console.error('RESEND_API_KEY not configured');
+      return NextResponse.json(
+        { error: 'Email service not configured' },
+        { status: 500 }
+      );
+    }
 
     const amount = (giftCard.originalAmount / 100).toFixed(2);
     const expirationDate = giftCard.expirationDate.toDate().toLocaleDateString();
@@ -96,12 +97,22 @@ export async function POST(request: NextRequest) {
     `;
 
     // Send gift card email
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: recipientEmailAddress,
-      subject: `🎁 You've Received a Gift Card from A Pretty Girl Matter!`,
-      html: giftCardEmailHtml,
-    });
+    const giftCardResult = await ResendEmailService.sendEmail(
+      recipientEmailAddress,
+      {
+        subject: `🎁 You've Received a Gift Card from A Pretty Girl Matter!`,
+        htmlContent: giftCardEmailHtml,
+        textContent: `Gift Card from A Pretty Girl Matter! Code: ${giftCard.code}, Value: $${amount}`
+      }
+    );
+
+    if (!giftCardResult.success) {
+      console.error('Failed to send gift card email:', giftCardResult.error);
+      return NextResponse.json(
+        { error: 'Failed to send gift card email' },
+        { status: 500 }
+      );
+    }
 
     // Send confirmation email to purchaser (if different from recipient)
     if (recipientEmail && recipientEmail !== purchaserEmail) {
@@ -123,12 +134,18 @@ export async function POST(request: NextRequest) {
         </div>
       `;
 
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: purchaserEmail,
-        subject: 'Gift Card Purchase Confirmation - A Pretty Girl Matter',
-        html: confirmationEmailHtml,
-      });
+      const confirmationResult = await ResendEmailService.sendEmail(
+        purchaserEmail,
+        {
+          subject: 'Gift Card Purchase Confirmation - A Pretty Girl Matter',
+          htmlContent: confirmationEmailHtml,
+          textContent: `Gift Card Purchase Confirmation. Amount: $${amount}, Gift Card Code: ${giftCard.code}, Recipient: ${recipientName} (${recipientEmail}), Expiration Date: ${expirationDate}`
+        }
+      );
+
+      if (!confirmationResult.success) {
+        console.error('Failed to send confirmation email:', confirmationResult.error);
+      }
     }
 
     return NextResponse.json({ success: true });

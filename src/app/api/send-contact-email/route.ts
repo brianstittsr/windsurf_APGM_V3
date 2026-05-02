@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
+import { ResendEmailService } from '@/services/resendEmailService';
 
 
 export async function GET(request: NextRequest) {
@@ -25,46 +25,63 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if Resend is configured
+    const resendConfigured = !!process.env.RESEND_API_KEY;
+    if (!resendConfigured) {
+      console.log('⚠️ RESEND_API_KEY not configured, logging contact only');
+      console.log('Contact logged:', {
+        timestamp: new Date().toISOString(),
+        name, email, phone, service, message, emailSent: false
+      });
+      return NextResponse.json({
+        success: true,
+        message: 'Message logged. Email service not configured.'
+      });
+    }
+
     let emailSent = false;
     
-    // Method 1: Try Gmail SMTP with nodemailer
-    if (process.env.GMAIL_USER && process.env.GMAIL_PASS) {
-      console.log('Trying Gmail SMTP...');
-      try {
-        const transporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: process.env.GMAIL_USER,
-            pass: process.env.GMAIL_PASS
-          }
-        });
+    // Send notification email to business
+    console.log('Sending notification email via Resend...');
+    const notificationResult = await ResendEmailService.sendEmail(
+      'victoria@aprettygirlmatter.com',
+      {
+        subject: `New Contact Form Submission from ${name}`,
+        htmlContent: `
+          <h2>New Contact Form Submission</h2>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
+          <p><strong>Service:</strong> ${service || 'Not specified'}</p>
+          <p><strong>Message:</strong></p>
+          <p>${message}</p>
+          <hr>
+          <p>Reply to: ${email}</p>
+        `,
+        textContent: `New Contact Form Submission
+Name: ${name}
+Email: ${email}
+Phone: ${phone || 'Not provided'}
+Service: ${service || 'Not specified'}
+Message: ${message}
+Reply to: ${email}`
+      },
+      undefined, // fromEmail - use default
+      ['brianstittsr@gmail.com'], // cc
+      undefined, // bcc
+      email // replyTo
+    );
 
-        // Send notification email
-        await transporter.sendMail({
-          from: process.env.GMAIL_USER,
-          to: 'victoria@aprettygirlmatter.com',
-          cc: 'brianstittsr@gmail.com',
-          subject: `New Contact Form Submission from ${name}`,
-          html: `
-            <h2>New Contact Form Submission</h2>
-            <p><strong>Name:</strong> ${name}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
-            <p><strong>Service:</strong> ${service || 'Not specified'}</p>
-            <p><strong>Message:</strong></p>
-            <p>${message}</p>
-            <hr>
-            <p>Reply to: ${email}</p>
-          `,
-          replyTo: email
-        });
-
-        // Send confirmation email
-        await transporter.sendMail({
-          from: process.env.GMAIL_USER,
-          to: email,
+    if (notificationResult.success) {
+      console.log('✅ Notification email sent successfully');
+      
+      // Send confirmation email to user
+      console.log('Sending confirmation email via Resend...');
+      const confirmationResult = await ResendEmailService.sendEmail(
+        email,
+        {
           subject: 'Thank you for contacting A Pretty Girl Matter!',
-          html: `
+          htmlContent: `
             <h2>Thank You, ${name}!</h2>
             <p>We've received your message and will get back to you within 24 hours.</p>
             <p><strong>What's Next?</strong><br>
@@ -75,41 +92,30 @@ export async function POST(request: NextRequest) {
             <p>A Pretty Girl Matter<br>
             4040 Barrett Drive Suite 3, Raleigh, NC 27609<br>
             victoria@aprettygirlmatter.com | (919) 441-0932</p>
-          `
-        });
+          `,
+          textContent: `Thank You, ${name}!
+We've received your message and will get back to you within 24 hours.
 
-        console.log('Emails sent successfully via Gmail SMTP');
-        emailSent = true;
-      } catch (gmailError) {
-        console.error('Gmail SMTP failed:', gmailError);
-      }
-    }
+What's Next?
+Victoria will personally review your message and respond with detailed information about your inquiry.
 
-    // Method 2: Simple HTTP form submission (always works)
-    if (!emailSent) {
-      console.log('Trying simple form submission...');
-      try {
-        const formData = new FormData();
-        formData.append('name', name);
-        formData.append('email', email);
-        formData.append('phone', phone || '');
-        formData.append('service', service || '');
-        formData.append('message', message);
-        formData.append('_subject', `New Contact Form Submission from ${name}`);
-        formData.append('_cc', 'brianstittsr@gmail.com');
+Need immediate assistance?
+Call or text us at (919) 441-0932
 
-        const response = await fetch('https://formsubmit.co/victoria@aprettygirlmatter.com', {
-          method: 'POST',
-          body: formData
-        });
-
-        if (response.ok) {
-          console.log('Form submitted successfully via FormSubmit');
-          emailSent = true;
+A Pretty Girl Matter
+4040 Barrett Drive Suite 3, Raleigh, NC 27609
+victoria@aprettygirlmatter.com | (919) 441-0932`
         }
-      } catch (formError) {
-        console.error('Form submission failed:', formError);
+      );
+
+      if (confirmationResult.success) {
+        console.log('✅ Confirmation email sent successfully');
+        emailSent = true;
+      } else {
+        console.error('❌ Confirmation email failed:', confirmationResult.error);
       }
+    } else {
+      console.error('❌ Notification email failed:', notificationResult.error);
     }
 
     // Always log the contact
