@@ -306,8 +306,23 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Step 3: Save to Firestore
+    // Step 3: Only save to Firestore if GHL appointment was created successfully
+    if (!appointmentId) {
+      log('✗ All GHL methods failed - not saving to Firestore');
+      return NextResponse.json({
+        success: false,
+        appointmentId: null,
+        contactId,
+        message: `Failed to create appointment in GoHighLevel. Please check: (1) The time slot is not already booked in GHL, (2) Your GHL API key is valid, (3) Try a different date/time`,
+        logs,
+        contactLogs,
+        suggestion: 'Use "Check GHL Availability" to find available slots'
+      }, { status: 400 });
+    }
+
+    // Save to Firestore only after successful GHL sync
     log('Step 3: Saving to Firestore...');
+    let bookingRefId = null;
     
     try {
       const { db } = await import('@/lib/firebase-admin');
@@ -318,42 +333,34 @@ export async function POST(request: NextRequest) {
           ghlContactId: contactId,
           ghlAppointmentId: appointmentId,
           ghlCalendarId: calendarId,
-          ghlCreationMethod: creationMethod || 'failed',
+          ghlCreationMethod: creationMethod,
           ghlSyncLogs: logs,
-          ghlSyncStatus: appointmentId ? 'synced' : 'failed',
+          ghlSyncStatus: 'synced',
           createdAt: new Date(),
-          syncedAt: appointmentId ? new Date() : null
+          syncedAt: new Date()
         });
+        bookingRefId = bookingRef.id;
         log(`✓ Saved to Firestore: ${bookingRef.id}`);
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Unknown error';
       log(`✗ Firestore save failed: ${errorMsg}`);
+      // Note: GHL appointment was created but Firebase save failed
+      // This is a partial success - we should still report it
     }
 
-    // Return result
-    if (appointmentId) {
-      return NextResponse.json({
-        success: true,
-        appointmentId,
-        contactId,
-        calendarId,
-        creationMethod,
-        message: `Appointment created via ${creationMethod} method`,
-        logs,
-        ghlAppointment: appointmentResult
-      });
-    } else {
-      return NextResponse.json({
-        success: false,
-        appointmentId: null,
-        contactId,
-        message: 'Failed to create appointment in GHL after trying all methods',
-        logs,
-        contactLogs,
-        suggestion: 'The time slot may be permanently blocked. Try a different date/time.'
-      }, { status: 200 });
-    }
+    // Return success
+    return NextResponse.json({
+      success: true,
+      appointmentId,
+      contactId,
+      calendarId,
+      bookingId: bookingRefId,
+      creationMethod,
+      message: `Appointment created in GoHighLevel and saved to database`,
+      logs,
+      ghlAppointment: appointmentResult
+    });
 
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : 'Unknown error';

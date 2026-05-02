@@ -177,13 +177,13 @@ export async function POST(request: NextRequest) {
       } catch {}
       
       return NextResponse.json({
-        success: true,
+        success: false,
         appointment: null,
         appointmentId: null,
         contactId: contactId || null,
         ghlError: { status: createAppointmentResponse.status, message: errorMessage },
         message: userMessage
-      });
+      }, { status: 400 });
     } else {
       appointmentResult = await createAppointmentResponse.json();
       ghlAppointmentId = appointmentResult?.event?.id || appointmentResult?.id || null;
