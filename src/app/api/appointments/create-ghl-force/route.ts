@@ -148,10 +148,10 @@ export async function POST(request: NextRequest) {
         startTime: appointmentData.startTime,
         endTime: appointmentData.endTime,
         title: appointmentData.title || appointmentData.serviceName,
-        appointmentStatus: appointmentData.status || 'confirmed',
+        appointmentStatus: 'confirmed', // Must be confirmed to trigger GHL workflows
         address: appointmentData.address || '',
         ignoreDateRange: true,
-        toNotify: false // Don't send notifications for admin-forced bookings
+        toNotify: true // Triggers GHL confirmation email + reminder workflows
       };
 
       const standardResponse = await fetch(
@@ -226,7 +226,7 @@ export async function POST(request: NextRequest) {
             title: appointmentData.title,
             appointmentStatus: 'confirmed',
             ignoreDateRange: true,
-            toNotify: false
+            toNotify: true // Triggers GHL workflows
           };
 
           const retryResponse = await fetch(

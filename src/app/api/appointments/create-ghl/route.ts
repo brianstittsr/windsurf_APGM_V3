@@ -135,10 +135,10 @@ export async function POST(request: NextRequest) {
       startTime: appointmentData.startTime, // ISO format: "2025-11-25T11:00:00.000Z"
       endTime: appointmentData.endTime,
       title: appointmentData.title || appointmentData.serviceName,
-      appointmentStatus: appointmentData.status || 'new',
+      appointmentStatus: 'confirmed', // Must be "confirmed" to trigger GHL workflows
       address: appointmentData.address || '',
       ignoreDateRange: true,
-      toNotify: true
+      toNotify: true // Triggers GHL confirmation email + reminder workflows
     };
 
     const createAppointmentResponse = await fetch(
