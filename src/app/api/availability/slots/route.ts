@@ -138,6 +138,46 @@ export async function GET(req: NextRequest) {
       // Continue without Firestore data - all slots will be available
     }
 
+    // Check Firestore bookings collection for admin-created bookings
+    try {
+      const db = adminDb;
+      const bookingsSnapshot = await db.collection('bookings')
+        .where('date', '==', date)
+        .get();
+
+      for (const bookingDoc of bookingsSnapshot.docs) {
+        const booking = bookingDoc.data();
+        if (booking.status === 'cancelled') continue;
+
+        // Extract hour from startTime ISO string or time field
+        let hour: number | null = null;
+        if (booking.startTime) {
+          const aptTime = new Date(booking.startTime);
+          if (!isNaN(aptTime.getTime())) {
+            hour = aptTime.getUTCHours();
+          }
+        } else if (booking.time && typeof booking.time === 'string') {
+          hour = parseInt(booking.time.split(':')[0], 10);
+        }
+
+        if (hour !== null) {
+          if (hour >= 10 && hour < 13 && !bookedSlots.includes('morning')) {
+            bookedSlots.push('morning');
+            console.log(`[Availability API] Firestore booking blocks morning slot on ${date}`);
+          } else if (hour >= 13 && hour < 16 && !bookedSlots.includes('afternoon')) {
+            bookedSlots.push('afternoon');
+            console.log(`[Availability API] Firestore booking blocks afternoon slot on ${date}`);
+          } else if (hour >= 16 && hour < 19 && !bookedSlots.includes('evening')) {
+            bookedSlots.push('evening');
+            console.log(`[Availability API] Firestore booking blocks evening slot on ${date}`);
+          }
+        }
+      }
+      console.log(`[Availability API] Firestore bookings check: ${bookingsSnapshot.docs.length} bookings found for ${date}`);
+    } catch (firestoreBookingsError) {
+      console.error('Error fetching bookings from Firestore:', firestoreBookingsError);
+    }
+
     // Check GHL appointments if credentials are available via env vars
     const apiKey = process.env.GHL_API_KEY || '';
     const locationId = process.env.GHL_LOCATION_ID || '';
@@ -147,8 +187,9 @@ export async function GET(req: NextRequest) {
         const appointments = await fetchGHLAppointmentsForDate(apiKey, locationId, date);
         
         for (const apt of appointments) {
+          // Use UTC hours since GHL returns ISO strings in UTC
           const aptTime = new Date(apt.startTime);
-          const hour = aptTime.getHours();
+          const hour = aptTime.getUTCHours();
           
           // Determine which slot this appointment falls into (using new time ranges)
           if (hour >= 10 && hour < 13 && !bookedSlots.includes('morning')) {
@@ -159,6 +200,7 @@ export async function GET(req: NextRequest) {
             bookedSlots.push('evening');
           }
         }
+        console.log(`[Availability API] GHL check: ${appointments.length} appointments found for ${date}`);
       } catch (error) {
         console.error('Error fetching GHL appointments:', error);
         // Continue without GHL data
@@ -192,8 +234,9 @@ async function fetchGHLAppointmentsForDate(
   const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
   try {
-    const startTime = new Date(date + 'T00:00:00').toISOString();
-    const endTime = new Date(date + 'T23:59:59').toISOString();
+    // Use explicit UTC times to avoid timezone ambiguity
+    const startTime = `${date}T00:00:00.000Z`;
+    const endTime = `${date}T23:59:59.999Z`;
 
     const response = await fetch(
       `https://services.leadconnectorhq.com/calendars/events?locationId=${locationId}&startTime=${startTime}&endTime=${endTime}`,

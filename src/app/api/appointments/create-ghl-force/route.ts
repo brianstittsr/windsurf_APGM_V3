@@ -266,46 +266,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Method 3: Create a task instead of appointment (as fallback)
-    if (!appointmentId && contactId) {
-      log('Method 3: Creating task as fallback');
-      
-      try {
-        const taskResponse = await fetch(
-          'https://services.leadconnectorhq.com/tasks/',
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${apiKey}`,
-              'Version': '2021-07-28',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              locationId,
-              contactId,
-              title: appointmentData.title || 'Appointment',
-              description: `Service: ${appointmentData.serviceName}\nDate: ${appointmentData.startTime}`,
-              dueDate: appointmentData.startTime,
-              status: 'open',
-              assignedTo: 'jwyGOFDhImfPWcsPXy6F' // Use the assigned user from successful creation
-            })
-          }
-        );
-
-        if (taskResponse.ok) {
-          const taskData = await taskResponse.json();
-          appointmentId = `task-${taskData.id}`;
-          creationMethod = 'task-fallback';
-          log(`✓ Created task as fallback: ${taskData.id}`);
-        } else {
-          log(`✗ Task creation failed: ${await taskResponse.text()}`);
-        }
-      } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : 'Unknown error';
-        log(`✗ Task method error: ${errorMsg}`);
-      }
-    }
-
     // Step 3: Only save to Firestore if GHL appointment was created successfully
     if (!appointmentId) {
       log('✗ All GHL methods failed - not saving to Firestore');

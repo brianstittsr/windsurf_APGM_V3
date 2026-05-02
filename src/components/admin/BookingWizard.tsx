@@ -599,9 +599,28 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
 
     setCreatingBooking(true);
     try {
+      // Validate date and time values before constructing ISO strings
+      if (!selectedDate || !/^\d{4}-\d{2}-\d{2}$/.test(selectedDate)) {
+        throw new Error(`Invalid date: "${selectedDate}". Expected YYYY-MM-DD format.`);
+      }
+      const timeRegex = /^\d{2}:\d{2}$/;
+      if (!timeRegex.test(selectedSlot.time)) {
+        throw new Error(`Invalid start time: "${selectedSlot.time}". Expected HH:MM format.`);
+      }
+      if (!timeRegex.test(selectedSlot.endTime)) {
+        throw new Error(`Invalid end time: "${selectedSlot.endTime}". Expected HH:MM format.`);
+      }
       // Build ISO start/end times for GHL
-      const startISO = new Date(`${selectedDate}T${selectedSlot.time}:00`).toISOString();
-      const endISO   = new Date(`${selectedDate}T${selectedSlot.endTime}:00`).toISOString();
+      const startDate = new Date(`${selectedDate}T${selectedSlot.time}:00`);
+      const endDate   = new Date(`${selectedDate}T${selectedSlot.endTime}:00`);
+      if (isNaN(startDate.getTime())) {
+        throw new Error(`Could not parse start time: ${selectedDate}T${selectedSlot.time}:00`);
+      }
+      if (isNaN(endDate.getTime())) {
+        throw new Error(`Could not parse end time: ${selectedDate}T${selectedSlot.endTime}:00`);
+      }
+      const startISO = startDate.toISOString();
+      const endISO   = endDate.toISOString();
 
       const payload = {
         // Contact fields
@@ -1170,10 +1189,12 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                       <Button 
                         onClick={() => {
                           if (calendarOverrideDate && calendarOverrideTime) {
-                            const endHour = parseInt(calendarOverrideTime.split(':')[0]) + 3;
-                            const endTime = `${String(endHour).padStart(2, '0')}:${calendarOverrideTime.split(':')[1]}`;
+                            const [overrideHour, overrideMin] = calendarOverrideTime.split(':').map(Number);
+                            const rawEndHour = overrideHour + Math.floor(duration / 60);
+                            const clampedEndHour = Math.min(rawEndHour, 23);
+                            const endTime = `${String(clampedEndHour).padStart(2, '0')}:${String(overrideMin).padStart(2, '0')}`;
                             setSelectedSlot({
-                              time: calendarOverrideTime,
+                              time: `${String(overrideHour).padStart(2, '0')}:${String(overrideMin).padStart(2, '0')}`,
                               endTime: endTime,
                               available: true,
                               calendarId: calendars[0]?.id || '',
