@@ -175,6 +175,11 @@ export async function POST(request: NextRequest) {
       } else {
         const errorText = await standardResponse.text();
         log(`✗ Standard method failed (${standardResponse.status}): ${errorText}`);
+        // Parse GHL error for better messaging
+        try {
+          const errJson = JSON.parse(errorText);
+          log(`✗ GHL error detail: ${errJson.message || errJson.error || JSON.stringify(errJson)}`);
+        } catch {}
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Unknown error';
@@ -255,10 +260,12 @@ export async function POST(request: NextRequest) {
             creationMethod = 'blocked-slot-workaround';
             log(`✓ Created via blocked slot workaround: ${appointmentId}`);
           } else {
-            log(`✗ Retry after unblock failed: ${await retryResponse.text()}`);
+            const retryErr = await retryResponse.text();
+            log(`✗ Retry after unblock failed (${retryResponse.status}): ${retryErr}`);
           }
         } else {
-          log(`✗ Block slot creation failed: ${await blockResponse.text()}`);
+          const blockErr = await blockResponse.text();
+          log(`✗ Block slot creation failed (${blockResponse.status}): ${blockErr}`);
         }
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Unknown error';
@@ -268,9 +275,14 @@ export async function POST(request: NextRequest) {
 
     // Step 3: Only save to Firestore if GHL appointment was created successfully
     if (!appointmentId) {
-      log('✗ All GHL methods failed - not saving to Firestore');
-      const lastLog = logs[logs.length - 1] || 'Unknown GHL error';
-      const errorMsg = `GHL appointment creation failed. Last error: ${lastLog}. Check: (1) API key is valid, (2) Try a different time slot`;
+      // Find the most informative error log (look for status codes and GHL messages)
+      const ghlErrorLogs = logs.filter(l => l.includes('failed') || l.includes('error') || l.includes('✗'));
+      const detailLog = ghlErrorLogs.find(l => l.includes('Standard method failed') || l.includes('GHL error detail')) 
+        || ghlErrorLogs[ghlErrorLogs.length - 1] 
+        || logs[logs.length - 1] 
+        || 'Unknown GHL error';
+      const errorMsg = `GHL sync failed: ${detailLog}`;
+      console.error('[GHL-FORCE] All methods failed. Full logs:', logs);
       return NextResponse.json({
         success: false,
         appointmentId: null,
@@ -279,7 +291,7 @@ export async function POST(request: NextRequest) {
         message: errorMsg,
         logs,
         contactLogs,
-        suggestion: 'Use "Check GHL Availability" to find available slots'
+        suggestion: 'Check Vercel logs for the full GHL API response details'
       }, { status: 400 });
     }
 
