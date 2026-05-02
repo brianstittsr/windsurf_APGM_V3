@@ -21,41 +21,31 @@ interface Booking {
 }
 
 async function getGHLApiKey() {
+  // Env vars always take priority to avoid stale Firestore credentials
+  if (process.env.GHL_API_KEY) return process.env.GHL_API_KEY;
   try {
-    // First try to get from the collection (any document)
     const settingsSnapshot = await db.collection('crmSettings').limit(1).get();
-    if (!settingsSnapshot.empty) {
-      return settingsSnapshot.docs[0].data().apiKey;
-    }
-    
-    // Fallback: try specific document ID for backwards compatibility
+    if (!settingsSnapshot.empty) return settingsSnapshot.docs[0].data().apiKey || '';
     const settingsDoc = await db.collection('crmSettings').doc('gohighlevel').get();
-    if (settingsDoc.exists) {
-      return settingsDoc.data()?.apiKey;
-    }
+    if (settingsDoc.exists) return settingsDoc.data()?.apiKey || '';
   } catch (error) {
     console.error('Error fetching GHL API key:', error);
   }
-  return process.env.GHL_API_KEY || '';
+  return '';
 }
 
 async function getGHLLocationId() {
+  // Env vars always take priority to avoid stale Firestore credentials
+  if (process.env.GHL_LOCATION_ID) return process.env.GHL_LOCATION_ID;
   try {
-    // First try to get from the collection (any document)
     const settingsSnapshot = await db.collection('crmSettings').limit(1).get();
-    if (!settingsSnapshot.empty) {
-      return settingsSnapshot.docs[0].data().locationId;
-    }
-    
-    // Fallback: try specific document ID for backwards compatibility
+    if (!settingsSnapshot.empty) return settingsSnapshot.docs[0].data().locationId || '';
     const settingsDoc = await db.collection('crmSettings').doc('gohighlevel').get();
-    if (settingsDoc.exists) {
-      return settingsDoc.data()?.locationId;
-    }
+    if (settingsDoc.exists) return settingsDoc.data()?.locationId || '';
   } catch (error) {
     console.error('Error fetching GHL location ID:', error);
   }
-  return process.env.GHL_LOCATION_ID || '';
+  return '';
 }
 
 async function createOrUpdateGHLContact(booking: Booking, apiKey: string) {
@@ -178,15 +168,20 @@ async function createOrUpdateGHLAppointment(booking: Booking, contactId: string,
     
     console.log(`[sync-ghl] Using calendar ID: ${calendarId} (${useServiceCalendar ? 'Service Calendar for MOELCALL200' : 'APGM Calendar'})`);
     
-    // Parse date and add 3 hours for end time
-    const startDateTime = new Date(`${booking.date}T${booking.time}:00`);
+    // Parse date/time — treat as local time by appending timezone offset so it matches what was booked
+    // booking.time is HH:MM in UTC (stored from GHL), interpret as-is
+    const startDateTime = new Date(`${booking.date}T${booking.time}:00Z`);
     const endDateTime = new Date(startDateTime.getTime() + (3 * 60 * 60 * 1000)); // Add 3 hours
+
+    // Use existing ghlTitle if available (from GHL sync) for title consistency
+    const bookingTitle = (booking as any).ghlTitle || `${booking.serviceName} - ${booking.clientName}`;
 
     const appointmentData = {
       locationId,
       contactId,
       calendarId,
-      title: `${booking.serviceName} - ${booking.clientName}`,
+      title: bookingTitle,
+      ignoreDateRange: true,
       appointmentStatus: booking.status === 'confirmed' ? 'confirmed' : 'new',
       startTime: startDateTime.toISOString(),
       endTime: endDateTime.toISOString(),
