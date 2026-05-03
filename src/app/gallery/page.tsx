@@ -114,7 +114,7 @@ export default function GalleryPage() {
                         src={src}
                         alt={`Permanent makeup transformation ${index + 1}`}
                         fill
-                        className="object-contain"
+                        className="object-contain object-center"
                         sizes="(max-width: 768px) 100vw, 80vw"
                         priority={index === 0}
                         onError={(e) => {
