@@ -136,13 +136,6 @@ export default function GalleryPage() {
 
                   {/* Overlay Gradient */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-
-                  {/* Image Counter */}
-                  <div className="absolute bottom-6 right-6 bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full">
-                    <span className="text-white font-medium">
-                      {currentIndex + 1} / {images.length}
-                    </span>
-                  </div>
                 </div>
 
                 {/* Thumbnail Strip */}
