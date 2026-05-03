@@ -10,6 +10,7 @@ export default function Footer() {
     { name: "Process", href: "http://localhost:3001/#process" },
     { name: "About Victoria", href: "http://localhost:3001/#about" },
     { name: "Client Reviews", href: "http://localhost:3001/#reviews" },
+    { name: "Gallery", href: "/gallery" },
     { name: "Contact Us", href: "/contact" }
   ];
 

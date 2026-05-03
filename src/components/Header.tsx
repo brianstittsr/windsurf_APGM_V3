@@ -129,6 +129,9 @@ export default function Header() {
               <Link href="/contact" className="text-gray-700 hover:text-gray-900 text-sm font-medium transition-colors">
                 CONTACT
               </Link>
+              <Link href="/gallery" className="text-gray-700 hover:text-gray-900 text-sm font-medium transition-colors">
+                GALLERY
+              </Link>
             </nav>
 
             {/* Desktop Right Section */}
@@ -248,6 +251,11 @@ export default function Header() {
                   <Button variant="ghost" asChild className="justify-start text-lg">
                     <Link href="/contact" onClick={() => setIsMenuOpen(false)}>
                       CONTACT
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" asChild className="justify-start text-lg">
+                    <Link href="/gallery" onClick={() => setIsMenuOpen(false)}>
+                      GALLERY
                     </Link>
                   </Button>
                   
