@@ -100,7 +100,7 @@ export default function GalleryPage() {
               </div>
             ) : (
               /* Image Gallery */
-              <div className="max-w-5xl mx-auto">
+              <div className="max-w-3xl mx-auto">
                 {/* Main Image Display */}
                 <div className="relative aspect-[3/4] md:aspect-[4/5] bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl overflow-hidden shadow-2xl mb-8 max-h-[70vh]">
                   {images.map((src, index) => (
