@@ -102,23 +102,24 @@ export default function GalleryPage() {
               /* Image Gallery */
               <div className="max-w-3xl mx-auto">
                 {/* Main Image Display */}
-                <div className="relative aspect-[3/4] md:aspect-[4/5] bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl overflow-hidden shadow-2xl mb-8 max-h-[70vh]">
+                <div className="relative aspect-[3/4] md:aspect-[4/5] bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl overflow-hidden shadow-2xl mb-8 max-h-[70vh] flex items-center justify-center">
                   {images.map((src, index) => (
                     <div
                       key={index}
-                      className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                      className={`absolute inset-0 flex items-center justify-center transition-opacity duration-1000 ease-in-out ${
                         index === currentIndex ? 'opacity-100' : 'opacity-0'
                       }`}
                     >
                       <Image
                         src={src}
                         alt={`Permanent makeup transformation ${index + 1}`}
-                        fill
-                        className="object-contain object-center"
+                        width={0}
+                        height={0}
+                        className="object-contain w-full h-full"
                         sizes="(max-width: 768px) 100vw, 80vw"
                         priority={index === 0}
+                        style={{ maxWidth: '100%', maxHeight: '100%' }}
                         onError={(e) => {
-                          // Fallback for missing images
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
                         }}
