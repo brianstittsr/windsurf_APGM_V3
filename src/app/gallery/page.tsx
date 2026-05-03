@@ -102,7 +102,7 @@ export default function GalleryPage() {
               /* Image Gallery */
               <div className="max-w-5xl mx-auto">
                 {/* Main Image Display */}
-                <div className="relative aspect-[16/10] bg-gray-100 rounded-2xl overflow-hidden shadow-2xl mb-8">
+                <div className="relative aspect-[3/4] md:aspect-[4/5] bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl overflow-hidden shadow-2xl mb-8 max-h-[70vh]">
                   {images.map((src, index) => (
                     <div
                       key={index}
@@ -114,7 +114,8 @@ export default function GalleryPage() {
                         src={src}
                         alt={`Permanent makeup transformation ${index + 1}`}
                         fill
-                        className="object-cover"
+                        className="object-contain"
+                        sizes="(max-width: 768px) 100vw, 80vw"
                         priority={index === 0}
                         onError={(e) => {
                           // Fallback for missing images
