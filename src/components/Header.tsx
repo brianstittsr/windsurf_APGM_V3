@@ -129,9 +129,6 @@ export default function Header() {
               <Link href="/contact" className="text-gray-700 hover:text-gray-900 text-sm font-medium transition-colors">
                 CONTACT
               </Link>
-              <Link href="/gallery" className="text-gray-700 hover:text-gray-900 text-sm font-medium transition-colors">
-                GALLERY
-              </Link>
             </nav>
 
             {/* Desktop Right Section */}
@@ -253,11 +250,13 @@ export default function Header() {
                       CONTACT
                     </Link>
                   </Button>
+{/* Gallery mobile link hidden
                   <Button variant="ghost" asChild className="justify-start text-lg">
                     <Link href="/gallery" onClick={() => setIsMenuOpen(false)}>
                       GALLERY
                     </Link>
                   </Button>
+                  */}
                   
                   <div className="border-t pt-4 mt-4">
                     <Button 
