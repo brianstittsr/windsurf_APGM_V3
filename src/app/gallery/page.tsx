@@ -7,24 +7,15 @@ import Link from 'next/link';
 import { Camera, Sparkles, ArrowRight } from 'lucide-react';
 
 const galleryImages = [
-  '/images/gallery/0C33214B-3B91-4574-A6BA-C7DF98121702_1_102_o.jpeg',
-  '/images/gallery/18FFAF18-637B-41C5-B7DF-B32CA59E9A7F_1_105_c.jpeg',
-  '/images/gallery/22667FB6-8A1F-4630-B181-BE2045198FEB_1_102_o.jpeg',
-  '/images/gallery/24F722F4-E240-410B-BF86-4FF3479EB0F7_1_105_c.jpeg',
-  '/images/gallery/2588E8A8-58BD-4906-A65D-53E8D5890CA7_1_105_c.jpeg',
-  '/images/gallery/27256B3F-0857-4070-AD73-939BAD8F609F_1_105_c.jpeg',
-  '/images/gallery/29F668EA-399A-4A32-B81D-620E9EA4788F_1_105_c.jpeg',
-  '/images/gallery/3EAC1005-39E8-4AA0-95E3-BC4B071B5762_1_105_c.jpeg',
-  '/images/gallery/4FEB2DFB-7B7E-4303-ABE7-A135BABBB82B_1_105_c.jpeg',
-  '/images/gallery/67FDDF17-8204-426B-83F0-A9BE0E598F57_1_105_c.jpeg',
-  '/images/gallery/6E06ACA2-DFC1-4B18-8086-064A35366BFD_1_102_o.jpeg',
-  '/images/gallery/6F25D45E-C00F-44FA-AF72-474AC530608F_1_105_c.jpeg',
-  '/images/gallery/7151A3CA-9B4E-43C4-B1B6-F84ADAE6296D_1_102_o.jpeg',
-  '/images/gallery/9AA12F13-3233-4DB0-94DA-632EAE313DDD_1_105_c.jpeg',
-  '/images/gallery/A5BF43BF-8A9F-4C3A-9E03-C938A9E0E67F_1_102_o.jpeg',
-  '/images/gallery/AEB29E0F-C582-4264-9FF6-FE2C4CEAEA85_4_5005_c.jpeg',
-  '/images/gallery/D06690BA-A746-4AFA-AFBF-8B76BE6A777F_1_102_o.jpeg',
-  '/images/gallery/E32A3D73-B56F-4096-97FA-92F88F9A4526_1_102_o.jpeg',
+  '/images/gallery/0C33214B-3B91-4574-A6BA-C7DF98121702_1_102_o.jpeg',  // 1
+  '/images/gallery/18FFAF18-637B-41C5-B7DF-B32CA59E9A7F_1_105_c.jpeg',  // 2
+  '/images/gallery/27256B3F-0857-4070-AD73-939BAD8F609F_1_105_c.jpeg',  // 6
+  '/images/gallery/29F668EA-399A-4A32-B81D-620E9EA4788F_1_105_c.jpeg',  // 7
+  '/images/gallery/6E06ACA2-DFC1-4B18-8086-064A35366BFD_1_102_o.jpeg',  // 11
+  '/images/gallery/7151A3CA-9B4E-43C4-B1B6-F84ADAE6296D_1_102_o.jpeg',  // 13
+  '/images/gallery/A5BF43BF-8A9F-4C3A-9E03-C938A9E0E67F_1_102_o.jpeg',  // 15
+  '/images/gallery/AEB29E0F-C582-4264-9FF6-FE2C4CEAEA85_4_5005_c.jpeg', // 16
+  '/images/gallery/D06690BA-A746-4AFA-AFBF-8B76BE6A777F_1_102_o.jpeg',  // 17
 ];
 
 // Each composite image: left half = Before, right half = After
