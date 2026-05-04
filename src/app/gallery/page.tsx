@@ -6,20 +6,21 @@ import Footer from '@/components/Footer';
 import Link from 'next/link';
 import { Camera, Sparkles, ArrowRight } from 'lucide-react';
 
-const galleryImages = [
-  '/images/gallery/0C33214B-3B91-4574-A6BA-C7DF98121702_1_102_o.jpeg',  // 1
-  '/images/gallery/18FFAF18-637B-41C5-B7DF-B32CA59E9A7F_1_105_c.jpeg',  // 2
-  '/images/gallery/27256B3F-0857-4070-AD73-939BAD8F609F_1_105_c.jpeg',  // 6
-  '/images/gallery/29F668EA-399A-4A32-B81D-620E9EA4788F_1_105_c.jpeg',  // 7
-  '/images/gallery/6E06ACA2-DFC1-4B18-8086-064A35366BFD_1_102_o.jpeg',  // 11
-  '/images/gallery/7151A3CA-9B4E-43C4-B1B6-F84ADAE6296D_1_102_o.jpeg',  // 13
-  '/images/gallery/A5BF43BF-8A9F-4C3A-9E03-C938A9E0E67F_1_102_o.jpeg',  // 15
-  '/images/gallery/AEB29E0F-C582-4264-9FF6-FE2C4CEAEA85_4_5005_c.jpeg', // 16
-  '/images/gallery/D06690BA-A746-4AFA-AFBF-8B76BE6A777F_1_102_o.jpeg',  // 17
+// Each entry is a [before, after] pair using pre-cropped images from /images/edited/
+const galleryPairs: [string, string][] = [
+  ['/images/edited/0C33214B-3B91-4574-A6BA-C7DF98121702_1_102_o_before.jpg',  '/images/edited/0C33214B-3B91-4574-A6BA-C7DF98121702_1_102_o_after.jpg'],
+  ['/images/edited/18FFAF18-637B-41C5-B7DF-B32CA59E9A7F_1_105_c_before.jpg',  '/images/edited/18FFAF18-637B-41C5-B7DF-B32CA59E9A7F_1_105_c_after.jpg'],
+  ['/images/edited/27256B3F-0857-4070-AD73-939BAD8F609F_1_105_c_before.jpg',  '/images/edited/27256B3F-0857-4070-AD73-939BAD8F609F_1_105_c_after.jpg'],
+  ['/images/edited/29F668EA-399A-4A32-B81D-620E9EA4788F_1_105_c_before.jpg',  '/images/edited/29F668EA-399A-4A32-B81D-620E9EA4788F_1_105_c_after.jpg'],
+  ['/images/edited/6E06ACA2-DFC1-4B18-8086-064A35366BFD_1_102_o_before.jpg',  '/images/edited/6E06ACA2-DFC1-4B18-8086-064A35366BFD_1_102_o_after.jpg'],
+  ['/images/edited/7151A3CA-9B4E-43C4-B1B6-F84ADAE6296D_1_102_o_before.jpg',  '/images/edited/7151A3CA-9B4E-43C4-B1B6-F84ADAE6296D_1_102_o_after.jpg'],
+  ['/images/edited/A5BF43BF-8A9F-4C3A-9E03-C938A9E0E67F_1_102_o_before.jpg',  '/images/edited/A5BF43BF-8A9F-4C3A-9E03-C938A9E0E67F_1_102_o_after.jpg'],
+  ['/images/edited/AEB29E0F-C582-4264-9FF6-FE2C4CEAEA85_4_5005_c_before.jpg', '/images/edited/AEB29E0F-C582-4264-9FF6-FE2C4CEAEA85_4_5005_c_after.jpg'],
+  ['/images/edited/D06690BA-A746-4AFA-AFBF-8B76BE6A777F_1_102_o_before.jpg',  '/images/edited/D06690BA-A746-4AFA-AFBF-8B76BE6A777F_1_102_o_after.jpg'],
 ];
 
-// Each composite image: left half = Before, right half = After
-// CSS crops each half using object-position and overflow:hidden on a 200%-wide image
+// Pre-cropped images already have the correct half + label baked in.
+// Each panel just displays its image with cover sizing — no stretching, no CSS tricks.
 
 interface PanelProps {
   src: string;
@@ -29,9 +30,6 @@ interface PanelProps {
 }
 
 function HalfPanel({ src, side, visible, delay }: PanelProps) {
-  // Use background-image CSS to crop left or right half of the composite image
-  const bgPosition = side === 'before' ? 'left center' : 'right center';
-
   return (
     <div
       style={{
@@ -43,39 +41,17 @@ function HalfPanel({ src, side, visible, delay }: PanelProps) {
         minHeight: '100%',
       }}
     >
-      {/* Cropped half via background-image: 200% wide, positioned left or right */}
+      {/* Pre-cropped image fills panel without stretching */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
           backgroundImage: `url(${src})`,
-          backgroundSize: '200% 100%',
-          backgroundPosition: bgPosition,
+          backgroundSize: 'cover',
+          backgroundPosition: 'top center',
           backgroundRepeat: 'no-repeat',
         }}
       />
-
-      {/* Label */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 12,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 10,
-          background: 'rgba(173,98,105,0.88)',
-          color: 'white',
-          fontWeight: 700,
-          fontSize: 13,
-          letterSpacing: '0.12em',
-          padding: '4px 18px',
-          borderRadius: 99,
-          whiteSpace: 'nowrap',
-          backdropFilter: 'blur(4px)',
-        }}
-      >
-        {side === 'before' ? 'BEFORE' : 'AFTER'}
-      </div>
     </div>
   );
 }
@@ -89,7 +65,7 @@ export default function GalleryPage() {
     const enterTimer = setTimeout(() => setPhase('holding'), 2000);
     const exitTimer = setTimeout(() => setPhase('exiting'), 5000);
     const nextTimer = setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % galleryImages.length);
+      setCurrentIndex((prev) => (prev + 1) % galleryPairs.length);
       setPhase('entering');
     }, 6000);
 
@@ -152,13 +128,13 @@ export default function GalleryPage() {
                 }}
               >
                 <HalfPanel
-                  src={galleryImages[currentIndex]}
+                  src={galleryPairs[currentIndex][0]}
                   side="before"
                   visible={pairVisible}
                   delay={beforeDelay}
                 />
                 <HalfPanel
-                  src={galleryImages[currentIndex]}
+                  src={galleryPairs[currentIndex][1]}
                   side="after"
                   visible={pairVisible}
                   delay={afterDelay}
@@ -167,7 +143,7 @@ export default function GalleryPage() {
 
               {/* Dot Navigation */}
               <div className="flex justify-center gap-3 flex-wrap mt-8">
-                {galleryImages.map((_, index) => (
+                {galleryPairs.map((_: [string, string], index: number) => (
                   <button
                     key={index}
                     onClick={() => handleDotClick(index)}
