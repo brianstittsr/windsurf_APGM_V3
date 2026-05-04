@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Camera, Sparkles, ArrowRight } from 'lucide-react';
 
@@ -39,6 +38,9 @@ interface PanelProps {
 }
 
 function HalfPanel({ src, side, visible, delay }: PanelProps) {
+  // Use background-image CSS to crop left or right half of the composite image
+  const bgPosition = side === 'before' ? 'left center' : 'right center';
+
   return (
     <div
       style={{
@@ -47,8 +49,21 @@ function HalfPanel({ src, side, visible, delay }: PanelProps) {
         overflow: 'hidden',
         opacity: visible ? 1 : 0,
         transition: `opacity 800ms ease-in-out ${delay}ms`,
+        minHeight: '100%',
       }}
     >
+      {/* Cropped half via background-image: 200% wide, positioned left or right */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: `url(${src})`,
+          backgroundSize: '200% 100%',
+          backgroundPosition: bgPosition,
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
+
       {/* Label */}
       <div
         style={{
@@ -64,33 +79,11 @@ function HalfPanel({ src, side, visible, delay }: PanelProps) {
           letterSpacing: '0.12em',
           padding: '4px 18px',
           borderRadius: 99,
-          pointerEvents: 'none',
+          whiteSpace: 'nowrap',
           backdropFilter: 'blur(4px)',
         }}
       >
         {side === 'before' ? 'BEFORE' : 'AFTER'}
-      </div>
-
-      {/* Cropped image: render at 200% width, shift left or right to show the correct half */}
-      <div
-        style={{
-          position: 'relative',
-          width: '200%',
-          height: '100%',
-          left: side === 'before' ? '0%' : '-100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Image
-          src={src}
-          alt={side === 'before' ? 'Before permanent makeup' : 'After permanent makeup'}
-          fill
-          className="object-cover object-center"
-          sizes="(max-width: 768px) 100vw, 50vw"
-          priority={side === 'before'}
-        />
       </div>
     </div>
   );
