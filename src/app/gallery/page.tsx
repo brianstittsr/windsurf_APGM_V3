@@ -6,8 +6,9 @@ import Footer from '@/components/Footer';
 import Link from 'next/link';
 import { Camera, Sparkles, ArrowRight } from 'lucide-react';
 
-// Each entry is a [before, after] pair using pre-cropped images from /images/edited/
-const galleryPairs: [string, string][] = [
+// Gallery entries: either [before, after] pairs or single image strings
+const galleryItems: (string | [string, string])[] = [
+  // Before/after pairs
   ['/images/edited/0C33214B-3B91-4574-A6BA-C7DF98121702_1_102_o_before.jpg',  '/images/edited/0C33214B-3B91-4574-A6BA-C7DF98121702_1_102_o_after.jpg'],
   ['/images/edited/18FFAF18-637B-41C5-B7DF-B32CA59E9A7F_1_105_c_before.jpg',  '/images/edited/18FFAF18-637B-41C5-B7DF-B32CA59E9A7F_1_105_c_after.jpg'],
   ['/images/edited/27256B3F-0857-4070-AD73-939BAD8F609F_1_105_c_before.jpg',  '/images/edited/27256B3F-0857-4070-AD73-939BAD8F609F_1_105_c_after.jpg'],
@@ -17,6 +18,11 @@ const galleryPairs: [string, string][] = [
   ['/images/edited/A5BF43BF-8A9F-4C3A-9E03-C938A9E0E67F_1_102_o_before.jpg',  '/images/edited/A5BF43BF-8A9F-4C3A-9E03-C938A9E0E67F_1_102_o_after.jpg'],
   ['/images/edited/AEB29E0F-C582-4264-9FF6-FE2C4CEAEA85_4_5005_c_before.jpg', '/images/edited/AEB29E0F-C582-4264-9FF6-FE2C4CEAEA85_4_5005_c_after.jpg'],
   ['/images/edited/D06690BA-A746-4AFA-AFBF-8B76BE6A777F_1_102_o_before.jpg',  '/images/edited/D06690BA-A746-4AFA-AFBF-8B76BE6A777F_1_102_o_after.jpg'],
+  // Single images (v2)
+  '/images/edited/3A7D2EF6-8DB5-4027-9AE3-94027600A3DB.jpg',
+  '/images/edited/B8340408-225D-4839-9DE0-B72F3AA1D912.jpg',
+  '/images/edited/FAC73E83-440C-4189-83DA-3564337D1803.jpg',
+  '/images/edited/IMG_2766.jpg',
 ];
 
 // Pre-cropped images already have the correct half + label baked in.
@@ -65,7 +71,7 @@ export default function GalleryPage() {
     const enterTimer = setTimeout(() => setPhase('holding'), 2000);
     const exitTimer = setTimeout(() => setPhase('exiting'), 5000);
     const nextTimer = setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % galleryPairs.length);
+      setCurrentIndex((prev) => (prev + 1) % galleryItems.length);
       setPhase('entering');
     }, 6000);
 
@@ -116,7 +122,7 @@ export default function GalleryPage() {
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
 
-              {/* Before / After Pair */}
+              {/* Gallery Display: handles both pairs and singles */}
               <div
                 style={{
                   display: 'flex',
@@ -127,23 +133,51 @@ export default function GalleryPage() {
                   justifyContent: 'center',
                 }}
               >
-                <HalfPanel
-                  src={galleryPairs[currentIndex][0]}
-                  side="before"
-                  visible={pairVisible}
-                  delay={beforeDelay}
-                />
-                <HalfPanel
-                  src={galleryPairs[currentIndex][1]}
-                  side="after"
-                  visible={pairVisible}
-                  delay={afterDelay}
-                />
+                {Array.isArray(galleryItems[currentIndex]) ? (
+                  // Before/after pair
+                  <>
+                    <HalfPanel
+                      src={galleryItems[currentIndex][0]}
+                      side="before"
+                      visible={pairVisible}
+                      delay={beforeDelay}
+                    />
+                    <HalfPanel
+                      src={galleryItems[currentIndex][1]}
+                      side="after"
+                      visible={pairVisible}
+                      delay={afterDelay}
+                    />
+                  </>
+                ) : (
+                  // Single image - centered full width
+                  <div
+                    style={{
+                      flex: 1,
+                      position: 'relative',
+                      overflow: 'hidden',
+                      opacity: pairVisible ? 1 : 0,
+                      transition: `opacity 800ms ease-in-out ${beforeDelay}ms`,
+                      minHeight: '100%',
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        backgroundImage: `url(${galleryItems[currentIndex]})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'top center',
+                        backgroundRepeat: 'no-repeat',
+                      }}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Dot Navigation */}
               <div className="flex justify-center gap-3 flex-wrap mt-8">
-                {galleryPairs.map((_: [string, string], index: number) => (
+                {galleryItems.map((_: string | [string, string], index: number) => (
                   <button
                     key={index}
                     onClick={() => handleDotClick(index)}

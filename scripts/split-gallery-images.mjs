@@ -1,10 +1,11 @@
 /**
  * split-gallery-images.mjs
  *
- * Reads every JPEG from public/images/gallery,
- * splits each composite image in half (left = BEFORE, right = AFTER),
- * adds a black padding strip at the bottom with a white label,
- * and writes the two files to public/images/edited/
+ * Reads every image from public/images/gallery,
+ * - For composite images: splits in half (left = BEFORE, right = AFTER)
+ * - For single images: adds a label strip without splitting
+ * Adds a black padding strip at the bottom with a white label,
+ * and writes the file(s) to public/images/edited/
  *
  * Run from the permanent-makeup-website folder:
  *   node scripts/split-gallery-images.mjs
@@ -39,6 +40,12 @@ const LETTER_SPACING = 6;   // px
  *  - A5BF43BF  : black BG, logo center-top ~18%, BEFORE/AFTER bar at bottom ~10%
  *  - AEB29E0F  : pink BG, tiny logo top ~10%, labels tiny at bottom ~5%
  *  - D06690BA  : black BG, logo center-top ~18%, BEFORE/AFTER bar at bottom ~10%
+ *
+ * v2 single images (not composites):
+ *  - 3A7D2EF6  : single PNG, pink BG — keep full
+ *  - B8340408  : single PNG, pink BG — keep full
+ *  - FAC73E83  : single PNG, pink BG — keep full
+ *  - IMG_2766  : single JPG, white BG — keep full
  */
 const CROP_OVERRIDES = {
   '18FFAF18-637B-41C5-B7DF-B32CA59E9A7F_1_105_c': { topFrac: 0.00, bottomFrac: 0.60 },
@@ -50,6 +57,11 @@ const CROP_OVERRIDES = {
   '27256B3F-0857-4070-AD73-939BAD8F609F_1_105_c': { topFrac: 0.00, bottomFrac: 1.00 },
   '29F668EA-399A-4A32-B81D-620E9EA4788F_1_105_c': { topFrac: 0.00, bottomFrac: 1.00 },
   '7151A3CA-9B4E-43C4-B1B6-F84ADAE6296D_1_102_o': { topFrac: 0.00, bottomFrac: 1.00 },
+  // v2 single images
+  '3A7D2EF6-8DB5-4027-9AE3-94027600A3DB': { topFrac: 0.00, bottomFrac: 1.00, single: true },
+  'B8340408-225D-4839-9DE0-B72F3AA1D912': { topFrac: 0.00, bottomFrac: 1.00, single: true },
+  'FAC73E83-440C-4189-83DA-3564337D1803': { topFrac: 0.00, bottomFrac: 1.00, single: true },
+  'IMG_2766': { topFrac: 0.00, bottomFrac: 1.00, single: true },
 };
 const DEFAULT_CROP = { topFrac: 0.00, bottomFrac: 0.84 };
 
@@ -70,26 +82,22 @@ for (const file of files) {
     const img = sharp(inputPath);
     const { width, height } = await img.metadata();
 
-    const halfW = Math.floor(width / 2);
+    const config = CROP_OVERRIDES[base] ?? DEFAULT_CROP;
+    const isSingle = config.single ?? false;
 
-    const { topFrac, bottomFrac } = CROP_OVERRIDES[base] ?? DEFAULT_CROP;
-    const topPx    = Math.floor(height * topFrac);
-    const cropHeight = Math.floor(height * bottomFrac) - topPx;
+    const topPx       = Math.floor(height * config.topFrac);
+    const cropHeight  = Math.floor(height * config.bottomFrac) - topPx;
 
-    for (const side of ['before', 'after']) {
-      const label      = side === 'before' ? 'BEFORE' : 'AFTER';
-      const left       = side === 'before' ? 0 : halfW;
-      const outputPath = path.join(OUTPUT_DIR, `${base}_${side}.jpg`);
-
-      // Total height of output = cropped photo height + label strip
+    if (isSingle) {
+      // Single image: just add a label strip (no splitting)
+      const outputPath = path.join(OUTPUT_DIR, `${base}.jpg`);
       const totalHeight = cropHeight + LABEL_HEIGHT;
 
-      // SVG label overlay (centered in the black strip)
       const labelSvg = `
-        <svg width="${halfW}" height="${LABEL_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
-          <rect width="${halfW}" height="${LABEL_HEIGHT}" fill="black"/>
+        <svg width="${width}" height="${LABEL_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
+          <rect width="${width}" height="${LABEL_HEIGHT}" fill="black"/>
           <text
-            x="${halfW / 2}"
+            x="${width / 2}"
             y="${LABEL_HEIGHT / 2 + FONT_SIZE / 3}"
             font-family="Arial, Helvetica, sans-serif"
             font-size="${FONT_SIZE}"
@@ -98,29 +106,26 @@ for (const file of files) {
             fill="white"
             text-anchor="middle"
             dominant-baseline="middle"
-          >${label}</text>
+          >AFTER</text>
         </svg>`;
-
       const labelBuffer = Buffer.from(labelSvg);
 
       await sharp({
         create: {
-          width:      halfW,
+          width:      width,
           height:     totalHeight,
           channels:   3,
           background: { r: 0, g: 0, b: 0 },
         },
       })
         .composite([
-          // Cropped half of the original image at the top
           {
             input: await sharp(inputPath)
-              .extract({ left, top: topPx, width: halfW, height: cropHeight })
+              .extract({ left: 0, top: topPx, width, height: cropHeight })
               .toBuffer(),
             top:  0,
             left: 0,
           },
-          // Label strip at the bottom
           {
             input: labelBuffer,
             top:   cropHeight,
@@ -131,6 +136,61 @@ for (const file of files) {
         .toFile(outputPath);
 
       console.log(`  ✓  ${path.basename(outputPath)}`);
+    } else {
+      // Composite image: split into before/after halves
+      const halfW = Math.floor(width / 2);
+
+      for (const side of ['before', 'after']) {
+        const label      = side === 'before' ? 'BEFORE' : 'AFTER';
+        const left       = side === 'before' ? 0 : halfW;
+        const outputPath = path.join(OUTPUT_DIR, `${base}_${side}.jpg`);
+
+        const totalHeight = cropHeight + LABEL_HEIGHT;
+
+        const labelSvg = `
+          <svg width="${halfW}" height="${LABEL_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
+            <rect width="${halfW}" height="${LABEL_HEIGHT}" fill="black"/>
+            <text
+              x="${halfW / 2}"
+              y="${LABEL_HEIGHT / 2 + FONT_SIZE / 3}"
+              font-family="Arial, Helvetica, sans-serif"
+              font-size="${FONT_SIZE}"
+              font-weight="bold"
+              letter-spacing="${LETTER_SPACING}"
+              fill="white"
+              text-anchor="middle"
+              dominant-baseline="middle"
+            >${label}</text>
+          </svg>`;
+        const labelBuffer = Buffer.from(labelSvg);
+
+        await sharp({
+          create: {
+            width:      halfW,
+            height:     totalHeight,
+            channels:   3,
+            background: { r: 0, g: 0, b: 0 },
+          },
+        })
+          .composite([
+            {
+              input: await sharp(inputPath)
+                .extract({ left, top: topPx, width: halfW, height: cropHeight })
+                .toBuffer(),
+              top:  0,
+              left: 0,
+            },
+            {
+              input: labelBuffer,
+              top:   cropHeight,
+              left:  0,
+            },
+          ])
+          .jpeg({ quality: 90 })
+          .toFile(outputPath);
+
+        console.log(`  ✓  ${path.basename(outputPath)}`);
+      }
     }
   } catch (err) {
     console.error(`  ✗  ${file}:`, err.message);
