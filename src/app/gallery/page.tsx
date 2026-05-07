@@ -150,14 +150,13 @@ export default function GalleryPage() {
                     />
                   </>
                 ) : (
-                  // Single image - centered full width
+                  // Single image - centered full width (always visible)
                   <div
                     style={{
                       flex: 1,
                       position: 'relative',
                       overflow: 'hidden',
-                      opacity: pairVisible ? 1 : 0,
-                      transition: `opacity 800ms ease-in-out ${beforeDelay}ms`,
+                      opacity: 1,
                       minHeight: '100%',
                     }}
                   >
