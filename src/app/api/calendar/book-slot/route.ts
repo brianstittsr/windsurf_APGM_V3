@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/firebase';
 import { collection, addDoc, updateDoc, doc, Timestamp, query, where, getDocs } from 'firebase/firestore';
+import { SMTPEmailService } from '@/services/gmailEmailService';
 
 interface BookSlotRequest {
   clientName: string;
@@ -221,6 +222,191 @@ export async function POST(request: NextRequest) {
           lastSyncedAt: Timestamp.now()
         });
       }
+    }
+    
+    // Send confirmation emails (non-blocking)
+    try {
+      const formattedDate = new Date(data.date).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      
+      const emailSubject = `Booking Confirmation - ${data.serviceName} at A Pretty Girl Matter`;
+      const emailHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Confirmation - A Pretty Girl Matter</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .email-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #AD6269 0%, #8B4A52 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 30px;
+        }
+        .appointment-card {
+            background: #fdf2f2;
+            border: 1px solid #fca5a5;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+        }
+        .appointment-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #fecaca;
+        }
+        .appointment-row:last-child {
+            border-bottom: none;
+        }
+        .appointment-label {
+            color: #666;
+            font-weight: 500;
+        }
+        .appointment-value {
+            color: #333;
+            font-weight: 600;
+        }
+        .deposit-info {
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 24px 30px;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>✨ Booking Confirmed!</h1>
+            <p>Your appointment has been successfully scheduled</p>
+        </div>
+        
+        <div class="content">
+            <p>Hi ${data.clientName},</p>
+            <p>Thank you for booking with A Pretty Girl Matter! We're excited to see you. Here are your appointment details:</p>
+            
+            <div class="appointment-card">
+                <h3>📅 Appointment Details</h3>
+                <div class="appointment-row">
+                    <span class="appointment-label">Service</span>
+                    <span class="appointment-value">${data.serviceName}</span>
+                </div>
+                <div class="appointment-row">
+                    <span class="appointment-label">Date</span>
+                    <span class="appointment-value">${formattedDate}</span>
+                </div>
+                <div class="appointment-row">
+                    <span class="appointment-label">Time</span>
+                    <span class="appointment-value">${data.startTime}</span>
+                </div>
+                <div class="appointment-row">
+                    <span class="appointment-label">Artist</span>
+                    <span class="appointment-value">${data.artistName}</span>
+                </div>
+                <div class="appointment-row">
+                    <span class="appointment-label">Booking ID</span>
+                    <span class="appointment-value">${bookingId}</span>
+                </div>
+            </div>
+            
+            <div class="deposit-info">
+                <h3>💳 Deposit Information</h3>
+                <p>A $${data.depositAmount || 200} deposit is required to confirm your booking.</p>
+                <p><strong>Remaining balance:</strong> $${(data.price - (data.depositAmount || 200)).toFixed(2)} due at your appointment.</p>
+                <p style="margin-top: 12px; font-size: 14px;">You will receive a payment link shortly.</p>
+            </div>
+            
+            <p><strong>Location:</strong> 4040 Barrett Drive Suite 3, Raleigh, NC 27609</p>
+            <p><strong>Phone:</strong> 919-441-0932</p>
+            <p><strong>Email:</strong> victoria@aprettygirlmatter.com</p>
+        </div>
+        
+        <div class="footer">
+            <p style="margin: 8px 0; color: #666; font-size: 14px;">
+                This is an automated confirmation email. Please do not reply directly to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>`;
+      
+      const emailText = `
+Booking Confirmation - A Pretty Girl Matter
+
+Hi ${data.clientName},
+
+Your appointment has been confirmed!
+
+Service: ${data.serviceName}
+Date: ${formattedDate}
+Time: ${data.startTime}
+Artist: ${data.artistName}
+Booking ID: ${bookingId}
+
+Deposit Information:
+Deposit Required: $${data.depositAmount || 200}
+Remaining Balance: $${(data.price - (data.depositAmount || 200)).toFixed(2)} due at appointment
+
+You will receive a payment link shortly.
+
+Location: 4040 Barrett Drive Suite 3, Raleigh, NC 27609
+Phone: 919-441-0932
+Email: victoria@aprettygirlmatter.com
+      `;
+      
+      // Send email to customer with BCC to Victoria
+      await SMTPEmailService.sendEmail(
+        data.clientEmail,
+        {
+          subject: emailSubject,
+          htmlContent: emailHtml,
+          textContent: emailText
+        },
+        undefined, // fromEmail - use default
+        undefined, // cc
+        ['victoria@aprettygirlmatter.com'] // bcc
+      );
+      
+      console.log('✅ Confirmation email sent to', data.clientEmail);
+    } catch (emailError) {
+      console.error('Failed to send confirmation email:', emailError);
+      // Don't fail the booking if email fails
     }
     
     return NextResponse.json({
