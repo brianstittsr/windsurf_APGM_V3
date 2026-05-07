@@ -324,6 +324,33 @@ export async function POST(request: NextRequest) {
       // This is a partial success - we should still report it
     }
 
+    // Trigger BMAD workflow for booking_created
+    try {
+      await fetch('/api/workflows/trigger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          trigger: 'booking_created',
+          data: {
+            name: appointmentData.name || `${appointmentData.firstName || ''} ${appointmentData.lastName || ''}`.trim(),
+            email: appointmentData.email,
+            phone: appointmentData.phone || '',
+            serviceName: appointmentData.serviceName || appointmentData.title,
+            date: new Date(appointmentData.startTime).toISOString().split('T')[0],
+            time: new Date(appointmentData.startTime).toTimeString().slice(0, 5),
+            artistName: appointmentData.artistName || 'Victoria',
+            price: appointmentData.price || 0,
+            contactId: contactId,
+            bookingId: bookingRefId
+          }
+        })
+      });
+      log('✓ BMAD workflow triggered for booking_created');
+    } catch (workflowError) {
+      log(`✗ Failed to trigger BMAD workflow: ${workflowError}`);
+      // Don't fail the booking if workflow fails
+    }
+
     // Return success
     return NextResponse.json({
       success: true,

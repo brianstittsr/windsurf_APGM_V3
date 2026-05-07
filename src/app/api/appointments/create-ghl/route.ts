@@ -210,8 +210,37 @@ export async function POST(request: NextRequest) {
     };
 
     const db = await getFirebaseDb();
+    let bookingId = null;
     if (db) {
-      await db.collection('bookings').add(bookingData);
+      const docRef = await db.collection('bookings').add(bookingData);
+      bookingId = docRef.id;
+    }
+
+    // Trigger BMAD workflow for booking_created
+    try {
+      await fetch('/api/workflows/trigger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          trigger: 'booking_created',
+          data: {
+            name: bookingData.clientName,
+            email: bookingData.clientEmail,
+            phone: bookingData.clientPhone,
+            serviceName: bookingData.serviceName,
+            date: bookingData.date,
+            time: bookingData.time,
+            artistName: bookingData.artistName,
+            price: bookingData.price,
+            contactId: contactId,
+            bookingId: bookingId
+          }
+        })
+      });
+      console.log('✅ BMAD workflow triggered for booking_created');
+    } catch (workflowError) {
+      console.error('Failed to trigger BMAD workflow:', workflowError);
+      // Don't fail the booking if workflow fails
     }
 
     return NextResponse.json({
