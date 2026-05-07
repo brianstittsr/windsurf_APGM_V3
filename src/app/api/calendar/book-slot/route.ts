@@ -101,7 +101,8 @@ async function createGHLAppointment(credentials: any, contactId: string, data: B
         title: `${data.serviceName} - ${data.clientName}`,
         appointmentStatus: 'confirmed',
         assignedUserId: data.artistId !== 'default-artist' ? data.artistId : undefined,
-        notes: data.notes || `Service: ${data.serviceName}\nPrice: $${data.price}`
+        notes: data.notes || `Service: ${data.serviceName}\nPrice: $${data.price}`,
+        toNotify: true // Triggers GHL confirmation email + reminder workflows
       })
     });
     
