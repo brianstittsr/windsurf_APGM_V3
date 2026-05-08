@@ -316,17 +316,67 @@ export default function BookingCalendar() {
 
   const handleStatusChange = async (bookingId: string, newStatus: Booking['status']) => {
     try {
-      const bookingRef = doc(getDb(), 'bookings', bookingId);
-      await updateDoc(bookingRef, { status: newStatus });
-      
-      // Sync with GHL
-      await syncBookingWithGHL(bookingId, { status: newStatus });
+      const booking = bookings.find(b => b.id === bookingId);
+
+      // If cancelling, use the dedicated cancellation API
+      if (newStatus === 'cancelled' && booking) {
+        const confirmed = await showConfirm({
+          title: 'Cancel Appointment',
+          description: `Are you sure you want to cancel this appointment for ${booking.clientName}? A cancellation email will be sent to the client and Victoria.`,
+          confirmText: 'Yes, Cancel',
+          cancelText: 'Keep Appointment',
+          variant: 'destructive'
+        });
+        if (!confirmed) return;
+
+        const response = await fetch('/api/bookings/cancel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bookingId,
+            clientName: booking.clientName,
+            clientEmail: booking.clientEmail,
+            serviceName: booking.serviceName,
+            date: booking.date,
+            time: booking.time,
+            artistName: booking.artistName,
+            ghlAppointmentId: booking.ghlAppointmentId
+          })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          await showAlert({
+            title: 'Appointment Cancelled',
+            description: 'The appointment has been cancelled, removed from GHL, and a cancellation email has been sent.',
+            confirmText: 'OK',
+            variant: 'success'
+          });
+        } else {
+          await showAlert({
+            title: 'Partial Cancellation',
+            description: `Appointment cancelled with issues: ${result.results?.filter((r: any) => !r.success).map((r: any) => r.error).join(', ')}`,
+            confirmText: 'OK',
+            variant: 'warning'
+          });
+        }
+      } else {
+        // For other status changes, update Firestore and sync with GHL
+        const bookingRef = doc(getDb(), 'bookings', bookingId);
+        await updateDoc(bookingRef, { status: newStatus });
+        await syncBookingWithGHL(bookingId, { status: newStatus });
+      }
       
       fetchBookings();
       setShowModal(false);
     } catch (error) {
       console.error('Error updating booking status:', error);
-      alert('Failed to update booking status');
+      await showAlert({
+        title: 'Error',
+        description: 'Failed to update booking status.',
+        confirmText: 'OK',
+        variant: 'destructive'
+      });
     }
   };
 

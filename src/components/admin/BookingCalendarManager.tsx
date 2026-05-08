@@ -174,21 +174,57 @@ export default function BookingCalendarManager() {
 
   const handleStatusChange = async (appointmentId: string, newStatus: string) => {
     try {
-      // Try bookings collection first
-      let appointmentRef = doc(getDb(), 'bookings', appointmentId);
-      try {
-        await updateDoc(appointmentRef, {
-          status: newStatus,
-          updatedAt: new Date()
+      const appointment = appointments.find(a => a.id === appointmentId);
+
+      // If cancelling, use the dedicated cancellation API
+      if (newStatus === 'cancelled' && appointment) {
+        const confirmed = await showConfirm({
+          title: 'Cancel Appointment',
+          description: `Are you sure you want to cancel this appointment for ${appointment.clientName}? A cancellation email will be sent to the client and Victoria.`,
+          confirmText: 'Yes, Cancel',
+          cancelText: 'Keep Appointment',
+          variant: 'destructive'
         });
-      } catch (e) {
-        // If not found in bookings, try appointments
-        appointmentRef = doc(getDb(), 'appointments', appointmentId);
-        await updateDoc(appointmentRef, {
-          status: newStatus,
-          updatedAt: new Date()
+        if (!confirmed) return;
+
+        const response = await fetch('/api/bookings/cancel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bookingId: appointmentId,
+            clientName: appointment.clientName,
+            clientEmail: appointment.clientEmail,
+            serviceName: appointment.serviceName,
+            date: appointment.appointmentDate || appointment.date,
+            time: appointment.appointmentTime || appointment.time,
+            artistName: appointment.artistName,
+            ghlAppointmentId: (appointment as any).ghlAppointmentId
+          })
         });
+
+        const result = await response.json();
+        if (result.success) {
+          await showAlert({ title: 'Appointment Cancelled', description: 'The appointment has been cancelled, removed from GHL, and a cancellation email has been sent.', variant: 'success' });
+        } else {
+          await showAlert({ title: 'Partial Cancellation', description: `Appointment cancelled with issues: ${result.results?.filter((r: any) => !r.success).map((r: any) => r.error).join(', ')}`, variant: 'warning' });
+        }
+      } else {
+        // For other status changes, just update Firestore
+        let appointmentRef = doc(getDb(), 'bookings', appointmentId);
+        try {
+          await updateDoc(appointmentRef, {
+            status: newStatus,
+            updatedAt: new Date()
+          });
+        } catch (e) {
+          appointmentRef = doc(getDb(), 'appointments', appointmentId);
+          await updateDoc(appointmentRef, {
+            status: newStatus,
+            updatedAt: new Date()
+          });
+        }
       }
+
       fetchAppointments();
     } catch (error) {
       console.error('Error updating appointment:', error);
