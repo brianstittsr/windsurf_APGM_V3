@@ -239,18 +239,39 @@ export default function BookingCalendarManager() {
   };
 
   const handleDeleteAppointment = async (appointmentId: string, clientName: string) => {
-    const confirmed = await showConfirm({ title: 'Delete Appointment', description: `Are you sure you want to delete the appointment for ${clientName}? This action cannot be undone.`, confirmText: 'Delete', variant: 'destructive' });
+    const appointment = appointments.find(a => a.id === appointmentId);
+    
+    const confirmed = await showConfirm({
+      title: 'Delete Appointment',
+      description: `This will cancel and permanently delete the appointment for ${clientName}. A cancellation email will be sent to the client and Victoria, and the GHL calendar will be updated.`,
+      confirmText: 'Delete',
+      cancelText: 'Keep',
+      variant: 'destructive'
+    });
     if (!confirmed) return;
 
     try {
-      // Try bookings collection first
-      try {
-        await deleteDoc(doc(getDb(), 'bookings', appointmentId));
-      } catch (e) {
-        // If not found in bookings, try appointments
-        await deleteDoc(doc(getDb(), 'appointments', appointmentId));
+      const response = await fetch('/api/bookings/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId: appointmentId,
+          clientName: appointment?.clientName || clientName,
+          clientEmail: appointment?.clientEmail,
+          serviceName: appointment?.serviceName,
+          date: appointment?.appointmentDate || appointment?.date,
+          time: appointment?.appointmentTime || appointment?.time,
+          artistName: appointment?.artistName,
+          ghlAppointmentId: appointment?.ghlAppointmentId
+        })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        await showAlert({ title: 'Success', description: 'Appointment deleted, removed from GHL, and cancellation email sent.', variant: 'success' });
+      } else {
+        await showAlert({ title: 'Deleted with Issues', description: 'Appointment deleted but some steps had issues. An admin notification has been sent.', variant: 'warning' });
       }
-      await showAlert({ title: 'Success', description: 'Appointment deleted successfully!', variant: 'success' });
       fetchAppointments();
     } catch (error) {
       console.error('Error deleting appointment:', error);

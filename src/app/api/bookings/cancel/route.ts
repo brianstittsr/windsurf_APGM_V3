@@ -347,13 +347,31 @@ A Pretty Girl Matter
       results.push({ step: 'send_email', success: false, error: 'No client email provided' });
     }
 
+    // 4. If any step failed, send admin notification email
+    const failures = results.filter(r => !r.success);
+    if (failures.length > 0) {
+      try {
+        await SMTPEmailService.sendEmail(
+          'victoria@aprettygirlmatter.com',
+          {
+            subject: `⚠️ Booking Cancellation Issue - ${clientName || bookingId}`,
+            htmlContent: `<div style="font-family: sans-serif; padding: 20px;"><h2 style="color: #DC2626;">⚠️ Booking Cancellation - Partial Failure</h2><p>The cancellation for <strong>${clientName || 'Unknown'}</strong> (ID: ${bookingId}) had issues:</p><ul>${failures.map(f => `<li><strong>${f.step}:</strong> ${f.error}</li>`).join('')}</ul><p>Please check the GHL calendar and contact the client manually if needed.</p><p><strong>Booking Details:</strong><br/>Service: ${serviceName || 'N/A'}<br/>Date: ${date || 'N/A'}<br/>Time: ${time || 'N/A'}<br/>Email: ${clientEmail || 'N/A'}</p></div>`,
+            textContent: `Booking cancellation for ${clientName} (ID: ${bookingId}) had failures:\n${failures.map(f => `- ${f.step}: ${f.error}`).join('\n')}`
+          }
+        );
+        console.log('📧 Admin failure notification sent');
+      } catch (adminEmailError) {
+        console.error('Failed to send admin notification:', adminEmailError);
+      }
+    }
+
     const allSuccess = results.every(r => r.success);
 
     return NextResponse.json({
       success: allSuccess,
       message: allSuccess
         ? 'Booking cancelled successfully, GHL synced, and email sent'
-        : 'Booking cancelled with some issues',
+        : 'Booking cancelled with some issues - admin notified',
       results
     });
 

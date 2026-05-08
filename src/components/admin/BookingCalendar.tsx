@@ -382,49 +382,50 @@ export default function BookingCalendar() {
 
   const handleDeleteBooking = async (bookingId: string) => {
     const booking = bookings.find(b => b.id === bookingId);
-    const hasGHLAppointment = booking?.ghlAppointmentId;
-    
-    const confirmMessage = hasGHLAppointment 
-      ? 'This will permanently delete the booking from both the website and GoHighLevel. This action cannot be undone.'
-      : 'This will permanently delete the booking. This action cannot be undone.';
+    if (!booking) return;
     
     const confirmed = await showConfirm({
       title: 'Delete Booking',
-      description: confirmMessage,
+      description: `This will cancel and permanently delete the booking for ${booking.clientName}. A cancellation email will be sent to the client and Victoria, and the GHL calendar will be updated.`,
       confirmText: 'Delete',
-      cancelText: 'Cancel',
+      cancelText: 'Keep',
       variant: 'destructive'
     });
     
     if (!confirmed) return;
 
     try {
-      // Delete from GHL first if it exists
-      if (hasGHLAppointment && booking.ghlAppointmentId) {
-        console.log('Deleting from GHL:', booking.ghlAppointmentId);
-        const ghlDeleted = await deleteGHLAppointment(booking.ghlAppointmentId);
-        if (!ghlDeleted) {
-          const continueAnyway = await showConfirm({
-            title: 'GHL Deletion Failed',
-            description: 'Failed to delete from GoHighLevel. Do you want to continue deleting from the website?',
-            confirmText: 'Continue',
-            cancelText: 'Cancel',
-            variant: 'warning'
-          });
-          if (!continueAnyway) return;
-        }
-      }
-      
-      // Delete from website database
-      console.log('Deleting from website database:', bookingId);
-      await deleteDoc(doc(getDb(), 'bookings', bookingId));
-      
-      await showAlert({
-        title: 'Booking Deleted',
-        description: 'The booking has been successfully deleted.',
-        confirmText: 'OK',
-        variant: 'success'
+      const response = await fetch('/api/bookings/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId,
+          clientName: booking.clientName,
+          clientEmail: booking.clientEmail,
+          serviceName: booking.serviceName,
+          date: booking.date,
+          time: booking.time,
+          artistName: booking.artistName,
+          ghlAppointmentId: booking.ghlAppointmentId
+        })
       });
+
+      const result = await response.json();
+      if (result.success) {
+        await showAlert({
+          title: 'Booking Deleted',
+          description: 'The booking has been deleted, removed from GHL, and a cancellation email has been sent.',
+          confirmText: 'OK',
+          variant: 'success'
+        });
+      } else {
+        await showAlert({
+          title: 'Deleted with Issues',
+          description: `Booking deleted but some steps had issues. An admin notification has been sent.`,
+          confirmText: 'OK',
+          variant: 'warning'
+        });
+      }
       fetchBookings();
       setShowModal(false);
     } catch (error) {
