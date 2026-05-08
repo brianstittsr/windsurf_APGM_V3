@@ -190,18 +190,23 @@ async function createOrUpdateGHLAppointment(booking: Booking, contactId: string,
 
     if (booking.ghlAppointmentId) {
       // Update existing appointment
-      const response = await fetch(`https://services.leadconnectorhq.com/calendars/events/appointments/${booking.ghlAppointmentId}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-          'Version': '2021-07-28'
-        },
-        body: JSON.stringify(appointmentData)
-      });
+      try {
+        const response = await fetch(`https://services.leadconnectorhq.com/calendars/events/appointments/${booking.ghlAppointmentId}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'Version': '2021-07-28'
+          },
+          body: JSON.stringify(appointmentData)
+        });
 
-      if (response.ok) {
-        return booking.ghlAppointmentId;
+        if (response.ok) {
+          return booking.ghlAppointmentId;
+        }
+        console.log(`[sync-ghl] Update failed for ${booking.ghlAppointmentId} (${response.status}), will try creating new`);
+      } catch (updateError) {
+        console.log(`[sync-ghl] Update threw error, will try creating new:`, updateError);
       }
     }
 

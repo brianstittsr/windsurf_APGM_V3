@@ -40,12 +40,16 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Filter out cancelled bookings - no need to sync them
+    const activeBookings = bookings.filter((b: any) => b.status !== 'cancelled');
+    console.log(`[sync-all-ghl] ${activeBookings.length} active bookings to sync (${bookings.length - activeBookings.length} cancelled skipped)`);
+
     let syncedCount = 0;
     let failedCount = 0;
     const errors: string[] = [];
 
-    // Sync each booking with GHL
-    for (const booking of bookings) {
+    // Sync each active booking with GHL
+    for (const booking of activeBookings) {
       try {
         const response = await fetch(`${req.nextUrl.origin}/api/calendar/sync-ghl`, {
           method: 'POST',
@@ -74,9 +78,10 @@ export async function POST(req: NextRequest) {
       success: true,
       synced: syncedCount,
       failed: failedCount,
-      total: bookings.length,
+      total: activeBookings.length,
+      skippedCancelled: bookings.length - activeBookings.length,
       errors: errors.length > 0 ? errors : undefined,
-      message: `Successfully synced ${syncedCount} out of ${bookings.length} bookings`
+      message: `Successfully synced ${syncedCount} out of ${activeBookings.length} active bookings (${bookings.length - activeBookings.length} cancelled skipped)`
     });
   } catch (error) {
     console.error('[sync-all-ghl] Error syncing all bookings:', error);

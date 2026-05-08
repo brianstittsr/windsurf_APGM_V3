@@ -503,12 +503,16 @@ export default function BookingCalendar() {
       const result = await response.json();
       
       if (result.total === 0) {
-        alert('No bookings to sync. Create some bookings first!');
+        await showAlert({ title: 'No Bookings', description: 'No active bookings to sync. Cancelled bookings are skipped.', variant: 'warning' });
       } else if (result.failed > 0) {
-        alert(`Synced ${result.synced} bookings. ${result.failed} failed.\n\nCheck console for details.`);
         console.error('Sync errors:', result.errors);
+        await showAlert({ 
+          title: 'Partial Sync', 
+          description: `Synced ${result.synced} of ${result.total} active bookings. ${result.failed} failed.${result.skippedCancelled ? ` ${result.skippedCancelled} cancelled bookings skipped.` : ''}\n\nFailed bookings:\n${(result.errors || []).slice(0, 5).join('\n')}${(result.errors || []).length > 5 ? `\n...and ${result.errors.length - 5} more` : ''}`, 
+          variant: 'warning' 
+        });
       } else {
-        alert(`Successfully synced ${result.synced} bookings with GHL`);
+        await showAlert({ title: 'Sync Complete', description: `Successfully synced ${result.synced} bookings with GHL.${result.skippedCancelled ? ` ${result.skippedCancelled} cancelled bookings skipped.` : ''}`, variant: 'success' });
       }
       
       fetchBookings();
