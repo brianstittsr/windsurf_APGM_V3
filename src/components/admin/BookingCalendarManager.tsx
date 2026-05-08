@@ -30,6 +30,8 @@ interface Appointment {
   bookingNotes?: BookingNote[];
   price?: number;
   depositPaid?: boolean;
+  ghlAppointmentId?: string;
+  ghlContactId?: string;
   createdAt?: Date;
 }
 
@@ -119,6 +121,8 @@ export default function BookingCalendarManager() {
             bookingNotes: data.bookingNotes || [],
             price: data.price,
             depositPaid: data.depositPaid,
+            ghlAppointmentId: data.ghlAppointmentId,
+            ghlContactId: data.ghlContactId,
             createdAt: data.createdAt,
             _collection: 'bookings'
           } as Appointment;
@@ -150,6 +154,8 @@ export default function BookingCalendarManager() {
             bookingNotes: data.bookingNotes || [],
             price: data.totalAmount || data.price,
             depositPaid: data.depositAmount > 0,
+            ghlAppointmentId: data.ghlAppointmentId,
+            ghlContactId: data.ghlContactId,
             createdAt: data.createdAt,
             _collection: 'appointments'
           } as Appointment;
@@ -198,7 +204,7 @@ export default function BookingCalendarManager() {
             date: appointment.appointmentDate || appointment.date,
             time: appointment.appointmentTime || appointment.time,
             artistName: appointment.artistName,
-            ghlAppointmentId: (appointment as any).ghlAppointmentId
+            ghlAppointmentId: appointment.ghlAppointmentId
           })
         });
 
