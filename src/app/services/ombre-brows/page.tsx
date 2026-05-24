@@ -103,7 +103,7 @@ export default function OmbreBrowsPage() {
   return (
     <>
       <Header />
-      <main className="pt-header">
+      <main className="pt-16">
         {/* Hero Section */}
         <section className="py-12 md:py-16 bg-gradient-to-br from-[#AD6269] to-[#8B4A52] text-white">
           <div className="container mx-auto px-4">

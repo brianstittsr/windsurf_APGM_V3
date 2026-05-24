@@ -92,7 +92,7 @@ export default function TinyTattoosPage() {
   return (
     <>
       <Header />
-      <main className="pt-header min-h-screen flex flex-col">
+      <main className="pt-16 min-h-screen flex flex-col">
         {/* Hero Section */}
         <section className="py-12 md:py-16 bg-gradient-to-br from-[#AD6269] to-[#8B4A52] text-white">
           <div className="container mx-auto px-4">
