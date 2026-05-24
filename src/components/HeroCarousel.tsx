@@ -510,7 +510,20 @@ export default function HeroCarousel({
                   )}
                 </div>
 
-                <div className="flex justify-center gap-4 fade-in-3" />
+                <div className="flex justify-center gap-4 fade-in-3 mt-8">
+                  <a
+                    href={currentSlide.buttonLink || '/contact'}
+                    className={`inline-flex items-center justify-center px-8 py-4 rounded-full font-semibold transition-all shadow-lg ${
+                      currentSlide.buttonStyle === 'secondary'
+                        ? 'bg-white text-gray-900 hover:bg-gray-100'
+                        : currentSlide.buttonStyle === 'outline'
+                        ? 'bg-transparent border-2 border-white text-white hover:bg-white/10'
+                        : 'bg-[#AD6269] text-white hover:bg-[#9d5860]'
+                    }`}
+                  >
+                    {currentSlide.buttonText || 'Book Now'}
+                  </a>
+                </div>
               </>
             )}
           </div>
