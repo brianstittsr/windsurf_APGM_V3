@@ -264,6 +264,8 @@ export default function HeroCarouselManager() {
       titleColor: slide.titleColor || '#FFFFFF',
       subtitleColor: slide.subtitleColor || '#AD6269',
       highlightColor: slide.highlightColor || '#FFFFFF',
+      subtitleGlow: slide.subtitleGlow || false,
+      highlightGlow: slide.highlightGlow || false,
       isActive: slide.isActive,
       order: slide.order,
       styleType: slide.styleType || 'standard',
@@ -462,6 +464,8 @@ export default function HeroCarouselManager() {
                         titleColor: slide.titleColor || '#FFFFFF',
                         subtitleColor: slide.subtitleColor || '#AD6269',
                         highlightColor: slide.highlightColor || '#FFFFFF',
+                        subtitleGlow: slide.subtitleGlow || false,
+                        highlightGlow: slide.highlightGlow || false,
                         isActive: slide.isActive,
                         order: slide.order,
                         styleType: slide.styleType || 'standard',
@@ -1532,6 +1536,31 @@ export default function HeroCarouselManager() {
                               placeholder="#FFFFFF"
                             />
                           </div>
+                        </div>
+                      </div>
+
+                      {/* Subtitle & Highlight Glow Toggles */}
+                      <div className="grid grid-cols-2 gap-4 mt-4">
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                          <div className={`w-8 h-5 rounded-full transition-colors ${formData.subtitleGlow ? 'bg-[#AD6269]' : 'bg-gray-300'} relative cursor-pointer`}
+                            onClick={() => setFormData({ ...formData, subtitleGlow: !formData.subtitleGlow })}
+                          >
+                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${formData.subtitleGlow ? 'translate-x-3' : 'translate-x-0.5'}`} />
+                          </div>
+                          <Label className="cursor-pointer text-sm" onClick={() => setFormData({ ...formData, subtitleGlow: !formData.subtitleGlow })}>
+                            Subtitle Glow
+                          </Label>
+                        </div>
+
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                          <div className={`w-8 h-5 rounded-full transition-colors ${formData.highlightGlow ? 'bg-[#AD6269]' : 'bg-gray-300'} relative cursor-pointer`}
+                            onClick={() => setFormData({ ...formData, highlightGlow: !formData.highlightGlow })}
+                          >
+                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${formData.highlightGlow ? 'translate-x-3' : 'translate-x-0.5'}`} />
+                          </div>
+                          <Label className="cursor-pointer text-sm" onClick={() => setFormData({ ...formData, highlightGlow: !formData.highlightGlow })}>
+                            Highlight Glow
+                          </Label>
                         </div>
                       </div>
                     </div>

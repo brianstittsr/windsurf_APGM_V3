@@ -20,6 +20,8 @@ export interface HeroSlide {
   titleColor?: string;
   subtitleColor?: string;
   highlightColor?: string;
+  subtitleGlow?: boolean;
+  highlightGlow?: boolean;
   isActive: boolean;
   order: number;
   createdAt: Date;
@@ -58,6 +60,8 @@ export interface HeroSlideFormData {
   titleColor: string;
   subtitleColor: string;
   highlightColor: string;
+  subtitleGlow: boolean;
+  highlightGlow: boolean;
   isActive: boolean;
   order: number;
   // Style type
@@ -94,6 +98,8 @@ export const defaultHeroSlideFormData: HeroSlideFormData = {
   titleColor: '#FFFFFF',
   subtitleColor: '#AD6269',
   highlightColor: '#FFFFFF',
+  subtitleGlow: false,
+  highlightGlow: false,
   isActive: true,
   order: 0,
   // Style type
