@@ -244,7 +244,7 @@ export default function HeroCarousel({
               {/* Mobile Background Image - Only visible below 768px */}
               {slide.mobileBackgroundImage && (
                 <div
-                  className="hero-mobile-bg absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
+                  className="hero-mobile-bg absolute top-0 left-0 w-full h-full bg-cover bg-top bg-no-repeat"
                   style={{
                     backgroundImage: `url(${slide.mobileBackgroundImage})`,
                     zIndex: -3
@@ -253,7 +253,7 @@ export default function HeroCarousel({
               )}
               {/* Desktop Background Image - Visible above 768px, or always if no mobile image */}
               <div
-                className={`hero-desktop-bg absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat ${slide.mobileBackgroundImage ? 'md-only' : ''}`}
+                className={`hero-desktop-bg absolute top-0 left-0 w-full h-full bg-cover bg-top bg-no-repeat ${slide.mobileBackgroundImage ? 'md-only' : ''}`}
                 style={{
                   backgroundImage: `url(${slide.backgroundImage})`,
                   zIndex: -2

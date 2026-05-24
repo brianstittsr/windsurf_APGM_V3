@@ -1539,7 +1539,7 @@ export default function HeroCarouselManager() {
                         </div>
                       </div>
 
-                      {/* Subtitle & Highlight Glow Toggles */}
+                      {/* Subtitle & Highlight "Make it pop" Toggles */}
                       <div className="grid grid-cols-2 gap-4 mt-4">
                         <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                           <div className={`w-8 h-5 rounded-full transition-colors ${formData.subtitleGlow ? 'bg-[#AD6269]' : 'bg-gray-300'} relative cursor-pointer`}
@@ -1548,7 +1548,7 @@ export default function HeroCarouselManager() {
                             <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${formData.subtitleGlow ? 'translate-x-3' : 'translate-x-0.5'}`} />
                           </div>
                           <Label className="cursor-pointer text-sm" onClick={() => setFormData({ ...formData, subtitleGlow: !formData.subtitleGlow })}>
-                            Subtitle Glow
+                            Make Subtitle Pop
                           </Label>
                         </div>
 
@@ -1559,7 +1559,7 @@ export default function HeroCarouselManager() {
                             <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${formData.highlightGlow ? 'translate-x-3' : 'translate-x-0.5'}`} />
                           </div>
                           <Label className="cursor-pointer text-sm" onClick={() => setFormData({ ...formData, highlightGlow: !formData.highlightGlow })}>
-                            Highlight Glow
+                            Make Highlight Pop
                           </Label>
                         </div>
                       </div>
