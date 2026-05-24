@@ -252,6 +252,7 @@ export default function HeroCarouselManager() {
       highlightText: slide.highlightText || '',
       description: slide.description || '',
       backgroundImage: slide.backgroundImage,
+      mobileBackgroundImage: slide.mobileBackgroundImage || '',
       backgroundVideo: slide.backgroundVideo || '',
       buttonText: slide.buttonText,
       buttonLink: slide.buttonLink,
@@ -287,7 +288,7 @@ export default function HeroCarouselManager() {
   };
 
   // File upload handler
-  const handleFileUpload = async (file: File, field: 'backgroundImage' | 'afterPhoto' | 'certificationBadge') => {
+  const handleFileUpload = async (file: File, field: 'backgroundImage' | 'mobileBackgroundImage' | 'afterPhoto' | 'certificationBadge') => {
     const isAfterPhoto = field === 'afterPhoto';
     const setUploadingState = isAfterPhoto ? setUploadingAfterPhoto : setUploading;
     
@@ -296,7 +297,7 @@ export default function HeroCarouselManager() {
     try {
       const formDataUpload = new FormData();
       formDataUpload.append('file', file);
-      formDataUpload.append('folder', field === 'backgroundImage' ? 'hero' : 'reviews');
+      formDataUpload.append('folder', (field === 'backgroundImage' || field === 'mobileBackgroundImage') ? 'hero' : 'reviews');
       
       const response = await fetch('/api/upload', {
         method: 'POST',
@@ -338,7 +339,7 @@ export default function HeroCarouselManager() {
     }
   };
 
-  const handleDrop = (e: React.DragEvent, field: 'backgroundImage' | 'afterPhoto' | 'certificationBadge') => {
+  const handleDrop = (e: React.DragEvent, field: 'backgroundImage' | 'mobileBackgroundImage' | 'afterPhoto' | 'certificationBadge') => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
@@ -349,7 +350,7 @@ export default function HeroCarouselManager() {
     }
   };
 
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'backgroundImage' | 'afterPhoto' | 'certificationBadge') => {
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'backgroundImage' | 'mobileBackgroundImage' | 'afterPhoto' | 'certificationBadge') => {
     if (e.target.files && e.target.files[0]) {
       handleFileUpload(e.target.files[0], field);
     }
@@ -444,6 +445,7 @@ export default function HeroCarouselManager() {
                         highlightText: slide.highlightText || '',
                         description: slide.description || '',
                         backgroundImage: slide.backgroundImage,
+                        mobileBackgroundImage: slide.mobileBackgroundImage || '',
                         backgroundVideo: slide.backgroundVideo || '',
                         buttonText: slide.buttonText,
                         buttonLink: slide.buttonLink,
@@ -1089,11 +1091,97 @@ export default function HeroCarouselManager() {
                         className="mt-2"
                       />
                       <p className="text-xs text-gray-400">
-                        {formData.styleType === 'google-review' 
+                        {formData.styleType === 'google-review'
                           ? "Optional: Leave blank to use a solid gradient background for the review slide"
                           : "Enter the path to your image file or upload above"}
                       </p>
                     </div>
+
+                    {/* Mobile Background Image Upload - Only show when desktop image is set */}
+                    {formData.backgroundImage && formData.styleType === 'standard' && (
+                      <div className="space-y-2 mt-6 pt-6 border-t border-gray-200">
+                        <Label htmlFor="mobileBackgroundImage">
+                          <i className="fas fa-mobile-alt mr-2 text-[#AD6269]"></i>
+                          Mobile Background Image <span className="text-gray-400 text-xs ml-1">(optional)</span>
+                        </Label>
+                        <p className="text-xs text-gray-500 mb-2">
+                          Upload a mobile-optimized version (portrait orientation) for better display on phones. If not provided, desktop image will be used.
+                        </p>
+
+                        {/* Mobile Image Upload Area */}
+                        <div
+                          className={`relative mt-2 rounded-xl border-2 border-dashed transition-all ${
+                            dragActive
+                              ? 'border-[#AD6269] bg-[#AD6269]/5'
+                              : formData.mobileBackgroundImage
+                              ? 'border-green-300 bg-green-50'
+                              : 'border-gray-300 hover:border-gray-400 bg-gray-50'
+                          }`}
+                          onDragEnter={(e) => handleDrag(e, false)}
+                          onDragLeave={(e) => handleDrag(e, false)}
+                          onDragOver={(e) => handleDrag(e, false)}
+                          onDrop={(e) => handleDrop(e, 'mobileBackgroundImage')}
+                        >
+                          {formData.mobileBackgroundImage ? (
+                            <div className="relative h-48 rounded-lg overflow-hidden">
+                              <div
+                                className="absolute inset-0 bg-cover bg-center"
+                                style={{ backgroundImage: `url(${formData.mobileBackgroundImage})` }}
+                              />
+                              <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center">
+                                <span className="text-white text-sm font-medium bg-black/50 px-3 py-1 rounded mb-2">Mobile Preview</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setFormData({ ...formData, mobileBackgroundImage: '' })}
+                                  className="text-white/80 hover:text-white text-xs underline"
+                                >
+                                  Remove mobile image
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <label className="flex flex-col items-center justify-center h-48 cursor-pointer">
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept="image/*"
+                                onChange={(e) => handleFileInputChange(e, 'mobileBackgroundImage')}
+                                disabled={uploading}
+                              />
+                              {uploading ? (
+                                <div className="flex flex-col items-center">
+                                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#AD6269] mb-3"></div>
+                                  <p className="text-gray-500 text-sm">Uploading...</p>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="w-14 h-14 rounded-full bg-[#AD6269]/10 flex items-center justify-center mb-3">
+                                    <i className="fas fa-mobile-alt text-2xl text-[#AD6269]"></i>
+                                  </div>
+                                  <p className="text-gray-700 font-medium mb-1">
+                                    {dragActive ? 'Drop mobile image here' : 'Upload mobile-optimized image'}
+                                  </p>
+                                  <p className="text-gray-400 text-sm mb-3">Portrait orientation recommended (9:16)</p>
+                                  <span className="px-4 py-2 bg-[#AD6269] text-white text-sm font-medium rounded-lg hover:bg-[#9d5860] transition-colors">
+                                    Choose Mobile Image
+                                  </span>
+                                  <p className="text-gray-400 text-xs mt-3">Supports: JPEG, PNG, GIF, WebP (max 10MB)</p>
+                                </>
+                              )}
+                            </label>
+                          )}
+                        </div>
+
+                        {/* URL Input for mobile as alternative */}
+                        <Input
+                          id="mobileBackgroundImage"
+                          value={formData.mobileBackgroundImage}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, mobileBackgroundImage: e.target.value })}
+                          placeholder="/images/hero/your-mobile-image.jpg"
+                          className="mt-2"
+                        />
+                      </div>
+                    )}
 
                     {/* After Photo for Google Review */}
                     {formData.styleType === 'google-review' && (

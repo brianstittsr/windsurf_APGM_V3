@@ -6,6 +6,23 @@ import { Button } from '@/components/ui/button';
 import { HeroSlide } from '@/types/heroSlide';
 import { HeroSlideService } from '@/services/heroSlideService';
 
+// Hook to detect mobile screen size
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return isMobile;
+}
+
 // Soft transition types
 type TransitionType = 'fade' | 'fadeUp' | 'fadeDown' | 'fadeScale' | 'crossfade' | 'blur';
 
@@ -24,6 +41,7 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [loading, setLoading] = useState(!propSlides);
   const [currentTransition, setCurrentTransition] = useState<TransitionType>('fade');
+  const isMobile = useIsMobile();
   
   // Pick a random transition for each slide change
   const pickRandomTransition = useCallback(() => {
@@ -185,7 +203,7 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
             <div
               className="absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
               style={{
-                backgroundImage: `url(${slide.backgroundImage})`,
+                backgroundImage: `url(${isMobile && slide.mobileBackgroundImage ? slide.mobileBackgroundImage : slide.backgroundImage})`,
                 zIndex: -2
               }}
             />

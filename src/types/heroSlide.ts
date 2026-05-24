@@ -8,6 +8,7 @@ export interface HeroSlide {
   highlightText?: string;
   description?: string;
   backgroundImage: string;
+  mobileBackgroundImage?: string;
   backgroundVideo?: string;
   buttonText: string;
   buttonLink: string;
@@ -40,6 +41,7 @@ export interface HeroSlideFormData {
   highlightText: string;
   description: string;
   backgroundImage: string;
+  mobileBackgroundImage: string;
   backgroundVideo: string;
   buttonText: string;
   buttonLink: string;
@@ -70,6 +72,7 @@ export const defaultHeroSlideFormData: HeroSlideFormData = {
   highlightText: '',
   description: '',
   backgroundImage: '',
+  mobileBackgroundImage: '',
   backgroundVideo: '',
   buttonText: 'Book Now',
   buttonLink: '/book-now-custom',
