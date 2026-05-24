@@ -279,12 +279,6 @@ export default function ContactPage() {
                         <Mail className="w-5 h-5 text-[#AD6269] group-hover:scale-110 transition-transform" />
                         <span className="font-medium text-gray-700">Email Victoria</span>
                       </a>
-                      <Link
-                        href="/book-now-custom"
-                        className="block text-center p-4 bg-gradient-to-r from-[#AD6269] to-[#8B4A52] text-white rounded-xl font-semibold hover:shadow-lg transition-all"
-                      >
-                        Book Consultation
-                      </Link>
                     </div>
                   </div>
 
