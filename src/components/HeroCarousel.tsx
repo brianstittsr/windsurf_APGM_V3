@@ -474,23 +474,18 @@ export default function HeroCarousel({
               <>
                 <div className="mb-4">
                   {currentSlide.subtitle && (
-                    <p className="paragraph-text mb-4 fade-in-1 tracking-[0.3em] uppercase font-medium">
-                      <span style={{ color: currentSlide.subtitleColor || '#AD6269' }}>
-                        {currentSlide.subtitle}
-                      </span>
+                    <p className="paragraph-text text-white mb-4 fade-in-1">
+                      <span style={{ color: currentSlide.subtitleColor || '#AD6269' }}>{currentSlide.subtitle}</span>
                       {currentSlide.highlightText && (
-                        <span style={{ color: currentSlide.highlightColor || '#FFFFFF' }}> {currentSlide.highlightText}
-                        </span>
+                        <span style={{ color: currentSlide.highlightColor || '#FFFFFF' }}> {currentSlide.highlightText}</span>
                       )}
                     </p>
                   )}
                   {!currentSlide.hideTitle && (
-                    <h1
-                      key={`title-${currentIndex}-${currentSlide.id}`}
-                      className="main-heading font-bold leading-tight animate-slide-up"
-                      style={{ color: currentSlide.titleColor || '#FFFFFF' }}
-                    >
-                      {currentSlide.title}
+                    <h1 className="main-heading font-bold leading-tight" style={{ color: currentSlide.titleColor || '#FFFFFF' }}>
+                      {currentSlide.title.split(' ').map((word: string, i: number) => (
+                        <span key={i} className={`animated-word word-fade-${(i % 5) + 1}`}>{word} </span>
+                      ))}
                     </h1>
                   )}
                   {currentSlide.description && (
