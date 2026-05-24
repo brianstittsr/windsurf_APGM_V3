@@ -15,6 +15,11 @@ export interface HeroSlide {
   buttonStyle?: 'primary' | 'secondary' | 'outline';
   textAlignment?: 'left' | 'center' | 'right';
   overlayOpacity?: number;
+  // Text styling
+  textGlow?: boolean;
+  titleColor?: string;
+  subtitleColor?: string;
+  highlightColor?: string;
   isActive: boolean;
   order: number;
   createdAt: Date;
@@ -48,6 +53,11 @@ export interface HeroSlideFormData {
   buttonStyle: 'primary' | 'secondary' | 'outline';
   textAlignment: 'left' | 'center' | 'right';
   overlayOpacity: number;
+  // Text styling
+  textGlow: boolean;
+  titleColor: string;
+  subtitleColor: string;
+  highlightColor: string;
   isActive: boolean;
   order: number;
   // Style type
@@ -79,6 +89,11 @@ export const defaultHeroSlideFormData: HeroSlideFormData = {
   buttonStyle: 'primary',
   textAlignment: 'center',
   overlayOpacity: 40,
+  // Text styling defaults
+  textGlow: false,
+  titleColor: '#FFFFFF',
+  subtitleColor: '#AD6269',
+  highlightColor: '#FFFFFF',
   isActive: true,
   order: 0,
   // Style type

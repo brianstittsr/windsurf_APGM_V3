@@ -259,6 +259,11 @@ export default function HeroCarouselManager() {
       buttonStyle: slide.buttonStyle || 'primary',
       textAlignment: slide.textAlignment || 'center',
       overlayOpacity: slide.overlayOpacity || 40,
+      // Text styling
+      textGlow: slide.textGlow || false,
+      titleColor: slide.titleColor || '#FFFFFF',
+      subtitleColor: slide.subtitleColor || '#AD6269',
+      highlightColor: slide.highlightColor || '#FFFFFF',
       isActive: slide.isActive,
       order: slide.order,
       styleType: slide.styleType || 'standard',
@@ -452,6 +457,11 @@ export default function HeroCarouselManager() {
                         buttonStyle: slide.buttonStyle || 'primary',
                         textAlignment: slide.textAlignment || 'center',
                         overlayOpacity: slide.overlayOpacity || 40,
+                        // Text styling
+                        textGlow: slide.textGlow || false,
+                        titleColor: slide.titleColor || '#FFFFFF',
+                        subtitleColor: slide.subtitleColor || '#AD6269',
+                        highlightColor: slide.highlightColor || '#FFFFFF',
                         isActive: slide.isActive,
                         order: slide.order,
                         styleType: slide.styleType || 'standard',
@@ -1438,6 +1448,91 @@ export default function HeroCarouselManager() {
                       <div className="flex justify-between text-xs text-gray-400">
                         <span>No overlay</span>
                         <span>Full dark</span>
+                      </div>
+                    </div>
+
+                    {/* Text Styling Section */}
+                    <div className="border-t pt-6">
+                      <h5 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <i className="fas fa-magic text-[#AD6269]"></i>
+                        Text Styling
+                      </h5>
+
+                      {/* Text Glow Toggle */}
+                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-6 rounded-full transition-colors ${formData.textGlow ? 'bg-[#AD6269]' : 'bg-gray-300'} relative cursor-pointer`}
+                            onClick={() => setFormData({ ...formData, textGlow: !formData.textGlow })}
+                          >
+                            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${formData.textGlow ? 'translate-x-5' : 'translate-x-1'}`} />
+                          </div>
+                          <div>
+                            <Label className="cursor-pointer" onClick={() => setFormData({ ...formData, textGlow: !formData.textGlow })}>
+                              Make Text &quot;Pop&quot; (Glow Effect)
+                            </Label>
+                            <p className="text-xs text-gray-500">Adds an animated glow to make text stand out</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Color Pickers */}
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="titleColor">Title Color</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              id="titleColor"
+                              value={formData.titleColor}
+                              onChange={(e) => setFormData({ ...formData, titleColor: e.target.value })}
+                              className="w-10 h-10 rounded cursor-pointer border-2 border-gray-200"
+                            />
+                            <Input
+                              value={formData.titleColor}
+                              onChange={(e) => setFormData({ ...formData, titleColor: e.target.value })}
+                              className="flex-1 text-sm"
+                              placeholder="#FFFFFF"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="subtitleColor">Subtitle Color</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              id="subtitleColor"
+                              value={formData.subtitleColor}
+                              onChange={(e) => setFormData({ ...formData, subtitleColor: e.target.value })}
+                              className="w-10 h-10 rounded cursor-pointer border-2 border-gray-200"
+                            />
+                            <Input
+                              value={formData.subtitleColor}
+                              onChange={(e) => setFormData({ ...formData, subtitleColor: e.target.value })}
+                              className="flex-1 text-sm"
+                              placeholder="#AD6269"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="highlightColor">Highlight Color</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              id="highlightColor"
+                              value={formData.highlightColor}
+                              onChange={(e) => setFormData({ ...formData, highlightColor: e.target.value })}
+                              className="w-10 h-10 rounded cursor-pointer border-2 border-gray-200"
+                            />
+                            <Input
+                              value={formData.highlightColor}
+                              onChange={(e) => setFormData({ ...formData, highlightColor: e.target.value })}
+                              className="flex-1 text-sm"
+                              placeholder="#FFFFFF"
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
