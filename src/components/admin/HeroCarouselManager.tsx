@@ -1097,8 +1097,8 @@ export default function HeroCarouselManager() {
                       </p>
                     </div>
 
-                    {/* Mobile Background Image Upload - Only show when desktop image is set */}
-                    {formData.backgroundImage && formData.styleType === 'standard' && (
+                    {/* Mobile Background Image Upload - Always visible for standard slides */}
+                    {formData.styleType === 'standard' && (
                       <div className="space-y-2 mt-6 pt-6 border-t border-gray-200">
                         <Label htmlFor="mobileBackgroundImage">
                           <i className="fas fa-mobile-alt mr-2 text-[#AD6269]"></i>
@@ -1107,6 +1107,12 @@ export default function HeroCarouselManager() {
                         <p className="text-xs text-gray-500 mb-2">
                           Upload a mobile-optimized version (portrait orientation) for better display on phones. If not provided, desktop image will be used.
                         </p>
+                        {!formData.backgroundImage && (
+                          <p className="text-xs text-amber-600 mb-2">
+                            <i className="fas fa-info-circle mr-1"></i>
+                            Upload desktop image first, then add mobile image here
+                          </p>
+                        )}
 
                         {/* Mobile Image Upload Area */}
                         <div
