@@ -8,6 +8,7 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAlertDialog } from '@/components/ui/alert-dialog';
+import { convertFileToWebP, isWebP, formatFileSize, calculateSavings } from '@/lib/imageConverter';
 
 interface ServiceFormData {
   name: string;
@@ -73,10 +74,36 @@ export default function ServicesManager() {
 
   const handleImageUpload = async (file: File): Promise<string> => {
     const timestamp = Date.now();
-    const fileName = `services/${timestamp}_${file.name}`;
+
+    // Convert to WebP if not already in WebP format
+    let fileToUpload = file;
+    let webpFileName = file.name;
+
+    if (!isWebP(file)) {
+      try {
+        console.log(`Converting ${file.name} to WebP...`);
+        fileToUpload = await convertFileToWebP(file, { quality: 0.85, maxWidth: 1920, maxHeight: 1920 });
+        webpFileName = fileToUpload.name;
+
+        const savings = calculateSavings(file.size, fileToUpload.size);
+        console.log(
+          `WebP conversion: ${formatFileSize(file.size)} → ${formatFileSize(fileToUpload.size)} ` +
+          `(${savings}% smaller)`
+        );
+      } catch (error) {
+        console.error('WebP conversion failed, using original:', error);
+        // Fallback to original file if conversion fails
+        webpFileName = file.name.replace(/\.[^/.]+$/, '.webp');
+      }
+    }
+
+    const fileName = `services/${timestamp}_${webpFileName}`;
     const storageRef = ref(storage, fileName);
-    
-    await uploadBytes(storageRef, file);
+
+    // Upload with proper content type
+    await uploadBytes(storageRef, fileToUpload, {
+      contentType: 'image/webp'
+    });
     const downloadURL = await getDownloadURL(storageRef);
     return downloadURL;
   };

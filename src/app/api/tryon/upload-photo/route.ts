@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
+import sharp from 'sharp';
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,12 +33,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate unique filename
-    const fileName = `tryon-photos/${uuidv4()}-${file.name}`;
+    // Convert image to WebP for better compression
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(new Uint8Array(bytes));
+
+    // Convert to WebP with quality 85 for optimal size/quality balance
+    const webpBuffer = await sharp(buffer)
+      .webp({ quality: 85, effort: 6 })
+      .toBuffer();
+
+    console.log(`Converted ${file.name} to WebP: ${(file.size / 1024).toFixed(0)}KB -> ${(webpBuffer.length / 1024).toFixed(0)}KB`);
+
+    // Generate unique filename with .webp extension
+    const baseFileName = file.name.replace(/\.[^/.]+$/, ''); // Remove original extension
+    const fileName = `tryon-photos/${uuidv4()}-${baseFileName}.webp`;
     const storageRef = ref(storage, fileName);
 
-    // Upload to Firebase Storage
-    const snapshot = await uploadBytes(storageRef, file);
+    // Upload WebP image to Firebase Storage with proper content type
+    const snapshot = await uploadBytes(storageRef, webpBuffer, {
+      contentType: 'image/webp'
+    });
     const downloadURL = await getDownloadURL(snapshot.ref);
 
     // Basic face detection validation (simulated)

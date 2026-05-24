@@ -65,22 +65,23 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // Start with quality 85 and reduce if needed
+        // Convert to WebP for better compression
+        // WebP typically provides 25-35% smaller file sizes than JPEG at same quality
         let quality = 85;
         let compressedBuffer: Buffer;
-        
+
         do {
           compressedBuffer = await sharp(buffer)
             .resize(newWidth, newHeight, { fit: 'inside', withoutEnlargement: true })
-            .jpeg({ quality, mozjpeg: true })
+            .webp({ quality, effort: 6 }) // effort 6 = good balance of speed/compression
             .toBuffer();
-          
-          console.log(`Quality ${quality}: ${(compressedBuffer.length / 1024).toFixed(0)}KB`);
-          
+
+          console.log(`WebP Quality ${quality}: ${(compressedBuffer.length / 1024).toFixed(0)}KB`);
+
           if (compressedBuffer.length <= TARGET_SIZE) {
             break;
           }
-          
+
           quality -= 10;
         } while (quality >= 30);
 
@@ -89,17 +90,17 @@ export async function POST(request: NextRequest) {
           const scaleFactor = Math.sqrt(TARGET_SIZE / compressedBuffer.length);
           newWidth = Math.round(newWidth * scaleFactor);
           newHeight = Math.round(newHeight * scaleFactor);
-          
+
           compressedBuffer = await sharp(buffer)
             .resize(newWidth, newHeight, { fit: 'inside' })
-            .jpeg({ quality: 70, mozjpeg: true })
+            .webp({ quality: 70, effort: 6 })
             .toBuffer();
-          
+
           console.log(`Resized to ${newWidth}x${newHeight}: ${(compressedBuffer.length / 1024).toFixed(0)}KB`);
         }
 
         buffer = Buffer.from(compressedBuffer);
-        outputType = 'image/jpeg';
+        outputType = 'image/webp';
         wasCompressed = true;
         
         console.log(`Compression complete: ${(file.size / 1024).toFixed(0)}KB -> ${(buffer.length / 1024).toFixed(0)}KB`);
