@@ -298,8 +298,8 @@ export default function HeroCarousel({
       })}
 
       {/* Content */}
-      <div className="container mx-auto px-4 pb-16 pt-5 relative z-20">
-        <div className={`flex flex-col ${textAlignClass} justify-end`}>
+      <div className="container mx-auto px-4 pb-8 pt-20 relative z-20">
+        <div className={`flex flex-col ${textAlignClass} justify-center`}>
           <div className="w-full lg:w-2/3 mx-auto">
             
             {/* Google Review Style - Redesigned */}
