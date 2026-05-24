@@ -241,24 +241,36 @@ export default function HeroCarousel({
             </video>
           ) : slide.backgroundImage ? (
             <>
-              {/* Mobile Background Image - Base layer, always rendered first if exists */}
-              {slide.mobileBackgroundImage ? (
+              {/* Mobile Background Image - Only visible below 768px */}
+              {slide.mobileBackgroundImage && (
                 <div
-                  className="absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat md:hidden"
+                  className="hero-mobile-bg absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
                   style={{
                     backgroundImage: `url(${slide.mobileBackgroundImage})`,
                     zIndex: -3
                   }}
                 />
-              ) : null}
-              {/* Desktop Background Image - Top layer, shown on desktop, hidden on mobile if mobile image exists */}
+              )}
+              {/* Desktop Background Image - Visible above 768px, or always if no mobile image */}
               <div
-                className={`absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat ${slide.mobileBackgroundImage ? 'hidden md:block' : 'block'}`}
+                className={`hero-desktop-bg absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat ${slide.mobileBackgroundImage ? 'md-only' : ''}`}
                 style={{
                   backgroundImage: `url(${slide.backgroundImage})`,
                   zIndex: -2
                 }}
               />
+              <style jsx>{`
+                @media (min-width: 768px) {
+                  .hero-mobile-bg {
+                    display: none !important;
+                  }
+                }
+                @media (max-width: 767px) {
+                  .hero-desktop-bg.md-only {
+                    display: none !important;
+                  }
+                }
+              `}</style>
             </>
           ) : (
             /* Fallback gradient for slides without background image (e.g., google-review) */
