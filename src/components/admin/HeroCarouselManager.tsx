@@ -1370,7 +1370,7 @@ export default function HeroCarouselManager() {
                           id="buttonLink"
                           value={formData.buttonLink}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, buttonLink: e.target.value })}
-                          placeholder="/book-now-custom"
+                          placeholder="/contact"
                         />
                       </div>
                     </div>

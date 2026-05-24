@@ -75,7 +75,7 @@ export const defaultHeroSlideFormData: HeroSlideFormData = {
   mobileBackgroundImage: '',
   backgroundVideo: '',
   buttonText: 'Book Now',
-  buttonLink: '/book-now-custom',
+  buttonLink: '/contact',
   buttonStyle: 'primary',
   textAlignment: 'center',
   overlayOpacity: 40,

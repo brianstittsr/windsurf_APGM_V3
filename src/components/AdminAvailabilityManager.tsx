@@ -522,7 +522,7 @@ export default function AdminAvailabilityManager({ className = '' }: AdminAvaila
             <div className="col-lg-4">
               <div className="d-flex flex-column gap-2">
                 <a 
-                  href="/book-now-custom" 
+                  href="/contact" 
                   target="_blank" 
                   className="btn btn-outline-primary rounded-pill"
                 >

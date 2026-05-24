@@ -643,9 +643,9 @@ export default function AvailabilityCalendar({ artistId, isEditable = true }: Av
                       <li><strong>Real-time:</strong> Changes here immediately update booking availability</li>
                     </ul>
                     <div className="d-flex gap-2">
-                      <a href="/book-now-custom" target="_blank" className="btn btn-outline-info btn-sm">
+                      <a href="/contact" target="_blank" className="btn btn-outline-info btn-sm">
                         <i className="fas fa-external-link-alt me-2"></i>
-                        View Booking Page
+                        View Contact Page
                       </a>
                       <button className="btn btn-info btn-sm" onClick={() => window.location.reload()}>
                         <i className="fas fa-sync-alt me-2"></i>

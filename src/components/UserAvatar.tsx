@@ -142,7 +142,7 @@ export default function UserAvatar({
               className="dropdown-item btn btn-link text-start w-100 border-0 p-2"
               onClick={() => {
                 setIsDropdownOpen(false);
-                window.location.href = '/book-now-custom';
+                window.location.href = '/contact';
               }}
             >
               <i className="fas fa-plus-circle me-2"></i>

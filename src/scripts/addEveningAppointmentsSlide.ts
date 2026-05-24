@@ -46,7 +46,7 @@ async function addEveningAppointmentsSlide() {
       mobileBackgroundImage: '/images/hero/evening-appointments-mobile.jpg',
       backgroundVideo: '',
       buttonText: 'Book Evening Appointment',
-      buttonLink: '/book-now-custom',
+      buttonLink: '/contact',
       buttonStyle: 'primary' as const,
       textAlignment: 'center' as const,
       overlayOpacity: 20, // Low opacity to let the image show through

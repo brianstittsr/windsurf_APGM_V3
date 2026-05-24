@@ -106,7 +106,7 @@ export default function AppointmentsList({ clientId, showTitle = true, maxItems 
           <p className="text-muted mb-4">
             You don't have any appointments scheduled. Book your first appointment to get started!
           </p>
-          <Link href="/book-now-custom" className="btn btn-primary">
+          <Link href="/contact" className="btn btn-primary">
             <i className="fas fa-plus me-2"></i>
             Book Your First Appointment
           </Link>

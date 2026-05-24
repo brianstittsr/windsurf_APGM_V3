@@ -111,7 +111,7 @@ export default function TheProcess() {
               scheduled 4-6 weeks later.
             </p>
             <a 
-              href="/book-now-custom"
+              href="/contact"
               className="inline-flex items-center px-8 py-4 bg-[#AD6269] text-white font-semibold rounded-full hover:bg-[#9d5860] transition-colors shadow-lg"
             >
               Start Your Journey

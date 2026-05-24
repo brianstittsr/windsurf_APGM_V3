@@ -89,7 +89,7 @@ export function useGoogleReviewSlides(
           hideTitle: false,
           backgroundImage: '', // No background image for review slides - uses gradient
           buttonText: 'Book Now',
-          buttonLink: '/book-now-custom',
+          buttonLink: '/contact',
           buttonStyle: 'primary',
           textAlignment: 'center',
           overlayOpacity: 10,

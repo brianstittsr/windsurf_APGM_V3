@@ -26,7 +26,7 @@ export default function CTABanner() {
           {/* Right - Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
             <a
-              href="/book-now-custom"
+              href="/contact"
               className="inline-flex items-center justify-center px-8 py-4 bg-white text-[#AD6269] font-bold rounded-full hover:bg-gray-100 transition-colors shadow-lg"
             >
               Book Consultation

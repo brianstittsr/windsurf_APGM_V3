@@ -36,7 +36,7 @@ export default function Hero() {
 
             <div className="flex justify-center fade-in-3">
               <Button asChild size="lg" className="rounded-full px-8 bg-[#AD6269] hover:bg-[#9d5860] text-base font-semibold">
-                <Link href="/book-now-custom">
+                <Link href="/contact">
                   Book Now
                 </Link>
               </Button>

@@ -178,8 +178,8 @@ export default function Header() {
                       {/* If user is authenticated and profile is complete, show Health Questions button */}
                       {isProfileComplete() && (
                         <Button variant="outline" asChild className="rounded-full h-8 px-4 text-xs">
-                          <Link href="/book-now-custom?step=health">
-                            Health Questions
+                          <Link href="/contact">
+                            Contact Us
                           </Link>
                         </Button>
                       )}
@@ -313,8 +313,8 @@ export default function Header() {
                             
                             {isProfileComplete() && (
                               <Button variant="outline" asChild className="w-full mb-2">
-                                <Link href="/book-now-custom?step=health" onClick={() => setIsMenuOpen(false)}>
-                                  Health Questions
+                                <Link href="/contact" onClick={() => setIsMenuOpen(false)}>
+                                  Contact Us
                                 </Link>
                               </Button>
                             )}

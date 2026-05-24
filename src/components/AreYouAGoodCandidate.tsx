@@ -149,7 +149,7 @@ export default function AreYouAGoodCandidate() {
               <Link href="/candidate-assessment" className="btn btn-primary rounded-pill px-4 fw-semibold book-now-text">
                 Am I Good Candidate
               </Link>
-              <Link href="/book-now-custom" className="btn btn-outline-primary rounded-pill px-4 fw-semibold book-now-text">
+              <Link href="/contact" className="btn btn-outline-primary rounded-pill px-4 fw-semibold book-now-text">
                 Book Now
               </Link>
               <button className="btn btn-outline-secondary rounded-pill px-4 fw-semibold book-now-text">
