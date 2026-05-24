@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, getDocs, doc, deleteDoc, updateDoc, query, where, addDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc, updateDoc, query, where, addDoc, getDoc } from 'firebase/firestore';
 import { getDb } from '../../lib/firebase';
 import { useAuth } from '../../hooks/useAuth';
 import { User } from '../../types/user';
@@ -503,10 +503,11 @@ export default function ClientsManager() {
       });
       setClientPayments(payments);
       
-      // Fetch progress notes from user document
-      const userDoc = await getDocs(query(collection(getDb(), 'users'), where('email', '==', client.email)));
-      if (!userDoc.empty) {
-        const userData = userDoc.docs[0].data();
+      // Fetch progress notes from user document using client ID directly
+      const userDocRef = doc(getDb(), 'users', client.id);
+      const userDocSnap = await getDoc(userDocRef);
+      if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
         setProgressNotes(userData.progressNotes || []);
       }
       
