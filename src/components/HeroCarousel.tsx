@@ -240,13 +240,26 @@ export default function HeroCarousel({
               <source src={slide.backgroundVideo} type="video/mp4" />
             </video>
           ) : slide.backgroundImage ? (
-            <div
-              className="absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
-              style={{
-                backgroundImage: `url(${isMobile && slide.mobileBackgroundImage ? slide.mobileBackgroundImage : slide.backgroundImage})`,
-                zIndex: -2
-              }}
-            />
+            <>
+              {/* Desktop Background Image - Hidden on mobile when mobile image exists */}
+              <div
+                className={`absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat ${slide.mobileBackgroundImage ? 'hidden md:block' : 'block'}`}
+                style={{
+                  backgroundImage: `url(${slide.backgroundImage})`,
+                  zIndex: -2
+                }}
+              />
+              {/* Mobile Background Image - Only shown on mobile when it exists */}
+              {slide.mobileBackgroundImage && (
+                <div
+                  className="absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat block md:hidden"
+                  style={{
+                    backgroundImage: `url(${slide.mobileBackgroundImage})`,
+                    zIndex: -2
+                  }}
+                />
+              )}
+            </>
           ) : (
             /* Fallback gradient for slides without background image (e.g., google-review) */
             <div
