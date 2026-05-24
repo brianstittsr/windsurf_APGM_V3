@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { GoogleReviewsFirebaseService } from '@/services/googleReviewsFirebaseService';
+import { GoogleReviewsConfig, GoogleReview } from '@/types/googleReviews';
 
 // ============================================================================
 // Types
@@ -30,6 +32,19 @@ interface PlaceDetails {
   url?: string;
   website?: string;
   formattedPhoneNumber?: string;
+}
+
+// Extended config with display settings
+interface ExtendedConfig extends GoogleReviewsConfig {
+  showBusinessName: boolean;
+  showOverallRating: boolean;
+  showReviewCount: boolean;
+  showAuthorPhotos: boolean;
+  showAuthorNames: boolean;
+  showTimestamps: boolean;
+  minimumRatingToDisplay: number;
+  maxReviewsToDisplay: number;
+  sortOrder: 'newest' | 'highest' | 'relevant';
 }
 
 interface SearchResult {
@@ -58,6 +73,12 @@ export default function GooglePlacesReviews() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
+  
+  // Firebase Config
+  const [firebaseConfig, setFirebaseConfig] = useState<ExtendedConfig | null>(null);
+  const [savingToFirebase, setSavingToFirebase] = useState(false);
+  const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
+  const [syncStatus, setSyncStatus] = useState<'success' | 'error' | 'pending' | null>(null);
 
   // Data
   const [placeDetails, setPlaceDetails] = useState<PlaceDetails | null>(null);
@@ -65,10 +86,35 @@ export default function GooglePlacesReviews() {
   const [filterRating, setFilterRating] = useState<number>(0);
 
   // --------------------------------------------------------------------------
-  // Load saved settings
+  // Load saved settings (from localStorage and Firebase)
   // --------------------------------------------------------------------------
 
   useEffect(() => {
+    loadConfiguration();
+  }, []);
+  
+  const loadConfiguration = async () => {
+    // First try to load from Firebase
+    try {
+      const config = await GoogleReviewsFirebaseService.getConfig();
+      if (config && config.placeId) {
+        setPlaceId(config.placeId);
+        setBusinessName(config.businessName);
+        setFirebaseConfig(config as ExtendedConfig);
+        setLastSyncAt(config.lastSyncAt || null);
+        setSyncStatus(config.lastSyncStatus || null);
+        setIsConnected(true);
+        
+        if (config.isActive) {
+          loadPlaceDetails(config.placeId);
+        }
+        return;
+      }
+    } catch (error) {
+      console.error('Error loading Firebase config:', error);
+    }
+    
+    // Fallback to localStorage
     const savedPlaceId = localStorage.getItem('google_places_place_id');
     const savedBusinessName = localStorage.getItem('google_places_business_name');
     
@@ -78,7 +124,7 @@ export default function GooglePlacesReviews() {
       setIsConnected(true);
       loadPlaceDetails(savedPlaceId);
     }
-  }, []);
+  };
 
   // --------------------------------------------------------------------------
   // API Calls
@@ -148,7 +194,7 @@ export default function GooglePlacesReviews() {
     }
   };
 
-  const selectPlace = (place: SearchResult) => {
+  const selectPlace = async (place: SearchResult) => {
     setPlaceId(place.placeId);
     setBusinessName(place.name);
     localStorage.setItem('google_places_place_id', place.placeId);
@@ -156,8 +202,41 @@ export default function GooglePlacesReviews() {
     setIsConnected(true);
     setSearchResults([]);
     setSearchQuery('');
-    setSuccessMessage('Business connected! Loading reviews...');
-    setTimeout(() => setSuccessMessage(null), 3000);
+    setSuccessMessage('Business connected! Saving to database...');
+    
+    // Save to Firebase
+    setSavingToFirebase(true);
+    try {
+      await GoogleReviewsFirebaseService.initializeConfig(place.placeId, {
+        businessName: place.name,
+        formattedAddress: place.formattedAddress,
+        googleMapsUrl: `https://www.google.com/maps/place/?q=place_id:${place.placeId}`
+      });
+      setFirebaseConfig({
+        placeId: place.placeId,
+        businessName: place.name,
+        isActive: true,
+        autoSync: true,
+        syncIntervalMinutes: 60,
+        minimumRatingToDisplay: 4,
+        maxReviewsToDisplay: 10,
+        sortOrder: 'newest',
+        showBusinessName: true,
+        showOverallRating: true,
+        showReviewCount: true,
+        showAuthorPhotos: true,
+        showAuthorNames: true,
+        showTimestamps: true
+      } as ExtendedConfig);
+      setSuccessMessage('Business connected and saved to database!');
+    } catch (error) {
+      console.error('Error saving to Firebase:', error);
+      setSuccessMessage('Connected locally. Firebase save failed.');
+    } finally {
+      setSavingToFirebase(false);
+      setTimeout(() => setSuccessMessage(null), 3000);
+    }
+    
     loadPlaceDetails(place.placeId);
   };
 
@@ -169,6 +248,13 @@ export default function GooglePlacesReviews() {
     setIsConnected(false);
     setPlaceDetails(null);
     setReviews([]);
+    setFirebaseConfig(null);
+    setLastSyncAt(null);
+    setSyncStatus(null);
+    
+    // Note: We don't delete from Firebase to preserve history
+    // Just mark as inactive if needed
+    console.log('Disconnected from Google Reviews');
   };
 
   // --------------------------------------------------------------------------

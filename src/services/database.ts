@@ -53,7 +53,11 @@ export const COLLECTIONS = {
   BUSINESS_SETTINGS: 'businessSettings',
   ANALYTICS: 'analytics',
   PDF_DOCUMENTS: 'pdfDocuments',
-  USER_ACTIVITIES: 'userActivities'
+  USER_ACTIVITIES: 'userActivities',
+  // Google Reviews collections
+  GOOGLE_REVIEWS_CONFIG: 'googleReviewsConfig',
+  GOOGLE_REVIEWS_CACHE: 'googleReviewsCache',
+  GOOGLE_REVIEWS_SYNC_LOGS: 'googleReviewsSyncLogs'
 } as const;
 
 // Generic CRUD operations
