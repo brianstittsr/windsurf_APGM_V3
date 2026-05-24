@@ -117,12 +117,9 @@ export default function Header() {
               >
                 ABOUT
               </button>
-              <button 
-                onClick={() => handleNavClick('reviews')} 
-                className="text-gray-700 hover:text-gray-900 text-sm font-medium transition-colors"
-              >
+              <Link href="/reviews" className="text-gray-700 hover:text-gray-900 text-sm font-medium transition-colors">
                 REVIEWS
-              </button>
+              </Link>
               <Link href="/financing" className="text-gray-700 hover:text-gray-900 text-sm font-medium transition-colors">
                 FINANCING
               </Link>
@@ -236,12 +233,10 @@ export default function Header() {
                   >
                     ABOUT
                   </Button>
-                  <Button 
-                    variant="ghost"
-                    onClick={() => { handleNavClick('reviews'); setIsMenuOpen(false); }}
-                    className="justify-start text-lg"
-                  >
-                    REVIEWS
+                  <Button variant="ghost" asChild className="justify-start text-lg">
+                    <Link href="/reviews" onClick={() => setIsMenuOpen(false)}>
+                      REVIEWS
+                    </Link>
                   </Button>
                   <Button variant="ghost" asChild className="justify-start text-lg">
                     <Link href="/financing" onClick={() => setIsMenuOpen(false)}>
