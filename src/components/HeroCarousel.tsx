@@ -426,7 +426,7 @@ export default function HeroCarousel({
                     Read More Reviews
                   </a>
                   <a
-                    href={currentSlide.buttonLink || '/contact'}
+                    href="/contact"
                     className="inline-flex items-center justify-center px-6 py-3 bg-[#AD6269] text-white font-semibold rounded-full hover:bg-[#9d5860] transition-colors shadow-lg"
                   >
                     {currentSlide.buttonText || 'Book Now'}
@@ -512,7 +512,7 @@ export default function HeroCarousel({
 
                 <div className="flex justify-center gap-4 fade-in-3 mt-8">
                   <a
-                    href={currentSlide.buttonLink || '/contact'}
+                    href="/contact"
                     className={`inline-flex items-center justify-center px-8 py-4 rounded-full font-semibold transition-all shadow-lg ${
                       currentSlide.buttonStyle === 'secondary'
                         ? 'bg-white text-gray-900 hover:bg-gray-100'
