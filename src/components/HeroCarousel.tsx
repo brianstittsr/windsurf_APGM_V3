@@ -497,10 +497,8 @@ export default function HeroCarousel({
                     </p>
                   )}
                   {!currentSlide.hideTitle && (
-                    <h1 className={`main-heading font-bold leading-tight ${currentSlide.textGlow ? 'animate-text-glow' : ''}`} style={{ color: currentSlide.titleColor || '#FFFFFF' }}>
-                      {currentSlide.title.split(' ').map((word: string, i: number) => (
-                        <span key={i} className={`animated-word word-fade-${i + 1}`}>{word} </span>
-                      ))}
+                    <h1 className="main-heading font-bold leading-tight animate-slide-up" style={{ color: currentSlide.titleColor || '#FFFFFF' }}>
+                      {currentSlide.title}
                     </h1>
                   )}
                   {currentSlide.description && (
