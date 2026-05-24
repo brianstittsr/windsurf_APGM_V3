@@ -182,7 +182,7 @@ export default function HeroCarousel({
   const textAlignClass = currentSlide.textAlignment === 'left' ? 'text-left items-start' : currentSlide.textAlignment === 'right' ? 'text-right items-end' : 'text-center items-center';
 
   return (
-    <section id="hero" className="flex items-end relative overflow-hidden" style={{ height: '100vh', width: '100vw', marginTop: '0', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)', maxHeight: '100vh' }}>
+    <section id="hero" className="flex items-end relative overflow-hidden" style={{ height: '70vh', width: '100vw', marginTop: '0', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)', maxHeight: '70vh' }}>
       {/* Slides */}
       {allSlides.map((slide: HeroSlide, index: number) => {
         const isActive = index === currentIndex;
