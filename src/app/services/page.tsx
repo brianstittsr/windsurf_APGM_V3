@@ -163,7 +163,7 @@ export default function ServicesPage() {
                 size="lg"
                 className="rounded-full px-8 bg-gradient-to-r from-[#AD6269] to-[#8B4A52] text-white hover:opacity-90"
               >
-                <Link href="/book-now-custom">
+                <Link href="/contact">
                   <Calendar className="w-5 h-5 mr-2" />
                   Book Free Consultation
                 </Link>

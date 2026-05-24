@@ -492,7 +492,7 @@ export default function FAQPage() {
                   answers and discuss your permanent makeup goals.
                 </p>
                 <div className="d-flex flex-column flex-sm-row gap-3 justify-content-center">
-                  <a href="/book-now" className="btn btn-primary btn-lg px-4">
+                  <a href="/contact" className="btn btn-primary btn-lg px-4">
                     <i className="fas fa-calendar-plus me-2"></i>
                     Schedule Consultation
                   </a>

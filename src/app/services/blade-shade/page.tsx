@@ -135,7 +135,7 @@ export default function BladeAndShadePage() {
                 variant="secondary"
                 className="rounded-full px-8 bg-white text-[#AD6269] hover:bg-white/90"
               >
-                <Link href="/book-now-custom">
+                <Link href="/contact">
                   <CalendarPlus className="w-5 h-5 mr-2" />
                   Book Free Consultation
                 </Link>
@@ -289,7 +289,7 @@ export default function BladeAndShadePage() {
                   variant="secondary"
                   className="rounded-full px-8 bg-white text-[#AD6269] hover:bg-white/90"
                 >
-                  <Link href="/book-now-custom">
+                  <Link href="/contact">
                     <CalendarPlus className="w-5 h-5 mr-2" />
                     Book Consultation
                   </Link>
