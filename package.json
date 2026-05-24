@@ -18,6 +18,7 @@
     "init-db": "tsx src/scripts/run-init-db.ts",
     "init-facebook-qr": "tsx src/scripts/initializeFacebookReviewsQR.ts",
     "init-google-reviews": "tsx src/scripts/initializeGoogleReviews.ts",
+    "init-google-reviews-env": "tsx src/scripts/initGoogleReviewsFromEnv.ts",
     "create-sample-booking": "tsx src/scripts/createSampleBooking.ts",
     "import-ghl-appointments": "tsx src/scripts/importGHLAppointments.ts",
     "list-ghl-calendars": "tsx src/scripts/listGHLCalendars.ts",
