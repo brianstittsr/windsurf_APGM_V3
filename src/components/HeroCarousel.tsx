@@ -387,10 +387,25 @@ export default function HeroCarousel({
               <>
                 <div className="mb-4">
                   {currentSlide.subtitle && (
-                    <p className={`paragraph-text mb-4 fade-in-1 tracking-[0.3em] uppercase font-medium ${currentSlide.textGlow ? 'animate-text-glow' : ''}`}>
-                      <span style={{ color: currentSlide.subtitleColor || '#AD6269' }}>{currentSlide.subtitle}</span>
+                    <p className="paragraph-text mb-4 fade-in-1 tracking-[0.3em] uppercase font-medium">
+                      <span
+                        className={currentSlide.textGlow ? 'animate-text-glow' : ''}
+                        style={{
+                          color: currentSlide.subtitleColor || '#AD6269',
+                          textShadow: currentSlide.textGlow ? '0 0 20px rgba(255, 255, 255, 0.5), 0 0 40px rgba(255, 255, 255, 0.3)' : undefined
+                        }}
+                      >
+                        {currentSlide.subtitle}
+                      </span>
                       {currentSlide.highlightText && (
-                        <span style={{ color: currentSlide.highlightColor || '#FFFFFF' }}> {currentSlide.highlightText}</span>
+                        <span
+                          className={currentSlide.textGlow ? 'animate-text-glow' : ''}
+                          style={{
+                            color: currentSlide.highlightColor || '#FFFFFF',
+                            textShadow: currentSlide.textGlow ? '0 0 20px rgba(255, 255, 255, 0.5), 0 0 40px rgba(255, 255, 255, 0.3)' : undefined
+                          }}
+                        > {currentSlide.highlightText}
+                        </span>
                       )}
                     </p>
                   )}
