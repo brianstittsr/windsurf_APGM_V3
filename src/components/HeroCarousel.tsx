@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { HeroSlide } from '@/types/heroSlide';
 import { HeroSlideService } from '@/services/heroSlideService';
+import { useGoogleReviewSlides } from '@/hooks/useGoogleReviewSlides';
 
 // Hook to detect mobile screen size
 function useIsMobile() {
@@ -32,16 +33,32 @@ interface HeroCarouselProps {
   slides?: HeroSlide[];
   autoPlay?: boolean;
   interval?: number;
+  enableDynamicReviews?: boolean;
+  maxReviewSlides?: number;
 }
 
-export default function HeroCarousel({ slides: propSlides, autoPlay = true, interval = 5000 }: HeroCarouselProps) {
-  const [slides, setSlides] = useState<HeroSlide[]>(propSlides || []);
+export default function HeroCarousel({ 
+  slides: propSlides, 
+  autoPlay = true, 
+  interval = 5000,
+  enableDynamicReviews = true,
+  maxReviewSlides = 5
+}: HeroCarouselProps) {
+  const [regularSlides, setRegularSlides] = useState<HeroSlide[]>([]);
+  const [allSlides, setAllSlides] = useState<HeroSlide[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [previousIndex, setPreviousIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [loading, setLoading] = useState(!propSlides);
+  const [loadingRegular, setLoadingRegular] = useState(!propSlides);
   const [currentTransition, setCurrentTransition] = useState<TransitionType>('fade');
   const isMobile = useIsMobile();
+  
+  // Fetch dynamic Google Review slides
+  const { reviewSlides, loading: loadingReviews } = useGoogleReviewSlides({
+    maxReviews: maxReviewSlides,
+    minRating: 4,
+    enabled: enableDynamicReviews && !propSlides, // Only fetch if not using prop slides
+  });
   
   // Pick a random transition for each slide change
   const pickRandomTransition = useCallback(() => {
@@ -49,20 +66,40 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
     setCurrentTransition(TRANSITIONS[randomIndex]);
   }, []);
 
+  // Load regular slides from Firestore
   useEffect(() => {
-    if (!propSlides) {
-      loadSlides();
+    if (propSlides) {
+      setRegularSlides(propSlides);
+      setLoadingRegular(false);
+    } else {
+      loadRegularSlides();
     }
   }, [propSlides]);
 
-  const loadSlides = async () => {
+  // Merge regular slides with review slides
+  useEffect(() => {
+    // Filter out any hardcoded google-review slides from regular slides
+    // (they will be replaced by dynamic ones)
+    const filteredRegularSlides = regularSlides.filter(
+      slide => slide.styleType !== 'google-review' || slide.id?.startsWith('custom-')
+    );
+    
+    // Combine and sort by order
+    const combined = [...filteredRegularSlides, ...reviewSlides].sort(
+      (a, b) => (a.order || 0) - (b.order || 0)
+    );
+    
+    setAllSlides(combined);
+  }, [regularSlides, reviewSlides]);
+
+  const loadRegularSlides = async () => {
     try {
       const activeSlides = await HeroSlideService.getActiveSlides();
       if (activeSlides.length > 0) {
-        setSlides(activeSlides);
+        setRegularSlides(activeSlides);
       } else {
         // Default slide if none configured
-        setSlides([{
+        setRegularSlides([{
           id: 'default',
           title: 'WAKE UP FLAWLESS EVERY DAY!',
           subtitle: 'SOFT NATURAL',
@@ -82,7 +119,7 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
     } catch (error) {
       console.error('Error loading hero slides:', error);
       // Fallback to default
-      setSlides([{
+      setRegularSlides([{
         id: 'default',
         title: 'WAKE UP FLAWLESS EVERY DAY!',
         subtitle: 'SOFT NATURAL',
@@ -99,9 +136,12 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
         updatedAt: new Date()
       }]);
     } finally {
-      setLoading(false);
+      setLoadingRegular(false);
     }
   };
+  
+  // Combined loading state
+  const loading = loadingRegular || loadingReviews;
 
   const goToSlide = useCallback((index: number) => {
     if (isTransitioning || index === currentIndex) return;
@@ -113,20 +153,20 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
   }, [currentIndex, isTransitioning, pickRandomTransition]);
 
   const nextSlide = useCallback(() => {
-    const next = (currentIndex + 1) % slides.length;
+    const next = (currentIndex + 1) % allSlides.length;
     goToSlide(next);
-  }, [currentIndex, slides.length, goToSlide]);
+  }, [currentIndex, allSlides.length, goToSlide]);
 
   const prevSlide = useCallback(() => {
-    const prev = (currentIndex - 1 + slides.length) % slides.length;
+    const prev = (currentIndex - 1 + allSlides.length) % allSlides.length;
     goToSlide(prev);
-  }, [currentIndex, slides.length, goToSlide]);
+  }, [currentIndex, allSlides.length, goToSlide]);
 
   useEffect(() => {
-    if (!autoPlay || slides.length <= 1) return;
+    if (!autoPlay || allSlides.length <= 1) return;
     const timer = setInterval(nextSlide, interval);
     return () => clearInterval(timer);
-  }, [autoPlay, interval, nextSlide, slides.length]);
+  }, [autoPlay, interval, nextSlide, allSlides.length]);
 
   if (loading) {
     return (
@@ -136,15 +176,15 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
     );
   }
 
-  if (slides.length === 0) return null;
+  if (allSlides.length === 0) return null;
 
-  const currentSlide = slides[currentIndex];
+  const currentSlide = allSlides[currentIndex];
   const textAlignClass = currentSlide.textAlignment === 'left' ? 'text-left items-start' : currentSlide.textAlignment === 'right' ? 'text-right items-end' : 'text-center items-center';
 
   return (
     <section id="hero" className="flex items-center relative overflow-hidden" style={{ height: '100vh', width: '100vw', marginTop: '0', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}>
       {/* Slides */}
-      {slides.map((slide, index) => {
+      {allSlides.map((slide: HeroSlide, index: number) => {
         const isActive = index === currentIndex;
         const isPrevious = index === previousIndex && isTransitioning;
         
@@ -329,7 +369,7 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
                   )}
                   {!currentSlide.hideTitle && (
                     <h1 className="main-heading font-bold text-white leading-tight">
-                      {currentSlide.title.split(' ').map((word, i) => (
+                      {currentSlide.title.split(' ').map((word: string, i: number) => (
                         <span key={i} className={`animated-word word-fade-${i + 1}`}>{word} </span>
                       ))}
                     </h1>
@@ -349,7 +389,7 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
       </div>
 
       {/* Navigation Arrows */}
-      {slides.length > 1 && (
+      {allSlides.length > 1 && (
         <>
           <button
             onClick={prevSlide}
@@ -369,9 +409,9 @@ export default function HeroCarousel({ slides: propSlides, autoPlay = true, inte
       )}
 
       {/* Dots Navigation */}
-      {slides.length > 1 && (
+      {allSlides.length > 1 && (
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex gap-2">
-          {slides.map((_, index) => (
+          {allSlides.map((_: HeroSlide, index: number) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
