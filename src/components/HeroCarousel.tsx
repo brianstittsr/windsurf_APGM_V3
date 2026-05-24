@@ -497,7 +497,11 @@ export default function HeroCarousel({
                     </p>
                   )}
                   {!currentSlide.hideTitle && (
-                    <h1 className="main-heading font-bold leading-tight animate-slide-up" style={{ color: currentSlide.titleColor || '#FFFFFF' }}>
+                    <h1
+                      key={`title-${currentIndex}-${currentSlide.id}`}
+                      className="main-heading font-bold leading-tight animate-slide-up"
+                      style={{ color: currentSlide.titleColor || '#FFFFFF' }}
+                    >
                       {currentSlide.title}
                     </h1>
                   )}
