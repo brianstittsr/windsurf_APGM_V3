@@ -240,7 +240,7 @@ export default function GalleryPage() {
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
-                  href="/book-now-custom"
+                  href="/contact"
                   className="group inline-flex items-center gap-3 bg-gradient-to-r from-[#AD6269] to-[#8B4A52] text-white px-8 py-4 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                 >
                   Schedule Consultation
