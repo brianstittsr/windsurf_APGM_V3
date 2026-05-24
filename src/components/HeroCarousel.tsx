@@ -182,7 +182,7 @@ export default function HeroCarousel({
   const textAlignClass = currentSlide.textAlignment === 'left' ? 'text-left items-start' : currentSlide.textAlignment === 'right' ? 'text-right items-end' : 'text-center items-center';
 
   return (
-    <section id="hero" className="flex items-center relative overflow-hidden" style={{ height: '100vh', width: '100vw', marginTop: '0', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}>
+    <section id="hero" className="flex items-end relative overflow-hidden" style={{ height: '100vh', width: '100vw', marginTop: '0', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)', maxHeight: '100vh' }}>
       {/* Slides */}
       {allSlides.map((slide: HeroSlide, index: number) => {
         const isActive = index === currentIndex;
@@ -298,8 +298,8 @@ export default function HeroCarousel({
       })}
 
       {/* Content */}
-      <div className="container mx-auto px-4 py-5 relative z-20">
-        <div className={`flex flex-col ${textAlignClass} justify-center min-h-[60vh]`}>
+      <div className="container mx-auto px-4 pb-16 pt-5 relative z-20">
+        <div className={`flex flex-col ${textAlignClass} justify-end`}>
           <div className="w-full lg:w-2/3 mx-auto">
             
             {/* Google Review Style - Redesigned */}
