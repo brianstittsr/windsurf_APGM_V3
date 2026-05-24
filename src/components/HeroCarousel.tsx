@@ -550,6 +550,23 @@ export default function HeroCarousel({
         </>
       )}
 
+      {/* Reviews Button - Top Right */}
+      {enableDynamicReviews && reviewSlides.length > 0 && (
+        <button
+          onClick={() => {
+            const firstReviewIndex = allSlides.findIndex(slide => slide.styleType === 'google-review');
+            if (firstReviewIndex !== -1) {
+              goToSlide(firstReviewIndex);
+            }
+          }}
+          className="absolute top-24 right-4 z-30 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all flex items-center gap-2 text-sm font-semibold text-[#AD6269]"
+          aria-label="View reviews"
+        >
+          <i className="fas fa-star text-yellow-500"></i>
+          <span>Reviews</span>
+        </button>
+      )}
+
       {/* Dots Navigation */}
       {allSlides.length > 1 && (
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex gap-2">
