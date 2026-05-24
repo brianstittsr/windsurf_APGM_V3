@@ -121,8 +121,14 @@ export default function ContactPage() {
 
       <main className="pt-20">
         {/* Hero Section */}
-        <section className="py-16 md:py-24 bg-gradient-to-br from-[#AD6269] to-[#8B4A52]">
-          <div className="container mx-auto px-4">
+        <section className="py-16 md:py-24 bg-gradient-to-br from-[#AD6269] to-[#8B4A52] animate-gradient relative overflow-hidden">
+          {/* Floating Particles */}
+          <div className="absolute inset-0 pointer-events-none">
+            {[...Array(10)].map((_, i) => (
+              <div key={i} className="floating-particle" />
+            ))}
+          </div>
+          <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-4xl mx-auto text-center">
               <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mb-6">
                 <MessageCircle className="w-10 h-10 text-white" />
