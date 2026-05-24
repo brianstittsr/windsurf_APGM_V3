@@ -265,17 +265,6 @@ export default function PermanentEyelinerPage() {
                     Book Consultation
                   </Link>
                 </Button>
-                <Button
-                  asChild
-                  size="lg"
-                  variant="outline"
-                  className="rounded-full px-8 border-white text-white hover:bg-white/10"
-                >
-                  <Link href="/contact">
-                    <Phone className="w-5 h-5 mr-2" />
-                    Contact Us
-                  </Link>
-                </Button>
               </div>
               <p className="mt-6 text-white/80 flex items-center justify-center gap-2">
                 <MapPin className="w-4 h-4" />
