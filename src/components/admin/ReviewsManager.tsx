@@ -692,10 +692,19 @@ GOOGLE_PLACE_ID=${placeDetails?.placeId || 'your_place_id_here'}`}
 
       {/* Add/Edit Review Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="review-modal-title"
+          aria-describedby="review-modal-description"
+        >
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <h3 
+                id="review-modal-title"
+                className="text-lg font-semibold text-gray-900 flex items-center gap-2"
+              >
                 <i className="fas fa-star text-[#AD6269]"></i>
                 {editingReview ? 'Edit Review' : 'Add New Review'}
               </h3>
@@ -707,10 +716,14 @@ GOOGLE_PLACE_ID=${placeDetails?.placeId || 'your_place_id_here'}`}
                   setEditingReview(null);
                   resetForm();
                 }}
+                aria-label="Close modal"
               >
                 <i className="fas fa-times"></i>
               </button>
             </div>
+            <p id="review-modal-description" className="sr-only">
+              {editingReview ? 'Update the review details below.' : 'Add a new customer review to display on your website.'}
+            </p>
             <form onSubmit={handleSubmit}>
               <div className="p-6 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
