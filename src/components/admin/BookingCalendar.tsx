@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, addDoc, Timestamp } from 'firebase/firestore';
 import { getDb } from '../../lib/firebase';
+import { useServices } from '@/hooks/useFirebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAlertDialog } from '@/components/ui/alert-dialog';
@@ -55,6 +56,7 @@ export default function BookingCalendar() {
   const [creating, setCreating] = useState(false);
   const [calendars, setCalendars] = useState<Array<{id: string, name: string}>>([]);
   const [loadingCalendars, setLoadingCalendars] = useState(false);
+  const { services, loading: servicesLoading } = useServices();
   const { showAlert, showConfirm, AlertDialogComponent } = useAlertDialog();
   const [newAppointment, setNewAppointment] = useState({
     name: '',
@@ -1160,14 +1162,14 @@ export default function BookingCalendar() {
                     value={historicalBooking.serviceName}
                     onChange={(e) => setHistoricalBooking({...historicalBooking, serviceName: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269]"
+                    disabled={servicesLoading}
                   >
-                    <option value="Microblading">Microblading - $500</option>
-                    <option value="Powder Brows">Powder Brows - $550</option>
-                    <option value="Combo Brows">Combo Brows - $600</option>
-                    <option value="Lip Blush">Lip Blush - $450</option>
-                    <option value="Eyeliner">Eyeliner - $400</option>
-                    <option value="Touch Up">Touch Up - $200</option>
-                    <option value="Consultation">Consultation - $0</option>
+                    <option value="">Select a service...</option>
+                    {services?.map((service) => (
+                      <option key={service.id} value={service.name}>
+                        {service.name} - ${service.price}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
