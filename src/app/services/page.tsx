@@ -1,4 +1,6 @@
-import { Metadata } from 'next';
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Header from '@/components/Header';
@@ -6,73 +8,45 @@ import Footer from '@/components/Footer';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Clock, Heart, Calendar, ArrowRight, Medal, Flag, Sparkles } from 'lucide-react';
-
-export const metadata: Metadata = {
-  title: 'Permanent Makeup Services Raleigh NC',
-  description: 'Explore our permanent makeup services in Raleigh, NC. Microblading, ombré brows, combo brows, lip blushing, and permanent eyeliner. Book your free consultation today!',
-  alternates: {
-    canonical: 'https://www.aprettygirlmatter.com/services',
-  },
-};
-
-const services = [
-  {
-    name: 'Microblading',
-    slug: 'microblading',
-    description: 'Natural-looking eyebrow enhancement using fine hair-like strokes that mimic real brow hairs.',
-    image: '/images/services/STROKES.png',
-    duration: '2-3 hours',
-    healing: '4-6 weeks',
-    lasts: '1-3 years',
-  },
-  {
-    name: 'Ombré Powder Brows',
-    slug: 'ombre-brows',
-    description: 'Soft, natural gradient effect that gives a powdered makeup look. Perfect for all skin types.',
-    image: '/images/services/OMBRE.png',
-    duration: '2-3 hours',
-    healing: '4-6 weeks',
-    lasts: '1-3 years',
-  },
-  {
-    name: 'Combo Brows',
-    slug: 'combo-brows',
-    description: 'The best of both worlds - microblading strokes combined with powder shading for a fuller look.',
-    image: '/images/services/COMBO.png',
-    duration: '2.5-3 hours',
-    healing: '4-6 weeks',
-    lasts: '1-3 years',
-  },
-  {
-    name: 'Blade & Shade',
-    slug: 'blade-shade',
-    description: 'Microblading strokes with added shading for enhanced texture, depth, and a bolder, more defined look.',
-    image: '/images/services/BLADE+SHADE.png',
-    duration: '3-4 hours',
-    healing: '4-6 weeks',
-    lasts: '1-3 years',
-  },
-  {
-    name: 'Lip Blushing',
-    slug: 'lip-blushing',
-    description: 'Enhance your natural lip color and define lip shape with this beautiful permanent lip tattoo.',
-    image: '/images/services/lipsBlush.png',
-    duration: '2-3 hours',
-    healing: '4-6 weeks',
-    lasts: '2-5 years',
-  },
-  {
-    name: 'Permanent Eyeliner',
-    slug: 'permanent-eyeliner',
-    description: 'Wake up with perfectly defined eyes every day. Lash line enhancement for a natural or dramatic look.',
-    image: '/images/services/eyeliner_enhancement.png',
-    duration: '1.5-2 hours',
-    healing: '4-6 weeks',
-    lasts: '2-5 years',
-  },
-];
+import { ServiceService } from '@/services/database';
+import { Service } from '@/types/database';
 
 export default function ServicesPage() {
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadServices();
+  }, []);
+
+  const loadServices = async () => {
+    try {
+      const servicesData = await ServiceService.getAllServices();
+      setServices(servicesData.filter(s => s.isActive));
+    } catch (error) {
+      console.error('Error loading services:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateSlug = (name: string) => {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  };
+
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <main className="pt-16">
+          <div className="container mx-auto px-4 py-12">
+            <div className="text-center">Loading services...</div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
   return (
     <>
       <Header />
@@ -99,10 +73,10 @@ export default function ServicesPage() {
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {services.map((service) => (
-                <Card key={service.slug} className="h-full border-0 shadow-lg overflow-hidden flex flex-col">
+                <Card key={service.id} className="h-full border-0 shadow-lg overflow-hidden flex flex-col">
                   <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
                     <Image
-                      src={service.image}
+                      src={service.image || '/images/placeholder.png'}
                       alt={service.name}
                       fill
                       className="object-contain p-4"
@@ -123,11 +97,7 @@ export default function ServicesPage() {
                       </span>
                       <span className="inline-flex items-center gap-1 px-2 py-1 bg-muted text-muted-foreground text-xs rounded-md">
                         <Heart className="w-3 h-3" />
-                        Heals in {service.healing}
-                      </span>
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-muted text-muted-foreground text-xs rounded-md">
-                        <Calendar className="w-3 h-3" />
-                        Lasts {service.lasts}
+                        ${service.price}
                       </span>
                     </div>
                   </CardContent>
@@ -136,7 +106,7 @@ export default function ServicesPage() {
                       asChild
                       className="w-full rounded-full bg-gradient-to-r from-[#AD6269] to-[#8B4A52] text-white hover:opacity-90"
                     >
-                      <Link href={`/services/${service.slug}`}>
+                      <Link href={`/services/${generateSlug(service.name)}`}>
                         Learn More
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Link>
