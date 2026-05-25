@@ -85,20 +85,37 @@ export default function ServicesManager() {
         order: Number(formData.order)
       };
 
+      console.log('Service data to save:', serviceData);
+
       if (editingService) {
         // Update existing service
+        console.log('Updating service:', editingService.id);
         await ServiceService.updateService(editingService.id, serviceData);
+        console.log('Service updated successfully');
       } else {
         // Create new service
-        await ServiceService.createService(serviceData);
+        console.log('Creating new service...');
+        const newServiceId = await ServiceService.createService(serviceData);
+        console.log('Service created successfully with ID:', newServiceId);
       }
 
       await loadServices();
       resetForm();
       setShowForm(false);
+      await showAlert({ 
+        title: 'Success', 
+        description: editingService ? 'Service updated successfully!' : 'Service created successfully!', 
+        variant: 'success' 
+      });
     } catch (err) {
       setError('Failed to save service');
       console.error('Error saving service:', err);
+      console.error('Error details:', JSON.stringify(err, null, 2));
+      await showAlert({ 
+        title: 'Error', 
+        description: `Failed to save service: ${err instanceof Error ? err.message : 'Unknown error'}`, 
+        variant: 'destructive' 
+      });
     } finally {
       setUploading(false);
     }
