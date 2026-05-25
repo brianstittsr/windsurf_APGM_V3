@@ -183,6 +183,47 @@ export default function HeroCarousel({
 
   return (
     <section id="hero" className="flex items-end relative overflow-hidden" style={{ height: '90vh', width: '100vw', marginTop: '0', marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)', maxHeight: '90vh' }}>
+      {/* Google Reviews Badge - Top of all slides */}
+      <div className="absolute top-4 left-0 right-0 z-30 flex justify-center">
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl px-6 py-3 shadow-lg flex items-center gap-4">
+          {/* Google Logo */}
+          <div className="flex items-center gap-2 border-r border-gray-200 pr-4">
+            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+              <span className="text-xl font-bold text-gray-600">G</span>
+            </div>
+            <div className="text-xs font-semibold text-gray-500 tracking-wider">MONITOR</div>
+          </div>
+          
+          {/* 5 Star Rating */}
+          <div className="flex flex-col items-center">
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <svg key={star} className="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+              ))}
+            </div>
+            <p className="text-sm font-medium text-gray-800">RATED 5 STARS ON GOOGLE</p>
+            <p className="text-xs text-gray-500">Trusted by women across Raleigh</p>
+          </div>
+          
+          {/* Ranked Badge */}
+          <div className="border-l border-gray-200 pl-4 flex items-center gap-2">
+            <div className="text-center">
+              <div className="bg-black text-white text-xs font-bold px-2 py-0.5 rounded">RANKED #2</div>
+              <div className="text-[10px] text-gray-600 mt-0.5">BusinessGuru<br/>Raleigh, NC 2026</div>
+            </div>
+            <div className="text-[10px] text-gray-400 text-center">
+              <div>Powered by</div>
+              <div className="flex items-center gap-0.5 justify-center">
+                <span className="font-semibold text-gray-600">G</span>
+                <span className="text-gray-400">Reviews</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Slides */}
       {allSlides.map((slide: HeroSlide, index: number) => {
         const isActive = index === currentIndex;
@@ -299,47 +340,6 @@ export default function HeroCarousel({
 
       {/* Content */}
       <div className="container mx-auto px-4 pb-20 pt-16 relative z-20">
-        {/* Google Reviews Badge - Top of all slides */}
-        <div className="flex justify-center mb-6">
-          <div className="bg-white/95 backdrop-blur-sm rounded-xl px-6 py-3 shadow-lg flex items-center gap-4">
-            {/* Google Logo */}
-            <div className="flex items-center gap-2 border-r border-gray-200 pr-4">
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                <span className="text-xl font-bold text-gray-600">G</span>
-              </div>
-              <div className="text-xs font-semibold text-gray-500 tracking-wider">MONITOR</div>
-            </div>
-            
-            {/* 5 Star Rating */}
-            <div className="flex flex-col items-center">
-              <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <svg key={star} className="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
-              </div>
-              <p className="text-sm font-medium text-gray-800">RATED 5 STARS ON GOOGLE</p>
-              <p className="text-xs text-gray-500">Trusted by women across Raleigh</p>
-            </div>
-            
-            {/* Ranked Badge */}
-            <div className="border-l border-gray-200 pl-4 flex items-center gap-2">
-              <div className="text-center">
-                <div className="bg-black text-white text-xs font-bold px-2 py-0.5 rounded">RANKED #2</div>
-                <div className="text-[10px] text-gray-600 mt-0.5">BusinessGuru<br/>Raleigh, NC 2026</div>
-              </div>
-              <div className="text-[10px] text-gray-400 text-center">
-                <div>Powered by</div>
-                <div className="flex items-center gap-0.5 justify-center">
-                  <span className="font-semibold text-gray-600">G</span>
-                  <span className="text-gray-400">Reviews</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div className={`flex flex-col ${textAlignClass} justify-center`}>
           <div className="w-full lg:w-2/3 mx-auto">
             
