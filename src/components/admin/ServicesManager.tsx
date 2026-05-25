@@ -3,12 +3,9 @@
 import { useState, useEffect } from 'react';
 import { ServiceService } from '@/services/database';
 import { Service } from '@/types/database';
-import { storage } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAlertDialog } from '@/components/ui/alert-dialog';
-import { convertFileToWebP, isWebP, formatFileSize, calculateSavings } from '@/lib/imageConverter';
 
 interface ServiceFormData {
   name: string;
@@ -20,7 +17,6 @@ interface ServiceFormData {
   requirements: string[];
   contraindications: string[];
   order: number;
-  image: string;
 }
 
 // Default form data structure
@@ -33,8 +29,7 @@ const defaultFormData: ServiceFormData = {
   isActive: true,
   requirements: [],
   contraindications: [],
-  order: 0,
-  image: ''
+  order: 0
 };
 
 export default function ServicesManager() {
@@ -44,7 +39,6 @@ export default function ServicesManager() {
   const [showForm, setShowForm] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [formData, setFormData] = useState<ServiceFormData>(defaultFormData);
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [newRequirement, setNewRequirement] = useState('');
   const [newContraindication, setNewContraindication] = useState('');
@@ -72,42 +66,6 @@ export default function ServicesManager() {
     }
   };
 
-  const handleImageUpload = async (file: File): Promise<string> => {
-    const timestamp = Date.now();
-
-    // Convert to WebP if not already in WebP format
-    let fileToUpload = file;
-    let webpFileName = file.name;
-
-    if (!isWebP(file)) {
-      try {
-        console.log(`Converting ${file.name} to WebP...`);
-        fileToUpload = await convertFileToWebP(file, { quality: 0.85, maxWidth: 1920, maxHeight: 1920 });
-        webpFileName = fileToUpload.name;
-
-        const savings = calculateSavings(file.size, fileToUpload.size);
-        console.log(
-          `WebP conversion: ${formatFileSize(file.size)} → ${formatFileSize(fileToUpload.size)} ` +
-          `(${savings}% smaller)`
-        );
-      } catch (error) {
-        console.error('WebP conversion failed, using original:', error);
-        // Fallback to original file if conversion fails
-        webpFileName = file.name.replace(/\.[^/.]+$/, '.webp');
-      }
-    }
-
-    const fileName = `services/${timestamp}_${webpFileName}`;
-    const storageRef = ref(storage, fileName);
-
-    // Upload with proper content type
-    await uploadBytes(storageRef, fileToUpload, {
-      contentType: 'image/webp'
-    });
-    const downloadURL = await getDownloadURL(storageRef);
-    return downloadURL;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Make sure we have at least the required fields
@@ -120,16 +78,9 @@ export default function ServicesManager() {
     console.log('Submitting service form...', formData);
 
     try {
-      let imageUrl = formData.image;
-
-      // Upload new image if selected
-      if (imageFile) {
-        imageUrl = await handleImageUpload(imageFile);
-      }
-
       const serviceData = {
         ...formData,
-        image: imageUrl,
+        image: '',
         price: Number(formData.price),
         order: Number(formData.order)
       };
@@ -164,8 +115,7 @@ export default function ServicesManager() {
       isActive: service.isActive,
       requirements: service.requirements || [],
       contraindications: service.contraindications || [],
-      order: (service as any).order || 0,
-      image: service.image
+      order: (service as any).order || 0
     });
     setShowForm(true);
   };
@@ -182,17 +132,6 @@ export default function ServicesManager() {
 
     try {
       await ServiceService.deleteService(service.id);
-      
-      // Delete image from storage if it's a Firebase storage URL
-      if (service.image && service.image.includes('firebase')) {
-        try {
-          const imageRef = ref(storage, service.image);
-          await deleteObject(imageRef);
-        } catch (imgError) {
-          console.warn('Could not delete image:', imgError);
-        }
-      }
-
       await showAlert({ title: 'Success', description: 'Service deleted successfully!', variant: 'success' });
       await loadServices();
     } catch (err) {
@@ -204,7 +143,6 @@ export default function ServicesManager() {
   const resetForm = () => {
     setFormData(defaultFormData);
     setEditingService(null);
-    setImageFile(null);
     setNewRequirement('');
     setNewContraindication('');
   };
@@ -473,30 +411,6 @@ export default function ServicesManager() {
                     placeholder="Describe the service in detail..."
                     required
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    <i className="fas fa-image mr-1 text-blue-600"></i>Service Image
-                  </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50">
-                    <input
-                      type="file"
-                      className="w-full text-sm"
-                      accept="image/*"
-                      onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                    />
-                    {formData.image && (
-                      <div className="mt-3 text-center">
-                        <img
-                          src={formData.image}
-                          alt="Current image"
-                          className="inline-block rounded-lg border-2 border-[#AD6269] shadow-sm max-w-[200px] max-h-[200px]"
-                        />
-                        <p className="text-sm text-gray-500 mt-2">Current service image</p>
-                      </div>
-                    )}
-                  </div>
                 </div>
 
                 {/* Requirements */}
