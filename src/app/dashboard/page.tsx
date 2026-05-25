@@ -47,12 +47,9 @@ import FAQsManager from '../../components/admin/FAQsManager';
 import GHLSyncStatus from '../../components/admin/GHLSyncStatus';
 import { ProcessCarouselManager } from '@/components/admin/ProcessCarouselManager';
 import GoogleCalendarIntegration from '../../components/admin/GoogleCalendarIntegration';
-import AlexaSkillsManager from '../../components/admin/AlexaSkillsManager';
-import OpenClawManager from '../../components/admin/OpenClawManager';
-import OpenClawWizardManager from '../../components/admin/OpenClawWizardManager';
 import { cn } from '@/lib/utils';
 
-type TabType = 'overview' | 'users' | 'clients' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'ghl-migration' | 'ghl-workflow-builder' | 'boldsign' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'alexa' | 'openclaw' | 'openclaw-wizard' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation' | 'hero-carousel' | 'documents' | 'canva' | 'faqs' | 'process-carousel' | 'integrations';
+type TabType = 'overview' | 'users' | 'clients' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'ghl-migration' | 'ghl-workflow-builder' | 'boldsign' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation' | 'hero-carousel' | 'documents' | 'canva' | 'faqs' | 'process-carousel' | 'integrations';
 
 interface BookingMetrics {
   total: number;
@@ -160,9 +157,6 @@ export default function DashboardPage() {
       'bmad-orchestrator': 'BMAD Orchestrator',
       'availability': 'Artist Availability',
       'calendar': 'Booking Calendar',
-      'alexa': 'Alexa Skills',
-      'openclaw': 'OpenClaw AI',
-      'openclaw-wizard': 'AI Wizard Journeys',
       'qrcodes': 'QR Code Management',
       'seo-competitor': 'SEO Competitor Analysis',
       'seo-pagespeed': 'SEO PageSpeed Analysis',
@@ -539,12 +533,6 @@ export default function DashboardPage() {
         return <ArtistAvailabilityManager />;
       case 'calendar':
         return <BookingCalendar />;
-      case 'alexa':
-        return <AlexaSkillsManager />;
-      case 'openclaw':
-        return <OpenClawManager />;
-      case 'openclaw-wizard':
-        return <OpenClawWizardManager />;
       case 'qrcodes':
         return <QRCodeManager />;
       case 'seo-competitor':
