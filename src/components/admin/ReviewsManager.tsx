@@ -6,6 +6,9 @@ import { getDb } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Star, Search, RefreshCw, MapPin, AlertCircle, CheckCircle, User, Settings, Globe } from 'lucide-react';
 
 interface Review {
   id: string;
@@ -21,7 +24,36 @@ interface Review {
   updatedAt: Date;
 }
 
+interface GooglePlaceResult {
+  placeId: string;
+  name: string;
+  formattedAddress: string;
+  rating?: number;
+  userRatingsTotal?: number;
+}
+
+interface GoogleReview {
+  authorName: string;
+  profilePhotoUrl?: string;
+  rating: number;
+  text: string;
+  relativeTimeDescription: string;
+  time: number;
+}
+
+interface GooglePlaceDetails {
+  placeId: string;
+  name: string;
+  formattedAddress: string;
+  rating: number;
+  userRatingsTotal: number;
+  reviews: GoogleReview[];
+}
+
 export default function ReviewsManager() {
+  const [activeTab, setActiveTab] = useState<'customer' | 'google'>('customer');
+  
+  // Customer Reviews State
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -37,6 +69,17 @@ export default function ReviewsManager() {
     isVisible: true
   });
 
+  // Google Reviews State
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState<string | null>(null);
+  const [googleSuccess, setGoogleSuccess] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('A Pretty Girl Matter');
+  const [searchResults, setSearchResults] = useState<GooglePlaceResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [placeDetails, setPlaceDetails] = useState<GooglePlaceDetails | null>(null);
+  const [googleReviews, setGoogleReviews] = useState<GoogleReview[]>([]);
+  const [isGoogleConfigured, setIsGoogleConfigured] = useState(false);
+
   const services = [
     'Microblading Eyebrows',
     'Semi-Permanent Eyeliner',
@@ -48,7 +91,71 @@ export default function ReviewsManager() {
 
   useEffect(() => {
     loadReviews();
+    checkGoogleConfiguration();
   }, []);
+
+  const checkGoogleConfiguration = async () => {
+    try {
+      const response = await fetch('/api/google-reviews');
+      const data = await response.json();
+      setIsGoogleConfigured(data.success && !data.notConfigured);
+      if (data.success && data.data) {
+        setPlaceDetails(data.data);
+        setGoogleReviews(data.data.reviews || []);
+      }
+    } catch (err) {
+      console.error('Error checking Google configuration:', err);
+    }
+  };
+
+  const searchGooglePlaces = async () => {
+    if (!searchQuery.trim()) return;
+    setSearching(true);
+    setGoogleError(null);
+    try {
+      const response = await fetch('/api/reviews/places', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'search', query: searchQuery })
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSearchResults(data.results || []);
+      } else {
+        setGoogleError(data.error || 'Search failed');
+      }
+    } catch (err: any) {
+      setGoogleError(err.message || 'Failed to search');
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const loadGoogleReviews = async (placeId: string) => {
+    setGoogleLoading(true);
+    setGoogleError(null);
+    try {
+      const response = await fetch('/api/reviews/places', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'details', placeId })
+      });
+      const data = await response.json();
+      if (data.success) {
+        setPlaceDetails(data.details);
+        setGoogleReviews(data.details?.reviews || []);
+        setIsGoogleConfigured(true);
+        setGoogleSuccess(`Loaded ${data.details?.reviews?.length || 0} Google reviews`);
+        setTimeout(() => setGoogleSuccess(null), 3000);
+      } else {
+        setGoogleError(data.error || 'Failed to load reviews');
+      }
+    } catch (err: any) {
+      setGoogleError(err.message || 'Failed to load reviews');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const loadReviews = async () => {
     try {
@@ -188,29 +295,83 @@ export default function ReviewsManager() {
     );
   }
 
+  const renderGoogleStars = (rating: number) => (
+    <div className="flex gap-0.5">
+      {[...Array(5)].map((_, i) => (
+        <Star
+          key={i}
+          className={`w-4 h-4 ${i < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+        />
+      ))}
+    </div>
+  );
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-            <i className="fas fa-star text-[#AD6269]"></i>Customer Reviews
-          </h2>
-          <p className="text-gray-500 text-sm mt-1">Manage customer reviews and testimonials</p>
+      {/* Header with Tabs */}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <i className="fas fa-star text-[#AD6269]"></i>Review Management
+            </h2>
+            <p className="text-gray-500 text-sm mt-1">Manage customer reviews and Google Business Profile integration</p>
+          </div>
         </div>
-        <Button
-          onClick={() => {
-            resetForm();
-            setEditingReview(null);
-            setShowModal(true);
-          }}
-          className="bg-[#AD6269] hover:bg-[#9d5860]"
-        >
-          <i className="fas fa-plus mr-2"></i>Add Review
-        </Button>
+
+        {/* Tabs */}
+        <div className="flex gap-2 border-b border-gray-200">
+          <button
+            onClick={() => setActiveTab('customer')}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === 'customer'
+                ? 'border-[#AD6269] text-[#AD6269]'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <i className="fas fa-users"></i>
+            Customer Reviews
+            <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
+              {reviews.length}
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveTab('google')}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === 'google'
+                ? 'border-[#AD6269] text-[#AD6269]'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <i className="fab fa-google"></i>
+            Google Reviews
+            {isGoogleConfigured && (
+              <span className="bg-green-100 text-green-600 px-2 py-0.5 rounded-full text-xs">
+                {googleReviews.length}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* Reviews Grid */}
+      {/* Customer Reviews Tab */}
+      {activeTab === 'customer' && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <p className="text-gray-600">Manage customer testimonials and reviews displayed on your website.</p>
+            <Button
+              onClick={() => {
+                resetForm();
+                setEditingReview(null);
+                setShowModal(true);
+              }}
+              className="bg-[#AD6269] hover:bg-[#9d5860]"
+            >
+              <i className="fas fa-plus mr-2"></i>Add Review
+            </Button>
+          </div>
+
+          {/* Reviews Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {reviews.map((review) => (
           <div key={review.id} className="bg-white rounded-xl border border-gray-200 shadow-sm relative overflow-hidden hover:shadow-md transition-shadow">
@@ -322,6 +483,208 @@ export default function ReviewsManager() {
           <i className="fas fa-star text-5xl text-gray-300 mb-4"></i>
           <h3 className="text-lg font-medium text-gray-600 mb-2">No reviews yet</h3>
           <p className="text-gray-500">Add your first customer review to get started.</p>
+        </div>
+      )}
+
+      {/* Google Reviews Tab */}
+      {activeTab === 'google' && (
+        <div className="space-y-6">
+          {/* Status Alert */}
+          {isGoogleConfigured ? (
+            <Alert className="bg-green-50 border-green-200">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-800">
+                Google Reviews is configured and active. {googleReviews.length} reviews loaded.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <Alert className="bg-yellow-50 border-yellow-200">
+              <AlertCircle className="h-4 w-4 text-yellow-600" />
+              <AlertDescription className="text-yellow-800">
+                Google Reviews not configured. Search for your business below to get started.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Search Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Search className="w-5 h-5" />
+                Search for Your Business
+              </CardTitle>
+              <CardDescription>
+                Find your business on Google to get the Place ID and reviews.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter business name (e.g., A Pretty Girl Matter)"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && searchGooglePlaces()}
+                />
+                <Button onClick={searchGooglePlaces} disabled={searching}>
+                  {searching ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                  Search
+                </Button>
+              </div>
+
+              {/* Search Results */}
+              {searchResults.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-700">Select your business:</p>
+                  {searchResults.map((result) => (
+                    <Card 
+                      key={result.placeId} 
+                      className="cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => loadGoogleReviews(result.placeId)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <MapPin className="w-5 h-5 text-pink-600 mt-0.5" />
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-900">{result.name}</h4>
+                            <p className="text-sm text-gray-500">{result.formattedAddress}</p>
+                            {result.rating && (
+                              <div className="flex items-center gap-2 mt-1">
+                                {renderGoogleStars(Math.round(result.rating))}
+                                <span className="text-sm text-gray-600">
+                                  {result.rating} ({result.userRatingsTotal} reviews)
+                                </span>
+                              </div>
+                            )}
+                            <p className="text-xs text-gray-400 mt-1">Place ID: {result.placeId}</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Error/Success Messages */}
+          {googleError && (
+            <Alert className="bg-red-50 border-red-200">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">{googleError}</AlertDescription>
+            </Alert>
+          )}
+          {googleSuccess && (
+            <Alert className="bg-green-50 border-green-200">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-800">{googleSuccess}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* Reviews Section */}
+          {placeDetails && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>{placeDetails.name}</CardTitle>
+                    <CardDescription>{placeDetails.formattedAddress}</CardDescription>
+                  </div>
+                  <div className="text-right">
+                    <div className="flex items-center gap-2 justify-end">
+                      {renderGoogleStars(Math.round(placeDetails.rating))}
+                      <span className="text-2xl font-bold">{placeDetails.rating.toFixed(1)}</span>
+                    </div>
+                    <p className="text-sm text-gray-500">{placeDetails.userRatingsTotal} reviews</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-gray-900">
+                    Latest Reviews ({googleReviews.length} showing)
+                  </h3>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => placeDetails && loadGoogleReviews(placeDetails.placeId)}
+                    disabled={googleLoading}
+                  >
+                    <RefreshCw className={`w-4 h-4 mr-2 ${googleLoading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                </div>
+
+                <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                  {googleReviews.map((review, index) => (
+                    <Card key={index} className="bg-gray-50">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          {review.profilePhotoUrl ? (
+                            <img 
+                              src={review.profilePhotoUrl} 
+                              alt={review.authorName}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center">
+                              <User className="w-5 h-5 text-pink-600" />
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-gray-900">{review.authorName}</span>
+                              {renderGoogleStars(review.rating)}
+                            </div>
+                            <p className="text-sm text-gray-500">{review.relativeTimeDescription}</p>
+                            <p className="text-gray-700 mt-2">{review.text}</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Environment Variables Info */}
+          <Card className="bg-blue-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="text-blue-900 text-lg flex items-center gap-2">
+                <Settings className="w-5 h-5" />
+                Environment Variables
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-blue-800 mb-2">
+                To permanently configure Google Reviews, add these to your <code>.env.local</code> file:
+              </p>
+              <pre className="bg-blue-100 p-3 rounded text-sm text-blue-900 overflow-x-auto">
+{`GOOGLE_PLACES_API_KEY=your_api_key_here
+GOOGLE_PLACE_ID=${placeDetails?.placeId || 'your_place_id_here'}`}
+              </pre>
+              <div className="flex gap-4 mt-3 text-sm">
+                <a 
+                  href="https://console.cloud.google.com/apis/credentials" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-700 hover:underline flex items-center gap-1"
+                >
+                  <Globe className="w-4 h-4" />
+                  Get API Key
+                </a>
+                <a 
+                  href="https://developers.google.com/maps/documentation/places/web-service/overview" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-700 hover:underline flex items-center gap-1"
+                >
+                  <i className="fas fa-book w-4"></i>
+                  Documentation
+                </a>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 
