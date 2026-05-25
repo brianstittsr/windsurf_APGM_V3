@@ -485,6 +485,8 @@ export default function ReviewsManager() {
           <p className="text-gray-500">Add your first customer review to get started.</p>
         </div>
       )}
+        </div>
+      )}
 
       {/* Google Reviews Tab */}
       {activeTab === 'google' && (
