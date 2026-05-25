@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
-import { getDb } from '@/lib/firebase';
-import { ServiceItem } from '@/types/service';
+import { ServiceService } from '@/services/database';
+import { Service } from '@/types/database';
 
 export function useServices() {
-  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -14,19 +13,9 @@ export function useServices() {
         setLoading(true);
         setError(null);
         
-        const servicesRef = collection(getDb(), 'services');
-        const q = query(servicesRef, orderBy('order', 'asc'));
-        const snapshot = await getDocs(q);
-        
-        const servicesData: ServiceItem[] = [];
-        snapshot.forEach((doc) => {
-          servicesData.push({
-            id: doc.id,
-            ...doc.data()
-          } as ServiceItem);
-        });
-        
-        setServices(servicesData);
+        const servicesData = await ServiceService.getAllServices();
+        const activeServices = servicesData.filter(service => service.isActive);
+        setServices(activeServices);
       } catch (err) {
         console.error('Error fetching services:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch services');

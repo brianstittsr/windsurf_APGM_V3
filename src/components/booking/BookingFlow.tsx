@@ -11,15 +11,7 @@ import SignaturePad from './SignaturePad';
 import { useServices } from '@/hooks/useFirebase';
 import { useAvailabilitySystem } from '@/hooks/useAvailabilitySystem';
 import { useAuth } from '@/hooks/useAuth';
-
-interface ServiceItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  duration: string;
-  image: string;
-}
+import { Service } from '@/types/database';
 
 interface ClientProfile {
   firstName: string;
@@ -35,7 +27,7 @@ type BookingStep = 'service' | 'datetime' | 'profile' | 'health' | 'review' | 'p
 
 export default function BookingFlow() {
   const [currentStep, setCurrentStep] = useState<BookingStep>('service');
-  const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTimeBlock, setSelectedTimeBlock] = useState<TimeBlock | null>(null);
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
@@ -103,7 +95,7 @@ export default function BookingFlow() {
     setCurrentWeekStart(newStart);
   };
 
-  const handleServiceSelect = (service: ServiceItem) => {
+  const handleServiceSelect = (service: Service) => {
     setSelectedService(service);
     setCurrentStep('datetime');
   };
@@ -258,7 +250,7 @@ export default function BookingFlow() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {services?.map((service: ServiceItem) => (
+          {services?.map((service: Service) => (
             <button
               key={service.id}
               onClick={() => handleServiceSelect(service)}

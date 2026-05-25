@@ -14,20 +14,12 @@ import { useTimeSlots } from '@/hooks/useTimeSlots';
 import { useAvailabilitySystem } from '@/hooks/useAvailabilitySystem';
 import { useNextAvailableDate } from '@/hooks/useNextAvailableDate';
 import { useServices } from '@/hooks/useFirebase';
+import { Service } from '@/types/database';
 import ClientProfileWizard, { ClientProfileData } from '@/components/ClientProfileWizard';
 import HealthFormWizard, { HealthFormData } from '@/components/HealthFormWizard';
 import CheckoutCart from '@/components/CheckoutCart';
 import MonthlyCalendar from '@/components/booking/MonthlyCalendar';
 import TimeSlotSelector from '@/components/booking/TimeSlotSelector';
-
-interface ServiceItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  duration: string;
-  image: string;
-}
 
 interface CheckoutData {
   selectedDate: string;
@@ -63,7 +55,7 @@ function BookNowCustomContent() {
   const isSetupMode = searchParams.get('setup') === 'true';
   
   const [currentStep, setCurrentStep] = useState<'services' | 'account-suggestion' | 'calendar' | 'profile' | 'health' | 'pre-post-care' | 'checkout' | 'confirmation'>('services');
-  const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
 
   // Clear any localStorage data that might be persisting dates
@@ -203,7 +195,7 @@ function BookNowCustomContent() {
     // If user is returning from login/register with service info
     if (step === 'calendar' && serviceParam && services && services.length > 0) {
       // Find the service by ID
-      const service = services.find((s: ServiceItem) => s.id === serviceParam);
+      const service = services.find((s: Service) => s.id === serviceParam);
       if (service) {
         setSelectedService(service);
         setCurrentStep('calendar');
@@ -390,7 +382,7 @@ function BookNowCustomContent() {
     setSelectedArtistId(artistId);
   };
 
-  const handleServiceSelect = (service: ServiceItem) => {
+  const handleServiceSelect = (service: Service) => {
     setSelectedService(service);
     // Use startTransition to prevent blocking the main thread during navigation
     // This improves INP by allowing the browser to paint interaction feedback first
@@ -1073,7 +1065,7 @@ function BookNowCustomContent() {
           <>
             {/* Services Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-              {services.map((service: ServiceItem) => (
+              {services.map((service: Service) => (
                 <div 
                   key={service.id}
                   className={`group relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-[#AD6269]/30 ${
