@@ -7,6 +7,8 @@ import { getDb } from '@/lib/firebase';
 import LoadingSpinner from './common/LoadingSpinner';
 import { FiCalendar, FiClock, FiUser, FiDollarSign } from 'react-icons/fi';
 import { format } from 'date-fns';
+import { ServiceService } from '@/services/database';
+import { Service } from '@/types/database';
 
 interface BookingFormProps {
   initialServiceId?: string;
@@ -21,16 +23,6 @@ interface BookingFormProps {
   onBookingComplete?: () => void;
   isModification?: boolean;
   oldBookingId?: string;
-}
-
-interface Service {
-  id: string;
-  name: string;
-  price: number;
-  description?: string;
-  duration: number;
-  deposit: number;
-  active: boolean;
 }
 
 interface Artist {
@@ -76,19 +68,10 @@ export const BookingForm = ({
     const fetchData = async () => {
       try {
         setLoading(true);
-        const db = getDb();
         
-        // Fetch services
-        const servicesRef = collection(db, 'services');
-        const serviceSnapshot = await getDocs(servicesRef);
-        const serviceData: Service[] = [];
-        serviceSnapshot.forEach((doc) => {
-          const data = doc.data() as Omit<Service, 'id'>;
-          serviceData.push({ id: doc.id, ...data });
-        });
-        
-        // Only show active services
-        const activeServices = serviceData.filter(service => service.active);
+        // Fetch services using ServiceService
+        const servicesData = await ServiceService.getAllServices();
+        const activeServices = servicesData.filter(service => service.isActive);
         setServices(activeServices);
         
         // Set initial selected service if provided
@@ -100,6 +83,7 @@ export const BookingForm = ({
         }
         
         // Fetch artists
+        const db = getDb();
         const artistsRef = collection(db, 'users');
         const artistSnapshot = await getDocs(artistsRef);
         const artistData: Artist[] = [];
@@ -462,9 +446,9 @@ export const BookingForm = ({
                 
                 <div className="flex items-center">
                   <FiDollarSign className="mr-2 text-gray-500" />
-                  <span>Deposit:</span>
+                  <span>Deposit (10%):</span>
                 </div>
-                <span className="font-medium">${selectedService?.deposit.toFixed(2)}</span>
+                <span className="font-medium">${selectedService ? (selectedService.price * 0.1).toFixed(2) : '0.00'}</span>
               </div>
             </div>
             
