@@ -13,6 +13,8 @@
     "test-email": "tsx src/scripts/testEmailSending.ts",
     "test-resend": "tsx src/scripts/sendTestEmail.ts",
     "test-firebase": "tsx src/scripts/testFirebaseEnv.ts",
+    "test-firebase-admin": "tsx src/scripts/testFirebaseAdmin.ts",
+    "check-firebase-admin-env": "tsx src/scripts/checkFirebaseAdminEnv.ts",
     "test-contact": "tsx src/scripts/testContactForm.ts",
     "test-ghl": "tsx src/scripts/testGHLConnection.ts",
     "init-db": "tsx src/scripts/run-init-db.ts",

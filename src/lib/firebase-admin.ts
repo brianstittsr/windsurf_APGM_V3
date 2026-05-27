@@ -7,42 +7,58 @@ import { getStorage } from 'firebase-admin/storage';
 function initializeFirebaseAdmin() {
   if (getApps().length === 0) {
     try {
-      // Check if we have the required environment variables
+      // Try to use service account file first
+      const serviceAccountPath = './serviceAccountKey.json';
+      const path = require('path');
+      const fullPath = path.resolve(__dirname, '../../..', serviceAccountPath);
+      
+      try {
+        // Check if service account file exists
+        const fs = require('fs');
+        if (fs.existsSync(serviceAccountPath)) {
+          const serviceAccount = require(serviceAccountPath);
+          
+          initializeApp({
+            credential: cert(serviceAccount),
+            projectId: serviceAccount.project_id,
+            storageBucket: `${serviceAccount.project_id}.appspot.com`,
+          });
+          
+          console.log('✅ Firebase Admin SDK initialized with service account file');
+          return;
+        }
+      } catch (fileError) {
+        console.log('Service account file not found, trying environment variables...');
+      }
+      
+      // Fall back to environment variables
       const projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
       const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
       const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
       
-      // If we're missing any of the required fields, use a demo configuration
       if (!projectId || !clientEmail || !privateKey) {
-        console.warn('⚠️ Firebase Admin environment variables not configured properly.');
-        console.log('📝 Please set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY in your environment.');
+        console.warn('⚠️ Firebase Admin not properly configured.');
+        console.log('📝 Using minimal configuration for build compatibility.');
         
-        // For build time, use a minimal configuration that won't throw errors
         initializeApp({
           projectId: projectId || 'demo-project',
         });
         return;
       }
       
-      // Initialize with full service account credentials
       const serviceAccount = {
         projectId,
         clientEmail,
         privateKey,
       };
 
-      // Get storage bucket from env or construct default
-      const storageBucket = process.env.FIREBASE_STORAGE_BUCKET || 
-        process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
-        `${projectId}.appspot.com`;
-
       initializeApp({
         credential: cert(serviceAccount),
         projectId,
-        storageBucket,
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || `${projectId}.appspot.com`,
       });
       
-      console.log('✅ Firebase Admin SDK initialized successfully');
+      console.log('✅ Firebase Admin SDK initialized with environment variables');
     } catch (error) {
       console.error('Failed to initialize Firebase Admin:', error);
     }
