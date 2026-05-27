@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, query, where } from 'firebase/firestore';
 import { getDb } from '../../lib/firebase';
+import { useServices } from '@/hooks/useFirebase';
 import { Button } from '@/components/ui/button';
 import { useAlertDialog } from '@/components/ui/alert-dialog';
 import BookingWizard from './BookingWizard';
@@ -40,6 +41,7 @@ export default function BookingCalendarManager() {
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<'all' | 'confirmed' | 'pending' | 'completed' | 'cancelled'>('all');
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const { services, loading: servicesLoading } = useServices();
   const { showAlert, showConfirm, AlertDialogComponent } = useAlertDialog();
   
   // Booking wizard state
@@ -1312,14 +1314,14 @@ export default function BookingCalendarManager() {
                       value={historicalBooking.serviceName}
                       onChange={(e) => setHistoricalBooking({...historicalBooking, serviceName: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                      disabled={servicesLoading}
                     >
-                      <option value="Microblading">Microblading - $500</option>
-                      <option value="Powder Brows">Powder Brows - $550</option>
-                      <option value="Combo Brows">Combo Brows - $600</option>
-                      <option value="Lip Blush">Lip Blush - $450</option>
-                      <option value="Eyeliner">Eyeliner - $400</option>
-                      <option value="Touch Up">Touch Up - $200</option>
-                      <option value="Consultation">Consultation - $0</option>
+                      <option value="">Select a service...</option>
+                      {services?.map((service) => (
+                        <option key={service.id} value={service.name}>
+                          {service.name} - ${service.price}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className="grid grid-cols-2 gap-4">

@@ -6,6 +6,7 @@ import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { getDb } from '../../lib/firebase';
 import { useAuth } from '../../hooks/useAuth';
+import { useServices } from '@/hooks/useFirebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAlertDialog } from '@/components/ui/alert-dialog';
@@ -110,6 +111,7 @@ function InlineStripeForm({ onSuccess, onError }: InlineStripeFormProps) {
 
 export default function BookingWizard({ isOpen, onClose, onBookingCreated, calendars }: BookingWizardProps) {
   const { user: currentUser } = useAuth();
+  const { services, loading: servicesLoading } = useServices();
   const { showAlert, AlertDialogComponent } = useAlertDialog();
   
   // Wizard state
@@ -1075,18 +1077,14 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                     value={serviceName}
                     onChange={(e) => setServiceName(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] bg-white"
+                    disabled={servicesLoading}
                   >
                     <option value="">Select a service...</option>
-                    <option value="Microblading">Microblading</option>
-                    <option value="Powder Brows">Powder Brows</option>
-                    <option value="Combo Brows">Combo Brows</option>
-                    <option value="Lip Blush">Lip Blush</option>
-                    <option value="Eyeliner">Eyeliner</option>
-                    <option value="Lash Enhancement">Lash Enhancement</option>
-                    <option value="Microblading Touch-Up">Microblading Touch-Up</option>
-                    <option value="Powder Brows Touch-Up">Powder Brows Touch-Up</option>
-                    <option value="Lip Blush Touch-Up">Lip Blush Touch-Up</option>
-                    <option value="Consultation">Consultation</option>
+                    {services?.map((service) => (
+                      <option key={service.id} value={service.name}>
+                        {service.name} - ${service.price}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
