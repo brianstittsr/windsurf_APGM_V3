@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PDFService, FormData } from '../services/pdfService';
+import { ClientOnlyPDFService, FormData } from '../components/ClientOnlyPDFService';
 
 export interface UsePDFGenerationReturn {
   isGenerating: boolean;
@@ -33,7 +33,7 @@ export const usePDFGeneration = (): UsePDFGenerationReturn => {
     setError(null);
     
     try {
-      const downloadURL = await PDFService.generateAndStorePDF(
+      const downloadURL = await ClientOnlyPDFService.generateAndStorePDF(
         formData,
         clientId,
         appointmentId
@@ -59,7 +59,7 @@ export const usePDFGeneration = (): UsePDFGenerationReturn => {
     setError(null);
     
     try {
-      const downloadURL = await PDFService.generateFormElementPDF(
+      const downloadURL = await ClientOnlyPDFService.generateFormElementPDF(
         elementId,
         clientId,
         appointmentId,

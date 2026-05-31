@@ -1,6 +1,6 @@
 import React from 'react';
 import { usePDFGeneration } from '../hooks/usePDFGeneration';
-import { FormData } from '../services/pdfService';
+import { FormData } from '../components/ClientOnlyPDFService';
 
 interface PDFFormGeneratorProps {
   formData: FormData;
