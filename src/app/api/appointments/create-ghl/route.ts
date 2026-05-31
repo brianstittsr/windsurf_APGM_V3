@@ -19,8 +19,19 @@ export async function POST(request: NextRequest) {
     const credentials = await getGHLCredentials();
     
     if (!credentials.apiKey || !credentials.locationId) {
+      console.error('❌ GHL credentials missing:', {
+        apiKey: credentials.apiKey ? 'present' : 'missing',
+        locationId: credentials.locationId ? 'present' : 'missing'
+      });
       return NextResponse.json(
-        { error: 'GHL credentials not configured' },
+        { 
+          error: 'GHL credentials not configured',
+          details: {
+            apiKey: credentials.apiKey ? 'present' : 'missing',
+            locationId: credentials.locationId ? 'present' : 'missing',
+            message: 'Please configure GHL_API_KEY and GHL_LOCATION_ID in environment variables or admin dashboard'
+          }
+        },
         { status: 400 }
       );
     }

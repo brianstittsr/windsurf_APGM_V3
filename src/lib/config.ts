@@ -28,8 +28,8 @@ const stripeConfig = {
  * No more .env.local dependency issues
  */
 export function getAppConfig(): AppConfig {
-  const isLocalhost = typeof window !== 'undefined' && 
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  // Fix SSR window error - use environment variables instead of window
+  const isLocalhost = process.env.NODE_ENV === 'development';
   
   const environment = process.env.NODE_ENV === 'production' ? 'production' : 'development';
   

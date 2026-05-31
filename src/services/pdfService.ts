@@ -1,5 +1,4 @@
 import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
 import { storage } from '../lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
@@ -16,6 +15,9 @@ export class PDFService {
    * Generate PDF from HTML element
    */
   static async generatePDFFromElement(element: HTMLElement, filename: string): Promise<Blob> {
+    // Dynamic import to fix SSR window error
+    const html2canvas = (await import('html2canvas')).default;
+    
     const canvas = await html2canvas(element, {
       scale: 2,
       useCORS: true,
