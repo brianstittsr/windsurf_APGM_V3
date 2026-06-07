@@ -23,6 +23,14 @@ import {
 } from 'lucide-react';
 import BookingWizard from './BookingWizard';
 
+// Helper to convert 24-hour time to 12-hour format
+function formatTo12Hour(time24: string): string {
+  const [hours, minutes] = time24.split(':').map(Number);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const hours12 = hours % 12 || 12;
+  return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
+
 interface Booking {
   id: string;
   clientName: string;
@@ -894,9 +902,9 @@ export default function BookingCalendar() {
                               key={booking.id}
                               className={`${getStatusColor(booking.status)} text-white text-xs px-2 py-1 rounded cursor-pointer hover:opacity-90 transition-opacity truncate`}
                               onClick={() => handleBookingClick(booking)}
-                              title={`${booking.time} - ${displayTitle}`}
+                              title={`${formatTo12Hour(booking.time)} - ${displayTitle}`}
                             >
-                              <span className="font-semibold">{booking.time}</span>
+                              <span className="font-semibold">{formatTo12Hour(booking.time)}</span>
                               <span className="ml-1 truncate">{displayTitle}</span>
                             </div>
                             );
@@ -961,9 +969,9 @@ export default function BookingCalendar() {
                           key={booking.id}
                           className={`${getStatusColor(booking.status)} text-white text-xs px-2 py-2 rounded cursor-pointer hover:opacity-90 transition-opacity`}
                           onClick={() => handleBookingClick(booking)}
-                          title={`${booking.time} - ${weekTitle}`}
+                          title={`${formatTo12Hour(booking.time)} - ${weekTitle}`}
                         >
-                          <div className="font-semibold">{booking.time}</div>
+                          <div className="font-semibold">{formatTo12Hour(booking.time)}</div>
                           <div className="truncate">{weekTitle}</div>
                         </div>
                             );
@@ -1005,7 +1013,7 @@ export default function BookingCalendar() {
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <div className="text-lg font-bold">{booking.time}</div>
+                          <div className="text-lg font-bold">{formatTo12Hour(booking.time)}</div>
                           <div className="text-xl font-semibold">{(booking as any).ghlTitle || `${booking.serviceName} - ${booking.clientName}`}</div>
                         </div>
                         <div className="text-right">
@@ -1054,7 +1062,7 @@ export default function BookingCalendar() {
                     <p className="text-gray-900"><span className="font-medium">Title:</span> {(selectedBooking as any).ghlTitle || selectedBooking.serviceName}</p>
                     <p className="text-gray-900"><span className="font-medium">Artist:</span> {selectedBooking.artistName}</p>
                     <p className="text-gray-900"><span className="font-medium">Date:</span> {selectedBooking.date}</p>
-                    <p className="text-gray-900"><span className="font-medium">Time:</span> {selectedBooking.time}</p>
+                    <p className="text-gray-900"><span className="font-medium">Time:</span> {formatTo12Hour(selectedBooking.time)}</p>
                     <p className="text-gray-900"><span className="font-medium">Price:</span> ${selectedBooking.price}</p>
                   </div>
                 </div>
