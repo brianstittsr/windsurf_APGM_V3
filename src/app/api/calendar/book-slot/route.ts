@@ -99,43 +99,12 @@ async function createGHLContact(credentials: any, data: BookSlotRequest) {
 
 async function createGHLAppointment(credentials: any, contactId: string, data: BookSlotRequest) {
   try {
-    // GHL calendar is set to America/New_York.
-    // GHL stores/displays in UTC, so we must convert ET → UTC before sending.
-    // EDT (Mar–Nov): UTC = ET + 4h  |  EST (Nov–Mar): UTC = ET + 5h
-    const getETtoUTCOffsetHours = (dateStr: string): number => {
-      const [year, month, day] = dateStr.split('-').map(Number);
-      const d = new Date(year, month - 1, day);
-      // DST: 2nd Sunday of March → 1st Sunday of November
-      const march2nd = new Date(year, 2, 1);
-      let sundays = 0;
-      while (sundays < 2) { if (march2nd.getDay() === 0) sundays++; if (sundays < 2) march2nd.setDate(march2nd.getDate() + 1); }
-      const nov1st = new Date(year, 10, 1);
-      while (nov1st.getDay() !== 0) nov1st.setDate(nov1st.getDate() + 1);
-      return d >= march2nd && d < nov1st ? 4 : 5;
-    };
+    // GHL displays times exactly as sent — no timezone conversion needed.
+    // Send the user's selected time as-is so it appears correctly on the GHL calendar.
+    const startTimeISO = `${data.date}T${data.startTime}:00+00:00`;
+    const endTimeISO   = `${data.date}T${data.endTime}:00+00:00`;
 
-    const shiftTimeUTC = (timeStr: string, dateStr: string, addHrs: number): { t: string; d: string } => {
-      const [h, m] = timeStr.split(':').map(Number);
-      const totalH = h + addHrs;
-      const overflow = Math.floor(totalH / 24);
-      const newH = totalH % 24;
-      let newDate = dateStr;
-      if (overflow > 0) {
-        const [y, mo, dy] = dateStr.split('-').map(Number);
-        const next = new Date(y, mo - 1, dy + overflow);
-        newDate = `${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}-${String(next.getDate()).padStart(2,'0')}`;
-      }
-      return { t: `${String(newH).padStart(2,'0')}:${String(m).padStart(2,'0')}`, d: newDate };
-    };
-
-    const offsetHrs = getETtoUTCOffsetHours(data.date);
-    const startUTC = shiftTimeUTC(data.startTime, data.date, offsetHrs);
-    const endUTC   = shiftTimeUTC(data.endTime,   data.date, offsetHrs);
-
-    const startTimeISO = `${startUTC.d}T${startUTC.t}:00Z`;
-    const endTimeISO   = `${endUTC.d}T${endUTC.t}:00Z`;
-
-    console.log(`[book-slot] ET ${data.startTime} +${offsetHrs}h → UTC ${startTimeISO}`);
+    console.log(`[book-slot] Sending to GHL: ${startTimeISO} → ${endTimeISO}`);
 
     const response = await fetch(`${GHL_API_BASE}/calendars/events/appointments`, {
       method: 'POST',
