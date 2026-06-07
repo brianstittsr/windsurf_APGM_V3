@@ -110,9 +110,39 @@ async function createAppointment(apiKey: string, locationId: string, contactId: 
       return 'SKIPPED_PAST_DATE';
     }
     
-    const startDateTime = new Date(`${date}T${time}:00`);
-    const endDateTime = new Date(startDateTime.getTime() + (3 * 60 * 60 * 1000));
-    
+    // GHL calendar is America/New_York (EDT UTC-4, EST UTC-5). Add offset to convert ET→UTC.
+    const getETtoUTCOffset = (dateStr: string): number => {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const date = new Date(y, m - 1, d);
+      const march2nd = new Date(y, 2, 1);
+      let sundays = 0;
+      while (sundays < 2) { if (march2nd.getDay() === 0) sundays++; if (sundays < 2) march2nd.setDate(march2nd.getDate() + 1); }
+      const nov1st = new Date(y, 10, 1);
+      while (nov1st.getDay() !== 0) nov1st.setDate(nov1st.getDate() + 1);
+      return date >= march2nd && date < nov1st ? 4 : 5;
+    };
+
+    const shiftTime = (timeStr: string, addHrs: number, dateStr: string): { t: string; d: string } => {
+      const [h, m] = timeStr.split(':').map(Number);
+      const totalH = h + addHrs;
+      const overflow = Math.floor(totalH / 24);
+      const newH = totalH % 24;
+      let newDate = dateStr;
+      if (overflow > 0) {
+        const [yy, mm, dd] = dateStr.split('-').map(Number);
+        const next = new Date(yy, mm - 1, dd + overflow);
+        newDate = `${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}-${String(next.getDate()).padStart(2,'0')}`;
+      }
+      return { t: `${String(newH).padStart(2,'0')}:${String(m).padStart(2,'0')}`, d: newDate };
+    };
+
+    const offsetHrs = getETtoUTCOffset(date);
+    const startUTC = shiftTime(time, offsetHrs, date);
+    const endUTC   = shiftTime(time, offsetHrs + 3, date);
+
+    const startTimeISO = `${startUTC.d}T${startUTC.t}:00Z`;
+    const endTimeISO   = `${endUTC.d}T${endUTC.t}:00Z`;
+
     const response = await fetch(`${GHL_API_BASE}/calendars/events/appointments`, {
       method: 'POST',
       headers: {
@@ -126,8 +156,8 @@ async function createAppointment(apiKey: string, locationId: string, contactId: 
         calendarId: SERVICE_CALENDAR_ID,
         title: `${appointment.serviceName || 'Appointment'} - ${appointment.clientName || 'Client'}`,
         appointmentStatus: appointment.status === 'confirmed' ? 'confirmed' : 'new',
-        startTime: startDateTime.toISOString(),
-        endTime: endDateTime.toISOString(),
+        startTime: startTimeISO,
+        endTime: endTimeISO,
         notes: `Service: ${appointment.serviceName}\nPrice: $${appointment.price || appointment.totalAmount || 0}`,
         toNotify: true // Send notifications for new syncs
       })
