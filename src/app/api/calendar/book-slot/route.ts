@@ -99,35 +99,13 @@ async function createGHLContact(credentials: any, data: BookSlotRequest) {
 
 async function createGHLAppointment(credentials: any, contactId: string, data: BookSlotRequest) {
   try {
-    // Business is in Raleigh, NC — always use Eastern Time
-    // Determine EDT (-04:00) vs EST (-05:00) based on booking date
-    const getEasternOffset = (dateStr: string): string => {
-      const [year, month, day] = dateStr.split('-').map(Number);
-      // DST: second Sunday in March to first Sunday in November
-      const date = new Date(year, month - 1, day);
-      const marchSecondSunday = (() => {
-        let d = new Date(year, 2, 1); // March 1
-        let sundays = 0;
-        while (sundays < 2) { if (d.getDay() === 0) sundays++; if (sundays < 2) d.setDate(d.getDate() + 1); }
-        return d.getDate();
-      })();
-      const novFirstSunday = (() => {
-        let d = new Date(year, 10, 1); // Nov 1
-        while (d.getDay() !== 0) d.setDate(d.getDate() + 1);
-        return d.getDate();
-      })();
-      const marchDst = new Date(year, 2, marchSecondSunday);
-      const novDst = new Date(year, 10, novFirstSunday);
-      return date >= marchDst && date < novDst ? '-04:00' : '-05:00';
-    };
+    // GHL is displaying times as UTC (calendar timezone appears to be UTC).
+    // Send the user's selected time directly as UTC so what they pick is what shows on calendar.
+    // NOTE: The permanent fix is to set the GHL calendar timezone to America/New_York in GHL settings.
+    const startTimeISO = `${data.date}T${data.startTime}:00Z`;
+    const endTimeISO = `${data.date}T${data.endTime}:00Z`;
 
-    const etOffset = getEasternOffset(data.date);
-
-    // Build ISO strings directly without Date object UTC conversion
-    const startTimeISO = `${data.date}T${data.startTime}:00${etOffset}`;
-    const endTimeISO = `${data.date}T${data.endTime}:00${etOffset}`;
-
-    console.log(`[book-slot] Booking time: ${startTimeISO} → ${endTimeISO} (Eastern Time ${etOffset})`);
+    console.log(`[book-slot] Sending to GHL: start=${startTimeISO}, end=${endTimeISO}`);
 
     const response = await fetch(`${GHL_API_BASE}/calendars/events/appointments`, {
       method: 'POST',

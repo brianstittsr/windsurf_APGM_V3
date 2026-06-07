@@ -198,8 +198,9 @@ async function createOrUpdateGHLAppointment(booking: Booking, contactId: string,
       return `${String(Math.floor(totalMinutes / 60) % 24).padStart(2, '0')}:${String(totalMinutes % 60).padStart(2, '0')}`;
     };
 
-    const startTimeISO = `${booking.date}T${booking.time}:00${etOffset}`;
-    const endTimeISO = `${booking.date}T${addHours(booking.time, 3)}:00${etOffset}`;
+    // Send times as UTC — GHL calendar must be set to America/New_York to display correctly
+    const startTimeISO = `${booking.date}T${booking.time}:00Z`;
+    const endTimeISO = `${booking.date}T${addHours(booking.time, 3)}:00Z`;
 
     // Use existing ghlTitle if available (from GHL sync) for title consistency
     const bookingTitle = (booking as any).ghlTitle || `${booking.serviceName} - ${booking.clientName}`;
