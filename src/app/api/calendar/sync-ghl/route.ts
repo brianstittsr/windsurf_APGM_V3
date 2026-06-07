@@ -168,10 +168,38 @@ async function createOrUpdateGHLAppointment(booking: Booking, contactId: string,
     
     console.log(`[sync-ghl] Using calendar ID: ${calendarId} (${useServiceCalendar ? 'Service Calendar for MOELCALL200' : 'APGM Calendar'})`);
     
-    // Parse date/time — treat as local time by appending timezone offset so it matches what was booked
-    // booking.time is HH:MM in UTC (stored from GHL), interpret as-is
-    const startDateTime = new Date(`${booking.date}T${booking.time}:00Z`);
-    const endDateTime = new Date(startDateTime.getTime() + (3 * 60 * 60 * 1000)); // Add 3 hours
+    // Business is in Raleigh, NC — always use Eastern Time offset
+    // DST: EDT (-04:00) Mar-Nov, EST (-05:00) Nov-Mar
+    const getEasternOffset = (dateStr: string): string => {
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
+      const marchSecondSunday = (() => {
+        let d = new Date(year, 2, 1);
+        let sundays = 0;
+        while (sundays < 2) { if (d.getDay() === 0) sundays++; if (sundays < 2) d.setDate(d.getDate() + 1); }
+        return d.getDate();
+      })();
+      const novFirstSunday = (() => {
+        let d = new Date(year, 10, 1);
+        while (d.getDay() !== 0) d.setDate(d.getDate() + 1);
+        return d.getDate();
+      })();
+      const marchDst = new Date(year, 2, marchSecondSunday);
+      const novDst = new Date(year, 10, novFirstSunday);
+      return date >= marchDst && date < novDst ? '-04:00' : '-05:00';
+    };
+
+    const etOffset = getEasternOffset(booking.date);
+
+    // Add 3 hours to get end time (HH:MM format)
+    const addHours = (timeStr: string, hours: number): string => {
+      const [h, m] = timeStr.split(':').map(Number);
+      const totalMinutes = h * 60 + m + hours * 60;
+      return `${String(Math.floor(totalMinutes / 60) % 24).padStart(2, '0')}:${String(totalMinutes % 60).padStart(2, '0')}`;
+    };
+
+    const startTimeISO = `${booking.date}T${booking.time}:00${etOffset}`;
+    const endTimeISO = `${booking.date}T${addHours(booking.time, 3)}:00${etOffset}`;
 
     // Use existing ghlTitle if available (from GHL sync) for title consistency
     const bookingTitle = (booking as any).ghlTitle || `${booking.serviceName} - ${booking.clientName}`;
@@ -183,8 +211,8 @@ async function createOrUpdateGHLAppointment(booking: Booking, contactId: string,
       title: bookingTitle,
       ignoreDateRange: true,
       appointmentStatus: booking.status === 'confirmed' ? 'confirmed' : 'new',
-      startTime: startDateTime.toISOString(),
-      endTime: endDateTime.toISOString(),
+      startTime: startTimeISO,
+      endTime: endTimeISO,
       notes: booking.notes || `Booking for ${booking.serviceName}. Price: $${booking.price}. Deposit Paid: ${booking.depositPaid ? 'Yes' : 'No'}`,
     };
 

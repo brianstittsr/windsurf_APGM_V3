@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { db as adminDb } from '@/lib/firebase-admin';
 import { getDb } from '@/lib/firebase';
 import { collection, addDoc, updateDoc, doc, Timestamp, query, where, getDocs } from 'firebase/firestore';
 import { SMTPEmailService } from '@/services/gmailEmailService';
@@ -24,25 +25,42 @@ const GHL_API_BASE = 'https://services.leadconnectorhq.com';
 const GHL_API_VERSION = '2021-07-28';
 
 async function getGHLCredentials() {
-  try {
-    const db = getDb();
-    const settingsRef = doc(db, 'crmSettings', 'gohighlevel');
-    const { getDoc } = await import('firebase/firestore');
-    const settingsDoc = await getDoc(settingsRef);
-    
-    if (settingsDoc.exists()) {
-      const data = settingsDoc.data();
-      return {
-        apiKey: data.apiKey,
-        locationId: data.locationId,
-        calendarId: data.calendarId
-      };
-    }
-    return null;
-  } catch (error) {
-    console.error('Error getting GHL credentials:', error);
-    return null;
+  // Environment variables take priority
+  const envApiKey = process.env.GHL_API_KEY || '';
+  const envLocationId = process.env.GHL_LOCATION_ID || '';
+  const envCalendarId = process.env.GHL_CALENDAR_ID || '';
+
+  if (envApiKey && envLocationId) {
+    return { apiKey: envApiKey, locationId: envLocationId, calendarId: envCalendarId };
   }
+
+  // Fall back to Firestore via Admin SDK (server-safe)
+  try {
+    if (adminDb) {
+      const settingsSnapshot = await adminDb.collection('crmSettings').limit(1).get();
+      if (!settingsSnapshot.empty) {
+        const data = settingsSnapshot.docs[0].data();
+        return {
+          apiKey: envApiKey || data?.apiKey || '',
+          locationId: envLocationId || data?.locationId || '',
+          calendarId: envCalendarId || data?.calendarId || ''
+        };
+      }
+      const settingsDoc = await adminDb.collection('crmSettings').doc('gohighlevel').get();
+      if (settingsDoc.exists) {
+        const data = settingsDoc.data();
+        return {
+          apiKey: envApiKey || data?.apiKey || '',
+          locationId: envLocationId || data?.locationId || '',
+          calendarId: envCalendarId || data?.calendarId || ''
+        };
+      }
+    }
+  } catch (error) {
+    console.error('Error getting GHL credentials from Firestore:', error);
+  }
+
+  return envApiKey ? { apiKey: envApiKey, locationId: envLocationId, calendarId: envCalendarId } : null;
 }
 
 async function createGHLContact(credentials: any, data: BookSlotRequest) {
@@ -81,10 +99,36 @@ async function createGHLContact(credentials: any, data: BookSlotRequest) {
 
 async function createGHLAppointment(credentials: any, contactId: string, data: BookSlotRequest) {
   try {
-    // Convert date and time to ISO format
-    const startDateTime = new Date(`${data.date}T${data.startTime}:00`);
-    const endDateTime = new Date(`${data.date}T${data.endTime}:00`);
-    
+    // Business is in Raleigh, NC — always use Eastern Time
+    // Determine EDT (-04:00) vs EST (-05:00) based on booking date
+    const getEasternOffset = (dateStr: string): string => {
+      const [year, month, day] = dateStr.split('-').map(Number);
+      // DST: second Sunday in March to first Sunday in November
+      const date = new Date(year, month - 1, day);
+      const marchSecondSunday = (() => {
+        let d = new Date(year, 2, 1); // March 1
+        let sundays = 0;
+        while (sundays < 2) { if (d.getDay() === 0) sundays++; if (sundays < 2) d.setDate(d.getDate() + 1); }
+        return d.getDate();
+      })();
+      const novFirstSunday = (() => {
+        let d = new Date(year, 10, 1); // Nov 1
+        while (d.getDay() !== 0) d.setDate(d.getDate() + 1);
+        return d.getDate();
+      })();
+      const marchDst = new Date(year, 2, marchSecondSunday);
+      const novDst = new Date(year, 10, novFirstSunday);
+      return date >= marchDst && date < novDst ? '-04:00' : '-05:00';
+    };
+
+    const etOffset = getEasternOffset(data.date);
+
+    // Build ISO strings directly without Date object UTC conversion
+    const startTimeISO = `${data.date}T${data.startTime}:00${etOffset}`;
+    const endTimeISO = `${data.date}T${data.endTime}:00${etOffset}`;
+
+    console.log(`[book-slot] Booking time: ${startTimeISO} → ${endTimeISO} (Eastern Time ${etOffset})`);
+
     const response = await fetch(`${GHL_API_BASE}/calendars/events/appointments`, {
       method: 'POST',
       headers: {
@@ -96,8 +140,8 @@ async function createGHLAppointment(credentials: any, contactId: string, data: B
         calendarId: credentials.calendarId,
         locationId: credentials.locationId,
         contactId: contactId,
-        startTime: startDateTime.toISOString(),
-        endTime: endDateTime.toISOString(),
+        startTime: startTimeISO,
+        endTime: endTimeISO,
         title: `${data.serviceName} - ${data.clientName}`,
         appointmentStatus: 'confirmed',
         assignedUserId: data.artistId !== 'default-artist' ? data.artistId : undefined,
