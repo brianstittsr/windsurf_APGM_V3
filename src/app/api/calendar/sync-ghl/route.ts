@@ -168,39 +168,39 @@ async function createOrUpdateGHLAppointment(booking: Booking, contactId: string,
     
     console.log(`[sync-ghl] Using calendar ID: ${calendarId} (${useServiceCalendar ? 'Service Calendar for MOELCALL200' : 'APGM Calendar'})`);
     
-    // Business is in Raleigh, NC — always use Eastern Time offset
-    // DST: EDT (-04:00) Mar-Nov, EST (-05:00) Nov-Mar
-    const getEasternOffset = (dateStr: string): string => {
+    // GHL calendar is set to America/New_York.
+    // Convert ET → UTC before sending: EDT (Mar-Nov) +4h, EST (Nov-Mar) +5h
+    const getETtoUTCOffsetHours = (dateStr: string): number => {
       const [year, month, day] = dateStr.split('-').map(Number);
-      const date = new Date(year, month - 1, day);
-      const marchSecondSunday = (() => {
-        let d = new Date(year, 2, 1);
-        let sundays = 0;
-        while (sundays < 2) { if (d.getDay() === 0) sundays++; if (sundays < 2) d.setDate(d.getDate() + 1); }
-        return d.getDate();
-      })();
-      const novFirstSunday = (() => {
-        let d = new Date(year, 10, 1);
-        while (d.getDay() !== 0) d.setDate(d.getDate() + 1);
-        return d.getDate();
-      })();
-      const marchDst = new Date(year, 2, marchSecondSunday);
-      const novDst = new Date(year, 10, novFirstSunday);
-      return date >= marchDst && date < novDst ? '-04:00' : '-05:00';
+      const d = new Date(year, month - 1, day);
+      const march2nd = new Date(year, 2, 1);
+      let sundays = 0;
+      while (sundays < 2) { if (march2nd.getDay() === 0) sundays++; if (sundays < 2) march2nd.setDate(march2nd.getDate() + 1); }
+      const nov1st = new Date(year, 10, 1);
+      while (nov1st.getDay() !== 0) nov1st.setDate(nov1st.getDate() + 1);
+      return d >= march2nd && d < nov1st ? 4 : 5;
     };
 
-    const etOffset = getEasternOffset(booking.date);
-
-    // Add 3 hours to get end time (HH:MM format)
-    const addHours = (timeStr: string, hours: number): string => {
+    const shiftTimeUTC = (timeStr: string, dateStr: string, addHrs: number): { t: string; d: string } => {
       const [h, m] = timeStr.split(':').map(Number);
-      const totalMinutes = h * 60 + m + hours * 60;
-      return `${String(Math.floor(totalMinutes / 60) % 24).padStart(2, '0')}:${String(totalMinutes % 60).padStart(2, '0')}`;
+      const totalH = h + addHrs;
+      const overflow = Math.floor(totalH / 24);
+      const newH = totalH % 24;
+      let newDate = dateStr;
+      if (overflow > 0) {
+        const [y, mo, dy] = dateStr.split('-').map(Number);
+        const next = new Date(y, mo - 1, dy + overflow);
+        newDate = `${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}-${String(next.getDate()).padStart(2,'0')}`;
+      }
+      return { t: `${String(newH).padStart(2,'0')}:${String(m).padStart(2,'0')}`, d: newDate };
     };
 
-    // Send times as UTC — GHL calendar must be set to America/New_York to display correctly
-    const startTimeISO = `${booking.date}T${booking.time}:00Z`;
-    const endTimeISO = `${booking.date}T${addHours(booking.time, 3)}:00Z`;
+    const offsetHrs = getETtoUTCOffsetHours(booking.date);
+    const startUTC = shiftTimeUTC(booking.time, booking.date, offsetHrs);
+    const endUTC   = shiftTimeUTC(booking.time, booking.date, offsetHrs + 3); // +3h appointment
+
+    const startTimeISO = `${startUTC.d}T${startUTC.t}:00Z`;
+    const endTimeISO   = `${endUTC.d}T${endUTC.t}:00Z`;
 
     // Use existing ghlTitle if available (from GHL sync) for title consistency
     const bookingTitle = (booking as any).ghlTitle || `${booking.serviceName} - ${booking.clientName}`;
