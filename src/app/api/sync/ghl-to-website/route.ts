@@ -346,9 +346,22 @@ async function syncAppointmentToWebsite(ghlAppointment: any, apiKey: string) {
   const startTime = parseGHLDate(ghlAppointment.startTime);
   const endTime = parseGHLDate(ghlAppointment.endTime);
 
-  // Parse time using UTC to match what was booked in GHL
-  const utcHours = String(startTime.getUTCHours()).padStart(2, '0');
-  const utcMinutes = String(startTime.getUTCMinutes()).padStart(2, '0');
+  // GHL stores times in UTC, but the calendar is set to America/New_York.
+  // Convert UTC → Eastern Time (EDT UTC-4 / EST UTC-5) so the website displays the correct local time.
+  const isEasternDST = (d: Date): boolean => {
+    const y = d.getUTCFullYear();
+    const march2nd = new Date(y, 2, 1);
+    let sundays = 0;
+    while (sundays < 2) { if (march2nd.getDay() === 0) sundays++; if (sundays < 2) march2nd.setDate(march2nd.getDate() + 1); }
+    const nov1st = new Date(y, 10, 1);
+    while (nov1st.getDay() !== 0) nov1st.setDate(nov1st.getDate() + 1);
+    return d >= march2nd && d < nov1st;
+  };
+  const etOffset = isEasternDST(startTime) ? 4 : 5;
+  const easternStart = new Date(startTime.getTime() - etOffset * 60 * 60 * 1000);
+
+  const utcHours = String(easternStart.getUTCHours()).padStart(2, '0');
+  const utcMinutes = String(easternStart.getUTCMinutes()).padStart(2, '0');
   const utcTimeStr = `${utcHours}:${utcMinutes}`;
 
   // Use the full GHL title as serviceName so the website calendar matches GHL
@@ -363,7 +376,7 @@ async function syncAppointmentToWebsite(ghlAppointment: any, apiKey: string) {
     artistName: 'Victoria Escobar',
     serviceName: extractServiceName(ghlTitle),
     ghlTitle: ghlTitle,
-    date: startTime.toISOString().split('T')[0],
+    date: easternStart.toISOString().split('T')[0],
     time: utcTimeStr,
     startTimeISO: ghlAppointment.startTime,
     endTimeISO: ghlAppointment.endTime,
