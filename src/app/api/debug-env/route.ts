@@ -13,8 +13,11 @@ export async function GET(request: NextRequest) {
       SMTP_PORT: process.env.SMTP_PORT || 'missing',
       SMTP_USER: !!process.env.SMTP_USER ? 'configured' : 'missing', 
       SMTP_PASS: !!process.env.SMTP_PASS ? 'configured' : 'missing',
+      GHL_API_KEY: process.env.GHL_API_KEY ? `set (${process.env.GHL_API_KEY.substring(0, 15)}...)` : 'MISSING',
+      GHL_LOCATION_ID: process.env.GHL_LOCATION_ID ? `set (${process.env.GHL_LOCATION_ID})` : 'MISSING',
+      GHL_CALENDAR_ID: process.env.GHL_CALENDAR_ID ? `set (${process.env.GHL_CALENDAR_ID})` : 'MISSING',
       allEnvKeys: Object.keys(process.env).filter(key => 
-        key.includes('SMTP') || key.includes('EMAIL') || key.includes('MAIL')
+        key.includes('SMTP') || key.includes('EMAIL') || key.includes('MAIL') || key.includes('GHL')
       ),
       totalEnvVars: Object.keys(process.env).length
     },
