@@ -8,6 +8,16 @@ import { Button } from '@/components/ui/button';
 import { useAlertDialog } from '@/components/ui/alert-dialog';
 import BookingWizard from './BookingWizard';
 
+// Helper to convert 24-hour time to 12-hour format
+function formatTo12Hour(time24?: string): string {
+  if (!time24) return '';
+  const [hours, minutes] = time24.split(':').map(Number);
+  if (isNaN(hours)) return time24;
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const hours12 = hours % 12 || 12;
+  return `${hours12}:${String(minutes || 0).padStart(2, '0')} ${period}`;
+}
+
 interface BookingNote {
   id: string;
   text: string;
@@ -752,7 +762,7 @@ export default function BookingCalendarManager() {
                     <tr key={apt.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       <td className="py-3 px-4">
                         <div className="text-sm font-medium text-gray-900">{new Date(`${apt.appointmentDate || apt.date}T${apt.appointmentTime || apt.time}`).toLocaleDateString()}</div>
-                        <div className="text-xs text-gray-500">{apt.appointmentTime || apt.time}</div>
+                        <div className="text-xs text-gray-500">{formatTo12Hour(apt.appointmentTime || apt.time)}</div>
                       </td>
                       <td className="py-3 px-4">
                         <div className="text-sm font-medium text-gray-900">{apt.clientName}</div>
@@ -835,7 +845,7 @@ export default function BookingCalendarManager() {
                     <tr key={apt.id} className="border-b border-gray-100 bg-gray-50/50 hover:bg-gray-100 transition-colors">
                       <td className="py-3 px-4">
                         <div className="text-sm font-medium text-gray-900">{new Date(`${apt.appointmentDate || apt.date}T${apt.appointmentTime || apt.time}`).toLocaleDateString()}</div>
-                        <div className="text-xs text-gray-500">{apt.appointmentTime || apt.time}</div>
+                        <div className="text-xs text-gray-500">{formatTo12Hour(apt.appointmentTime || apt.time)}</div>
                       </td>
                       <td className="py-3 px-4">
                         <div className="text-sm font-medium text-gray-900">{apt.clientName}</div>
@@ -1070,7 +1080,7 @@ export default function BookingCalendarManager() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600 text-sm">Time:</span>
-                      <span className="text-gray-900 font-medium">{viewingBooking.appointmentTime || viewingBooking.time}</span>
+                      <span className="text-gray-900 font-medium">{formatTo12Hour(viewingBooking.appointmentTime || viewingBooking.time)}</span>
                     </div>
                     {viewingBooking.artistName && (
                       <div className="flex justify-between items-center">
