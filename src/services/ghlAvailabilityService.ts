@@ -132,9 +132,29 @@ export class GHLAvailabilityService {
   }
 
   /**
-   * Generate time slots in 1-hour increments based on calendar availability
+   * Convert UTC time to Eastern Time (EDT/EST)
+   * EDT (Mar-Nov): UTC-4 | EST (Nov-Mar): UTC-5
    */
-  private static generateTimeSlots(
+  private static utcToEastern(utcTime: string, date: string): string {
+    const [h, m] = utcTime.split(':').map(Number);
+    const [y, mo, d] = date.split('-').map(Number);
+    const utcDate = new Date(Date.UTC(y, mo - 1, d, h, m));
+    
+    // Determine DST
+    const march2nd = new Date(y, 2, 1);
+    let sundays = 0;
+    while (sundays < 2) { if (march2nd.getDay() === 0) sundays++; if (sundays < 2) march2nd.setDate(march2nd.getDate() + 1); }
+    const nov1st = new Date(y, 10, 1);
+    while (nov1st.getDay() !== 0) nov1st.setDate(nov1st.getDate() + 1);
+    const isDST = utcDate >= march2nd && utcDate < nov1st;
+    
+    const offset = isDST ? 4 : 5;
+    const easternDate = new Date(utcDate.getTime() - offset * 60 * 60 * 1000);
+    
+    return `${String(easternDate.getHours()).padStart(2, '0')}:${String(easternDate.getMinutes()).padStart(2, '0')}`;
+  }
+
+  static generateTimeSlots(
     calendar: any,
     date: string,
     existingAppointments: any[],
@@ -155,7 +175,7 @@ export class GHLAvailabilityService {
     const [openHour, openMinute] = availability.openHour.split(':').map(Number);
     const [closeHour, closeMinute] = availability.closeHour.split(':').map(Number);
     
-    console.log(`Calendar ${calendar.name} hours: ${availability.openHour} - ${availability.closeHour}`);
+    console.log(`Calendar ${calendar.name} hours (UTC): ${availability.openHour} - ${availability.closeHour}`);
 
     // Generate slots in 1-hour increments
     let currentHour = openHour;
@@ -171,9 +191,13 @@ export class GHLAvailabilityService {
         break; // Stop generating slots
       }
 
-      // Format times as HH:MM
-      const startTime = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
-      const endTime = `${String(slotEndHour).padStart(2, '0')}:${String(slotEndMinute).padStart(2, '0')}`;
+      // Format times as HH:MM (UTC)
+      const startTimeUTC = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
+      const endTimeUTC = `${String(slotEndHour).padStart(2, '0')}:${String(slotEndMinute).padStart(2, '0')}`;
+
+      // Convert UTC to Eastern Time for display and storage
+      const startTime = GHLAvailabilityService.utcToEastern(startTimeUTC, date);
+      const endTime = GHLAvailabilityService.utcToEastern(endTimeUTC, date);
 
       // Check if this slot conflicts with existing appointments
       const slotStart = new Date(`${date}T${startTime}:00`);
@@ -249,7 +273,7 @@ export class GHLAvailabilityService {
           console.log(`[GHL Availability] Calendar "${calendar.name}": ${existingAppointments.length} existing appointments`);
 
           // Generate time slots based on calendar availability settings
-          const slots = this.generateTimeSlots(calendarDetails, date, existingAppointments, 3);
+          const slots = GHLAvailabilityService.generateTimeSlots(calendarDetails, date, existingAppointments, 3);
           
           console.log(`[GHL Availability] Calendar "${calendar.name}": ${slots.length} generated slots`);
 
