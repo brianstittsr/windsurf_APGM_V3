@@ -149,6 +149,7 @@ const navigationGroups: NavGroup[] = [
     items: [
       { id: 'integrations', label: 'Calendar Integrations', icon: Calendar },
       { id: 'gohighlevel', label: 'GoHighLevel', icon: Zap },
+      { id: 'private-tokens', label: 'Private Tokens', icon: ShieldCheck },
       { id: 'gohighlevel-mcp', label: 'GHL MCP', icon: Zap },
       { id: 'ghl-migration', label: 'GHL Migration', icon: ArrowLeftRight },
       { id: 'ghl-workflow-builder', label: 'AI Workflow Builder', icon: Bot },

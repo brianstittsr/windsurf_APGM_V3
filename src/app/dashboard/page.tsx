@@ -48,9 +48,10 @@ import FAQsManager from '../../components/admin/FAQsManager';
 import GHLSyncStatus from '../../components/admin/GHLSyncStatus';
 import { ProcessCarouselManager } from '@/components/admin/ProcessCarouselManager';
 import GoogleCalendarIntegration from '../../components/admin/GoogleCalendarIntegration';
+import PrivateTokenManager from '../../components/admin/PrivateTokenManager';
 import { cn } from '@/lib/utils';
 
-type TabType = 'overview' | 'users' | 'clients' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'ghl-migration' | 'ghl-workflow-builder' | 'boldsign' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation' | 'hero-carousel' | 'documents' | 'canva' | 'faqs' | 'process-carousel' | 'integrations';
+type TabType = 'overview' | 'users' | 'clients' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'ghl-migration' | 'ghl-workflow-builder' | 'boldsign' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'private-tokens' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation' | 'hero-carousel' | 'documents' | 'canva' | 'faqs' | 'process-carousel' | 'integrations';
 
 interface BookingMetrics {
   total: number;
@@ -152,6 +153,7 @@ export default function DashboardPage() {
       'forms': 'Registration Forms',
       'gohighlevel': 'GoHighLevel CRM',
       'gohighlevel-mcp': 'GHL MCP Protocol',
+      'private-tokens': 'Private Token Management',
       'ghl-migration': 'GHL Migration',
       'ghl-workflow-builder': 'AI Workflow Builder',
       'boldsign': 'BoldSign Forms',
