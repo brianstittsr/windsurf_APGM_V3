@@ -11,6 +11,22 @@ async function getFirebaseDb() {
   }
 }
 
+// Convert a UTC ISO timestamp to Eastern Time date (YYYY-MM-DD) and time (HH:MM).
+// GHL calendar is America/New_York: EDT = UTC-4 (Mar-Nov), EST = UTC-5 (Nov-Mar).
+function toEasternDateTime(isoString: string): { date: string; time: string } {
+  const utc = new Date(isoString);
+  const y = utc.getUTCFullYear();
+  const march = new Date(y, 2, 1);
+  let s = 0; while (s < 2) { if (march.getDay() === 0) s++; if (s < 2) march.setDate(march.getDate() + 1); }
+  const nov = new Date(y, 10, 1); while (nov.getDay() !== 0) nov.setDate(nov.getDate() + 1);
+  const isDST = utc >= march && utc < nov;
+  const offset = isDST ? 4 : 5;
+  const eastern = new Date(utc.getTime() - offset * 60 * 60 * 1000);
+  const date = eastern.toISOString().split('T')[0];
+  const time = eastern.toISOString().slice(11, 16);
+  return { date, time };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const appointmentData = await request.json();
@@ -208,8 +224,8 @@ export async function POST(request: NextRequest) {
       artistId: appointmentData.artistId || 'default-artist',
       artistName: appointmentData.artistName || 'Victoria Escobar',
       serviceName: appointmentData.serviceName || appointmentData.title,
-      date: new Date(appointmentData.startTime).toISOString().split('T')[0],
-      time: new Date(appointmentData.startTime).toTimeString().slice(0, 5),
+      date: appointmentData.appointmentDate || toEasternDateTime(appointmentData.startTime).date,
+      time: appointmentData.appointmentTime || toEasternDateTime(appointmentData.startTime).time,
       status: appointmentData.status || 'pending',
       price: appointmentData.price || 0,
       depositPaid: appointmentData.depositPaid || false,

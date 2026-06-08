@@ -612,17 +612,34 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
       if (!timeRegex.test(selectedSlot.endTime)) {
         throw new Error(`Invalid end time: "${selectedSlot.endTime}". Expected HH:MM format.`);
       }
-      // Build ISO start/end times for GHL
-      const startDate = new Date(`${selectedDate}T${selectedSlot.time}:00`);
-      const endDate   = new Date(`${selectedDate}T${selectedSlot.endTime}:00`);
-      if (isNaN(startDate.getTime())) {
-        throw new Error(`Could not parse start time: ${selectedDate}T${selectedSlot.time}:00`);
-      }
-      if (isNaN(endDate.getTime())) {
-        throw new Error(`Could not parse end time: ${selectedDate}T${selectedSlot.endTime}:00`);
-      }
-      const startISO = startDate.toISOString();
-      const endISO   = endDate.toISOString();
+      // selectedSlot.time/endTime are Eastern Time (the business timezone).
+      // Convert ET → UTC explicitly so the result does NOT depend on the admin's browser timezone.
+      // GHL calendar is America/New_York: EDT = UTC-4 (Mar-Nov), EST = UTC-5 (Nov-Mar).
+      const getETtoUTCOffset = (dStr: string): number => {
+        const [y, mo, d] = dStr.split('-').map(Number);
+        const dt = new Date(y, mo - 1, d);
+        const march = new Date(y, 2, 1);
+        let s = 0; while (s < 2) { if (march.getDay() === 0) s++; if (s < 2) march.setDate(march.getDate() + 1); }
+        const nov = new Date(y, 10, 1); while (nov.getDay() !== 0) nov.setDate(nov.getDate() + 1);
+        return dt >= march && dt < nov ? 4 : 5;
+      };
+      const toUTCISO = (dStr: string, tStr: string, offset: number): string => {
+        const [h, mn] = tStr.split(':').map(Number);
+        const total = h + offset;
+        const overflow = Math.floor(total / 24);
+        const nh = ((total % 24) + 24) % 24;
+        let nd = dStr;
+        if (overflow !== 0) {
+          const [yy, mm, dd] = dStr.split('-').map(Number);
+          const nx = new Date(yy, mm - 1, dd + overflow);
+          nd = `${nx.getFullYear()}-${String(nx.getMonth() + 1).padStart(2, '0')}-${String(nx.getDate()).padStart(2, '0')}`;
+        }
+        return `${nd}T${String(nh).padStart(2, '0')}:${String(mn).padStart(2, '0')}:00.000Z`;
+      };
+      const etOffset = getETtoUTCOffset(selectedDate);
+      const startISO = toUTCISO(selectedDate, selectedSlot.time, etOffset);
+      const endISO   = toUTCISO(selectedDate, selectedSlot.endTime, etOffset);
+      console.log(`[BookingWizard] ET ${selectedSlot.time} (+${etOffset}h) → UTC ${startISO}`);
 
       const payload = {
         // Contact fields
@@ -637,6 +654,8 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
         appointmentType: isConsultation ? 'consultation' : 'appointment',
         startTime: startISO,
         endTime:   endISO,
+        appointmentDate: selectedDate,      // raw Eastern date for website storage
+        appointmentTime: selectedSlot.time, // raw Eastern time for website storage
         artistId:   'victoria',
         artistName: 'Victoria',
         status: 'confirmed',
