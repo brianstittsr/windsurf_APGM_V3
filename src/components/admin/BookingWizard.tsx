@@ -58,6 +58,33 @@ interface BookingWizardProps {
 type WizardStep = 'client-type' | 'client-selection' | 'new-client' | 'date-selection' | 'payment' | 'confirmation';
 type DateSelectionMode = 'next-available' | 'weekend' | 'calendar-override';
 
+// Booking window and durations (minutes since midnight / minutes)
+const BUSINESS_START_MIN = 9 * 60;   // 9:00 AM
+const BUSINESS_END_MIN = 18 * 60;    // 6:00 PM
+const CONSULTATION_DURATION_MIN = 45;
+const DEFAULT_APPOINTMENT_DURATION_MIN = 180; // 3 hours
+
+const toMinutes = (t: string): number => {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + (m || 0);
+};
+
+const toHHMM = (mins: number): string => {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+};
+
+// Infer how long an existing booking occupies, for overlap detection.
+const inferDurationMin = (serviceName?: string, time?: string, endTime?: string): number => {
+  if (time && endTime) {
+    const diff = toMinutes(endTime) - toMinutes(time);
+    if (diff > 0) return diff;
+  }
+  if (serviceName && /consult/i.test(serviceName)) return CONSULTATION_DURATION_MIN;
+  return DEFAULT_APPOINTMENT_DURATION_MIN;
+};
+
 interface InlineStripeFormProps {
   onSuccess: () => void;
   onError: (msg: string) => void;
@@ -148,7 +175,6 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
   const [calendarOverrideDate, setCalendarOverrideDate] = useState('');
   const [calendarOverrideTime, setCalendarOverrideTime] = useState('');
   const [useManualTime, setUseManualTime] = useState(false);
-  const [duration, setDuration] = useState(180); // 3 hours default
   const [notes, setNotes] = useState('');
   
   // Payment state
@@ -169,6 +195,45 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
   
   // Consultation detection (derived — no price, skip payment)
   const isConsultation = serviceName === 'Consultation';
+
+  // Consultations are short (45 min) so many can be scheduled per day; other services default to 3 hours.
+  const effectiveDuration = isConsultation ? CONSULTATION_DURATION_MIN : DEFAULT_APPOINTMENT_DURATION_MIN;
+  // Step between offered start times: every 45 min for consultations, hourly for longer services.
+  const effectiveStep = isConsultation ? CONSULTATION_DURATION_MIN : 60;
+
+  // Generate selectable time slots for a day, stepping by `stepMin` and giving each slot
+  // a `durationMin` length. Skips slots that overlap an existing booking or are in the past.
+  const buildSlots = (
+    existing: Array<{ time: string; endTime?: string; serviceName?: string }>,
+    durationMin: number,
+    stepMin: number,
+    opts?: { dateStr?: string; todayStr?: string; now?: Date }
+  ): TimeSlot[] => {
+    const busy = existing.map(b => {
+      const start = toMinutes(b.time);
+      return { start, end: start + inferDurationMin(b.serviceName, b.time, b.endTime) };
+    });
+
+    const nowMin = opts?.now ? opts.now.getHours() * 60 + opts.now.getMinutes() : -1;
+    const isToday = !!opts?.dateStr && !!opts?.todayStr && opts.dateStr === opts.todayStr;
+
+    const slots: TimeSlot[] = [];
+    for (let start = BUSINESS_START_MIN; start + durationMin <= BUSINESS_END_MIN; start += stepMin) {
+      const end = start + durationMin;
+      const overlaps = busy.some(b => start < b.end && end > b.start);
+      const isPast = isToday && start <= nowMin;
+      if (!overlaps && !isPast) {
+        slots.push({
+          time: toHHMM(start),
+          endTime: toHHMM(end),
+          available: true,
+          calendarId: calendars[0]?.id || 'website-calendar',
+          calendarName: calendars[0]?.name || 'Website Calendar',
+        });
+      }
+    }
+    return slots;
+  };
 
   // GHL availability check state
   const [ghlAvailability, setGhlAvailability] = useState<{ date: string; slots: Array<{ time: string; endTime: string; available: boolean; reason?: string }> }[]>([]);
@@ -329,7 +394,6 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
     
     try {
       const now = new Date();
-      const currentHour = now.getHours();
       const todayStr = now.toISOString().split('T')[0];
       
       let searchDate = new Date();
@@ -351,33 +415,9 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
         
         // Check existing bookings from Firestore for conflicts
         const existingBookings = await getExistingBookingsForDate(dateStr);
-        const bookedTimes = existingBookings.map(b => b.time);
-        
-        // Generate slots from 9 AM to 3 PM (3-hour appointments)
-        const slots: TimeSlot[] = [];
-        for (let hour = 9; hour <= 15; hour++) {
-          const time = `${String(hour).padStart(2, '0')}:00`;
-          const endTime = `${String(hour + 3).padStart(2, '0')}:00`;
-          
-          // Skip if this time is already booked
-          const isBooked = bookedTimes.some(bookedTime => {
-            const bookedHour = parseInt(bookedTime.split(':')[0]);
-            return bookedHour >= hour && bookedHour < hour + 3;
-          });
-          
-          // Skip past times for today
-          const isPast = dateStr === todayStr && hour <= currentHour;
-          
-          if (!isBooked && !isPast) {
-            slots.push({
-              time,
-              endTime,
-              available: true,
-              calendarId: calendars[0]?.id || 'website-calendar',
-              calendarName: calendars[0]?.name || 'Website Calendar'
-            });
-          }
-        }
+
+        // Generate slots stepping by the service duration (45 min for consultations)
+        const slots = buildSlots(existingBookings, effectiveDuration, effectiveStep, { dateStr, todayStr, now });
         
         if (slots.length > 0) {
           foundSlots = slots;
@@ -420,16 +460,23 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
   };
 
   // Helper function to get existing bookings for a date
-  const getExistingBookingsForDate = async (date: string): Promise<Array<{time: string}>> => {
+  const getExistingBookingsForDate = async (
+    date: string
+  ): Promise<Array<{ time: string; endTime?: string; serviceName?: string }>> => {
     try {
       const db = getDb();
       const bookingsRef = collection(db, 'bookings');
       const q = query(bookingsRef, where('date', '==', date));
       const snapshot = await getDocs(q);
-      
-      return snapshot.docs.map(doc => ({
-        time: doc.data().time || '00:00'
-      }));
+
+      return snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          time: data.time || '00:00',
+          endTime: data.endTime || undefined,
+          serviceName: data.serviceName || data.ghlTitle || undefined,
+        };
+      });
     } catch (error) {
       console.error('Error fetching existing bookings:', error);
       return [];
@@ -444,30 +491,13 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
     try {
       // Check existing bookings from Firestore for conflicts
       const existingBookings = await getExistingBookingsForDate(date);
-      const bookedTimes = existingBookings.map(b => b.time);
-      
-      // Generate slots from 9 AM to 3 PM (3-hour appointments)
-      const slots: TimeSlot[] = [];
-      for (let hour = 9; hour <= 15; hour++) {
-        const time = `${String(hour).padStart(2, '0')}:00`;
-        const endTime = `${String(hour + 3).padStart(2, '0')}:00`;
-        
-        // Check if this slot conflicts with existing appointments
-        const hasConflict = bookedTimes.some(bookedTime => {
-          const bookedHour = parseInt(bookedTime.split(':')[0]);
-          return bookedHour >= hour && bookedHour < hour + 3;
-        });
-        
-        slots.push({
-          time,
-          endTime,
-          available: !hasConflict,
-          calendarId: calendars[0]?.id || 'website-calendar',
-          calendarName: calendars[0]?.name || 'Website Calendar'
-        });
-      }
-      
-      setAvailableSlots(slots.filter(s => s.available));
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+
+      // Generate slots stepping by the service duration (45 min for consultations)
+      const slots = buildSlots(existingBookings, effectiveDuration, effectiveStep, { dateStr: date, todayStr, now });
+
+      setAvailableSlots(slots);
       setSelectedDate(date);
     } catch (error) {
       console.error('Error fetching slots for date:', error);
@@ -1215,9 +1245,9 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                         onClick={() => {
                           if (calendarOverrideDate && calendarOverrideTime) {
                             const [overrideHour, overrideMin] = calendarOverrideTime.split(':').map(Number);
-                            const rawEndHour = overrideHour + Math.floor(duration / 60);
-                            const clampedEndHour = Math.min(rawEndHour, 23);
-                            const endTime = `${String(clampedEndHour).padStart(2, '0')}:${String(overrideMin).padStart(2, '0')}`;
+                            const startMin = overrideHour * 60 + overrideMin;
+                            const endMin = Math.min(startMin + effectiveDuration, 23 * 60 + 59);
+                            const endTime = toHHMM(endMin);
                             setSelectedSlot({
                               time: `${String(overrideHour).padStart(2, '0')}:${String(overrideMin).padStart(2, '0')}`,
                               endTime: endTime,
