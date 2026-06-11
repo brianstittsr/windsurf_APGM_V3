@@ -74,14 +74,17 @@ export function getServiceImagePath(service: ServiceItem): string {
   if (serviceName.includes('eyeliner')) {
     return '/images/services/STROKES.png';
   }
+  if (serviceName.includes('consultation') || serviceName.includes('perfecting session') || serviceName.includes('perfecting')) {
+    return '/images/APGM-icon.png';
+  }
 
   // Fall back to service.image from database if available
   if (service.image) {
     return service.image;
   }
 
-  // Ultimate fallback to the logo
-  return '/APRG_Text_Logo.png';
+  // Ultimate fallback to the PG logo icon
+  return '/images/APGM-icon.png';
 }
 
 /**

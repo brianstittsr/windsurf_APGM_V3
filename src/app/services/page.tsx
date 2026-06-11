@@ -7,9 +7,10 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, Heart, Calendar, ArrowRight, Medal, Flag, Sparkles } from 'lucide-react';
+import { Clock, Heart, Calendar, ArrowRight, Medal, Flag } from 'lucide-react';
 import { ServiceService } from '@/services/database';
 import { Service } from '@/types/database';
+import { getServiceImagePath } from '@/utils/serviceImageUtils';
 
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
@@ -22,12 +23,17 @@ export default function ServicesPage() {
   const loadServices = async () => {
     try {
       const servicesData = await ServiceService.getAllServices();
-      setServices(servicesData.filter(s => s.isActive));
+      const testNames = ['test service', 'test srvcie 3', 'test service 3'];
+      setServices(servicesData.filter(s => s.isActive && !testNames.includes(s.name.toLowerCase().trim())));
     } catch (error) {
       console.error('Error loading services:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const getServiceImage = (service: Service): string => {
+    return getServiceImagePath(service);
   };
 
   const generateSlug = (name: string) => {
@@ -76,7 +82,7 @@ export default function ServicesPage() {
                 <Card key={service.id} className="h-full border-0 shadow-lg overflow-hidden flex flex-col">
                   <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
                     <Image
-                      src={service.image || '/images/placeholder.png'}
+                      src={getServiceImage(service)}
                       alt={service.name}
                       fill
                       className="object-contain p-4"
@@ -94,10 +100,6 @@ export default function ServicesPage() {
                       <span className="inline-flex items-center gap-1 px-2 py-1 bg-muted text-muted-foreground text-xs rounded-md">
                         <Clock className="w-3 h-3" />
                         {service.duration}
-                      </span>
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-muted text-muted-foreground text-xs rounded-md">
-                        <Heart className="w-3 h-3" />
-                        ${service.price}
                       </span>
                     </div>
                   </CardContent>

@@ -27,7 +27,9 @@ import {
   Info,
   Users,
   Workflow,
-  Clock
+  Clock,
+  CreditCard,
+  Zap
 } from 'lucide-react';
 
 interface CRMSettings {
@@ -60,6 +62,8 @@ export default function GoHighLevelManager() {
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [showApiKey, setShowApiKey] = useState(false);
   const [testResult, setTestResult] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  const [fieldSetupResult, setFieldSetupResult] = useState<{ type: 'success' | 'error' | 'idle', message: string }>({ type: 'idle', message: '' });
+  const [settingUpFields, setSettingUpFields] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -178,6 +182,38 @@ export default function GoHighLevelManager() {
       setMessage({ type: 'error', text: 'Failed to toggle sync' });
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const handleSetupStripeField = async () => {
+    if (!settings.apiKey.trim()) {
+      setFieldSetupResult({ type: 'error', message: 'Please save your API Key first' });
+      return;
+    }
+    try {
+      setSettingUpFields(true);
+      setFieldSetupResult({ type: 'idle', message: '' });
+      const response = await fetch('/api/crm/setup-custom-fields', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey: settings.apiKey, locationId: settings.locationId })
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        const created = data.results.filter((r: any) => r.status === 'created').length;
+        const exists = data.results.filter((r: any) => r.status === 'exists').length;
+        const msg = created > 0
+          ? `✅ Created ${created} custom field(s) in GHL successfully!`
+          : `ℹ️ Custom field already exists in GHL — no changes needed.`;
+        setFieldSetupResult({ type: 'success', message: msg });
+      } else {
+        const errDetail = data.results?.find((r: any) => r.status === 'error')?.error || data.error || 'Unknown error';
+        setFieldSetupResult({ type: 'error', message: `❌ ${errDetail}` });
+      }
+    } catch (error) {
+      setFieldSetupResult({ type: 'error', message: '❌ Request failed. Check API key and Location ID.' });
+    } finally {
+      setSettingUpFields(false);
     }
   };
 
@@ -540,6 +576,111 @@ export default function GoHighLevelManager() {
             <p className="text-sm text-blue-700">
               <strong>Full Sync:</strong> Synchronizes all contacts and workflows from GoHighLevel to your database. This may take a few minutes depending on the amount of data.
             </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Stripe Integration Section */}
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm mb-6 overflow-hidden">
+        <div className="bg-indigo-600 text-white px-6 py-4">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <CreditCard className="w-5 h-5" />
+            Stripe Integration — Custom Field Setup
+          </h3>
+        </div>
+        <div className="p-6">
+          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-5">
+            <div className="flex items-start gap-3">
+              <Zap className="w-5 h-5 text-indigo-600 mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-indigo-800">
+                <p className="font-semibold mb-1">How GHL ↔ Stripe sync works</p>
+                <ol className="list-decimal list-inside space-y-1 text-indigo-700">
+                  <li>When a new contact is created in GHL, a webhook fires to this site</li>
+                  <li>A matching Stripe customer is created automatically</li>
+                  <li>The Stripe Customer ID is written back to the GHL contact's <code className="bg-indigo-100 px-1 rounded">stripe_customer_id</code> custom field</li>
+                  <li>Both records stay linked for reporting and transaction tracking</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          <div className="border border-gray-200 rounded-lg p-4 mb-5">
+            <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+              <Key className="w-4 h-4 text-indigo-500" />
+              Required GHL Custom Field
+            </h4>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-gray-500 border-b">
+                  <th className="pb-2 pr-4">Name</th>
+                  <th className="pb-2 pr-4">Field Key</th>
+                  <th className="pb-2">Type</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="text-gray-700">
+                  <td className="pt-3 pr-4 font-medium">Stripe Customer ID</td>
+                  <td className="pt-3 pr-4 font-mono text-xs bg-gray-50 px-2 py-1 rounded">contact.stripe_customer_id</td>
+                  <td className="pt-3">Text</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {fieldSetupResult.type !== 'idle' && (
+            <div className={`flex items-center justify-between px-4 py-3 rounded-lg mb-4 ${
+              fieldSetupResult.type === 'success'
+                ? 'bg-green-50 border border-green-200 text-green-700'
+                : 'bg-red-50 border border-red-200 text-red-700'
+            }`}>
+              <div className="flex items-center gap-2 text-sm">
+                {fieldSetupResult.type === 'success'
+                  ? <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                  : <AlertTriangle className="w-4 h-4 flex-shrink-0" />}
+                {fieldSetupResult.message}
+              </div>
+              <button onClick={() => setFieldSetupResult({ type: 'idle', message: '' })} className="ml-4 opacity-60 hover:opacity-100">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Button
+              onClick={handleSetupStripeField}
+              disabled={settingUpFields || !settings.apiKey}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
+              {settingUpFields ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Creating field...
+                </>
+              ) : (
+                <>
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Create Stripe Custom Field in GHL
+                </>
+              )}
+            </Button>
+            <div className="text-sm text-gray-500 flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
+              <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-400" />
+              <span>Safe to run multiple times — skips fields that already exist.</span>
+            </div>
+          </div>
+
+          <div className="mt-5 bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <h4 className="font-semibold text-amber-800 flex items-center gap-2 mb-2">
+              <AlertTriangle className="w-4 h-4" />
+              GHL Webhook Setup Required
+            </h4>
+            <ol className="text-sm text-amber-700 list-decimal list-inside space-y-1">
+              <li>In GHL go to <strong>Settings → Integrations → Webhooks</strong></li>
+              <li>Click <strong>Add New Webhook</strong></li>
+              <li>URL: <code className="bg-amber-100 px-1 rounded text-xs">https://www.aprettygirlmatter.com/api/webhooks/ghl-contact</code></li>
+              <li>Event: <strong>Contact Create</strong></li>
+              <li>Save — new contacts will now auto-sync to Stripe</li>
+            </ol>
           </div>
         </div>
       </div>
