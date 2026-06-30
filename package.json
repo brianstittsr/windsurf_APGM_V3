@@ -28,7 +28,9 @@
     "list-ghl-calendars": "tsx src/scripts/listGHLCalendars.ts",
     "list-ghl-appointments": "tsx src/scripts/listGHLAppointments.ts",
     "create-ghl-test-appointment": "tsx src/scripts/createGHLTestAppointment.ts",
-    "add-evening-slide": "tsx src/scripts/addEveningAppointmentsSlide.ts"
+    "add-evening-slide": "tsx src/scripts/addEveningAppointmentsSlide.ts",
+    "bulk-sync-stripe": "tsx src/scripts/bulkSyncStripeClients.ts",
+    "check-stripe-env": "tsx src/scripts/checkStripeEnv.ts"
   },
   "dependencies": {
     "@azure/msal-node": "^3.8.0",

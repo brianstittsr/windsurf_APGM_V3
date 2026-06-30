@@ -46,6 +46,7 @@ import {
   ShieldCheck,
   HelpCircle,
   PenTool,
+  CreditCard,
 } from 'lucide-react';
 
 // Navigation item types
@@ -148,6 +149,7 @@ const navigationGroups: NavGroup[] = [
     icon: Globe,
     items: [
       { id: 'integrations', label: 'Calendar Integrations', icon: Calendar },
+      { id: 'stripe-checkout', label: 'Stripe Checkout', icon: CreditCard },
       { id: 'gohighlevel', label: 'GoHighLevel', icon: Zap },
       { id: 'private-tokens', label: 'Private Tokens', icon: ShieldCheck },
       { id: 'gohighlevel-mcp', label: 'GHL MCP', icon: Zap },

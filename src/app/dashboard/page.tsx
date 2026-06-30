@@ -49,9 +49,10 @@ import GHLSyncStatus from '../../components/admin/GHLSyncStatus';
 import { ProcessCarouselManager } from '@/components/admin/ProcessCarouselManager';
 import GoogleCalendarIntegration from '../../components/admin/GoogleCalendarIntegration';
 import PrivateTokenManager from '../../components/admin/PrivateTokenManager';
+import StripeCheckoutManager from '../../components/admin/StripeCheckoutManager';
 import { cn } from '@/lib/utils';
 
-type TabType = 'overview' | 'users' | 'clients' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'ghl-migration' | 'ghl-workflow-builder' | 'boldsign' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'private-tokens' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation' | 'hero-carousel' | 'documents' | 'canva' | 'faqs' | 'process-carousel' | 'integrations';
+type TabType = 'overview' | 'users' | 'clients' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'ghl-migration' | 'ghl-workflow-builder' | 'boldsign' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'private-tokens' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation' | 'hero-carousel' | 'documents' | 'canva' | 'faqs' | 'process-carousel' | 'integrations' | 'stripe-checkout';
 
 interface BookingMetrics {
   total: number;
@@ -183,7 +184,8 @@ export default function DashboardPage() {
       'canva': 'Canva Integration',
       'faqs': 'FAQs & Help',
       'process-carousel': 'Process Carousel',
-      'integrations': 'Integrations'
+      'integrations': 'Integrations',
+      'stripe-checkout': 'Stripe Tap to Pay',
     };
     return pageTitles[tab] || 'Dashboard';
   };
@@ -463,7 +465,19 @@ export default function DashboardPage() {
                   <p className="text-gray-500 text-sm">CRM integration</p>
                 </div>
 
-                {/* QR Codes */}
+                {/* Stripe Checkout */}
+                <div 
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:border-[#AD6269] hover:shadow-lg transition-all cursor-pointer group text-center"
+                  onClick={() => setActiveTab('stripe-checkout')}
+                >
+                  <div className="w-16 h-16 bg-gray-100 group-hover:bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
+                    <i className="fas fa-credit-card text-3xl text-gray-600 group-hover:text-[#AD6269] transition-colors"></i>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Stripe Checkout</h3>
+                  <p className="text-gray-500 text-sm">Tap to Pay & client sync</p>
+                </div>
+
+              {/* QR Codes */}
                 <div 
                   className="bg-white rounded-xl border border-gray-200 p-6 hover:border-[#AD6269] hover:shadow-lg transition-all cursor-pointer group text-center"
                   onClick={() => setActiveTab('qrcodes')}
@@ -584,6 +598,8 @@ export default function DashboardPage() {
         return <ProcessCarouselManager />;
       case 'integrations':
         return <GoogleCalendarIntegration />;
+      case 'stripe-checkout':
+        return <StripeCheckoutManager />;
       default:
         return null;
     }

@@ -257,39 +257,57 @@ The payment is automatically linked to the client and appears in their payment h
 
 ### Step-by-Step Instructions
 
-1. **Navigate to Bookings**
-   - Go to **"Clients & Bookings"** → **"Bookings"** in the sidebar
-   - Or go to **"Calendar"** for a visual view
+Use this step-by-step script when creating a booking in the admin section:
 
-2. **Click "Create Booking"**
-   - Click the pink **"+ Create Booking"** button
+1. **Ask:** "Is this a new client or an existing client?"
+   - **Existing client:** Search by name, email, or phone and select the client from the list.
+   - **New client:** Click **"Create New Client"** and enter:
+     - First Name
+     - Last Name
+     - Email Address
+     - Phone Number
+     - Password
+     - Confirm Password
 
-3. **Select or Create a Client**
-   - **Existing Client**: Search by name or email and select from the list
-   - **New Client**: Click "Create New Client" and fill in their details
+2. **Ask:** "What service are we booking today?"
+   - Select the service from the dropdown.
+   - If it is a **Consultation**, no payment is required.
 
-4. **Choose a Service**
-   - Select the service type (e.g., Microblading, Lip Blush, etc.)
+3. **Ask:** "What date and time would you like?"
+   - Choose **Next Available**, **Weekend**, or **Calendar Override**.
+   - If needed, manually pick a date and time.
+   - Review the available time slots and select the best one.
 
-5. **Select Date and Time**
-   - Choose an available date from the calendar
-   - Select an available time slot
-   - If no slots are available, use "Calendar Override" to manually set a time
+4. **Ask:** "Would you like to add any notes or special instructions?"
+   - Add any appointment details, client preferences, or reminders.
 
-6. **Handle Deposit (Optional)**
-   - Choose payment method:
-     - **Square**: Process payment through Square
-     - **External Payment**: Record cash, Zelle, or other payment
-   - Enter deposit amount if applicable
+5. **If this is a paid appointment, ask:** "How would you like to pay today?"
+   - **Credit Card**
+   - **Klarna**
+   - **Afterpay**
+   - **Affirm**
+   - **Zelle**
+   - **External** (cash, check, or other)
 
-7. **Add Notes (Optional)**
-   - Enter any special notes about the appointment
-   - These notes will be saved with the booking
+6. **If Credit Card is selected:**
+   - Ask whether to charge a **deposit** or the **full service price**.
 
-8. **Confirm Booking**
-   - Review all details
-   - Click **"Create Booking"**
-   - Confirmation emails will be sent automatically
+7. **If Klarna, Afterpay, or Affirm is selected:**
+   - Confirm the buy-now-pay-later option and complete the payment form.
+
+8. **If Zelle or External is selected:**
+   - Record the payment as pending or confirmed as appropriate.
+
+9. **Review everything one last time**
+   - Client
+   - Service
+   - Date and time
+   - Notes
+   - Payment method
+
+10. Click **"Create Booking"** to save the appointment.
+
+The client will receive a confirmation email automatically.
 
 ---
 

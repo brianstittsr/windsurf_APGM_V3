@@ -29,7 +29,10 @@ import {
   Workflow,
   Clock,
   CreditCard,
-  Zap
+  Zap,
+  MessageSquare,
+  Send,
+  Smartphone
 } from 'lucide-react';
 
 interface CRMSettings {
@@ -65,8 +68,21 @@ export default function GoHighLevelManager() {
   const [fieldSetupResult, setFieldSetupResult] = useState<{ type: 'success' | 'error' | 'idle', message: string }>({ type: 'idle', message: '' });
   const [settingUpFields, setSettingUpFields] = useState(false);
 
+  // Privyr integration state
+  const [privyrWebhookUrl, setPrivyrWebhookUrl] = useState('');
+  const [privyrConfigured, setPrivyrConfigured] = useState(false);
+  const [privyrStats, setPrivyrStats] = useState({
+    totalConversations: 0,
+    successfulSyncs: 0,
+    failedSyncs: 0,
+  });
+  const [savingPrivyr, setSavingPrivyr] = useState(false);
+  const [testingPrivyr, setTestingPrivyr] = useState(false);
+  const [privyrMessage, setPrivyrMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
   useEffect(() => {
     loadSettings();
+    loadPrivyrSettings();
   }, []);
 
   const loadSettings = async () => {
@@ -81,6 +97,74 @@ export default function GoHighLevelManager() {
       setMessage({ type: 'error', text: 'Failed to load GoHighLevel settings' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPrivyrSettings = async () => {
+    try {
+      const response = await fetch('/api/integrations/privyr');
+      if (response.ok) {
+        const data = await response.json();
+        setPrivyrConfigured(data.configured);
+        setPrivyrWebhookUrl(data.webhookUrl || '');
+        setPrivyrStats({
+          totalConversations: data.stats?.totalConversationsLogged || 0,
+          successfulSyncs: data.stats?.successfulSyncs || 0,
+          failedSyncs: data.stats?.failedSyncs || 0,
+        });
+      }
+    } catch (error) {
+      console.error('Error loading Privyr settings:', error);
+    }
+  };
+
+  const handleSavePrivyr = async (testFirst = false) => {
+    if (!privyrWebhookUrl.trim()) {
+      setPrivyrMessage({ type: 'error', text: 'Please enter your Privyr webhook URL' });
+      return;
+    }
+
+    try {
+      if (testFirst) {
+        setTestingPrivyr(true);
+      } else {
+        setSavingPrivyr(true);
+      }
+      setPrivyrMessage(null);
+
+      const response = await fetch('/api/integrations/privyr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          webhookUrl: privyrWebhookUrl,
+          testMode: testFirst,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setPrivyrConfigured(true);
+        setPrivyrMessage({
+          type: 'success',
+          text: testFirst
+            ? '✅ Test successful! Privyr webhook is working and URL has been saved.'
+            : '✅ Privyr webhook URL saved successfully',
+        });
+      } else {
+        setPrivyrMessage({
+          type: 'error',
+          text: data.error || 'Failed to save Privyr settings',
+        });
+      }
+    } catch (error) {
+      setPrivyrMessage({
+        type: 'error',
+        text: 'Error saving Privyr settings. Please try again.',
+      });
+    } finally {
+      setSavingPrivyr(false);
+      setTestingPrivyr(false);
     }
   };
 
@@ -680,6 +764,157 @@ export default function GoHighLevelManager() {
               <li>URL: <code className="bg-amber-100 px-1 rounded text-xs">https://www.aprettygirlmatter.com/api/webhooks/ghl-contact</code></li>
               <li>Event: <strong>Contact Create</strong></li>
               <li>Save — new contacts will now auto-sync to Stripe</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      {/* Privyr Integration Section */}
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm mb-6 overflow-hidden">
+        <div className="bg-pink-600 text-white px-6 py-4">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <Smartphone className="w-5 h-5" />
+            Privyr Integration — GHL Conversation Sync
+          </h3>
+        </div>
+        <div className="p-6">
+          <div className="bg-pink-50 border border-pink-200 rounded-lg p-4 mb-5">
+            <div className="flex items-start gap-3">
+              <MessageSquare className="w-5 h-5 text-pink-600 mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-pink-800">
+                <p className="font-semibold mb-1">Sync GHL conversations to Privyr CRM</p>
+                <p className="text-pink-700 mb-2">
+                  Automatically forward SMS, Email, and Facebook Messenger conversations from GoHighLevel to Privyr. 
+                  This creates leads in Privyr with conversation history so you can respond quickly via the Privyr mobile app.
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-pink-700">
+                  <li>Real-time sync of inbound messages</li>
+                  <li>Captures contact info (name, email, phone)</li>
+                  <li>Includes message preview in lead notes</li>
+                  <li>Works with SMS, Email, and Messenger channels</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+            <div className={`rounded-lg p-4 text-white ${privyrConfigured ? 'bg-green-500' : 'bg-gray-400'}`}>
+              <p className="text-sm text-white/80 mb-1">Privyr Status</p>
+              <h4 className="text-lg font-bold">{privyrConfigured ? 'Connected' : 'Not Configured'}</h4>
+            </div>
+            <div className="bg-blue-500 rounded-lg p-4 text-white">
+              <p className="text-sm text-white/80 mb-1">Conversations Logged</p>
+              <h4 className="text-2xl font-bold">{privyrStats.totalConversations}</h4>
+            </div>
+            <div className="bg-purple-500 rounded-lg p-4 text-white">
+              <p className="text-sm text-white/80 mb-1">Successful Syncs</p>
+              <h4 className="text-2xl font-bold">{privyrStats.successfulSyncs}</h4>
+            </div>
+          </div>
+
+          {/* Message Display */}
+          {privyrMessage && (
+            <div className={`flex items-center justify-between px-4 py-3 rounded-lg mb-4 ${
+              privyrMessage.type === 'success'
+                ? 'bg-green-50 border border-green-200 text-green-700'
+                : 'bg-red-50 border border-red-200 text-red-700'
+            }`}>
+              <div className="flex items-center gap-2 text-sm">
+                {privyrMessage.type === 'success'
+                  ? <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                  : <AlertTriangle className="w-4 h-4 flex-shrink-0" />}
+                {privyrMessage.text}
+              </div>
+              <button onClick={() => setPrivyrMessage(null)} className="ml-4 opacity-60 hover:opacity-100">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {/* Webhook URL Input */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <span className="flex items-center gap-1">
+                  <Send className="w-4 h-4 text-pink-500" />
+                  Privyr Incoming Webhook URL *
+                </span>
+              </label>
+              <Input
+                type="text"
+                value={privyrWebhookUrl}
+                onChange={(e) => setPrivyrWebhookUrl(e.target.value)}
+                placeholder="https://www.privyr.com/api/v1/incoming-leads/XXXX/YYYY"
+                className="w-full"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Get this from Privyr: Account → Integrations → Incoming Webhook
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Button
+                onClick={() => handleSavePrivyr(true)}
+                disabled={testingPrivyr || savingPrivyr || !privyrWebhookUrl.trim()}
+                variant="outline"
+                className="w-full"
+              >
+                {testingPrivyr ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                    Testing...
+                  </>
+                ) : (
+                  <>
+                    <Plug className="w-4 h-4 mr-2" />
+                    Test & Save Connection
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={() => handleSavePrivyr(false)}
+                disabled={testingPrivyr || savingPrivyr || !privyrWebhookUrl.trim()}
+                className="w-full bg-pink-600 hover:bg-pink-700 text-white"
+              >
+                {savingPrivyr ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Webhook URL
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {/* Setup Instructions */}
+          <div className="mt-5 bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <h4 className="font-semibold text-amber-800 flex items-center gap-2 mb-2">
+              <AlertTriangle className="w-4 h-4" />
+              GHL Workflow Setup Required
+            </h4>
+            <p className="text-sm text-amber-700 mb-3">
+              Since GHL doesn't have native conversation webhooks, you must create a Workflow:
+            </p>
+            <ol className="text-sm text-amber-700 list-decimal list-inside space-y-2">
+              <li>In GHL: <strong>Automation → Workflows</strong></li>
+              <li>Create new Workflow: "Conversation Sync to Privyr"</li>
+              <li>Add <strong>TRIGGER</strong>: "Customer Replied" (catches all inbound messages)<br/>
+                <span className="text-xs text-amber-600 ml-4">Or use specific triggers: "SMS Received", "Email Received"</span>
+              </li>
+              <li>Add <strong>ACTION</strong>: "Webhook"
+                <ul className="list-disc list-inside ml-6 mt-1 space-y-1 text-xs">
+                  <li>URL: <code className="bg-amber-100 px-1 rounded">https://www.aprettygirlmatter.com/api/webhooks/ghl-conversation</code></li>
+                  <li>Method: POST</li>
+                  <li>Body: Use Custom JSON (see API file for full schema)</li>
+                </ul>
+              </li>
+              <li>Save and Publish the workflow</li>
             </ol>
           </div>
         </div>

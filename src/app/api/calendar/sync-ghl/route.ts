@@ -149,6 +149,34 @@ async function createOrUpdateGHLContact(booking: Booking, apiKey: string) {
   }
 }
 
+async function upsertWebsiteClientFromBooking(booking: Booking, contactId: string) {
+  const usersCollection = db.collection('users');
+  let targetDoc = usersCollection.doc(contactId);
+
+  if (booking.clientEmail) {
+    const existingByEmail = await usersCollection.where('email', '==', booking.clientEmail).limit(1).get();
+    if (!existingByEmail.empty) {
+      targetDoc = existingByEmail.docs[0].ref;
+    }
+  }
+
+  const nameParts = booking.clientName.trim().split(' ');
+  await targetDoc.set({
+    id: targetDoc.id,
+    email: booking.clientEmail || '',
+    displayName: booking.clientName,
+    firstName: nameParts[0] || booking.clientName,
+    lastName: nameParts.slice(1).join(' ') || '',
+    phone: booking.clientPhone || '',
+    role: 'client',
+    isActive: true,
+    source: 'Calendar Sync',
+    ghlContactId: contactId,
+    updatedAt: new Date(),
+    createdAt: new Date(),
+  }, { merge: true });
+}
+
 async function createOrUpdateGHLAppointment(booking: Booking, contactId: string, apiKey: string) {
   try {
     const locationId = await getGHLLocationId();
@@ -327,6 +355,8 @@ export async function POST(req: NextRequest) {
     try {
       contactId = await createOrUpdateGHLContact(booking, apiKey);
       console.log('[sync-ghl] Contact created/updated:', contactId);
+      await upsertWebsiteClientFromBooking(booking, contactId);
+      console.log('[sync-ghl] Website client upserted from booking:', booking.id);
     } catch (contactError) {
       const errorMsg = contactError instanceof Error ? contactError.message : 'Unknown contact error';
       console.error('[sync-ghl] Contact creation failed:', errorMsg);

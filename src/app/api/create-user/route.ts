@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { UserService } from '@/services/database';
+import { db as adminDb } from '@/lib/firebase-admin';
 
 // Initialize Firebase Admin if not already initialized
 if (!getApps().length) {
@@ -30,28 +30,56 @@ if (!getApps().length) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, firstName, lastName, phone } = await request.json();
+    const { email, password, firstName, lastName, phone, displayName } = await request.json();
 
-    if (!email || !password || !firstName || !lastName || !phone) {
+    if (!email || !firstName || !lastName || !phone) {
       return NextResponse.json({
         success: false,
-        message: 'All fields are required: email, password, firstName, lastName, phone'
+        message: 'Required fields are: email, firstName, lastName, phone'
       }, { status: 400 });
     }
 
     const auth = getAuth();
-    
-    // Create Firebase Auth user
-    const userRecord = await auth.createUser({
-      email,
-      password,
-      emailVerified: false,
-      disabled: false,
-    });
+    const normalizedDisplayName = displayName || `${firstName} ${lastName}`.trim();
+    let uid: string;
+    let createdAuthUser = false;
 
-    // Create user profile in Firestore
+    try {
+      const existingUser = await auth.getUserByEmail(email);
+      uid = existingUser.uid;
+      console.log(`ℹ️ Existing auth user found for ${email}: ${uid}`);
+
+      await auth.updateUser(uid, {
+        displayName: normalizedDisplayName,
+      });
+    } catch (authError: any) {
+      if (authError?.code !== 'auth/user-not-found') {
+        throw authError;
+      }
+
+      if (!password) {
+        return NextResponse.json({
+          success: false,
+          message: 'Password is required for a new client'
+        }, { status: 400 });
+      }
+
+      const userRecord = await auth.createUser({
+        email,
+        password,
+        displayName: normalizedDisplayName,
+        emailVerified: false,
+        disabled: false,
+      });
+      uid = userRecord.uid;
+      createdAuthUser = true;
+    }
+
+    // Create or update user profile in Firestore
     const userProfileData = {
+      id: uid,
       email,
+      displayName: normalizedDisplayName,
       firstName,
       lastName,
       phone,
@@ -63,15 +91,19 @@ export async function POST(request: NextRequest) {
       emergencyContactName: '',
       emergencyContactPhone: '',
       hearAboutUs: 'Admin Created',
-      role: 'client'
+      role: 'client',
+      isActive: true,
+      updatedAt: new Date(),
+      createdAt: new Date(),
     };
 
-    await UserService.createUser(userRecord.uid, userProfileData);
+    await adminDb.collection('users').doc(uid).set(userProfileData, { merge: true });
 
     return NextResponse.json({
       success: true,
-      uid: userRecord.uid,
-      message: 'User created successfully'
+      uid,
+      createdAuthUser,
+      message: 'User upserted successfully'
     });
 
   } catch (error: any) {

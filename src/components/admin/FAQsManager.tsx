@@ -80,14 +80,55 @@ Note: Email addresses cannot be changed after creation.`
     category: 'bookings',
     order: 1,
     question: 'How do I create a new booking?',
-    answer: `1. Go to **Clients & Bookings** → **Bookings**
-2. Click **"+ Create Booking"**
-3. Follow the booking wizard:
-   - **Step 1**: Select or create a client
-   - **Step 2**: Choose the service
-   - **Step 3**: Select date and time
-   - **Step 4**: Handle deposit (optional)
-   - **Step 5**: Add notes and confirm
+    answer: `Use this step-by-step script when creating a booking in the admin section:
+
+1. **Ask:** "Is this a new client or an existing client?"
+   - **Existing client:** Search by name, email, or phone and select the client from the list.
+   - **New client:** Click **"Create New Client"** and enter:
+     - First Name
+     - Last Name
+     - Email Address
+     - Phone Number
+     - Password
+     - Confirm Password
+
+2. **Ask:** "What service are we booking today?"
+   - Select the service from the dropdown.
+   - If it is a **Consultation**, no payment is required.
+
+3. **Ask:** "What date and time would you like?"
+   - Choose **Next Available**, **Weekend**, or **Calendar Override**.
+   - If needed, manually pick a date and time.
+   - Review the available time slots and select the best one.
+
+4. **Ask:** "Would you like to add any notes or special instructions?"
+   - Add any appointment details, client preferences, or reminders.
+
+5. **If this is a paid appointment, ask:** "How would you like to pay today?"
+   - **Credit Card**
+   - **Klarna**
+   - **Afterpay**
+   - **Affirm**
+   - **Zelle**
+   - **External** (cash, check, or other)
+
+6. **If Credit Card is selected:**
+   - Ask whether to charge a **deposit** or the **full service price**.
+
+7. **If Klarna, Afterpay, or Affirm is selected:**
+   - Confirm the buy-now-pay-later option and complete the payment form.
+
+8. **If Zelle or External is selected:**
+   - Record the payment as pending or confirmed as appropriate.
+
+9. **Review everything one last time**
+   - Client
+   - Service
+   - Date and time
+   - Notes
+   - Payment method
+
+10. Click **"Create Booking"** to save the appointment.
 
 The client will receive a confirmation email automatically.`
   },

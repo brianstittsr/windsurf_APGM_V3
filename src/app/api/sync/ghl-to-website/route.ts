@@ -304,6 +304,37 @@ async function fetchGHLContactAppointments(
   return allAppointments;
 }
 
+async function upsertWebsiteClientFromGHLContact(contactId: string, contactData: any, ghlAppointmentId: string) {
+  const displayName = contactData.name || (contactData.firstName && contactData.lastName ? `${contactData.firstName} ${contactData.lastName}` : contactData.firstName || 'Unknown');
+  const email = contactData.email || '';
+  const phone = contactData.phone || '';
+  const usersCollection = db.collection('users');
+
+  let targetDoc = usersCollection.doc(contactId);
+  if (email) {
+    const existingByEmail = await usersCollection.where('email', '==', email).limit(1).get();
+    if (!existingByEmail.empty) {
+      targetDoc = existingByEmail.docs[0].ref;
+    }
+  }
+
+  await targetDoc.set({
+    id: targetDoc.id,
+    email,
+    displayName,
+    firstName: contactData.firstName || displayName.split(' ')[0] || '',
+    lastName: contactData.lastName || displayName.split(' ').slice(1).join(' ') || '',
+    phone,
+    role: 'client',
+    isActive: true,
+    source: 'GHL Sync',
+    ghlContactId: contactId,
+    ghlAppointmentId,
+    updatedAt: new Date(),
+    createdAt: new Date(),
+  }, { merge: true });
+}
+
 async function syncAppointmentToWebsite(ghlAppointment: any, apiKey: string) {
   // Fetch contact details
   const contactId = ghlAppointment.contactId;
@@ -327,6 +358,15 @@ async function syncAppointmentToWebsite(ghlAppointment: any, apiKey: string) {
       }
     } catch (error) {
       console.error('[ghl-sync] Error fetching contact:', error);
+    }
+  }
+
+  if (contactId && contactData) {
+    try {
+      await upsertWebsiteClientFromGHLContact(contactId, contactData, ghlAppointment.id);
+      console.log('[ghl-sync] Website client upserted from GHL contact:', contactId);
+    } catch (syncError) {
+      console.error('[ghl-sync] Failed to upsert website client:', syncError);
     }
   }
 
