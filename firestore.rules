@@ -394,5 +394,12 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow write: if isAdmin();
     }
+
+    // Stripe tap-to-pay transaction records - Admin read/write, system create
+    match /stripe-tap-transactions/{transactionId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+      allow create: if true; // Allow server-side webhook and tap route to create records
+    }
   }
 }

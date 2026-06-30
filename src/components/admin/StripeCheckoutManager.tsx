@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase';
 import { useServices } from '@/hooks/useFirebase';
 import {
@@ -115,6 +115,10 @@ export default function StripeCheckoutManager() {
   // --- Transactions state ---
   const [transactions, setTransactions] = useState<TapTransaction[]>([]);
   const [loadingTx, setLoadingTx] = useState(false);
+  const [syncingHistory, setSyncingHistory] = useState(false);
+  const [syncHistoryResult, setSyncHistoryResult] = useState<{
+    summary: { usersProcessed: number; totalTransactionsSynced: number; totalRevenueCents: number; errors: number };
+  } | null>(null);
 
   // Fetch clients
   const fetchClients = useCallback(async () => {
@@ -149,14 +153,15 @@ export default function StripeCheckoutManager() {
     }
   }, []);
 
-  // Fetch recent tap transactions
+  // Fetch recent tap transactions via server API (Admin SDK bypasses Firestore rules)
   const fetchTransactions = useCallback(async () => {
     setLoadingTx(true);
     try {
-      const snap = await getDocs(
-        query(collection(getDb(), 'stripe-tap-transactions'), orderBy('createdAt', 'desc'), limit(50))
-      );
-      setTransactions(snap.docs.map(d => ({ paymentIntentId: d.id, ...d.data() } as TapTransaction)));
+      const res = await fetch('/api/stripe/transactions?limit=50');
+      if (res.ok) {
+        const data = await res.json();
+        setTransactions(data.transactions || []);
+      }
     } catch (err) {
       console.error('Error fetching transactions:', err);
     } finally {
@@ -942,22 +947,69 @@ export default function StripeCheckoutManager() {
       {/* ─── TRANSACTIONS VIEW ─── */}
       {activeView === 'transactions' && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900">Tap-to-Pay Transaction History</h3>
-            <Button size="sm" variant="outline" onClick={fetchTransactions} disabled={loadingTx}>
-              <RefreshCw className={`w-4 h-4 mr-1 ${loadingTx ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
+          <div className="px-5 py-4 border-b border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="font-semibold text-gray-900">Tap-to-Pay Transaction History</h3>
+              <p className="text-xs text-gray-400 mt-0.5">Payments from Stripe linked to Firebase clients</p>
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={fetchTransactions} disabled={loadingTx}>
+                <RefreshCw className={`w-4 h-4 mr-1 ${loadingTx ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button
+                size="sm"
+                onClick={async () => {
+                  setSyncingHistory(true);
+                  setSyncHistoryResult(null);
+                  try {
+                    const res = await fetch('/api/stripe/transactions/sync-history', { method: 'POST' });
+                    const data = await res.json();
+                    setSyncHistoryResult(data);
+                    await fetchTransactions();
+                  } catch (err) {
+                    console.error('History sync error:', err);
+                  } finally {
+                    setSyncingHistory(false);
+                  }
+                }}
+                disabled={syncingHistory}
+                className="bg-[#AD6269] hover:bg-[#9d5860]"
+              >
+                {syncingHistory ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                ) : (
+                  <Upload className="w-4 h-4 mr-1" />
+                )}
+                Sync from Stripe
+              </Button>
+            </div>
           </div>
 
-          {loadingTx ? (
-            <div className="flex items-center justify-center py-12">
+          {syncHistoryResult && (
+            <div className="mx-5 mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="font-semibold text-green-800 text-sm mb-2">Stripe History Synced</p>
+              <div className="flex flex-wrap gap-4 text-sm">
+                <span className="text-gray-600">Clients checked: <strong>{syncHistoryResult.summary.usersProcessed}</strong></span>
+                <span className="text-green-700">Transactions imported: <strong>{syncHistoryResult.summary.totalTransactionsSynced}</strong></span>
+                <span className="text-[#AD6269]">Total revenue: <strong>${(syncHistoryResult.summary.totalRevenueCents / 100).toFixed(2)}</strong></span>
+                {syncHistoryResult.summary.errors > 0 && (
+                  <span className="text-red-600">Errors: <strong>{syncHistoryResult.summary.errors}</strong></span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {loadingTx || syncingHistory ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-3">
               <Loader2 className="w-7 h-7 animate-spin text-[#AD6269]" />
+              <p className="text-sm text-gray-500">{syncingHistory ? 'Pulling transactions from Stripe…' : 'Loading…'}</p>
             </div>
           ) : transactions.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
-              <Receipt className="w-10 h-10 mx-auto mb-2 opacity-30" />
-              <p>No tap transactions yet</p>
+              <Receipt className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="text-sm mb-1">No transactions in Firebase yet</p>
+              <p className="text-xs text-gray-400 mb-4">Click "Sync from Stripe" to import existing payment history</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
