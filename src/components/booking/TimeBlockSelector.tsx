@@ -264,7 +264,7 @@ export default function TimeBlockSelector({
             <div>
               <p className="font-semibold text-green-800">Time Selected</p>
               <p className="text-green-600 text-sm">
-                {new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} at {selectedBlock.displayTime}
+                {new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} at {selectedBlock.displayTime}
               </p>
             </div>
           </div>

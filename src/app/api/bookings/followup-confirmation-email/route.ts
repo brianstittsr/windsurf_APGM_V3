@@ -199,7 +199,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: 'Email service not configured' });
     }
 
-    const appointmentDate = new Date(booking.date + 'T00:00:00').toLocaleDateString('en-US', {
+    const appointmentDate = new Date(booking.date + 'T12:00:00').toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',

@@ -511,7 +511,7 @@ export default function BookingFlow() {
             </div>
             <div>
               <p className="font-semibold text-gray-900">
-                {selectedDate && new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                {selectedDate && new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
               </p>
               <p className="text-gray-600">{selectedTimeBlock?.displayTime}</p>
             </div>
@@ -585,7 +585,7 @@ export default function BookingFlow() {
           <div className="flex justify-between">
             <span className="text-gray-600">Date:</span>
             <span className="font-medium">
-              {selectedDate && new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+              {selectedDate && new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </span>
           </div>
           <div className="flex justify-between">

@@ -588,7 +588,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
     
     try {
       // Check 7 days starting from selected date
-      const start = new Date(selectedDate);
+      const start = new Date(selectedDate + 'T12:00:00');
       const end = new Date(start);
       end.setDate(end.getDate() + 6);
 
@@ -1288,7 +1288,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                   <div className="space-y-4">
                     <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                       <p className="text-green-800 font-medium">
-                        Available on: {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        Available on: {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                       </p>
                     </div>
                     
@@ -1484,7 +1484,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                   <div className="text-sm text-gray-600 space-y-1">
                     <p><strong>Client:</strong> {selectedClient?.displayName}</p>
                     <p><strong>Service:</strong> {serviceName || 'PMU Appointment'}</p>
-                    <p><strong>Date:</strong> {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    <p><strong>Date:</strong> {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
                     <p><strong>Time:</strong> {selectedSlot?.time} - {selectedSlot?.endTime}</p>
                   </div>
                 </div>
@@ -1861,7 +1861,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                     <div>
                       <span className="text-gray-500">Date:</span>
                       <p className="font-medium text-gray-900">
-                        {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                       </p>
                     </div>
                     <div>

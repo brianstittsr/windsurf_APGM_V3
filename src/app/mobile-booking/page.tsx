@@ -866,7 +866,7 @@ export default function MobileBookingPage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <p className="font-medium text-gray-900">
-                    {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                    {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                   </p>
                   <button 
                     onClick={() => {
@@ -960,7 +960,7 @@ export default function MobileBookingPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Date</span>
-                  <span className="font-medium">{new Date(selectedDate + 'T00:00:00').toLocaleDateString()}</span>
+                  <span className="font-medium">{new Date(selectedDate + 'T12:00:00').toLocaleDateString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Time</span>
@@ -1197,7 +1197,7 @@ export default function MobileBookingPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Date</span>
-                <span className="font-medium">{new Date(selectedDate + 'T00:00:00').toLocaleDateString()}</span>
+                <span className="font-medium">{new Date(selectedDate + 'T12:00:00').toLocaleDateString()}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Time</span>

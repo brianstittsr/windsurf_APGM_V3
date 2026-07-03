@@ -52,7 +52,7 @@ export function useAvailability(selectedDate: string) {
         setLoading(true);
         setError(null);
         
-        const date = new Date(selectedDate);
+        const date = new Date(selectedDate + 'T12:00:00');
         const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][date.getDay()];
         
         const availabilityRef = collection(getDb(), 'artistAvailability');

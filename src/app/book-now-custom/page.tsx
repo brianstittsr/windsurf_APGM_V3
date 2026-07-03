@@ -1332,7 +1332,7 @@ function BookNowCustomContent() {
               </div>
               <div className="flex justify-between items-center py-2 border-b border-green-200">
                 <span className="text-gray-600 font-medium">Date</span>
-                <span className="text-gray-900 font-semibold">{new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                <span className="text-gray-900 font-semibold">{new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-green-200">
                 <span className="text-gray-600 font-medium">Time</span>

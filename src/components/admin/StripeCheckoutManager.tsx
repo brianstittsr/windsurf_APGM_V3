@@ -117,7 +117,7 @@ export default function StripeCheckoutManager() {
   const [loadingTx, setLoadingTx] = useState(false);
   const [syncingHistory, setSyncingHistory] = useState(false);
   const [syncHistoryResult, setSyncHistoryResult] = useState<{
-    summary: { usersProcessed: number; totalTransactionsSynced: number; totalRevenueCents: number; errors: number };
+    summary: { stripePaymentIntentsScanned: number; usersMatched: number; totalTransactionsSynced: number; totalRevenueCents: number };
   } | null>(null);
 
   // Fetch clients
@@ -990,12 +990,10 @@ export default function StripeCheckoutManager() {
             <div className="mx-5 mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
               <p className="font-semibold text-green-800 text-sm mb-2">Stripe History Synced</p>
               <div className="flex flex-wrap gap-4 text-sm">
-                <span className="text-gray-600">Clients checked: <strong>{syncHistoryResult.summary.usersProcessed}</strong></span>
+                <span className="text-gray-600">Stripe PIs scanned: <strong>{syncHistoryResult.summary.stripePaymentIntentsScanned}</strong></span>
                 <span className="text-green-700">Transactions imported: <strong>{syncHistoryResult.summary.totalTransactionsSynced}</strong></span>
+                <span className="text-blue-600">Clients matched: <strong>{syncHistoryResult.summary.usersMatched}</strong></span>
                 <span className="text-[#AD6269]">Total revenue: <strong>${(syncHistoryResult.summary.totalRevenueCents / 100).toFixed(2)}</strong></span>
-                {syncHistoryResult.summary.errors > 0 && (
-                  <span className="text-red-600">Errors: <strong>{syncHistoryResult.summary.errors}</strong></span>
-                )}
               </div>
             </div>
           )}

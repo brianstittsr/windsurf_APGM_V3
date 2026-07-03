@@ -417,7 +417,7 @@ export const BookingForm = ({
                   <span>Date:</span>
                 </div>
                 <span className="font-medium">
-                  {new Date(selectedDate).toLocaleDateString('en-US', { 
+                  {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { 
                     weekday: 'long', 
                     year: 'numeric', 
                     month: 'long', 
