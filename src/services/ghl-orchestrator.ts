@@ -278,6 +278,10 @@ export class GHLOrchestrator {
     return this.makeRequest(`/contacts/${contactId}/tags/${tagId}`, 'POST');
   }
 
+  async addTagsToContact(contactId: string, tags: string[]) {
+    return this.makeRequest(`/contacts/${contactId}/tags`, 'POST', { tags });
+  }
+
   async removeTagFromContact(contactId: string, tagId: string) {
     return this.makeRequest(`/contacts/${contactId}/tags/${tagId}`, 'DELETE');
   }

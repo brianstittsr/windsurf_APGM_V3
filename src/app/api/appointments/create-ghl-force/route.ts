@@ -131,6 +131,33 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Add "booked" tag to the GHL contact
+    if (contactId) {
+      try {
+        const tagResponse = await fetch(
+          `https://services.leadconnectorhq.com/contacts/${contactId}/tags`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Version': '2021-07-28',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ tags: ['booked'] })
+          }
+        );
+        if (tagResponse.ok) {
+          log(`Added "booked" tag to contact ${contactId}`);
+        } else {
+          const tagErrorText = await tagResponse.text();
+          log(`Failed to add "booked" tag: ${tagErrorText}`);
+        }
+      } catch (tagError) {
+        const errorMsg = tagError instanceof Error ? tagError.message : 'Unknown error';
+        log(`Tag error: ${errorMsg}`);
+      }
+    }
+
     // Step 2: Try multiple methods to create the appointment
     log('Step 2: Attempting to create appointment...');
     

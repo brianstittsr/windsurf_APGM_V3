@@ -29,6 +29,14 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+/** Convert "HH:MM" 24-hour string to 12-hour format like "9:00 AM" */
+const to12Hour = (time24: string): string => {
+  const [h, m] = time24.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+};
+
 interface Client {
   id: string;
   email: string;
@@ -892,8 +900,8 @@ export default function MobileBookingPage() {
                       }`}
                     >
                       <Clock className="w-5 h-5 mx-auto mb-1 text-[#AD6269]" />
-                      <p className="font-semibold text-gray-900">{slot.time}</p>
-                      <p className="text-xs text-gray-500">to {slot.endTime}</p>
+                      <p className="font-semibold text-gray-900">{to12Hour(slot.time)}</p>
+                      <p className="text-xs text-gray-500">to {to12Hour(slot.endTime)}</p>
                     </button>
                   ))}
                 </div>
@@ -964,7 +972,7 @@ export default function MobileBookingPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Time</span>
-                  <span className="font-medium">{selectedSlot?.time} - {selectedSlot?.endTime}</span>
+                  <span className="font-medium">{selectedSlot ? to12Hour(selectedSlot.time) : ''} - {selectedSlot ? to12Hour(selectedSlot.endTime) : ''}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between">
                   <span className="text-gray-900 font-medium">Deposit</span>
@@ -1201,7 +1209,7 @@ export default function MobileBookingPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Time</span>
-                <span className="font-medium">{selectedSlot?.time}</span>
+                <span className="font-medium">{selectedSlot ? to12Hour(selectedSlot.time) : ''}</span>
               </div>
             </div>
 

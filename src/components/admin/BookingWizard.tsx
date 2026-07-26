@@ -31,6 +31,14 @@ import {
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string);
 
+/** Convert "HH:MM" 24-hour string to 12-hour format like "9:00 AM" */
+const to12Hour = (time24: string): string => {
+  const [h, m] = time24.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+};
+
 interface Client {
   id: string;
   email: string;
@@ -1304,8 +1312,8 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                           }`}
                         >
                           <Clock className="w-5 h-5 mx-auto mb-1 text-gray-400" />
-                          <div className="font-medium">{slot.time}</div>
-                          <div className="text-xs text-gray-500">to {slot.endTime}</div>
+                          <div className="font-medium">{to12Hour(slot.time)}</div>
+                          <div className="text-xs text-gray-500">to {to12Hour(slot.endTime)}</div>
                         </button>
                       ))}
                     </div>
@@ -1375,7 +1383,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                                   }`}
                                   title={slot.reason}
                                 >
-                                  {slot.time} - {slot.available ? '✓' : '✗'}
+                                  {to12Hour(slot.time)} - {slot.available ? '✓' : '✗'}
                                 </span>
                               ))}
                             </div>
@@ -1485,7 +1493,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                     <p><strong>Client:</strong> {selectedClient?.displayName}</p>
                     <p><strong>Service:</strong> {serviceName || 'PMU Appointment'}</p>
                     <p><strong>Date:</strong> {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    <p><strong>Time:</strong> {selectedSlot?.time} - {selectedSlot?.endTime}</p>
+                    <p><strong>Time:</strong> {selectedSlot ? to12Hour(selectedSlot.time) : ''} - {selectedSlot ? to12Hour(selectedSlot.endTime) : ''}</p>
                   </div>
                 </div>
 
@@ -1866,7 +1874,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                     </div>
                     <div>
                       <span className="text-gray-500">Time:</span>
-                      <p className="font-medium text-gray-900">{selectedSlot?.time} - {selectedSlot?.endTime}</p>
+                      <p className="font-medium text-gray-900">{selectedSlot ? to12Hour(selectedSlot.time) : ''} - {selectedSlot ? to12Hour(selectedSlot.endTime) : ''}</p>
                     </div>
                     {!isConsultation && (
                       <>

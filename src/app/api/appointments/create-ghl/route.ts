@@ -138,6 +138,32 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Add "booked" tag to the GHL contact
+    if (contactId) {
+      try {
+        const tagResponse = await fetch(
+          `https://services.leadconnectorhq.com/contacts/${contactId}/tags`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${credentials.apiKey}`,
+              'Version': '2021-07-28',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ tags: ['booked'] })
+          }
+        );
+        if (!tagResponse.ok) {
+          const tagErrorText = await tagResponse.text();
+          console.error(`[GHL] Failed to add "booked" tag: ${tagResponse.status} - ${tagErrorText}`);
+        } else {
+          console.log(`[GHL] Added "booked" tag to contact ${contactId}`);
+        }
+      } catch (tagError) {
+        console.error('[GHL] Error adding "booked" tag:', tagError);
+      }
+    }
+
     // Service Calendar ID (for MOELCALL200 coupon)
     const SERVICE_CALENDAR_ID = process.env.GHL_CALENDAR_ID || 'C9kiOUUFTpnSSqGurWh1'; // APGM_Calendar
     

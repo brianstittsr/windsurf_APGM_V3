@@ -127,7 +127,7 @@ export class BMADWorkflowEngine {
             lastName: bookingData.lastName || bookingData.name?.split(' ')[1],
             email: bookingData.email,
             phone: bookingData.phone,
-            tags: ['New Booking', bookingData.serviceName || 'Service'],
+            tags: ['booked', 'New Booking', bookingData.serviceName || 'Service'],
             customFields: {
               'Service': bookingData.serviceName,
               'Booking Date': bookingData.date,
@@ -135,6 +135,13 @@ export class BMADWorkflowEngine {
             }
           });
           results.push({ action: 'create_ghl_contact', success: true, data: contact });
+
+          // 1b. Ensure the contact is tagged as "booked"
+          const contactId = contact?.id || contact?.contact?.id;
+          if (contactId) {
+            await this.ghlOrchestrator.addTagsToContact(contactId, ['booked']);
+            results.push({ action: 'add_booked_tag', success: true });
+          }
         } catch (error) {
           console.error('Failed to create GHL contact:', error);
           results.push({ action: 'create_ghl_contact', success: false, error });
