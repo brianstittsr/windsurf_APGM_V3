@@ -436,7 +436,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Process Carousel */}
-                <div 
+                <div
                   className="bg-white rounded-xl border border-gray-200 p-6 hover:border-[#AD6269] hover:shadow-lg transition-all cursor-pointer group text-center"
                   onClick={() => setActiveTab('process-carousel')}
                 >
@@ -445,6 +445,18 @@ export default function DashboardPage() {
                   </div>
                   <h3 className="font-semibold text-gray-900 mb-1">Process Carousel</h3>
                   <p className="text-gray-500 text-sm">Process slides</p>
+                </div>
+
+                {/* Image Manager */}
+                <div
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:border-[#AD6269] hover:shadow-lg transition-all cursor-pointer group text-center"
+                  onClick={() => router.push('/admin/images')}
+                >
+                  <div className="w-16 h-16 bg-gray-100 group-hover:bg-[#AD6269]/10 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
+                    <i className="fas fa-images text-3xl text-gray-600 group-hover:text-[#AD6269] transition-colors"></i>
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Image Manager</h3>
+                  <p className="text-gray-500 text-sm">Upload & manage images</p>
                 </div>
               </div>
             </div>
