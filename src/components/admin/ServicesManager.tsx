@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ServiceService } from '@/services/database';
-import { Service } from '@/types/database';
+import { ServiceService, BusinessSettingsService } from '@/services/database';
+import { Service, BusinessSettings } from '@/types/database';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAlertDialog } from '@/components/ui/alert-dialog';
@@ -19,6 +19,8 @@ interface ServiceFormData {
   requirements: string[];
   contraindications: string[];
   order: number;
+  showPrice: boolean;
+  isMostPopular: boolean;
 }
 
 // Default form data structure
@@ -32,7 +34,9 @@ const defaultFormData: ServiceFormData = {
   isActive: true,
   requirements: [],
   contraindications: [],
-  order: 0
+  order: 0,
+  showPrice: true,
+  isMostPopular: false
 };
 
 export default function ServicesManager() {
@@ -45,14 +49,51 @@ export default function ServicesManager() {
   const [uploading, setUploading] = useState(false);
   const [newRequirement, setNewRequirement] = useState('');
   const [newContraindication, setNewContraindication] = useState('');
+  const [showPricesGlobal, setShowPricesGlobal] = useState(true);
+  const [globalSettingLoading, setGlobalSettingLoading] = useState(false);
   const { showAlert, showConfirm, AlertDialogComponent } = useAlertDialog();
 
   useEffect(() => {
     loadServices();
-    
+    loadBusinessSettings();
+
     // Add a console log to confirm the component loaded properly
     console.log('ServicesManager component loaded');
   }, []);
+
+  const loadBusinessSettings = async () => {
+    try {
+      const settings = await BusinessSettingsService.getSettings();
+      if (settings?.services?.showPrices !== undefined) {
+        setShowPricesGlobal(settings.services.showPrices);
+      } else if (settings?.booking?.showServicePrices !== undefined) {
+        setShowPricesGlobal(settings.booking.showServicePrices);
+      }
+    } catch (err) {
+      console.error('Error loading business settings:', err);
+    }
+  };
+
+  const toggleGlobalShowPrices = async () => {
+    const newValue = !showPricesGlobal;
+    setShowPricesGlobal(newValue);
+    setGlobalSettingLoading(true);
+    try {
+      await BusinessSettingsService.createOrUpdateSettings({
+        services: { showPrices: newValue }
+      });
+    } catch (err) {
+      console.error('Error saving business settings:', err);
+      setShowPricesGlobal(!newValue);
+      await showAlert({
+        title: 'Error',
+        description: 'Failed to save global price setting',
+        variant: 'destructive'
+      });
+    } finally {
+      setGlobalSettingLoading(false);
+    }
+  };
 
   const loadServices = async () => {
     console.log('Loading services...');
@@ -135,7 +176,9 @@ export default function ServicesManager() {
       isActive: service.isActive,
       requirements: service.requirements || [],
       contraindications: service.contraindications || [],
-      order: (service as any).order || 0
+      order: (service as any).order || 0,
+      showPrice: service.showPrice ?? true,
+      isMostPopular: service.isMostPopular ?? false
     });
     setShowForm(true);
   };
@@ -211,19 +254,36 @@ export default function ServicesManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-          <i className="fas fa-cogs text-[#AD6269]"></i>Services Management
-        </h2>
-        <Button
-          className="bg-[#AD6269] hover:bg-[#9d5860]"
-          onClick={() => {
-            resetForm();
-            setShowForm(true);
-          }}
-        >
-          <i className="fas fa-plus mr-2"></i>Add New Service
-        </Button>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <i className="fas fa-cogs text-[#AD6269]"></i>Services Management
+          </h2>
+        </div>
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+          <label className="flex items-center gap-3 cursor-pointer bg-white border border-gray-200 rounded-lg px-4 py-2 shadow-sm">
+            <input
+              type="checkbox"
+              checked={showPricesGlobal}
+              onChange={toggleGlobalShowPrices}
+              disabled={globalSettingLoading}
+              className="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500"
+            />
+            <span className="font-semibold text-gray-700 text-sm">
+              <i className="fas fa-dollar-sign mr-1 text-green-600"></i>
+              Show prices globally
+            </span>
+          </label>
+          <Button
+            className="bg-[#AD6269] hover:bg-[#9d5860]"
+            onClick={() => {
+              resetForm();
+              setShowForm(true);
+            }}
+          >
+            <i className="fas fa-plus mr-2"></i>Add New Service
+          </Button>
+        </div>
       </div>
 
       {error && (
@@ -248,6 +308,8 @@ export default function ServicesManager() {
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Image</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Name</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Price</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Show</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Popular</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Duration</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Category</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Status</th>
@@ -280,7 +342,25 @@ export default function ServicesManager() {
                     </div>
                   </td>
                   <td className="py-3 px-4">
-                    <span className="font-semibold text-green-600">${service.price}</span>
+                    {service.showPrice ?? true ? (
+                      <span className="font-semibold text-green-600">${service.price}</span>
+                    ) : (
+                      <span className="text-gray-400 text-sm"><i className="fas fa-eye-slash mr-1"></i>Hidden</span>
+                    )}
+                  </td>
+                  <td className="py-3 px-4">
+                    {service.showPrice ?? true ? (
+                      <span className="text-green-600 text-xs"><i className="fas fa-eye"></i></span>
+                    ) : (
+                      <span className="text-gray-400 text-xs"><i className="fas fa-eye-slash"></i></span>
+                    )}
+                  </td>
+                  <td className="py-3 px-4">
+                    {service.isMostPopular ? (
+                      <span className="text-yellow-500" title="Most Popular"><i className="fas fa-star"></i></span>
+                    ) : (
+                      <span className="text-gray-300"><i className="far fa-star"></i></span>
+                    )}
                   </td>
                   <td className="py-3 px-4 text-gray-700">{service.duration}</td>
                   <td className="py-3 px-4">
@@ -504,18 +584,46 @@ export default function ServicesManager() {
                   </div>
                 </div>
 
-                <div className="border-2 border-[#AD6269]/30 rounded-lg p-4 bg-[#AD6269]/5">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.isActive}
-                      onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                      className="w-5 h-5 rounded border-gray-300 text-[#AD6269] focus:ring-[#AD6269]"
-                    />
-                    <span className="font-semibold text-gray-700">
-                      <i className="fas fa-eye mr-1 text-[#AD6269]"></i>Active (visible to customers)
-                    </span>
-                  </label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="border-2 border-[#AD6269]/30 rounded-lg p-4 bg-[#AD6269]/5">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.isActive}
+                        onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                        className="w-5 h-5 rounded border-gray-300 text-[#AD6269] focus:ring-[#AD6269]"
+                      />
+                      <span className="font-semibold text-gray-700">
+                        <i className="fas fa-eye mr-1 text-[#AD6269]"></i>Active (visible to customers)
+                      </span>
+                    </label>
+                  </div>
+                  <div className="border-2 border-green-200 rounded-lg p-4 bg-green-50">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.showPrice}
+                        onChange={(e) => setFormData(prev => ({ ...prev, showPrice: e.target.checked }))}
+                        className="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      />
+                      <span className="font-semibold text-gray-700">
+                        <i className="fas fa-dollar-sign mr-1 text-green-600"></i>Show price
+                      </span>
+                    </label>
+                  </div>
+                  <div className="border-2 border-yellow-200 rounded-lg p-4 bg-yellow-50">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.isMostPopular}
+                        onChange={(e) => setFormData(prev => ({ ...prev, isMostPopular: e.target.checked }))}
+                        className="w-5 h-5 rounded border-gray-300 text-yellow-500 focus:ring-yellow-500"
+                      />
+                      <span className="font-semibold text-gray-700">
+                        <i className="fas fa-star mr-1 text-yellow-500"></i>Most Popular
+                      </span>
+                    </label>
+                  </div>
                 </div>
               </div>
               

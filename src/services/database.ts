@@ -666,11 +666,10 @@ export class BusinessSettingsService {
     return DatabaseService.update<BusinessSettings>(COLLECTIONS.BUSINESS_SETTINGS, 'main', settings);
   }
 
-  static async createOrUpdateSettings(settings: BusinessSettings): Promise<void> {
+  static async createOrUpdateSettings(settings: Partial<BusinessSettings>): Promise<void> {
     const docRef = doc(getDb(), COLLECTIONS.BUSINESS_SETTINGS, 'main');
     await setDoc(docRef, {
       ...settings,
-      createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     }, { merge: true });
   }

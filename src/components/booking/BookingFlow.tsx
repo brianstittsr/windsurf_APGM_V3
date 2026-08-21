@@ -267,12 +267,21 @@ export default function BookingFlow() {
                 <div className="absolute bottom-4 left-4 right-4">
                   <h3 className="text-xl font-bold text-white">{service.name}</h3>
                 </div>
+                {service.isMostPopular && (
+                  <div className="absolute top-4 right-4 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                    <i className="fas fa-star"></i> Most Popular
+                  </div>
+                )}
               </div>
               <div className="p-5">
                 <p className="text-gray-600 text-sm mb-4 line-clamp-2">{service.description}</p>
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-2xl font-bold text-[#AD6269]">${service.price}</span>
+                    {service.showPrice !== false ? (
+                      <span className="text-2xl font-bold text-[#AD6269]">${service.price}</span>
+                    ) : (
+                      <span className="text-gray-500 text-sm">Price available on request</span>
+                    )}
                     <span className="text-gray-500 text-sm ml-2">{service.duration}</span>
                   </div>
                   <div className="w-10 h-10 bg-[#AD6269]/10 rounded-full flex items-center justify-center group-hover:bg-[#AD6269] transition-colors">
@@ -498,7 +507,11 @@ export default function BookingFlow() {
           <h3 className="text-sm font-medium text-gray-500 mb-2">Service</h3>
           <div className="flex items-center justify-between">
             <span className="text-lg font-semibold text-gray-900">{selectedService?.name}</span>
-            <span className="text-xl font-bold text-[#AD6269]">${selectedService?.price}</span>
+            {selectedService?.showPrice !== false ? (
+              <span className="text-xl font-bold text-[#AD6269]">${selectedService?.price}</span>
+            ) : (
+              <span className="text-gray-500 text-sm">Price on request</span>
+            )}
           </div>
         </div>
 

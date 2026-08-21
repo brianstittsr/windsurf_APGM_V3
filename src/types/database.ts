@@ -39,6 +39,8 @@ export interface Service {
   isActive: boolean;
   requirements: string[];
   contraindications: string[];
+  showPrice: boolean;
+  isMostPopular: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -465,6 +467,10 @@ export interface BusinessSettings {
     maxReschedules: number;
     autoConfirm: boolean;
     requireDeposit: boolean;
+    showServicePrices?: boolean;
+  };
+  services?: {
+    showPrices?: boolean;
   };
   payments: {
     stripePublicKey: string;
