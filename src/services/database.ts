@@ -22,6 +22,7 @@ import { getDb } from '@/lib/firebase';
 import {
   User,
   Service,
+  ServiceImage,
   Appointment,
   HealthForm,
   CandidateAssessment,
@@ -40,6 +41,7 @@ import {
 export const COLLECTIONS = {
   USERS: 'users',
   SERVICES: 'services',
+  SERVICE_IMAGES: 'serviceImages',
   APPOINTMENTS: 'appointments',
   HEALTH_FORMS: 'healthForms',
   CANDIDATE_ASSESSMENTS: 'candidateAssessments',
@@ -337,6 +339,33 @@ export class UserService {
     };
 
     return this.createUser(userData);
+  }
+}
+
+export class ServiceImageService {
+  static async getAllImages(): Promise<ServiceImage[]> {
+    const images = await DatabaseService.getAll<ServiceImage>(COLLECTIONS.SERVICE_IMAGES);
+    return images.sort((a, b) => {
+      const aDate = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+      const bDate = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+      return bDate - aDate;
+    });
+  }
+
+  static async getImageById(id: string): Promise<ServiceImage | null> {
+    return DatabaseService.getById<ServiceImage>(COLLECTIONS.SERVICE_IMAGES, id);
+  }
+
+  static async createImage(imageData: Omit<ServiceImage, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+    return DatabaseService.create<ServiceImage>(COLLECTIONS.SERVICE_IMAGES, imageData);
+  }
+
+  static async updateImage(id: string, imageData: Partial<ServiceImage>): Promise<void> {
+    return DatabaseService.update<ServiceImage>(COLLECTIONS.SERVICE_IMAGES, id, imageData);
+  }
+
+  static async deleteImage(id: string): Promise<void> {
+    return DatabaseService.delete(COLLECTIONS.SERVICE_IMAGES, id);
   }
 }
 

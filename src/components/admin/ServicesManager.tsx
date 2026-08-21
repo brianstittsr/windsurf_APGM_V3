@@ -6,6 +6,7 @@ import { Service } from '@/types/database';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAlertDialog } from '@/components/ui/alert-dialog';
+import ImageManager from './ImageManager';
 
 interface ServiceFormData {
   name: string;
@@ -13,6 +14,7 @@ interface ServiceFormData {
   price: number;
   duration: string;
   category: 'eyebrows' | 'eyeliner' | 'lips' | 'correction';
+  image: string;
   isActive: boolean;
   requirements: string[];
   contraindications: string[];
@@ -26,6 +28,7 @@ const defaultFormData: ServiceFormData = {
   price: 0,
   duration: '',
   category: 'eyebrows',
+  image: '',
   isActive: true,
   requirements: [],
   contraindications: [],
@@ -80,7 +83,6 @@ export default function ServicesManager() {
     try {
       const serviceData = {
         ...formData,
-        image: '',
         price: Number(formData.price),
         order: Number(formData.order)
       };
@@ -129,6 +131,7 @@ export default function ServicesManager() {
       price: service.price,
       duration: service.duration,
       category: service.category,
+      image: service.image || '',
       isActive: service.isActive,
       requirements: service.requirements || [],
       contraindications: service.contraindications || [],
@@ -383,6 +386,17 @@ export default function ServicesManager() {
                       min="0"
                     />
                   </div>
+                </div>
+
+                {/* Image Upload / Manager */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    <i className="fas fa-image mr-1 text-[#AD6269]"></i>Service Image
+                  </label>
+                  <ImageManager
+                    selectedImage={formData.image}
+                    onSelect={(image) => setFormData(prev => ({ ...prev, image }))}
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

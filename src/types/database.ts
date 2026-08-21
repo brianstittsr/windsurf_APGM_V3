@@ -43,6 +43,17 @@ export interface Service {
   updatedAt: Timestamp;
 }
 
+// Service Image Types
+export interface ServiceImage {
+  id: string;
+  name: string;
+  base64: string;
+  mimeType: string;
+  size?: number;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
 // Gift Card Types
 export interface GiftCard {
   id: string;
