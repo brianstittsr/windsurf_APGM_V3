@@ -5,14 +5,16 @@ import { Timestamp } from 'firebase-admin/firestore';
 // GET /api/services/images — list all service images
 export async function GET() {
   try {
-    const snapshot = await db.collection('serviceImages')
-      .orderBy('createdAt', 'desc')
-      .get();
+    const snapshot = await db.collection('serviceImages').get();
 
     const images = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
-    }));
+    })).sort((a: any, b: any) => {
+      const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+      const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+      return bTime - aTime;
+    });
 
     return NextResponse.json({ success: true, images }, { status: 200 });
   } catch (error) {

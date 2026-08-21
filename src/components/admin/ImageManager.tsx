@@ -137,14 +137,22 @@ export default function ImageManager({ selectedImage, onSelect }: ImageManagerPr
   return (
     <div className="space-y-4">
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-          {error}
-          <button
-            onClick={() => setError(null)}
-            className="ml-2 text-red-500 hover:text-red-700"
-          >
-            <i className="fas fa-times"></i>
-          </button>
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex justify-between items-center">
+          <span><i className="fas fa-exclamation-circle mr-2"></i>{error}</span>
+          <div className="flex gap-2">
+            <button
+              onClick={loadImages}
+              className="text-red-700 hover:text-red-900 font-semibold underline"
+            >
+              Retry
+            </button>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-500 hover:text-red-700"
+            >
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
         </div>
       )}
 
