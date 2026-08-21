@@ -1,13 +1,17 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ServiceImageService } from '@/services/database';
-import { ServiceImage } from '@/types/database';
-import { Button } from '@/components/ui/button';
-
 interface ImageManagerProps {
   selectedImage: string;
   onSelect: (base64Image: string) => void;
+}
+
+interface ServiceImage {
+  id: string;
+  name: string;
+  base64: string;
+  mimeType: string;
+  size?: number;
 }
 
 const MAX_FILE_SIZE_MB = 2;
@@ -24,11 +28,15 @@ export default function ImageManager({ selectedImage, onSelect }: ImageManagerPr
     try {
       setLoading(true);
       setError(null);
-      const allImages = await ServiceImageService.getAllImages();
-      setImages(allImages);
+      const res = await fetch('/api/services/images');
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to load images');
+      }
+      setImages(data.images || []);
     } catch (err) {
       console.error('Error loading images:', err);
-      setError('Failed to load images');
+      setError(err instanceof Error ? err.message : 'Failed to load images');
     } finally {
       setLoading(false);
     }
@@ -69,18 +77,25 @@ export default function ImageManager({ selectedImage, onSelect }: ImageManagerPr
 
     try {
       const base64 = await fileToBase64(file);
-      const id = await ServiceImageService.createImage({
-        name: file.name,
-        base64,
-        mimeType: file.type,
-        size: file.size
+      const res = await fetch('/api/services/images', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: file.name,
+          base64,
+          mimeType: file.type,
+          size: file.size
+        })
       });
-      console.log('Uploaded image:', id);
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to upload image');
+      }
       onSelect(base64);
       await loadImages();
     } catch (err) {
       console.error('Error uploading image:', err);
-      setError('Failed to upload image');
+      setError(err instanceof Error ? err.message : 'Failed to upload image');
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
@@ -94,14 +109,18 @@ export default function ImageManager({ selectedImage, onSelect }: ImageManagerPr
     if (!confirm(`Delete "${image.name}"? This cannot be undone.`)) return;
 
     try {
-      await ServiceImageService.deleteImage(image.id);
+      const res = await fetch(`/api/services/images/${image.id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to delete image');
+      }
       if (selectedImage === image.base64) {
         onSelect('');
       }
       await loadImages();
     } catch (err) {
       console.error('Error deleting image:', err);
-      setError('Failed to delete image');
+      setError(err instanceof Error ? err.message : 'Failed to delete image');
     }
   };
 
