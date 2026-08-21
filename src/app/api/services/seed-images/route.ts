@@ -74,9 +74,15 @@ async function processImage(filePath: string): Promise<{ buffer: Buffer; mimeTyp
 
 export async function POST(request: NextRequest) {
   try {
+    const body = await request.json().catch(() => ({}));
+    const requestedNames = Array.isArray(body.names) ? body.names as string[] : [];
+    const imagesToSeed = requestedNames.length > 0
+      ? existingImages.filter(img => requestedNames.includes(img.name))
+      : existingImages;
+
     const results: Array<{ name: string; success: boolean; id?: string; error?: string; skipped?: boolean }> = [];
 
-    for (const image of existingImages) {
+    for (const image of imagesToSeed) {
       try {
         const fullPath = path.join(process.cwd(), image.filePath);
 
