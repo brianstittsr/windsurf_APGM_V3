@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import Link from 'next/link';
 import { Camera, Sparkles, ArrowRight } from 'lucide-react';
 
 // Gallery entries: either [before, after] pairs or single image strings
@@ -239,13 +238,15 @@ export default function GalleryPage() {
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link
-                  href="/contact"
+                <a
+                  href="https://link.socaldigitalstudio.com/widget/form/xnTbiXzxbuMKsegJPbFx"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="group inline-flex items-center gap-3 bg-gradient-to-r from-[#AD6269] to-[#8B4A52] text-white px-8 py-4 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                 >
-                  Schedule Consultation
+                  Your Pretty Girl Consultation Starts Here
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
+                </a>
 
                 <a
                   href="tel:919-441-0932"
