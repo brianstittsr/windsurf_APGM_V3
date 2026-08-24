@@ -7,44 +7,8 @@ export default function PermanentMakeupForYou() {
   return (
     <section id="services" className="py-section bg-white">
       <div className="container mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h2 className="main-heading font-bold text-gray-900 mb-4">
-            <span className="text-rose-600">PERMANENT MAKEUP</span>
-            <br />
-            DESIGNED JUST FOR YOU
-          </h2>
-        </div>
-
-        {/* 2-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left Side - Before/After Image */}
-          <div>
-            <div className="relative h-[400px]">
-              <img
-                src="/images/before-after.png"
-                alt="Before and After permanent makeup transformation"
-                className="w-full h-full object-cover rounded-custom-lg shadow-custom-lg"
-              />
-            </div>
-          </div>
-          
-          {/* Right Side - Text Content */}
-          <div>
-            <p className="paragraph-text text-gray-600 mb-3">
-              soft or natural to bold and defined...
-            </p>
-            <h2 className="sub-heading font-bold text-gray-900 mb-4">
-              THE CHOICE IS <span className="text-[#AD6269]">YOURS</span>
-            </h2>
-            <p className="paragraph-text text-gray-600 leading-relaxed">
-              Forget the outdated idea that permanent makeup has to look dark or harsh. At A Pretty Girl Matter, every look is customized to your style and preferences, whether you want a subtle, natural finish or a striking, statement look.
-            </p>
-          </div>
-        </div>
-
         {/* Services Grid */}
-        <div className="mt-16">
+        <div>
           <h3 className="sub-heading font-bold text-gray-900 mb-8 text-center">
             Our <span className="text-[#AD6269]">Services</span>
           </h3>

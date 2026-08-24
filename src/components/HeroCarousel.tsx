@@ -105,8 +105,8 @@ export default function HeroCarousel({
           subtitle: 'SOFT NATURAL',
           highlightText: 'PERMANENT MAKEUP',
           backgroundImage: '/images/hero/victoria-escobar-hero-main.jpg',
-          buttonText: 'Book Now',
-          buttonLink: '/contact',
+          buttonText: 'Schedule a Virtual Consultation',
+          buttonLink: 'https://link.socaldigitalstudio.com/widget/form/xnTbiXzxbuMKsegJPbFx',
           buttonStyle: 'primary',
           textAlignment: 'center',
           overlayOpacity: 40,
@@ -125,8 +125,8 @@ export default function HeroCarousel({
         subtitle: 'SOFT NATURAL',
         highlightText: 'PERMANENT MAKEUP',
         backgroundImage: '/images/hero/victoria-escobar-hero-main.jpg',
-        buttonText: 'Book Now',
-        buttonLink: '/contact',
+        buttonText: 'Schedule a Virtual Consultation',
+        buttonLink: 'https://link.socaldigitalstudio.com/widget/form/xnTbiXzxbuMKsegJPbFx',
         buttonStyle: 'primary',
         textAlignment: 'center',
         overlayOpacity: 40,
@@ -435,10 +435,12 @@ export default function HeroCarousel({
                     Read More Reviews
                   </a>
                   <a
-                    href="/contact"
+                    href={currentSlide.buttonLink || 'https://link.socaldigitalstudio.com/widget/form/xnTbiXzxbuMKsegJPbFx'}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="inline-flex items-center justify-center px-6 py-3 bg-[#AD6269] text-white font-semibold rounded-full hover:bg-[#9d5860] transition-colors shadow-lg"
                   >
-                    {currentSlide.buttonText || 'Book Now'}
+                    {currentSlide.buttonText || 'Schedule a Virtual Consultation'}
                     <i className="fas fa-arrow-right ml-2"></i>
                   </a>
                 </div>
@@ -521,7 +523,9 @@ export default function HeroCarousel({
 
                 <div className="flex justify-center gap-4 fade-in-3 mt-8">
                   <a
-                    href="/contact"
+                    href={currentSlide.buttonLink || 'https://link.socaldigitalstudio.com/widget/form/xnTbiXzxbuMKsegJPbFx'}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className={`inline-flex items-center justify-center px-8 py-4 rounded-full font-semibold transition-all shadow-lg ${
                       currentSlide.buttonStyle === 'secondary'
                         ? 'bg-white text-gray-900 hover:bg-gray-100'
@@ -530,7 +534,7 @@ export default function HeroCarousel({
                         : 'bg-[#AD6269] text-white hover:bg-[#9d5860]'
                     }`}
                   >
-                    {currentSlide.buttonText || 'Book Now'}
+                    {currentSlide.buttonText || 'Schedule a Virtual Consultation'}
                   </a>
                 </div>
               </>
