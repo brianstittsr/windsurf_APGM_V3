@@ -126,18 +126,6 @@ export default function PermanentMakeupForYou() {
             </Link>
           </div>
         </div>
-
-        {/* Bottom CTA */}
-        <div className="text-center mt-12">
-          <div className="rounded-custom-lg p-8" style={{ backgroundColor: 'rgba(173, 98, 105, 0.3)' }}>
-            <h3 className="sub-heading font-bold text-gray-900 mb-4">
-              Not sure which service is right for you?
-            </h3>
-            <p className="paragraph-text text-gray-600 mb-6">
-              Book now to complete your free online consultation, and let&apos;s explore the best options tailored to your unique features and lifestyle.
-            </p>
-          </div>
-        </div>
       </div>
     </section>
   );
