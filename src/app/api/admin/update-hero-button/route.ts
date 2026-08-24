@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 
-const NEW_BUTTON_TEXT = 'Schedule a Virtual Consultation';
+const NEW_BUTTON_TEXT = 'Your Pretty Girl Consultation Starts Here';
 const NEW_BUTTON_LINK = 'https://link.socaldigitalstudio.com/widget/form/xnTbiXzxbuMKsegJPbFx';
+const OLD_BUTTON_TEXTS = ['Book Now', 'Schedule a Virtual Consultation'];
 
 export async function POST() {
   try {
@@ -13,7 +14,7 @@ export async function POST() {
     for (const docSnap of snapshot.docs) {
       try {
         const data = docSnap.data();
-        if (data.buttonText === 'Book Now' || !data.buttonText) {
+        if (OLD_BUTTON_TEXTS.includes(data.buttonText) || !data.buttonText) {
           await docSnap.ref.update({
             buttonText: NEW_BUTTON_TEXT,
             buttonLink: NEW_BUTTON_LINK,

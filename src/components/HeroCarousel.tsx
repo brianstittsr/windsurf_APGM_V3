@@ -105,7 +105,7 @@ export default function HeroCarousel({
           subtitle: 'SOFT NATURAL',
           highlightText: 'PERMANENT MAKEUP',
           backgroundImage: '/images/hero/victoria-escobar-hero-main.jpg',
-          buttonText: 'Schedule a Virtual Consultation',
+          buttonText: 'Your Pretty Girl Consultation Starts Here',
           buttonLink: 'https://link.socaldigitalstudio.com/widget/form/xnTbiXzxbuMKsegJPbFx',
           buttonStyle: 'primary',
           textAlignment: 'center',
@@ -125,7 +125,7 @@ export default function HeroCarousel({
         subtitle: 'SOFT NATURAL',
         highlightText: 'PERMANENT MAKEUP',
         backgroundImage: '/images/hero/victoria-escobar-hero-main.jpg',
-        buttonText: 'Schedule a Virtual Consultation',
+        buttonText: 'Your Pretty Girl Consultation Starts Here',
         buttonLink: 'https://link.socaldigitalstudio.com/widget/form/xnTbiXzxbuMKsegJPbFx',
         buttonStyle: 'primary',
         textAlignment: 'center',
@@ -440,7 +440,7 @@ export default function HeroCarousel({
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center px-6 py-3 bg-[#AD6269] text-white font-semibold rounded-full hover:bg-[#9d5860] transition-colors shadow-lg"
                   >
-                    {currentSlide.buttonText || 'Schedule a Virtual Consultation'}
+                    {currentSlide.buttonText || 'Your Pretty Girl Consultation Starts Here'}
                     <i className="fas fa-arrow-right ml-2"></i>
                   </a>
                 </div>
@@ -534,7 +534,7 @@ export default function HeroCarousel({
                         : 'bg-[#AD6269] text-white hover:bg-[#9d5860]'
                     }`}
                   >
-                    {currentSlide.buttonText || 'Schedule a Virtual Consultation'}
+                    {currentSlide.buttonText || 'Your Pretty Girl Consultation Starts Here'}
                   </a>
                 </div>
               </>
