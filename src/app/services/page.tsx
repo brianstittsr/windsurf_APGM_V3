@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Clock, Heart, Calendar, ArrowRight, Medal, Flag } from 'lucide-react';
 import { ServiceService } from '@/services/database';
 import { Service } from '@/types/database';
-import { getServiceImagePath } from '@/utils/serviceImageUtils';
+import { getServiceImagePath, getServiceSlug } from '@/utils/serviceImageUtils';
 
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
@@ -36,8 +36,9 @@ export default function ServicesPage() {
     return getServiceImagePath(service);
   };
 
-  const generateSlug = (name: string) => {
-    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const truncateDescription = (description: string, maxLength: number = 110): string => {
+    if (!description || description.length <= maxLength) return description;
+    return `${description.slice(0, maxLength).trim()}...`;
   };
 
   if (loading) {
@@ -64,10 +65,10 @@ export default function ServicesPage() {
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
                 Our Permanent Makeup Services
               </h1>
-              <p className="text-lg md:text-xl mb-4 text-white/90">
+              <p className="text-lg md:text-xl mb-4 text-white">
                 Expert permanent makeup services in Raleigh, NC. Each treatment is customized to enhance your natural beauty.
               </p>
-              <p className="text-white/80">
+              <p className="text-white">
                 Serving Raleigh, Cary, Durham, Chapel Hill, and Wake Forest
               </p>
             </div>
@@ -78,44 +79,48 @@ export default function ServicesPage() {
         <section className="py-12 md:py-16">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {services.map((service) => (
-                <Card key={service.id} className="h-full border-0 shadow-lg overflow-hidden flex flex-col">
-                  <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
-                    <Image
-                      src={getServiceImage(service)}
-                      alt={service.name}
-                      fill
-                      className="object-contain p-4"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                  </div>
-                  <CardHeader className="pb-2">
-                    <h2 className="text-xl font-bold text-[#AD6269]">
-                      {service.name}
-                    </h2>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <p className="text-muted-foreground mb-4">{service.description}</p>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-muted text-muted-foreground text-xs rounded-md">
-                        <Clock className="w-3 h-3" />
-                        {service.duration}
-                      </span>
+              {services.map((service) => {
+                const slug = getServiceSlug(service);
+                const href = slug ? `/services/${slug}` : '/services';
+                return (
+                  <Card key={service.id} className="h-full border-0 shadow-lg overflow-hidden flex flex-col">
+                    <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+                      <Image
+                        src={getServiceImage(service)}
+                        alt={service.name}
+                        fill
+                        className="object-contain p-4"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      />
                     </div>
-                  </CardContent>
-                  <CardFooter className="pt-0">
-                    <Button
-                      asChild
-                      className="w-full rounded-full bg-gradient-to-r from-[#AD6269] to-[#8B4A52] text-white hover:opacity-90"
-                    >
-                      <Link href={`/services/${generateSlug(service.name)}`}>
-                        Learn More
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+                    <CardHeader className="pb-2">
+                      <h2 className="text-xl font-bold text-[#AD6269]">
+                        {service.name}
+                      </h2>
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                      <p className="text-muted-foreground mb-4">{truncateDescription(service.description)}</p>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-muted text-muted-foreground text-xs rounded-md">
+                          <Clock className="w-3 h-3" />
+                          {service.duration}
+                        </span>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="pt-0">
+                      <Button
+                        asChild
+                        className="w-full rounded-full bg-gradient-to-r from-[#AD6269] to-[#8B4A52] text-white hover:opacity-90"
+                      >
+                        <Link href={href}>
+                          Learn More
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </Link>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         </section>

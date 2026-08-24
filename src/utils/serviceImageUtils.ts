@@ -101,3 +101,56 @@ export function getAvailableServiceImages(): string[] {
     '/images/services/BOLD-COMBO.png',
   ];
 }
+
+// Slugs for service detail pages that actually exist under /services/[slug]
+const VALID_SERVICE_SLUGS = [
+  'microblading',
+  'ombre-brows',
+  'combo-brows',
+  'blade-shade',
+  'lip-blushing',
+  'permanent-eyeliner',
+  'tiny-tattoos',
+];
+
+/**
+ * Get the correct detail-page slug for a service, based on its name/id.
+ * Falls back to null if no matching detail page exists, so callers can
+ * link to the general /services page instead of a broken/404 route.
+ * @param service - The service object
+ * @returns A valid slug (matching an existing /services/[slug] page) or null
+ */
+export function getServiceSlug(service: ServiceItem): string | null {
+  const id = (service.id || '').toLowerCase();
+  const name = service.name.toLowerCase();
+
+  // Direct match by id
+  if (VALID_SERVICE_SLUGS.includes(id)) {
+    return id;
+  }
+
+  // Match by name patterns
+  if (name.includes('microblading') || name.includes('strokes')) {
+    return 'microblading';
+  }
+  if (name.includes('ombre') || name.includes('ombré')) {
+    return 'ombre-brows';
+  }
+  if (name.includes('blade') && name.includes('shade')) {
+    return 'blade-shade';
+  }
+  if (name.includes('combo')) {
+    return 'combo-brows';
+  }
+  if (name.includes('lip')) {
+    return 'lip-blushing';
+  }
+  if (name.includes('eyeliner')) {
+    return 'permanent-eyeliner';
+  }
+  if (name.includes('tiny tattoo') || name.includes('mini tattoo') || name.includes('tattoo')) {
+    return 'tiny-tattoos';
+  }
+
+  return null;
+}

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ServiceService } from '@/services/database';
 import { Service } from '@/types/database';
-import { getServiceImagePath } from '@/utils/serviceImageUtils';
+import { getServiceImagePath, getServiceSlug } from '@/utils/serviceImageUtils';
 
 export default function PermanentMakeupForYou() {
   const [services, setServices] = useState<Service[]>([]);
@@ -27,8 +27,9 @@ export default function PermanentMakeupForYou() {
     }
   };
 
-  const generateSlug = (name: string) => {
-    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const truncateDescription = (description: string, maxLength: number = 90): string => {
+    if (!description || description.length <= maxLength) return description;
+    return `${description.slice(0, maxLength).trim()}...`;
   };
 
   return (
@@ -43,10 +44,12 @@ export default function PermanentMakeupForYou() {
             <div className="text-center text-gray-500">Loading services...</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {services.map((service) => (
-                <Link key={service.id} href={`/services/${generateSlug(service.name)}`} className="group">
-                  <div className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100 h-full flex flex-col">
-                    <div className="relative h-32 bg-gradient-to-br from-gray-50 to-gray-100">
+              {services.map((service) => {
+                const slug = getServiceSlug(service);
+                const href = slug ? `/services/${slug}` : '/services';
+                return (
+                  <div key={service.id} className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100 h-full flex flex-col group">
+                    <Link href={href} className="relative h-32 bg-gradient-to-br from-gray-50 to-gray-100 block">
                       <Image
                         src={getServiceImagePath(service)}
                         alt={service.name}
@@ -54,23 +57,23 @@ export default function PermanentMakeupForYou() {
                         className="object-contain p-4"
                         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       />
-                    </div>
-                    <div className="p-6 flex-grow">
-                      <h4 className="font-bold text-gray-900 mb-2 group-hover:text-[#AD6269] transition-colors">{service.name}</h4>
-                      <p className="text-gray-600 text-sm">{service.description}</p>
+                    </Link>
+                    <div className="p-6 flex-grow flex flex-col">
+                      <Link href={href}>
+                        <h4 className="font-bold text-gray-900 mb-2 group-hover:text-[#AD6269] transition-colors">{service.name}</h4>
+                      </Link>
+                      <p className="text-gray-600 text-sm flex-grow">{truncateDescription(service.description)}</p>
+                      <Link
+                        href={href}
+                        className="inline-flex items-center gap-1 text-sm font-semibold text-[#AD6269] mt-4 hover:underline"
+                      >
+                        Learn More
+                        <i className="fas fa-arrow-right text-xs"></i>
+                      </Link>
                     </div>
                   </div>
-                </Link>
-              ))}
-              <Link href="/services" className="group">
-                <div className="bg-[#AD6269]/10 rounded-xl shadow-md p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-[#AD6269]/20 h-full flex flex-col justify-center">
-                  <div className="w-12 h-12 rounded-full bg-[#AD6269] flex items-center justify-center mb-4">
-                    <i className="fas fa-arrow-right text-white text-xl"></i>
-                  </div>
-                  <h4 className="font-bold text-[#AD6269] mb-2">View All Services</h4>
-                  <p className="text-gray-600 text-sm">Explore our complete service menu</p>
-                </div>
-              </Link>
+                );
+              })}
             </div>
           )}
         </div>
