@@ -111,10 +111,12 @@ export default function TheProcess() {
               scheduled 4-6 weeks later.
             </p>
             <a 
-              href="/contact"
+              href="https://link.socaldigitalstudio.com/widget/form/xnTbiXzxbuMKsegJPbFx"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center px-8 py-4 bg-[#AD6269] text-white font-semibold rounded-full hover:bg-[#9d5860] transition-colors shadow-lg"
             >
-              Start Your Journey
+              Your Pretty Girl Consultation Starts Here
               <ArrowRight className="w-5 h-5 ml-2" />
             </a>
           </div>
