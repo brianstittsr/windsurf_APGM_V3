@@ -225,10 +225,10 @@ export default function TinyTattoosPage() {
                     size="lg"
                     className="rounded-full px-8 bg-gradient-to-r from-[#AD6269] to-[#8B4A52] text-white hover:opacity-90"
                   >
-                    <Link href="/book-now-custom">
+                    <a href="https://link.socaldigitalstudio.com/widget/form/xnTbiXzxbuMKsegJPbFx" target="_blank" rel="noopener noreferrer">
                       <CalendarPlus className="w-5 h-5 mr-2" />
-                      Book Consultation
-                    </Link>
+                      Your Pretty Girl Consultation Starts Here
+                    </a>
                   </Button>
                   <Button
                     asChild

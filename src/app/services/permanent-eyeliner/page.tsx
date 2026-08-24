@@ -260,10 +260,10 @@ export default function PermanentEyelinerPage() {
                   variant="secondary"
                   className="rounded-full px-8 bg-white text-[#AD6269] hover:bg-white/90"
                 >
-                  <Link href="/contact">
+                  <a href="https://link.socaldigitalstudio.com/widget/form/xnTbiXzxbuMKsegJPbFx" target="_blank" rel="noopener noreferrer">
                     <CalendarPlus className="w-5 h-5 mr-2" />
-                    Book Consultation
-                  </Link>
+                    Your Pretty Girl Consultation Starts Here
+                  </a>
                 </Button>
               </div>
               <p className="mt-6 text-white/80 flex items-center justify-center gap-2">
