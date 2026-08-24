@@ -24,6 +24,8 @@ const existingImages = [
   { name: 'a-pretty-girl-matter-plaque.webp', filePath: 'public/images/a-pretty-girl-matter-plaque.webp' },
   { name: 'about-victoria.jpg', filePath: 'public/images/about/about-victoria.jpg' },
   { name: 'before-after.png', filePath: 'public/images/before-after.png' },
+  { name: 'eyeliner_enhancement.webp', filePath: 'public/images/eyeliner_enhancement.webp' },
+  { name: 'lipsBlush.webp', filePath: 'public/images/lipsBlush.webp' },
   // The Process images
   { name: 'BookNow.png', filePath: 'public/images/theprocess/BookNow.png' },
   { name: 'numbing.jpg', filePath: 'public/images/theprocess/numbing.jpg' },
