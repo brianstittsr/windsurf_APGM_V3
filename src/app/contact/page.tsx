@@ -130,18 +130,23 @@ export default function ContactPage() {
           </div>
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-4xl mx-auto text-center">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mb-6">
-                <MessageCircle className="w-10 h-10 text-white" />
-              </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
                 Get In Touch
               </h1>
-              <p className="text-xl text-white/90 leading-relaxed mb-4">
+              <p className="text-xl text-white leading-relaxed mb-4">
                 Ready to enhance your natural beauty? We'd love to hear from you!
               </p>
-              <p className="text-white/80 max-w-2xl mx-auto">
+              <p className="text-white max-w-2xl mx-auto mb-8">
                 Schedule your consultation today and discover how permanent makeup can transform your daily routine.
               </p>
+              <a
+                href="https://link.socaldigitalstudio.com/widget/form/xnTbiXzxbuMKsegJPbFx"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center px-8 py-4 bg-white text-[#AD6269] font-bold rounded-full hover:bg-gray-100 transition-colors shadow-lg"
+              >
+                Your Pretty Girl Consultation Starts Here
+              </a>
             </div>
           </div>
         </section>
