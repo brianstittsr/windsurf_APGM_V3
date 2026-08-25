@@ -17,6 +17,12 @@ export interface ServiceItem {
  * @returns The correct image path
  */
 export function getServiceImagePath(service: ServiceItem): string {
+  // Prefer the image explicitly set in the Services admin panel so the
+  // public site always matches what's configured there.
+  if (service.image) {
+    return service.image;
+  }
+
   // Service-specific mappings to ensure correct images
   const serviceImageMap: { [key: string]: string } = {
     'powder-brows': '/images/services/POWDER.png',
