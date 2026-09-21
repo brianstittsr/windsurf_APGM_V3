@@ -26,7 +26,8 @@ import {
   CalendarRange,
   AlertCircle,
   CalendarClock,
-  DollarSign
+  DollarSign,
+  Users
 } from 'lucide-react';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string);
@@ -46,6 +47,7 @@ interface Client {
   firstName: string;
   lastName: string;
   phone: string;
+  ghlContactId?: string;
 }
 
 interface TimeSlot {
@@ -63,7 +65,7 @@ interface BookingWizardProps {
   calendars: Array<{ id: string; name: string }>;
 }
 
-type WizardStep = 'client-type' | 'client-selection' | 'new-client' | 'date-selection' | 'payment' | 'confirmation';
+type WizardStep = 'client-type' | 'client-selection' | 'ghl-client-selection' | 'new-client' | 'date-selection' | 'payment' | 'confirmation';
 type DateSelectionMode = 'next-available' | 'weekend' | 'calendar-override';
 
 // Booking window and durations (minutes since midnight / minutes)
@@ -159,6 +161,14 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
   const [clientSearch, setClientSearch] = useState('');
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [loadingClients, setLoadingClients] = useState(false);
+
+  // GHL contact lookup state
+  const [useGhlLookup, setUseGhlLookup] = useState(false);
+  const [ghlSearch, setGhlSearch] = useState('');
+  const [ghlContacts, setGhlContacts] = useState<Client[]>([]);
+  const [loadingGhlContacts, setLoadingGhlContacts] = useState(false);
+  const [ghlSearchError, setGhlSearchError] = useState<string | null>(null);
+  const [ghlSearched, setGhlSearched] = useState(false);
   
   // New client form state
   const [newClientForm, setNewClientForm] = useState({
@@ -203,6 +213,11 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
   
   // Consultation detection (derived — no price, skip payment)
   const isConsultation = serviceName === 'Consultation';
+
+  // "The Pretty Girl Preview - Virtual Consultation" — triggers the GHL workflow
+  // webhook when the booking is created. Tolerant match: the stored service name
+  // uses different separators across environments ("*", "-", etc.).
+  const isPrettyGirlPreview = /pretty\s+girl\s+preview/i.test(serviceName);
 
   // Consultations are short (45 min) so many can be scheduled per day; other services default to 3 hours.
   const effectiveDuration = isConsultation ? CONSULTATION_DURATION_MIN : DEFAULT_APPOINTMENT_DURATION_MIN;
@@ -302,6 +317,51 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
       console.error('Error fetching clients:', error);
     } finally {
       setLoadingClients(false);
+    }
+  };
+
+  const searchGhlContacts = async () => {
+    if (!ghlSearch.trim()) {
+      await showAlert({
+        title: 'Enter a Search Term',
+        description: 'Type a name, email, or phone number to search GHL contacts.',
+        variant: 'warning'
+      });
+      return;
+    }
+
+    setLoadingGhlContacts(true);
+    setGhlSearchError(null);
+    setGhlSearched(true);
+    try {
+      const response = await fetch(`/api/admin/search-ghl-contacts?query=${encodeURIComponent(ghlSearch.trim())}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to search GHL contacts');
+      }
+
+      const mapped: Client[] = (data.contacts || []).map((c: any) => {
+        const firstName = c.firstName || c.first_name || '';
+        const lastName = c.lastName || c.last_name || '';
+        return {
+          id: c.id,
+          email: c.email || '',
+          displayName: c.contactName || c.name || `${firstName} ${lastName}`.trim() || c.email || 'No Name',
+          firstName,
+          lastName,
+          phone: c.phone || '',
+          ghlContactId: c.id
+        };
+      });
+
+      setGhlContacts(mapped);
+    } catch (error: any) {
+      console.error('Error searching GHL contacts:', error);
+      setGhlSearchError(error.message || 'Failed to search GHL contacts');
+      setGhlContacts([]);
+    } finally {
+      setLoadingGhlContacts(false);
     }
   };
 
@@ -686,6 +746,8 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
         lastName:  selectedClient.lastName,
         email: selectedClient.email,
         phone: selectedClient.phone || '',
+        // Reuse the GHL contact when the client was picked via GHL lookup
+        contactId: selectedClient.ghlContactId || undefined,
         // Appointment fields
         title: `${isConsultation ? 'Consult' : 'Appt'} - ${serviceName || 'PMU'} - ${selectedClient.displayName}`,
         serviceName: isConsultation ? 'Consultation' : (serviceName || 'PMU Appointment'),
@@ -735,6 +797,13 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
       // Send confirmation emails (non-blocking)
       sendConfirmationEmails(payload).catch(console.error);
 
+      // "The Pretty Girl Preview - Virtual Consultation" bookings also notify
+      // the GHL workflow inbound webhook (non-blocking).
+      let prettyGirlWebhookSent = false;
+      if (isPrettyGirlPreview) {
+        prettyGirlWebhookSent = await sendPrettyGirlPreviewWebhook(payload, result);
+      }
+
       setBookingCreated(true);
       setCurrentStep('confirmation');
 
@@ -757,9 +826,15 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
         console.log('[BookingWizard] Force sync logs:', result.logs);
       }
 
+      const prettyGirlMsg = isPrettyGirlPreview
+        ? prettyGirlWebhookSent
+          ? ' Booking details were sent to the GHL workflow.'
+          : ' Warning: the GHL workflow webhook could not be reached — check server logs.'
+        : '';
+
       await showAlert({
         title: 'Booking Created!',
-        description: `The appointment has been created and confirmation emails have been sent.${ghlMsg}`,
+        description: `The appointment has been created and confirmation emails have been sent.${ghlMsg}${prettyGirlMsg}`,
         variant: 'success'
       });
 
@@ -804,11 +879,36 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
     }
   };
 
+  const sendPrettyGirlPreviewWebhook = async (bookingData: any, bookingResult: any): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/bookings/ghl-pretty-girl-webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking: bookingData, result: bookingResult })
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        console.error('[BookingWizard] Pretty Girl Preview webhook failed:', err);
+        return false;
+      }
+      console.log('[BookingWizard] Pretty Girl Preview booking sent to GHL workflow webhook');
+      return true;
+    } catch (error) {
+      console.error('[BookingWizard] Error calling Pretty Girl Preview webhook:', error);
+      return false;
+    }
+  };
+
   const resetWizard = () => {
     setCurrentStep('client-type');
     setIsNewClient(null);
     setSelectedClient(null);
     setClientSearch('');
+    setUseGhlLookup(false);
+    setGhlSearch('');
+    setGhlContacts([]);
+    setGhlSearchError(null);
+    setGhlSearched(false);
     setNewClientForm({
       firstName: '',
       lastName: '',
@@ -849,6 +949,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
     switch (currentStep) {
       case 'client-type': return 1;
       case 'client-selection':
+      case 'ghl-client-selection':
       case 'new-client': return 2;
       case 'date-selection': return 3;
       case 'payment': return 4;
@@ -901,10 +1002,11 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                   <p className="text-gray-500 mt-2">Select the client type to continue</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <button
                     onClick={() => {
                       setIsNewClient(false);
+                      setUseGhlLookup(false);
                       setCurrentStep('client-selection');
                     }}
                     className="p-6 border-2 border-gray-200 rounded-xl hover:border-[#AD6269] hover:bg-[#AD6269]/5 transition-all group"
@@ -916,7 +1018,21 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
 
                   <button
                     onClick={() => {
+                      setIsNewClient(false);
+                      setUseGhlLookup(true);
+                      setCurrentStep('ghl-client-selection');
+                    }}
+                    className="p-6 border-2 border-gray-200 rounded-xl hover:border-[#AD6269] hover:bg-[#AD6269]/5 transition-all group"
+                  >
+                    <Users className="w-12 h-12 text-gray-400 group-hover:text-[#AD6269] mx-auto mb-4" />
+                    <h4 className="text-lg font-semibold text-gray-900">GHL Contact</h4>
+                    <p className="text-gray-500 text-sm mt-2">Look up a GoHighLevel contact</p>
+                  </button>
+
+                  <button
+                    onClick={() => {
                       setIsNewClient(true);
+                      setUseGhlLookup(false);
                       setCurrentStep('new-client');
                     }}
                     className="p-6 border-2 border-gray-200 rounded-xl hover:border-[#AD6269] hover:bg-[#AD6269]/5 transition-all group"
@@ -994,7 +1110,106 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
               </div>
             )}
 
-            {/* Step 2b: New Client Registration */}
+            {/* Step 2b: GHL Contact Lookup */}
+            {currentStep === 'ghl-client-selection' && (
+              <div className="space-y-6">
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#AD6269]/10 mb-4">
+                    <Users className="w-8 h-8 text-[#AD6269]" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900">Look Up GHL Contact</h3>
+                  <p className="text-gray-500 mt-2">Search GoHighLevel contacts by name, email, or phone</p>
+                </div>
+
+                {/* Search Input */}
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search GHL contacts..."
+                      value={ghlSearch}
+                      onChange={(e) => setGhlSearch(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !loadingGhlContacts) searchGhlContacts();
+                      }}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                    />
+                  </div>
+                  <Button
+                    onClick={searchGhlContacts}
+                    disabled={loadingGhlContacts}
+                    className="bg-[#AD6269] hover:bg-[#9d5860] px-6"
+                  >
+                    {loadingGhlContacts ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      'Search'
+                    )}
+                  </Button>
+                </div>
+
+                {/* Error */}
+                {ghlSearchError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-800 text-sm flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+                    {ghlSearchError}
+                  </div>
+                )}
+
+                {/* Results */}
+                <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
+                  {loadingGhlContacts ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-[#AD6269]" />
+                    </div>
+                  ) : ghlContacts.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      {ghlSearched ? 'No GHL contacts found' : 'Enter a search term and press Search'}
+                    </div>
+                  ) : (
+                    ghlContacts.map(contact => (
+                      <button
+                        key={contact.id}
+                        onClick={() => setSelectedClient(contact)}
+                        className={`w-full p-4 text-left border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors ${
+                          selectedClient?.id === contact.id ? 'bg-[#AD6269]/10 border-l-4 border-l-[#AD6269]' : ''
+                        }`}
+                      >
+                        <div className="font-medium text-gray-900">{contact.displayName || 'No Name'}</div>
+                        <div className="text-sm text-gray-500">{contact.email}</div>
+                        {contact.phone && <div className="text-sm text-gray-400">{contact.phone}</div>}
+                      </button>
+                    ))
+                  )}
+                </div>
+
+                {/* Selected contact indicator */}
+                {selectedClient?.ghlContactId && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-green-800 text-sm">
+                    Selected: <strong>{selectedClient.displayName}</strong>
+                  </div>
+                )}
+
+                {/* Navigation */}
+                <div className="flex justify-between pt-4">
+                  <Button variant="outline" onClick={() => setCurrentStep('client-type')}>
+                    <ChevronLeft className="w-4 h-4 mr-2" />
+                    Back
+                  </Button>
+                  <Button
+                    onClick={() => setCurrentStep('date-selection')}
+                    disabled={!selectedClient}
+                    className="bg-[#AD6269] hover:bg-[#9d5860]"
+                  >
+                    Continue
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2c: New Client Registration */}
             {currentStep === 'new-client' && (
               <div className="space-y-6">
                 <div className="text-center mb-6">
@@ -1422,7 +1637,13 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                         setSelectedSlot(null);
                         setSelectedDate('');
                       } else {
-                        setCurrentStep(isNewClient ? 'new-client' : 'client-selection');
+                        setCurrentStep(
+                          isNewClient
+                            ? 'new-client'
+                            : useGhlLookup
+                              ? 'ghl-client-selection'
+                              : 'client-selection'
+                        );
                       }
                     }}
                   >
