@@ -332,6 +332,11 @@ export async function POST(request: NextRequest) {
         const bookingRef = db.collection('bookings').doc();
         await bookingRef.set({
           ...appointmentData,
+          // Normalize fields so website overlap detection can read them reliably.
+          date: appointmentData.appointmentDate || new Date(appointmentData.startTime).toISOString().split('T')[0],
+          time: appointmentData.appointmentTime || new Date(appointmentData.startTime).toISOString().slice(11, 16),
+          endTime: appointmentData.appointmentEndTime || '',
+          duration: appointmentData.duration || 0,
           ghlContactId: contactId,
           ghlAppointmentId: appointmentId,
           ghlCalendarId: calendarId,

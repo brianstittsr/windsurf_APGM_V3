@@ -252,6 +252,8 @@ export async function POST(request: NextRequest) {
       serviceName: appointmentData.serviceName || appointmentData.title,
       date: appointmentData.appointmentDate || toEasternDateTime(appointmentData.startTime).date,
       time: appointmentData.appointmentTime || toEasternDateTime(appointmentData.startTime).time,
+      endTime: appointmentData.appointmentEndTime || '',
+      duration: appointmentData.duration || 0,
       status: appointmentData.status || 'pending',
       price: appointmentData.price || 0,
       depositPaid: appointmentData.depositPaid || false,

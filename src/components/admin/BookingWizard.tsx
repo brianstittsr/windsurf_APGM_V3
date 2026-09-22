@@ -86,11 +86,13 @@ const toHHMM = (mins: number): string => {
 };
 
 // Infer how long an existing booking occupies, for overlap detection.
-const inferDurationMin = (serviceName?: string, time?: string, endTime?: string): number => {
+const inferDurationMin = (serviceName?: string, time?: string, endTime?: string, duration?: number): number => {
   if (time && endTime) {
     const diff = toMinutes(endTime) - toMinutes(time);
     if (diff > 0) return diff;
   }
+  if (typeof duration === 'number' && duration > 0) return duration;
+  if (serviceName && /pretty\s+girl\s+preview/i.test(serviceName)) return 30;
   if (serviceName && /consult/i.test(serviceName)) return CONSULTATION_DURATION_MIN;
   return DEFAULT_APPOINTMENT_DURATION_MIN;
 };
@@ -185,6 +187,8 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
   const [selectedCalendar, setSelectedCalendar] = useState('');
   const [serviceName, setServiceName] = useState('');
   const [servicePrice, setServicePrice] = useState<number>(500); // Custom service price
+  // Per-service duration override (minutes). 0 means use the service-type defaults.
+  const [serviceDuration, setServiceDuration] = useState<number>(0);
   const [dateSelectionMode, setDateSelectionMode] = useState<DateSelectionMode | null>(null);
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
@@ -219,22 +223,60 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
   // uses different separators across environments ("*", "-", etc.).
   const isPrettyGirlPreview = /pretty\s+girl\s+preview/i.test(serviceName);
 
-  // Consultations are short (45 min) so many can be scheduled per day; other services default to 3 hours.
-  const effectiveDuration = isConsultation ? CONSULTATION_DURATION_MIN : DEFAULT_APPOINTMENT_DURATION_MIN;
-  // Step between offered start times: every 45 min for consultations, hourly for longer services.
-  const effectiveStep = isConsultation ? CONSULTATION_DURATION_MIN : 60;
+  // Pretty Girl Preview consultations use the admin-selected duration (default 30 min);
+  // generic consultations are 45 min; everything else defaults to 3 hours.
+  const effectiveDuration = isPrettyGirlPreview
+    ? (serviceDuration > 0 ? serviceDuration : 30)
+    : isConsultation
+      ? CONSULTATION_DURATION_MIN
+      : DEFAULT_APPOINTMENT_DURATION_MIN;
+  // Step between offered start times: every 30 min for Pretty Girl Preview, every 45 min
+  // for generic consultations, and hourly for longer services.
+  const effectiveStep = isPrettyGirlPreview ? 30 : isConsultation ? CONSULTATION_DURATION_MIN : 60;
+
+  // Pretty Girl Preview duration options (30-min increments up to 4 hours).
+  const DURATION_OPTIONS = [30, 60, 90, 120, 150, 180, 210, 240];
+  const formatDurationLabel = (minutes: number): string => {
+    if (minutes < 60) return `${minutes} minutes`;
+    const hours = Math.floor(minutes / 60);
+    const remainder = minutes % 60;
+    return remainder === 0 ? `${hours} hour${hours > 1 ? 's' : ''}` : `${hours} hour ${remainder} minutes`;
+  };
+
+  // Reset/customize duration when the service changes.
+  useEffect(() => {
+    if (isPrettyGirlPreview) {
+      setServiceDuration(prev => (prev > 0 ? prev : 30));
+    } else {
+      setServiceDuration(0);
+    }
+  }, [isPrettyGirlPreview]);
+
+  // When Pretty Girl Preview duration changes, clear the selected slot so the admin
+  // can't keep an old end time, and rebuild the slots if a date/mode is already open.
+  useEffect(() => {
+    if (!isPrettyGirlPreview) return;
+    setSelectedSlot(null);
+    if (dateSelectionMode && selectedDate && !loadingSlots) {
+      if (dateSelectionMode === 'calendar-override') {
+        fetchSlotsForDate(selectedDate);
+      } else {
+        fetchAvailableSlots(dateSelectionMode);
+      }
+    }
+  }, [serviceDuration]);
 
   // Generate selectable time slots for a day, stepping by `stepMin` and giving each slot
   // a `durationMin` length. Skips slots that overlap an existing booking or are in the past.
   const buildSlots = (
-    existing: Array<{ time: string; endTime?: string; serviceName?: string }>,
+    existing: Array<{ time: string; endTime?: string; serviceName?: string; duration?: number }>,
     durationMin: number,
     stepMin: number,
     opts?: { dateStr?: string; todayStr?: string; now?: Date }
   ): TimeSlot[] => {
     const busy = existing.map(b => {
       const start = toMinutes(b.time);
-      return { start, end: start + inferDurationMin(b.serviceName, b.time, b.endTime) };
+      return { start, end: start + inferDurationMin(b.serviceName, b.time, b.endTime, b.duration) };
     });
 
     const nowMin = opts?.now ? opts.now.getHours() * 60 + opts.now.getMinutes() : -1;
@@ -530,7 +572,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
   // Helper function to get existing bookings for a date
   const getExistingBookingsForDate = async (
     date: string
-  ): Promise<Array<{ time: string; endTime?: string; serviceName?: string }>> => {
+  ): Promise<Array<{ time: string; endTime?: string; serviceName?: string; duration?: number }>> => {
     try {
       const db = getDb();
       const bookingsRef = collection(db, 'bookings');
@@ -540,9 +582,10 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
       return snapshot.docs.map(doc => {
         const data = doc.data();
         return {
-          time: data.time || '00:00',
+          time: data.time || data.appointmentTime || '00:00',
           endTime: data.endTime || undefined,
           serviceName: data.serviceName || data.ghlTitle || undefined,
+          duration: typeof data.duration === 'number' ? data.duration : undefined,
         };
       });
     } catch (error) {
@@ -754,8 +797,10 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
         appointmentType: isConsultation ? 'consultation' : 'appointment',
         startTime: startISO,
         endTime:   endISO,
-        appointmentDate: selectedDate,      // raw Eastern date for website storage
-        appointmentTime: selectedSlot.time, // raw Eastern time for website storage
+        appointmentDate: selectedDate,       // raw Eastern date for website storage
+        appointmentTime: selectedSlot.time,  // raw Eastern time for website storage
+        appointmentEndTime: selectedSlot.endTime, // raw Eastern end time for website storage
+        duration: effectiveDuration,          // appointment length in minutes
         artistId:   'victoria',
         artistName: 'Victoria',
         status: 'confirmed',
@@ -926,6 +971,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
     setUseManualTime(false);
     setServiceName('');
     setServicePrice(500);
+    setServiceDuration(0);
     setNotes('');
     setPaymentMethod(null);
     setCardPaymentAmount('deposit');
@@ -1359,6 +1405,29 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                     ))}
                   </select>
                 </div>
+
+                {/* Pretty Girl Preview: configurable duration */}
+                {isPrettyGirlPreview && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Consultation Duration
+                    </label>
+                    <select
+                      value={serviceDuration}
+                      onChange={(e) => setServiceDuration(Number(e.target.value))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AD6269] bg-white"
+                    >
+                      {DURATION_OPTIONS.map((minutes) => (
+                        <option key={minutes} value={minutes}>
+                          {formatDurationLabel(minutes)}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Default is 30 minutes. Choose up to 4 hours.
+                    </p>
+                  </div>
+                )}
 
                 {/* Custom Price Input — hidden for consultations */}
                 {isConsultation ? (
