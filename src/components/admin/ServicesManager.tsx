@@ -23,6 +23,16 @@ interface ServiceFormData {
   isMostPopular: boolean;
 }
 
+// Pretty Girl Preview consultations use fixed 30-minute increments up to 4 hours.
+const DURATION_OPTIONS = [30, 60, 90, 120, 150, 180, 210, 240];
+const isPrettyGirlPreviewService = (name: string): boolean => /pretty\s+girl\s+preview/i.test(name);
+const formatDurationLabel = (minutes: number): string => {
+  if (minutes < 60) return `${minutes} minutes`;
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return remainder === 0 ? `${hours} hour${hours > 1 ? 's' : ''}` : `${hours} hour ${remainder} minutes`;
+};
+
 // Default form data structure
 const defaultFormData: ServiceFormData = {
   name: '',
@@ -60,6 +70,15 @@ export default function ServicesManager() {
     // Add a console log to confirm the component loaded properly
     console.log('ServicesManager component loaded');
   }, []);
+
+  // Pretty Girl Preview consultations always use a fixed 30-minute-increment duration.
+  useEffect(() => {
+    if (!isPrettyGirlPreviewService(formData.name)) return;
+    const parsed = parseInt(formData.duration, 10);
+    if (!DURATION_OPTIONS.includes(parsed)) {
+      setFormData(prev => ({ ...prev, duration: '30' }));
+    }
+  }, [formData.name]);
 
   const loadBusinessSettings = async () => {
     try {
@@ -484,13 +503,28 @@ export default function ServicesManager() {
                     <label className="block text-sm font-semibold text-gray-700 mb-1">
                       <i className="fas fa-clock mr-1 text-yellow-600"></i>Duration *
                     </label>
-                    <Input
-                      type="text"
-                      value={formData.duration}
-                      onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
-                      placeholder="e.g., 2-3 hours"
-                      required
-                    />
+                    {isPrettyGirlPreviewService(formData.name) ? (
+                      <select
+                        value={formData.duration}
+                        onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
+                        required
+                        className="w-full h-10 px-3 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#AD6269] focus:border-transparent"
+                      >
+                        {DURATION_OPTIONS.map((minutes) => (
+                          <option key={minutes} value={String(minutes)}>
+                            {formatDurationLabel(minutes)}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <Input
+                        type="text"
+                        value={formData.duration}
+                        onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
+                        placeholder="e.g., 2-3 hours"
+                        required
+                      />
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">

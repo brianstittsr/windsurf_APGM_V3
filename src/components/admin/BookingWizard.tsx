@@ -243,17 +243,21 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
     return remainder === 0 ? `${hours} hour${hours > 1 ? 's' : ''}` : `${hours} hour ${remainder} minutes`;
   };
 
-  // Reset/customize duration, price and deposit when the service changes.
+  // For Pretty Girl Preview, use the service-level duration for slot generation and
+  // end-time calculation. Default to 30 minutes if the service record hasn't been updated.
   useEffect(() => {
-    if (isPrettyGirlPreview) {
-      setServiceDuration(prev => (prev > 0 ? prev : 30));
-      setServicePrice(0);
-      setDepositAmount(0);
-      setCustomDepositInput('0');
-    } else {
+    if (!isPrettyGirlPreview) {
       setServiceDuration(0);
+      return;
     }
-  }, [isPrettyGirlPreview]);
+    const matchedService = services.find(s => s.name === serviceName);
+    const parsedDuration = parseInt(matchedService?.duration || '', 10);
+    const validDuration = DURATION_OPTIONS.includes(parsedDuration) ? parsedDuration : 30;
+    setServiceDuration(validDuration);
+    setServicePrice(0);
+    setDepositAmount(0);
+    setCustomDepositInput('0');
+  }, [isPrettyGirlPreview, serviceName, services]);
 
   // When Pretty Girl Preview duration changes, clear the selected slot so the admin
   // can't keep an old end time, and rebuild the slots if a date/mode is already open.
@@ -1427,7 +1431,7 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
                       ))}
                     </select>
                     <p className="text-xs text-gray-500 mt-1">
-                      Default is 30 minutes. Choose up to 4 hours.
+                      Pulled from the service settings. Change here if this appointment needs a different length.
                     </p>
                   </div>
                 )}
