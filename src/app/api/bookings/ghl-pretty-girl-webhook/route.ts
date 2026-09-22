@@ -23,14 +23,25 @@ export async function POST(request: NextRequest) {
 
     const webhookUrl = process.env.GHL_PRETTY_GIRL_WEBHOOK_URL || DEFAULT_WEBHOOK_URL;
 
+    // Derive first/last name from the full name if either piece is missing.
+    const fullName = (booking.name || `${booking.firstName || ''} ${booking.lastName || ''}`.trim()).trim();
+    const nameParts = fullName.split(/\s+/).filter(Boolean);
+    const firstName = (booking.firstName || nameParts[0] || '').trim();
+    const lastName = (booking.lastName || nameParts.slice(1).join(' ') || '').trim();
+
     const payload = {
       event: 'booking_created',
       serviceName: booking.serviceName || '',
       serviceKey: 'pretty_girl_preview_virtual_consultation',
-      name: booking.name || '',
-      FullName: booking.name || `${booking.firstName || ''} ${booking.lastName || ''}`.trim(),
-      firstName: booking.firstName || '',
-      lastName: booking.lastName || '',
+      name: fullName,
+      FullName: fullName,
+      firstName,
+      lastName,
+      // GHL workflow mappings sometimes expect capitalized or snake-cased keys.
+      FirstName: firstName,
+      LastName: lastName,
+      first_name: firstName,
+      last_name: lastName,
       email: booking.email || '',
       phone: booking.phone || '',
       appointmentDate: booking.appointmentDate || '',
