@@ -161,7 +161,20 @@ async function createGHLAppointment(
     }
     
     const startDateTime = new Date(`${date}T${time}:00`);
-    const endDateTime = new Date(startDateTime.getTime() + (3 * 60 * 60 * 1000)); // 3 hours
+    // Use the stored end time (HH:MM) or duration (minutes) when present so synced
+    // appointments match the booked duration; fall back to 3 hours for legacy docs.
+    const storedEndTime = appointment.endTime;
+    const storedDuration = appointment.duration;
+    let endDateTime: Date;
+    if (typeof storedEndTime === 'string' && /^\d{2}:\d{2}$/.test(storedEndTime)) {
+      endDateTime = new Date(`${date}T${storedEndTime}:00`);
+      if (endDateTime <= startDateTime) {
+        endDateTime = new Date(startDateTime.getTime() + (3 * 60 * 60 * 1000));
+      }
+    } else {
+      const durationMs = (typeof storedDuration === 'number' && storedDuration > 0 ? storedDuration : 180) * 60 * 1000;
+      endDateTime = new Date(startDateTime.getTime() + durationMs);
+    }
     
     const serviceName = appointment.serviceName || 'Appointment';
     const clientName = appointment.clientName || 'Unknown Client';

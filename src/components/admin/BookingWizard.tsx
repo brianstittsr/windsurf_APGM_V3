@@ -715,7 +715,8 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           startDate: start.toISOString().split('T')[0],
-          endDate: end.toISOString().split('T')[0]
+          endDate: end.toISOString().split('T')[0],
+          duration: effectiveDuration
         })
       });
 

@@ -663,6 +663,9 @@ export default function BookingCalendar() {
       // Create start and end times
       const startDateTime = new Date(`${newAppointment.date}T${newAppointment.time}:00`);
       const endDateTime = new Date(startDateTime.getTime() + newAppointment.duration * 60000);
+      const [sh, sm] = newAppointment.time.split(':').map(Number);
+      const endMin = sh * 60 + sm + newAppointment.duration;
+      const appointmentEndTime = `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`;
 
       const appointmentData = {
         name: newAppointment.name,
@@ -673,6 +676,10 @@ export default function BookingCalendar() {
         title: newAppointment.serviceName || 'Appointment',
         startTime: startDateTime.toISOString(),
         endTime: endDateTime.toISOString(),
+        appointmentDate: newAppointment.date,
+        appointmentTime: newAppointment.time,
+        appointmentEndTime,
+        duration: newAppointment.duration,
         notes: newAppointment.notes,
         status: newAppointment.status
       };

@@ -105,6 +105,8 @@ export interface Appointment {
   artistId: string;
   date: string; // YYYY-MM-DD format
   time: string; // HH:MM format
+  endTime?: string; // HH:MM format (Eastern)
+  duration?: number; // minutes
   scheduledDate: string; // Legacy field - can be removed after migration
   scheduledTime: string; // Legacy field - can be removed after migration
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'rescheduled';

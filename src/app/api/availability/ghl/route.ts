@@ -244,6 +244,9 @@ async function fetchLocalBookings(date: string): Promise<any[]> {
         id: doc.id,
         date: data.date,
         time: data.time,
+        endTime: data.endTime || undefined,
+        duration: typeof data.duration === 'number' ? data.duration : undefined,
+        serviceName: data.serviceName || '',
         status: data.status
       };
     });
@@ -322,8 +325,21 @@ function generateTimeSlots(
         const bookingHour = parseInt(booking.time.split(':')[0]);
         const bookingMinute = parseInt(booking.time.split(':')[1] || '0');
         const bookingStart = new Date(`${date}T${booking.time}:00`);
-        // Assume 3-hour appointments
-        const bookingEnd = new Date(bookingStart.getTime() + (3 * 60 * 60 * 1000));
+        // Use the stored end time/duration so short bookings don't block extra slots
+        let bookingEnd: Date;
+        if (typeof booking.endTime === 'string' && /^\d{2}:\d{2}$/.test(booking.endTime)) {
+          bookingEnd = new Date(`${date}T${booking.endTime}:00`);
+          if (bookingEnd <= bookingStart) {
+            bookingEnd = new Date(bookingStart.getTime() + (3 * 60 * 60 * 1000));
+          }
+        } else {
+          const durationMin = typeof booking.duration === 'number' && booking.duration > 0
+            ? booking.duration
+            : /pretty\s+girl\s+preview/i.test(booking.serviceName || '') ? 30
+            : /consult/i.test(booking.serviceName || '') ? 45
+            : 180;
+          bookingEnd = new Date(bookingStart.getTime() + durationMin * 60 * 1000);
+        }
         return (slotStart < bookingEnd && slotEnd > bookingStart);
       });
       

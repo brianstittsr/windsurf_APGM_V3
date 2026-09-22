@@ -14,7 +14,8 @@ interface DayAvailability {
 
 export async function POST(request: NextRequest) {
   try {
-    const { startDate, endDate, calendarId, locationId } = await request.json();
+    const { startDate, endDate, calendarId, locationId, duration } = await request.json();
+    const durationMin = typeof duration === 'number' && duration > 0 ? duration : 180;
 
     if (!startDate || !endDate) {
       return NextResponse.json(
@@ -52,18 +53,22 @@ export async function POST(request: NextRequest) {
 
     const slotsByDate: Record<string, TimeSlot[]> = {};
 
-    // Generate time slots for each day (10am - 7pm, 3-hour blocks)
+    // Generate time slots for each day (10am - 7pm) sized to the appointment
+    // duration, stepping every 30 minutes.
     // Initialize as AVAILABLE - we mark as unavailable only if an existing event blocks the slot
     const start = new Date(startDate + 'T12:00:00');
     const end = new Date(endDate + 'T12:00:00');
-    
+    const DAY_START_MIN = 10 * 60;
+    const DAY_END_MIN = 19 * 60;
+
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       const dateStr = d.toISOString().split('T')[0];
-      slotsByDate[dateStr] = [
-        { time: '10:00', endTime: '13:00', available: true },
-        { time: '13:00', endTime: '16:00', available: true },
-        { time: '16:00', endTime: '19:00', available: true }
-      ];
+      const daySlots: TimeSlot[] = [];
+      for (let m = DAY_START_MIN; m + durationMin <= DAY_END_MIN; m += 30) {
+        const hh = (v: number) => `${String(Math.floor(v / 60)).padStart(2, '0')}:${String(v % 60).padStart(2, '0')}`;
+        daySlots.push({ time: hh(m), endTime: hh(m + durationMin), available: true });
+      }
+      slotsByDate[dateStr] = daySlots;
     }
 
     // Fetch existing appointments/events from GHL to find which slots are blocked

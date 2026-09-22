@@ -124,7 +124,7 @@ export class CalendarSyncService {
         timeZone: 'America/New_York'
       },
       end: {
-        dateTime: `${booking.date}T${this.addDuration(booking.time, 180)}:00`,
+        dateTime: `${booking.date}T${this.getEndTime(booking)}:00`,
         timeZone: 'America/New_York'
       },
       attendees: [
@@ -144,10 +144,20 @@ export class CalendarSyncService {
     return {
       title: `${booking.serviceName} - ${booking.clientName}`,
       startTime: `${booking.date}T${booking.time}:00`,
-      endTime: `${booking.date}T${this.addDuration(booking.time, 180)}:00`,
+      endTime: `${booking.date}T${this.getEndTime(booking)}:00`,
       description: `Service: ${booking.serviceName}\nPrice: $${booking.price}`,
       status: this.mapStatusToGHL(booking.status)
     };
+  }
+
+  private static getEndTime(booking: Appointment): string {
+    if (booking.endTime && /^\d{2}:\d{2}$/.test(booking.endTime)) {
+      return booking.endTime;
+    }
+    const durationMin = typeof booking.duration === 'number' && booking.duration > 0
+      ? booking.duration
+      : 180;
+    return this.addDuration(booking.time, durationMin);
   }
 
   private static addDuration(time: string, minutes: number): string {
