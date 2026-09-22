@@ -243,10 +243,13 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
     return remainder === 0 ? `${hours} hour${hours > 1 ? 's' : ''}` : `${hours} hour ${remainder} minutes`;
   };
 
-  // Reset/customize duration when the service changes.
+  // Reset/customize duration, price and deposit when the service changes.
   useEffect(() => {
     if (isPrettyGirlPreview) {
       setServiceDuration(prev => (prev > 0 ? prev : 30));
+      setServicePrice(0);
+      setDepositAmount(0);
+      setCustomDepositInput('0');
     } else {
       setServiceDuration(0);
     }
@@ -1457,24 +1460,28 @@ export default function BookingWizard({ isOpen, onClose, onBookingCreated, calen
 
                 {/* Date Selection Mode Buttons */}
                 {!dateSelectionMode && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button
-                      onClick={() => handleDateModeSelect('next-available')}
-                      className="p-4 border-2 border-gray-200 rounded-xl hover:border-[#AD6269] hover:bg-[#AD6269]/5 transition-all group text-center"
-                    >
-                      <CalendarClock className="w-10 h-10 text-gray-400 group-hover:text-[#AD6269] mx-auto mb-3" />
-                      <h4 className="font-semibold text-gray-900">Next Available</h4>
-                      <p className="text-xs text-gray-500 mt-1">First available slot</p>
-                    </button>
+                  <div className={`grid grid-cols-1 ${isPrettyGirlPreview ? '' : 'md:grid-cols-3'} gap-4`}>
+                    {!isPrettyGirlPreview && (
+                      <button
+                        onClick={() => handleDateModeSelect('next-available')}
+                        className="p-4 border-2 border-gray-200 rounded-xl hover:border-[#AD6269] hover:bg-[#AD6269]/5 transition-all group text-center"
+                      >
+                        <CalendarClock className="w-10 h-10 text-gray-400 group-hover:text-[#AD6269] mx-auto mb-3" />
+                        <h4 className="font-semibold text-gray-900">Next Available</h4>
+                        <p className="text-xs text-gray-500 mt-1">First available slot</p>
+                      </button>
+                    )}
 
-                    <button
-                      onClick={() => handleDateModeSelect('weekend')}
-                      className="p-4 border-2 border-gray-200 rounded-xl hover:border-[#AD6269] hover:bg-[#AD6269]/5 transition-all group text-center"
-                    >
-                      <CalendarDays className="w-10 h-10 text-gray-400 group-hover:text-[#AD6269] mx-auto mb-3" />
-                      <h4 className="font-semibold text-gray-900">Weekend</h4>
-                      <p className="text-xs text-gray-500 mt-1">Sat/Sun only</p>
-                    </button>
+                    {!isPrettyGirlPreview && (
+                      <button
+                        onClick={() => handleDateModeSelect('weekend')}
+                        className="p-4 border-2 border-gray-200 rounded-xl hover:border-[#AD6269] hover:bg-[#AD6269]/5 transition-all group text-center"
+                      >
+                        <CalendarDays className="w-10 h-10 text-gray-400 group-hover:text-[#AD6269] mx-auto mb-3" />
+                        <h4 className="font-semibold text-gray-900">Weekend</h4>
+                        <p className="text-xs text-gray-500 mt-1">Sat/Sun only</p>
+                      </button>
+                    )}
 
                     <button
                       onClick={() => handleDateModeSelect('calendar-override')}
