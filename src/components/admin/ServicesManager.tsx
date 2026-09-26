@@ -15,6 +15,7 @@ interface ServiceFormData {
   duration: string;
   category: 'eyebrows' | 'eyeliner' | 'lips' | 'correction';
   image: string;
+  link?: string; // detail page slug, e.g. "microblading"
   isActive: boolean;
   requirements: string[];
   contraindications: string[];
@@ -22,6 +23,15 @@ interface ServiceFormData {
   showPrice: boolean;
   isMostPopular: boolean;
 }
+
+const slugify = (name: string): string =>
+  name
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]+/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .substring(0, 80);
 
 // Pretty Girl Preview consultations use fixed 30-minute increments up to 4 hours.
 const DURATION_OPTIONS = [30, 60, 90, 120, 150, 180, 210, 240];
@@ -46,7 +56,8 @@ const defaultFormData: ServiceFormData = {
   contraindications: [],
   order: 0,
   showPrice: true,
-  isMostPopular: false
+  isMostPopular: false,
+  link: ''
 };
 
 export default function ServicesManager() {
@@ -141,8 +152,10 @@ export default function ServicesManager() {
     console.log('Submitting service form...', formData);
 
     try {
+      const link = formData.link?.trim() || slugify(formData.name);
       const serviceData = {
         ...formData,
+        link,
         price: Number(formData.price),
         order: Number(formData.order)
       };
@@ -192,6 +205,7 @@ export default function ServicesManager() {
       duration: service.duration,
       category: service.category,
       image: service.image || '',
+      link: service.link || slugify(service.name),
       isActive: service.isActive,
       requirements: service.requirements || [],
       contraindications: service.contraindications || [],
@@ -326,6 +340,7 @@ export default function ServicesManager() {
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Order</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Image</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Name</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Page</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Price</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Show</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Popular</th>
@@ -359,6 +374,20 @@ export default function ServicesManager() {
                         {service.description.substring(0, 60)}...
                       </p>
                     </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    {service.link ? (
+                      <a
+                        href={`/services/${service.link}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        /services/{service.link}
+                      </a>
+                    ) : (
+                      <span className="text-sm text-gray-400">—</span>
+                    )}
                   </td>
                   <td className="py-3 px-4">
                     {service.showPrice ?? true ? (
@@ -401,6 +430,16 @@ export default function ServicesManager() {
                       >
                         <i className="fas fa-edit"></i>
                       </button>
+                      <a
+                        className={`p-2 rounded-lg transition-colors ${service.link ? 'text-green-600 hover:bg-green-50' : 'text-gray-300 cursor-not-allowed'}`}
+                        href={service.link ? `/services/${service.link}` : undefined}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={service.link ? 'View detail page' : 'No page link set'}
+                        onClick={(e) => !service.link && e.preventDefault()}
+                      >
+                        <i className="fas fa-external-link-alt"></i>
+                      </a>
                       <button
                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         onClick={() => handleDelete(service)}
@@ -556,6 +595,33 @@ export default function ServicesManager() {
                     placeholder="Describe the service in detail..."
                     required
                   />
+                </div>
+
+                {/* Detail Page Link */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    <i className="fas fa-link mr-1 text-blue-600"></i>Detail Page Slug
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      value={formData.link || ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, link: e.target.value }))}
+                      placeholder="e.g., microblading"
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setFormData(prev => ({ ...prev, link: slugify(prev.name) }))}
+                    >
+                      Generate from name
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    The detail page will live at <code className="bg-gray-100 px-1 rounded">/services/{formData.link ? formData.link : '...'}</code>.
+                    Leave blank to auto-generate from the service name when saving.
+                  </p>
                 </div>
 
                 {/* Requirements */}

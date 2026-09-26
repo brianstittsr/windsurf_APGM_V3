@@ -36,6 +36,7 @@ export interface Service {
   duration: string;
   category: 'eyebrows' | 'eyeliner' | 'lips' | 'correction';
   image: string;
+  link?: string; // detail page slug/path
   isActive: boolean;
   requirements: string[];
   contraindications: string[];

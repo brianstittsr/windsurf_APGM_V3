@@ -9,6 +9,7 @@ export interface ServiceItem {
   id: string;
   name: string;
   image?: string;
+  link?: string;
 }
 
 /**
@@ -129,6 +130,11 @@ const VALID_SERVICE_SLUGS = [
 export function getServiceSlug(service: ServiceItem): string | null {
   const id = (service.id || '').toLowerCase();
   const name = service.name.toLowerCase();
+
+  // Prefer the explicit detail-page link set in the admin Services panel
+  if (service.link?.trim()) {
+    return service.link.trim();
+  }
 
   // Direct match by id
   if (VALID_SERVICE_SLUGS.includes(id)) {
