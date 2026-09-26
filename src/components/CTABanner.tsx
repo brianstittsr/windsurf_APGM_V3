@@ -31,7 +31,7 @@ export default function CTABanner() {
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center px-8 py-4 bg-white text-[#AD6269] font-bold rounded-full hover:bg-gray-100 transition-colors shadow-lg"
             >
-              Your Pretty Girl Consultation Starts Here
+              Your Pretty Girl Matter Consultation Starts Here
               <ArrowRight className="w-5 h-5 ml-2" />
             </a>
             <a
