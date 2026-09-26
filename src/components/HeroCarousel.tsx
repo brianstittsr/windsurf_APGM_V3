@@ -106,7 +106,7 @@ export default function HeroCarousel({
           highlightText: 'PERMANENT MAKEUP',
           backgroundImage: '/images/hero/victoria-escobar-hero-main.jpg',
           buttonText: 'Your Pretty Girl Consultation Starts Here',
-          buttonLink: 'https://link.socaldigitalstudio.com/widget/form/xnTbiXzxbuMKsegJPbFx',
+          buttonLink: 'https://link.socaldigitalstudio.com/widget/form/wxQMl8ZFz9MiWtrKYlnP',
           buttonStyle: 'primary',
           textAlignment: 'center',
           overlayOpacity: 40,
@@ -126,7 +126,7 @@ export default function HeroCarousel({
         highlightText: 'PERMANENT MAKEUP',
         backgroundImage: '/images/hero/victoria-escobar-hero-main.jpg',
         buttonText: 'Your Pretty Girl Consultation Starts Here',
-        buttonLink: 'https://link.socaldigitalstudio.com/widget/form/xnTbiXzxbuMKsegJPbFx',
+        buttonLink: 'https://link.socaldigitalstudio.com/widget/form/wxQMl8ZFz9MiWtrKYlnP',
         buttonStyle: 'primary',
         textAlignment: 'center',
         overlayOpacity: 40,
@@ -435,7 +435,7 @@ export default function HeroCarousel({
                     Read More Reviews
                   </a>
                   <a
-                    href={currentSlide.buttonLink || 'https://link.socaldigitalstudio.com/widget/form/xnTbiXzxbuMKsegJPbFx'}
+                    href={currentSlide.buttonLink || 'https://link.socaldigitalstudio.com/widget/form/wxQMl8ZFz9MiWtrKYlnP'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center px-6 py-3 bg-[#AD6269] text-white font-semibold rounded-full hover:bg-[#9d5860] transition-colors shadow-lg"
@@ -523,7 +523,7 @@ export default function HeroCarousel({
 
                 <div className="flex justify-center gap-4 fade-in-3 mt-8">
                   <a
-                    href={currentSlide.buttonLink || 'https://link.socaldigitalstudio.com/widget/form/xnTbiXzxbuMKsegJPbFx'}
+                    href={currentSlide.buttonLink || 'https://link.socaldigitalstudio.com/widget/form/wxQMl8ZFz9MiWtrKYlnP'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`inline-flex items-center justify-center px-8 py-4 rounded-full font-semibold transition-all shadow-lg ${

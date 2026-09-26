@@ -225,7 +225,7 @@ export default function TinyTattoosPage() {
                     size="lg"
                     className="rounded-full px-8 bg-gradient-to-r from-[#AD6269] to-[#8B4A52] text-white hover:opacity-90"
                   >
-                    <a href="https://link.socaldigitalstudio.com/widget/form/xnTbiXzxbuMKsegJPbFx" target="_blank" rel="noopener noreferrer">
+                    <a href="https://link.socaldigitalstudio.com/widget/form/wxQMl8ZFz9MiWtrKYlnP" target="_blank" rel="noopener noreferrer">
                       <CalendarPlus className="w-5 h-5 mr-2" />
                       Your Pretty Girl Consultation Starts Here
                     </a>

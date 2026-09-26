@@ -3,7 +3,7 @@ import { db } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 
 const NEW_BUTTON_TEXT = 'Your Pretty Girl Consultation Starts Here';
-const NEW_BUTTON_LINK = 'https://link.socaldigitalstudio.com/widget/form/xnTbiXzxbuMKsegJPbFx';
+const NEW_BUTTON_LINK = 'https://link.socaldigitalstudio.com/widget/form/wxQMl8ZFz9MiWtrKYlnP';
 const OLD_BUTTON_TEXTS = ['Book Now', 'Schedule a Virtual Consultation'];
 
 export async function POST() {

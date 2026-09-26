@@ -262,7 +262,7 @@ export default function LipBlushingPage() {
                   variant="secondary"
                   className="rounded-full px-8 bg-white text-[#AD6269] hover:bg-white/90"
                 >
-                  <a href="https://link.socaldigitalstudio.com/widget/form/xnTbiXzxbuMKsegJPbFx" target="_blank" rel="noopener noreferrer">
+                  <a href="https://link.socaldigitalstudio.com/widget/form/wxQMl8ZFz9MiWtrKYlnP" target="_blank" rel="noopener noreferrer">
                     <CalendarPlus className="w-5 h-5 mr-2" />
                     Your Pretty Girl Consultation Starts Here
                   </a>
