@@ -7,11 +7,32 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronRight, Clock, CalendarPlus, MapPin, CheckCircle, Sparkles } from 'lucide-react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import {
+  ChevronRight,
+  Clock,
+  CalendarPlus,
+  MapPin,
+  CheckCircle,
+  Sparkles,
+  Leaf,
+  Droplets,
+  Smile,
+  Palette,
+  RefreshCw,
+  UserCheck,
+} from 'lucide-react';
 import { getServiceImagePath } from '@/utils/serviceImageUtils';
-import { Service } from '@/types/database';
+import { Service, ServiceDetailPageContent } from '@/types/database';
 
 const CONSULTATION_FORM_URL = 'https://link.socaldigitalstudio.com/widget/form/wxQMl8ZFz9MiWtrKYlnP';
+
+const DEFAULT_ICONS = [Clock, Leaf, Droplets, Smile, Palette, RefreshCw];
 
 interface PageProps {
   params: { slug: string };
@@ -49,6 +70,10 @@ async function getServiceBySlug(slug: string): Promise<Service | null> {
     console.error('[services/[slug]] Error fetching service:', error);
     return null;
   }
+}
+
+function getContent(service: Service): ServiceDetailPageContent {
+  return service.detailPageContent || {};
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -99,6 +124,10 @@ export default async function ServiceDetailPage({ params }: PageProps) {
   const imagePath = getServiceImagePath(service);
   const serviceName = service.name;
   const showPrice = service.showPrice ?? true;
+  const content = getContent(service);
+
+  const heroTitle = content.heroTitle || serviceName;
+  const heroSubtitle = content.heroSubtitle || service.description;
 
   return (
     <>
@@ -119,10 +148,10 @@ export default async function ServiceDetailPage({ params }: PageProps) {
                 <ChevronRight className="w-4 h-4" />
                 <span className="text-white">{serviceName}</span>
               </nav>
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{serviceName}</h1>
-              {service.description && (
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{heroTitle}</h1>
+              {heroSubtitle && (
                 <p className="text-lg md:text-xl mb-6 text-white/90 max-w-2xl mx-auto">
-                  {service.description}
+                  {heroSubtitle}
                 </p>
               )}
               <Button
@@ -155,7 +184,7 @@ export default async function ServiceDetailPage({ params }: PageProps) {
               </div>
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  About This Service
+                  What is {serviceName}?
                 </h2>
                 <p className="text-lg text-muted-foreground mb-6">
                   {service.description || `Learn more about ${serviceName} at A Pretty Girl Matter.`}
@@ -189,9 +218,147 @@ export default async function ServiceDetailPage({ params }: PageProps) {
           </div>
         </section>
 
+        {/* Benefits */}
+        {content.benefits && content.benefits.length > 0 && (
+          <section className="py-12 md:py-16 bg-[#AD6269]/10">
+            <div className="container mx-auto px-4">
+              <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
+                Benefits of {serviceName}
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {content.benefits.map((benefit, index) => {
+                  const Icon = DEFAULT_ICONS[index % DEFAULT_ICONS.length];
+                  return (
+                    <Card key={index} className="h-full border-0 shadow-sm">
+                      <CardContent className="p-6 text-center">
+                        <Icon className="w-10 h-10 text-[#AD6269] mx-auto mb-4" />
+                        <h3 className="text-lg font-bold mb-2">{benefit.title}</h3>
+                        <p className="text-muted-foreground text-sm">{benefit.description}</p>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Ideal Candidates */}
+        {content.candidates && content.candidates.length > 0 && (
+          <section className="py-12 md:py-16">
+            <div className="container mx-auto px-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div className="order-2 lg:order-1 h-80 md:h-96 bg-gradient-to-br from-[#AD6269]/20 to-[#8B4A52]/20 rounded-2xl shadow-lg flex items-center justify-center">
+                  <div className="text-center">
+                    <UserCheck className="w-20 h-20 text-[#AD6269] mx-auto mb-4" />
+                    <p className="font-bold text-[#AD6269]">Ideal Candidates</p>
+                  </div>
+                </div>
+                <div className="order-1 lg:order-2">
+                  <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
+                    Who is {serviceName} Best For?
+                  </h2>
+                  <p className="text-muted-foreground mb-6">
+                    {serviceName} is an excellent choice for many clients. It is particularly beneficial for:
+                  </p>
+                  <ul className="space-y-4">
+                    {content.candidates.map((candidate, index) => (
+                      <li key={index} className="flex items-start gap-3">
+                        <CheckCircle className="w-5 h-5 text-[#AD6269] mt-0.5 shrink-0" />
+                        <span>
+                          <strong>{candidate.title}</strong> — {candidate.description}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Process Steps */}
+        {content.processSteps && content.processSteps.length > 0 && (
+          <section className="py-12 md:py-16 bg-[#AD6269]/10">
+            <div className="container mx-auto px-4">
+              <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
+                The {serviceName} Process
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {content.processSteps.map((step, index) => (
+                  <div key={index} className="text-center">
+                    <div className="w-20 h-20 rounded-full bg-[#AD6269] text-white flex items-center justify-center mx-auto mb-4">
+                      <span className="text-2xl font-bold">{step.number}</span>
+                    </div>
+                    <h3 className="text-lg font-bold mb-2">{step.title}</h3>
+                    <p className="text-muted-foreground text-sm">{step.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Aftercare */}
+        {content.aftercareSections && content.aftercareSections.length > 0 && (
+          <section className="py-12 md:py-16">
+            <div className="container mx-auto px-4">
+              <div className="max-w-3xl mx-auto">
+                <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-[#AD6269]">
+                  {serviceName} Aftercare
+                </h2>
+                <p className="text-center text-muted-foreground mb-8">
+                  Proper aftercare is essential for achieving the best results.
+                </p>
+                <Card className="border-0 shadow-lg">
+                  <CardContent className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {content.aftercareSections.map((section, index) => (
+                        <div key={index}>
+                          <h3 className="font-bold mb-3">{section.title}</h3>
+                          <ul className="space-y-2 text-sm text-muted-foreground">
+                            {section.items.map((item, i) => (
+                              <li key={i}>• {item}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* FAQ */}
+        {content.faqs && content.faqs.length > 0 && (
+          <section className="py-12 md:py-16 bg-[#AD6269]/10">
+            <div className="container mx-auto px-4">
+              <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
+                Frequently Asked Questions About {serviceName}
+              </h2>
+              <div className="max-w-3xl mx-auto">
+                <Accordion type="single" collapsible className="space-y-3">
+                  {content.faqs.map((faq, index) => (
+                    <AccordionItem key={index} value={`item-${index}`} className="border-0 shadow-sm bg-white rounded-lg px-6">
+                      <AccordionTrigger className="text-left font-semibold hover:no-underline py-4">
+                        {faq.question}
+                      </AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground pb-4">
+                        {faq.answer}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Requirements & Contraindications */}
         {(service.requirements?.length > 0 || service.contraindications?.length > 0) && (
-          <section className="py-12 md:py-16 bg-[#AD6269]/10">
+          <section className="py-12 md:py-16">
             <div className="container mx-auto px-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
                 {service.requirements?.length > 0 && (
@@ -236,10 +403,11 @@ export default async function ServiceDetailPage({ params }: PageProps) {
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                Ready to Get Started?
+                {content.ctaTitle || `Ready for Beautiful ${serviceName} Results?`}
               </h2>
               <p className="text-lg mb-6 text-white/90">
-                Book a free consultation with Victoria and discover how {serviceName} can enhance your natural beauty.
+                {content.ctaText ||
+                  `Book a free consultation with Victoria and discover how ${serviceName} can enhance your natural beauty.`}
               </p>
               <Button
                 asChild

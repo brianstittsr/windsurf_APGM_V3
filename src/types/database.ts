@@ -42,8 +42,47 @@ export interface Service {
   contraindications: string[];
   showPrice: boolean;
   isMostPopular: boolean;
+  detailPageContent?: ServiceDetailPageContent;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+}
+
+export interface ServiceDetailBenefit {
+  title: string;
+  description: string;
+}
+
+export interface ServiceDetailCandidate {
+  title: string;
+  description: string;
+}
+
+export interface ServiceDetailProcessStep {
+  number: string;
+  title: string;
+  description: string;
+}
+
+export interface ServiceDetailAftercareSection {
+  title: string;
+  items: string[];
+}
+
+export interface ServiceDetailFaq {
+  question: string;
+  answer: string;
+}
+
+export interface ServiceDetailPageContent {
+  heroTitle?: string;
+  heroSubtitle?: string;
+  benefits?: ServiceDetailBenefit[];
+  candidates?: ServiceDetailCandidate[];
+  processSteps?: ServiceDetailProcessStep[];
+  aftercareSections?: ServiceDetailAftercareSection[];
+  faqs?: ServiceDetailFaq[];
+  ctaTitle?: string;
+  ctaText?: string;
 }
 
 // Service Image Types

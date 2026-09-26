@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { ServiceService, BusinessSettingsService } from '@/services/database';
-import { Service, BusinessSettings } from '@/types/database';
+import { Service, BusinessSettings, ServiceDetailPageContent } from '@/types/database';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAlertDialog } from '@/components/ui/alert-dialog';
 import ImageManager from './ImageManager';
+import ServiceDetailPageEditor from './ServiceDetailPageEditor';
 
 interface ServiceFormData {
   name: string;
@@ -60,6 +61,18 @@ const defaultFormData: ServiceFormData = {
   link: ''
 };
 
+const defaultDetailContent: ServiceDetailPageContent = {
+  heroTitle: '',
+  heroSubtitle: '',
+  benefits: [],
+  candidates: [],
+  processSteps: [],
+  aftercareSections: [],
+  faqs: [],
+  ctaTitle: '',
+  ctaText: ''
+};
+
 export default function ServicesManager() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,6 +85,7 @@ export default function ServicesManager() {
   const [newContraindication, setNewContraindication] = useState('');
   const [showPricesGlobal, setShowPricesGlobal] = useState(true);
   const [globalSettingLoading, setGlobalSettingLoading] = useState(false);
+  const [detailContent, setDetailContent] = useState<ServiceDetailPageContent>(defaultDetailContent);
   const { showAlert, showConfirm, AlertDialogComponent } = useAlertDialog();
 
   useEffect(() => {
@@ -157,7 +171,8 @@ export default function ServicesManager() {
         ...formData,
         link,
         price: Number(formData.price),
-        order: Number(formData.order)
+        order: Number(formData.order),
+        detailPageContent: detailContent
       };
 
       console.log('Service data to save:', serviceData);
@@ -213,6 +228,7 @@ export default function ServicesManager() {
       showPrice: service.showPrice ?? true,
       isMostPopular: service.isMostPopular ?? false
     });
+    setDetailContent(service.detailPageContent || defaultDetailContent);
     setShowForm(true);
   };
 
@@ -238,6 +254,7 @@ export default function ServicesManager() {
 
   const resetForm = () => {
     setFormData(defaultFormData);
+    setDetailContent(defaultDetailContent);
     setEditingService(null);
     setNewRequirement('');
     setNewContraindication('');
@@ -683,6 +700,12 @@ export default function ServicesManager() {
                     ))}
                   </div>
                 </div>
+
+                <ServiceDetailPageEditor
+                  content={detailContent}
+                  onChange={setDetailContent}
+                  serviceName={formData.name}
+                />
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="border-2 border-[#AD6269]/30 rounded-lg p-4 bg-[#AD6269]/5">
