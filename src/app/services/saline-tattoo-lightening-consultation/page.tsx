@@ -37,26 +37,32 @@ export const metadata: Metadata = {
 
 const faqs = [
     { question: "Is the consultation free?", answer: "Consultation details, including any fees, will be confirmed when you book." },
-    { question: "Can I book my procedure the same day?", answer: "Procedures are typically scheduled after the consultation to allow proper planning." },];
+    { question: "Can I book my procedure the same day?", answer: "Procedures are typically scheduled after the consultation to allow proper planning." },
+];
 
 const benefits = [
     { icon: Clock, title: "Personalized Plan", description: "Get recommendations based on your features and goals." },
     { icon: Clock, title: "Ask Questions", description: "Learn about techniques, healing, and aftercare." },
     { icon: Clock, title: "Shape Preview", description: "See a preview of your potential brow or lip design." },
-    { icon: Clock, title: "No Pressure", description: "Take time to decide on the right service for you." },];
+    { icon: Clock, title: "No Pressure", description: "Take time to decide on the right service for you." },
+];
 
 const candidates = [
     { title: "New clients", description: "Perfect for anyone considering permanent makeup for the first time." },
     { title: "Unsure which service", description: "Compare options with professional guidance." },
-    { title: "Existing clients", description: "Plan touch-ups, corrections, or new services." },];
+    { title: "Existing clients", description: "Plan touch-ups, corrections, or new services." },
+];
 
 const processSteps = [
     { number: "1", title: "Book", description: "Choose a convenient time for your consultation." },
     { number: "2", title: "Discuss Goals", description: "Share what you want to achieve with Victoria." },
     { number: "3", title: "Design Preview", description: "See a rough sketch or color recommendation." },
-    { number: "4", title: "Plan", description: "Schedule your procedure if you decide to move forward." },];
+    { number: "4", title: "Plan", description: "Schedule your procedure if you decide to move forward." },
+];
 
-const aftercareSections = [];
+const aftercareSections = [
+
+];
 
 export default function ServicePage() {
   return (
@@ -72,13 +78,13 @@ export default function ServicePage() {
                 <ChevronRight className="w-4 h-4" />
                 <Link href="/services" className="hover:text-white transition-colors">Services</Link>
                 <ChevronRight className="w-4 h-4" />
-                <span className="text-white">Saline Tattoo Lightening Consultation</span>
+                <span className="text-white">{"Saline Tattoo Lightening Consultation"}</span>
               </nav>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                Saline Tattoo Lightening Consultation in Raleigh, NC
+                {"Saline Tattoo Lightening Consultation in Raleigh, NC"}
               </h1>
               <p className="text-lg md:text-xl mb-6 text-white/90 max-w-2xl mx-auto">
-                Discuss your goals, explore options, and design a plan tailored to you.
+                {"Discuss your goals, explore options, and design a plan tailored to you."}
               </p>
               <Button
                 asChild
@@ -101,17 +107,10 @@ export default function ServicePage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  What is Saline Tattoo Lightening Consultation?
+                  What is {"Saline Tattoo Lightening Consultation"}?
                 </h2>
                 <p className="text-lg text-muted-foreground mb-4">
-                  Saline Tattoo Lightening is a non-laser method designed to gradually lighten unwanted pigment in tattooed eyebrows or body tattoos using a gentle, natural solution. This technique works by implanting a saline and fruit extract-based solution into the skin, which lifts and fades the pigment over multiple sessions.
-
-Safe for both cosmetic and body tattoos
-Breaks up pigment naturally without harsh chemicals or lasers
-Does NOT completely remove the tattoo in one session—lightens gradually
-Ideal for those wanting to correct or fade previous work before a cover-up
-
-Results vary based on pigment depth, skin type, and number of sessions needed.
+                  {"Saline Tattoo Lightening is a non-laser method designed to gradually lighten unwanted pigment in tattooed eyebrows or body tattoos using a gentle, natural solution. This technique works by implanting a saline and fruit extract-based solution into the skin, which lifts and fades the pigment over multiple sessions.\n\nSafe for both cosmetic and body tattoos\nBreaks up pigment naturally without harsh chemicals or lasers\nDoes NOT completely remove the tattoo in one session—lightens gradually\nIdeal for those wanting to correct or fade previous work before a cover-up\n\nResults vary based on pigment depth, skin type, and number of sessions needed."}
                 </p>
                 <div className="flex flex-wrap gap-3 mb-6">
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md capitalize">
@@ -120,7 +119,7 @@ Results vary based on pigment depth, skin type, and number of sessions needed.
                   </span>
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md">
                     <Clock className="w-4 h-4" />
-                    30 min
+                    {"30 min"}
                   </span>
                   
                 </div>
@@ -151,7 +150,7 @@ Results vary based on pigment depth, skin type, and number of sessions needed.
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              Benefits of Saline Tattoo Lightening Consultation
+              Benefits of {"Saline Tattoo Lightening Consultation"}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {benefits.map((benefit, index) => {
@@ -182,10 +181,10 @@ Results vary based on pigment depth, skin type, and number of sessions needed.
               </div>
               <div className="order-1 lg:order-2">
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  Who is Saline Tattoo Lightening Consultation Best For?
+                  Who is {"Saline Tattoo Lightening Consultation"} Best For?
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  Saline Tattoo Lightening Consultation is an excellent choice for many clients. It is particularly beneficial for:
+                  {"Saline Tattoo Lightening Consultation is an excellent choice for many clients. It is particularly beneficial for:"}
                 </p>
                 <ul className="space-y-4">
                   {candidates.map((candidate, index) => (
@@ -206,7 +205,7 @@ Results vary based on pigment depth, skin type, and number of sessions needed.
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              The Saline Tattoo Lightening Consultation Process
+              The {"Saline Tattoo Lightening Consultation"} Process
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {processSteps.map((step, index) => (
@@ -228,7 +227,7 @@ Results vary based on pigment depth, skin type, and number of sessions needed.
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              Frequently Asked Questions About Saline Tattoo Lightening Consultation
+              Frequently Asked Questions About {"Saline Tattoo Lightening Consultation"}
             </h2>
             <div className="max-w-3xl mx-auto">
               <Accordion type="single" collapsible className="space-y-3">
@@ -252,10 +251,10 @@ Results vary based on pigment depth, skin type, and number of sessions needed.
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                Book Your Consultation Today
+                {"Book Your Consultation Today"}
               </h2>
               <p className="text-lg mb-6 text-white/90">
-                Take the first step toward effortless, beautiful permanent makeup.
+                {"Take the first step toward effortless, beautiful permanent makeup."}
               </p>
               <Button
                 asChild

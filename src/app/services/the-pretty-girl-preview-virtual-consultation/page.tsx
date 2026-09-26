@@ -37,26 +37,32 @@ export const metadata: Metadata = {
 
 const faqs = [
     { question: "Is the consultation free?", answer: "Consultation details, including any fees, will be confirmed when you book." },
-    { question: "Can I book my procedure the same day?", answer: "Procedures are typically scheduled after the consultation to allow proper planning." },];
+    { question: "Can I book my procedure the same day?", answer: "Procedures are typically scheduled after the consultation to allow proper planning." },
+];
 
 const benefits = [
     { icon: Clock, title: "Personalized Plan", description: "Get recommendations based on your features and goals." },
     { icon: Clock, title: "Ask Questions", description: "Learn about techniques, healing, and aftercare." },
     { icon: Clock, title: "Shape Preview", description: "See a preview of your potential brow or lip design." },
-    { icon: Clock, title: "No Pressure", description: "Take time to decide on the right service for you." },];
+    { icon: Clock, title: "No Pressure", description: "Take time to decide on the right service for you." },
+];
 
 const candidates = [
     { title: "New clients", description: "Perfect for anyone considering permanent makeup for the first time." },
     { title: "Unsure which service", description: "Compare options with professional guidance." },
-    { title: "Existing clients", description: "Plan touch-ups, corrections, or new services." },];
+    { title: "Existing clients", description: "Plan touch-ups, corrections, or new services." },
+];
 
 const processSteps = [
     { number: "1", title: "Book", description: "Choose a convenient time for your consultation." },
     { number: "2", title: "Discuss Goals", description: "Share what you want to achieve with Victoria." },
     { number: "3", title: "Design Preview", description: "See a rough sketch or color recommendation." },
-    { number: "4", title: "Plan", description: "Schedule your procedure if you decide to move forward." },];
+    { number: "4", title: "Plan", description: "Schedule your procedure if you decide to move forward." },
+];
 
-const aftercareSections = [];
+const aftercareSections = [
+
+];
 
 export default function ServicePage() {
   return (
@@ -72,13 +78,13 @@ export default function ServicePage() {
                 <ChevronRight className="w-4 h-4" />
                 <Link href="/services" className="hover:text-white transition-colors">Services</Link>
                 <ChevronRight className="w-4 h-4" />
-                <span className="text-white">The Pretty Girl Preview * Virtual Consultation</span>
+                <span className="text-white">{"The Pretty Girl Preview * Virtual Consultation"}</span>
               </nav>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                The Pretty Girl Preview * Virtual Consultation in Raleigh, NC
+                {"The Pretty Girl Preview * Virtual Consultation in Raleigh, NC"}
               </h1>
               <p className="text-lg md:text-xl mb-6 text-white/90 max-w-2xl mx-auto">
-                Discuss your goals, explore options, and design a plan tailored to you.
+                {"Discuss your goals, explore options, and design a plan tailored to you."}
               </p>
               <Button
                 asChild
@@ -101,21 +107,10 @@ export default function ServicePage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  What is The Pretty Girl Preview * Virtual Consultation?
+                  What is {"The Pretty Girl Preview * Virtual Consultation"}?
                 </h2>
                 <p className="text-lg text-muted-foreground mb-4">
-                  Schedules a virtual consultation on the calendar and triggers reminders. 
-
-Virtual Consultation via Zoom:
-The Pretty Girl Preview * Consultation
-
-Zoom Link: https://us05web.zoom.us/j/2989268538?pwd=Q4wtUTamIablNDnZzDiX6a4sWQqNcB.1#success
-
-Inbound Webhook: 
-
-https://services.leadconnectorhq.com/hooks/Wyy3BzaCa7rC36CsrH9z/webhook-trigger/cd9706ec-fd62-4bff-b358-0a3d24e082a0
-
-Sample rest URL payload: curl -X POST "https://services.leadconnectorhq.com/hooks/Wyy3BzaCa7rC36CsrH9z/webhook-trigger/cd9706ec-fd62-4bff-b358-0a3d24e082a0" -H "Content-Type: application/json" -d \'{"Full Name":"Brian Stitt","Date":"10-02-2026","Time":"10:00AM","Service":"EyeBrows","Pre-Consultation Form Link":"https://www.yahoo.com"}\'
+                  {"Schedules a virtual consultation on the calendar and triggers reminders. \n\nVirtual Consultation via Zoom:\nThe Pretty Girl Preview * Consultation\n\nZoom Link: https://us05web.zoom.us/j/2989268538?pwd=Q4wtUTamIablNDnZzDiX6a4sWQqNcB.1#success\n\nInbound Webhook: \n\nhttps://services.leadconnectorhq.com/hooks/Wyy3BzaCa7rC36CsrH9z/webhook-trigger/cd9706ec-fd62-4bff-b358-0a3d24e082a0\n\nSample rest URL payload: curl -X POST \"https://services.leadconnectorhq.com/hooks/Wyy3BzaCa7rC36CsrH9z/webhook-trigger/cd9706ec-fd62-4bff-b358-0a3d24e082a0\" -H \"Content-Type: application/json\" -d '{\"Full Name\":\"Brian Stitt\",\"Date\":\"10-02-2026\",\"Time\":\"10:00AM\",\"Service\":\"EyeBrows\",\"Pre-Consultation Form Link\":\"https://www.yahoo.com\"}'"}
                 </p>
                 <div className="flex flex-wrap gap-3 mb-6">
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md capitalize">
@@ -124,7 +119,7 @@ Sample rest URL payload: curl -X POST "https://services.leadconnectorhq.com/hook
                   </span>
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md">
                     <Clock className="w-4 h-4" />
-                    .5
+                    {".5"}
                   </span>
                   
                 </div>
@@ -155,7 +150,7 @@ Sample rest URL payload: curl -X POST "https://services.leadconnectorhq.com/hook
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              Benefits of The Pretty Girl Preview * Virtual Consultation
+              Benefits of {"The Pretty Girl Preview * Virtual Consultation"}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {benefits.map((benefit, index) => {
@@ -186,10 +181,10 @@ Sample rest URL payload: curl -X POST "https://services.leadconnectorhq.com/hook
               </div>
               <div className="order-1 lg:order-2">
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  Who is The Pretty Girl Preview * Virtual Consultation Best For?
+                  Who is {"The Pretty Girl Preview * Virtual Consultation"} Best For?
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  The Pretty Girl Preview * Virtual Consultation is an excellent choice for many clients. It is particularly beneficial for:
+                  {"The Pretty Girl Preview * Virtual Consultation is an excellent choice for many clients. It is particularly beneficial for:"}
                 </p>
                 <ul className="space-y-4">
                   {candidates.map((candidate, index) => (
@@ -210,7 +205,7 @@ Sample rest URL payload: curl -X POST "https://services.leadconnectorhq.com/hook
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              The The Pretty Girl Preview * Virtual Consultation Process
+              The {"The Pretty Girl Preview * Virtual Consultation"} Process
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {processSteps.map((step, index) => (
@@ -232,7 +227,7 @@ Sample rest URL payload: curl -X POST "https://services.leadconnectorhq.com/hook
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              Frequently Asked Questions About The Pretty Girl Preview * Virtual Consultation
+              Frequently Asked Questions About {"The Pretty Girl Preview * Virtual Consultation"}
             </h2>
             <div className="max-w-3xl mx-auto">
               <Accordion type="single" collapsible className="space-y-3">
@@ -256,10 +251,10 @@ Sample rest URL payload: curl -X POST "https://services.leadconnectorhq.com/hook
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                Book Your Consultation Today
+                {"Book Your Consultation Today"}
               </h2>
               <p className="text-lg mb-6 text-white/90">
-                Take the first step toward effortless, beautiful permanent makeup.
+                {"Take the first step toward effortless, beautiful permanent makeup."}
               </p>
               <Button
                 asChild

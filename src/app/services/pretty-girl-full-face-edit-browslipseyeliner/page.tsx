@@ -37,28 +37,33 @@ export const metadata: Metadata = {
 
 const faqs = [
     { question: "Can all features be done in one day?", answer: "Timing depends on the selected services; your plan will be customized during the consultation." },
-    { question: "Is the full face package discounted?", answer: "Package pricing is available; details will be discussed during your consultation." },];
+    { question: "Is the full face package discounted?", answer: "Package pricing is available; details will be discussed during your consultation." },
+];
 
 const benefits = [
     { icon: Clock, title: "Complete Transformation", description: "Wake up with polished brows, defined eyes, and tinted lips." },
     { icon: Clock, title: "Coordinated Look", description: "Color and style are designed to harmonize across features." },
     { icon: Clock, title: "Save Time", description: "Cut your daily makeup routine dramatically." },
     { icon: Clock, title: "Custom for You", description: "Every feature is tailored to your face shape and preferences." },
-    { icon: Clock, title: "Long-Lasting", description: "Enjoy a cohesive look with results that last for years." },];
+    { icon: Clock, title: "Long-Lasting", description: "Enjoy a cohesive look with results that last for years." },
+];
 
 const candidates = [
     { title: "Busy professionals", description: "Perfect for those who want to simplify their beauty routine." },
     { title: "Makeup minimalists", description: "Great for clients who want to wake up ready." },
-    { title: "Anyone wanting a refresh", description: "Refresh multiple features in one curated plan." },];
+    { title: "Anyone wanting a refresh", description: "Refresh multiple features in one curated plan." },
+];
 
 const processSteps = [
     { number: "1", title: "Consultation", description: "We design a full-face plan for brows, lips, and eyeliner." },
     { number: "2", title: "Brows", description: "Shape and define your brows to frame your face." },
     { number: "3", title: "Lips", description: "Add natural color and definition to your lips." },
-    { number: "4", title: "Eyeliner", description: "Enhance your eyes with subtle or defined liner." },];
+    { number: "4", title: "Eyeliner", description: "Enhance your eyes with subtle or defined liner." },
+];
 
 const aftercareSections = [
-    { title: "General Aftercare", items: ["Follow specific instructions for each treated area", "Keep areas clean and dry", "Avoid makeup and harsh products during healing", "Use recommended aftercare products", "Return for touch-ups as scheduled"] },];
+    { title: "General Aftercare", items: ["Follow specific instructions for each treated area", "Keep areas clean and dry", "Avoid makeup and harsh products during healing", "Use recommended aftercare products", "Return for touch-ups as scheduled"] },
+];
 
 export default function ServicePage() {
   return (
@@ -74,13 +79,13 @@ export default function ServicePage() {
                 <ChevronRight className="w-4 h-4" />
                 <Link href="/services" className="hover:text-white transition-colors">Services</Link>
                 <ChevronRight className="w-4 h-4" />
-                <span className="text-white">Pretty Girl Full Face Edit * Brows*Lips*Eyeliner</span>
+                <span className="text-white">{"Pretty Girl Full Face Edit * Brows*Lips*Eyeliner"}</span>
               </nav>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                Full Face Edit in Raleigh, NC
+                {"Full Face Edit in Raleigh, NC"}
               </h1>
               <p className="text-lg md:text-xl mb-6 text-white/90 max-w-2xl mx-auto">
-                A complete permanent makeup transformation for brows, lips, and eyeliner.
+                {"A complete permanent makeup transformation for brows, lips, and eyeliner."}
               </p>
               <Button
                 asChild
@@ -103,20 +108,10 @@ export default function ServicePage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  What is Pretty Girl Full Face Edit * Brows*Lips*Eyeliner?
+                  What is {"Pretty Girl Full Face Edit * Brows*Lips*Eyeliner"}?
                 </h2>
                 <p className="text-lg text-muted-foreground mb-4">
-                  The Pretty Girl Face Edit — Signature Package Savings
-
-The ultimate permanent makeup experience for the girl who wants the full edit. This signature package includes brows, Lip Blush, and Eyeliner Enhancement, all customized to work together to enhance your natural features and create a polished, balanced look.
-
-Your brows frame and define the face, Lip Blush adds soft customized color and definition, and Eyeliner Enhancement subtly defines the lash line for an effortless, finished look.
-
-Reserve them together as The Pretty Girl Face Edit for package savings.
-
-Please note: Perfecting Sessions are not included in this package and are booked separately at the applicable rate.
-
-Brows framed. Lips blushed. Eyes defined. The full Pretty Girl edit.
+                  {"The Pretty Girl Face Edit — Signature Package Savings\n\nThe ultimate permanent makeup experience for the girl who wants the full edit. This signature package includes brows, Lip Blush, and Eyeliner Enhancement, all customized to work together to enhance your natural features and create a polished, balanced look.\n\nYour brows frame and define the face, Lip Blush adds soft customized color and definition, and Eyeliner Enhancement subtly defines the lash line for an effortless, finished look.\n\nReserve them together as The Pretty Girl Face Edit for package savings.\n\nPlease note: Perfecting Sessions are not included in this package and are booked separately at the applicable rate.\n\nBrows framed. Lips blushed. Eyes defined. The full Pretty Girl edit."}
                 </p>
                 <div className="flex flex-wrap gap-3 mb-6">
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md capitalize">
@@ -125,7 +120,7 @@ Brows framed. Lips blushed. Eyes defined. The full Pretty Girl edit.
                   </span>
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md">
                     <Clock className="w-4 h-4" />
-                    8.5 Hours
+                    {"8.5 Hours"}
                   </span>
                   
                 </div>
@@ -156,7 +151,7 @@ Brows framed. Lips blushed. Eyes defined. The full Pretty Girl edit.
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              Benefits of Pretty Girl Full Face Edit * Brows*Lips*Eyeliner
+              Benefits of {"Pretty Girl Full Face Edit * Brows*Lips*Eyeliner"}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {benefits.map((benefit, index) => {
@@ -187,10 +182,10 @@ Brows framed. Lips blushed. Eyes defined. The full Pretty Girl edit.
               </div>
               <div className="order-1 lg:order-2">
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  Who is Pretty Girl Full Face Edit * Brows*Lips*Eyeliner Best For?
+                  Who is {"Pretty Girl Full Face Edit * Brows*Lips*Eyeliner"} Best For?
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  Pretty Girl Full Face Edit * Brows*Lips*Eyeliner is an excellent choice for many clients. It is particularly beneficial for:
+                  {"Pretty Girl Full Face Edit * Brows*Lips*Eyeliner is an excellent choice for many clients. It is particularly beneficial for:"}
                 </p>
                 <ul className="space-y-4">
                   {candidates.map((candidate, index) => (
@@ -211,7 +206,7 @@ Brows framed. Lips blushed. Eyes defined. The full Pretty Girl edit.
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              The Pretty Girl Full Face Edit * Brows*Lips*Eyeliner Process
+              The {"Pretty Girl Full Face Edit * Brows*Lips*Eyeliner"} Process
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {processSteps.map((step, index) => (
@@ -232,7 +227,7 @@ Brows framed. Lips blushed. Eyes defined. The full Pretty Girl edit.
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto">
               <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-[#AD6269]">
-                Pretty Girl Full Face Edit * Brows*Lips*Eyeliner Aftercare
+                {"Pretty Girl Full Face Edit * Brows*Lips*Eyeliner Aftercare"}
               </h2>
               <p className="text-center text-muted-foreground mb-8">
                 Proper aftercare is essential for achieving the best results.
@@ -261,7 +256,7 @@ Brows framed. Lips blushed. Eyes defined. The full Pretty Girl edit.
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              Frequently Asked Questions About Pretty Girl Full Face Edit * Brows*Lips*Eyeliner
+              Frequently Asked Questions About {"Pretty Girl Full Face Edit * Brows*Lips*Eyeliner"}
             </h2>
             <div className="max-w-3xl mx-auto">
               <Accordion type="single" collapsible className="space-y-3">
@@ -285,10 +280,10 @@ Brows framed. Lips blushed. Eyes defined. The full Pretty Girl edit.
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                Transform Your Morning Routine
+                {"Transform Your Morning Routine"}
               </h2>
               <p className="text-lg mb-6 text-white/90">
-                Book a full face consultation and design your complete permanent makeup look.
+                {"Book a full face consultation and design your complete permanent makeup look."}
               </p>
               <Button
                 asChild

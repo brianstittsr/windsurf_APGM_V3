@@ -37,29 +37,34 @@ export const metadata: Metadata = {
 
 const faqs = [
     { question: "When should I book a refresh?", answer: "Timing depends on the service; refreshes are typically recommended within the specified window after your initial session." },
-    { question: "Is a refresh the same as the first session?", answer: "It is usually shorter, focusing on reinforcing color and shape rather than a full new design." },];
+    { question: "Is a refresh the same as the first session?", answer: "It is usually shorter, focusing on reinforcing color and shape rather than a full new design." },
+];
 
 const benefits = [
     { icon: Clock, title: "Restore Color", description: "Bring faded pigment back to life for vibrant results." },
     { icon: Clock, title: "Refine Shape", description: "Adjust the brow, lip, or liner shape as desired." },
     { icon: Clock, title: "Extend Results", description: "Keep your permanent makeup looking fresh longer." },
     { icon: Clock, title: "Quick Procedure", description: "Touch-ups are typically shorter than the initial appointment." },
-    { icon: Clock, title: "Maintain Your Investment", description: "Routine refreshes protect the look you love." },];
+    { icon: Clock, title: "Maintain Your Investment", description: "Routine refreshes protect the look you love." },
+];
 
 const candidates = [
     { title: "Previous PMU clients", description: "Anyone who has had permanent makeup done and needs a refresh." },
     { title: "Faded results", description: "Color that has lightened over time." },
-    { title: "Shape changes", description: "Clients wanting to tweak or refine their existing look." },];
+    { title: "Shape changes", description: "Clients wanting to tweak or refine their existing look." },
+];
 
 const processSteps = [
     { number: "1", title: "Assessment", description: "Victoria evaluates your existing permanent makeup." },
     { number: "2", title: "Design", description: "The refreshed shape and color are planned." },
     { number: "3", title: "Touch-Up", description: "Pigment is carefully added to refresh and perfect." },
-    { number: "4", title: "Aftercare", description: "Follow the healing instructions for best retention." },];
+    { number: "4", title: "Aftercare", description: "Follow the healing instructions for best retention." },
+];
 
 const aftercareSections = [
     { title: "First 2 Weeks", items: ["Keep brows dry - avoid water, sweat, and steam", "Apply healing ointment as directed", "Don't pick or scratch flaking skin", "Avoid makeup on the brow area", "Sleep on your back to avoid rubbing"] },
-    { title: "Weeks 2-6", items: ["Brows may appear lighter - this is normal", "Color will gradually return as skin heals", "Avoid sun exposure and tanning", "Schedule your touch-up appointment"] },];
+    { title: "Weeks 2-6", items: ["Brows may appear lighter - this is normal", "Color will gradually return as skin heals", "Avoid sun exposure and tanning", "Schedule your touch-up appointment"] },
+];
 
 export default function ServicePage() {
   return (
@@ -75,13 +80,13 @@ export default function ServicePage() {
                 <ChevronRight className="w-4 h-4" />
                 <Link href="/services" className="hover:text-white transition-colors">Services</Link>
                 <ChevronRight className="w-4 h-4" />
-                <span className="text-white">The Pretty Finish* After 9 Weeks- 11 Months</span>
+                <span className="text-white">{"The Pretty Finish* After 9 Weeks- 11 Months"}</span>
               </nav>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                The Pretty Finish* After 9 Weeks- 11 Months in Raleigh, NC
+                {"The Pretty Finish* After 9 Weeks- 11 Months in Raleigh, NC"}
               </h1>
               <p className="text-lg md:text-xl mb-6 text-white/90 max-w-2xl mx-auto">
-                Refresh and perfect your existing permanent makeup with a touch-up session.
+                {"Refresh and perfect your existing permanent makeup with a touch-up session."}
               </p>
               <Button
                 asChild
@@ -104,12 +109,10 @@ export default function ServicePage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  What is The Pretty Finish* After 9 Weeks- 11 Months?
+                  What is {"The Pretty Finish* After 9 Weeks- 11 Months"}?
                 </h2>
                 <p className="text-lg text-muted-foreground mb-4">
-                  For returning clients who are past the 8-week perfecting window but still within 11 months of their initial service. This appointment is designed to refresh faded color, restore definition, and make any needed adjustments to keep your results looking polished and pretty.
-
-Because more time has passed since your original session, additional pigment and detail work may be needed compared with a standard perfecting session.
+                  {"For returning clients who are past the 8-week perfecting window but still within 11 months of their initial service. This appointment is designed to refresh faded color, restore definition, and make any needed adjustments to keep your results looking polished and pretty.\n\nBecause more time has passed since your original session, additional pigment and detail work may be needed compared with a standard perfecting session."}
                 </p>
                 <div className="flex flex-wrap gap-3 mb-6">
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md capitalize">
@@ -118,7 +121,7 @@ Because more time has passed since your original session, additional pigment and
                   </span>
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md">
                     <Clock className="w-4 h-4" />
-                    1 hr 30 min
+                    {"1 hr 30 min"}
                   </span>
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-100 text-green-700 text-sm rounded-md font-semibold">
                     $225
@@ -151,7 +154,7 @@ Because more time has passed since your original session, additional pigment and
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              Benefits of The Pretty Finish* After 9 Weeks- 11 Months
+              Benefits of {"The Pretty Finish* After 9 Weeks- 11 Months"}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {benefits.map((benefit, index) => {
@@ -182,10 +185,10 @@ Because more time has passed since your original session, additional pigment and
               </div>
               <div className="order-1 lg:order-2">
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  Who is The Pretty Finish* After 9 Weeks- 11 Months Best For?
+                  Who is {"The Pretty Finish* After 9 Weeks- 11 Months"} Best For?
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  The Pretty Finish* After 9 Weeks- 11 Months is an excellent choice for many clients. It is particularly beneficial for:
+                  {"The Pretty Finish* After 9 Weeks- 11 Months is an excellent choice for many clients. It is particularly beneficial for:"}
                 </p>
                 <ul className="space-y-4">
                   {candidates.map((candidate, index) => (
@@ -206,7 +209,7 @@ Because more time has passed since your original session, additional pigment and
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              The The Pretty Finish* After 9 Weeks- 11 Months Process
+              The {"The Pretty Finish* After 9 Weeks- 11 Months"} Process
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {processSteps.map((step, index) => (
@@ -227,7 +230,7 @@ Because more time has passed since your original session, additional pigment and
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto">
               <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-[#AD6269]">
-                The Pretty Finish* After 9 Weeks- 11 Months Aftercare
+                {"The Pretty Finish* After 9 Weeks- 11 Months Aftercare"}
               </h2>
               <p className="text-center text-muted-foreground mb-8">
                 Proper aftercare is essential for achieving the best results.
@@ -256,7 +259,7 @@ Because more time has passed since your original session, additional pigment and
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              Frequently Asked Questions About The Pretty Finish* After 9 Weeks- 11 Months
+              Frequently Asked Questions About {"The Pretty Finish* After 9 Weeks- 11 Months"}
             </h2>
             <div className="max-w-3xl mx-auto">
               <Accordion type="single" collapsible className="space-y-3">
@@ -280,10 +283,10 @@ Because more time has passed since your original session, additional pigment and
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                Refresh Your Look Today
+                {"Refresh Your Look Today"}
               </h2>
               <p className="text-lg mb-6 text-white/90">
-                Book your touch-up and keep your permanent makeup looking its best.
+                {"Book your touch-up and keep your permanent makeup looking its best."}
               </p>
               <Button
                 asChild

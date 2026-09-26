@@ -39,6 +39,10 @@ function renderArray<T>(arr: T[] | undefined, renderItem: (item: T) => string): 
   return arr.map(renderItem).join('\n');
 }
 
+function jsxStr(value: string): string {
+  return `{${JSON.stringify(value)}}`;
+}
+
 function generatePage(service: Service): string {
   const content: ServiceDetailPageContent = service.detailPageContent || {};
   const serviceName = service.name;
@@ -131,13 +135,13 @@ export default function ServicePage() {
                 <ChevronRight className="w-4 h-4" />
                 <Link href="/services" className="hover:text-white transition-colors">Services</Link>
                 <ChevronRight className="w-4 h-4" />
-                <span className="text-white">${serviceName.replace(/'/g, "\\'")}</span>
+                <span className="text-white">${jsxStr(serviceName)}</span>
               </nav>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                ${heroTitle.replace(/'/g, "\\'")}
+                ${jsxStr(heroTitle)}
               </h1>
               <p className="text-lg md:text-xl mb-6 text-white/90 max-w-2xl mx-auto">
-                ${heroSubtitle.replace(/'/g, "\\'")}
+                ${jsxStr(heroSubtitle)}
               </p>
               <Button
                 asChild
@@ -160,10 +164,10 @@ export default function ServicePage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  What is ${serviceName.replace(/'/g, "\\'")}?
+                  What is ${jsxStr(serviceName)}?
                 </h2>
                 <p className="text-lg text-muted-foreground mb-4">
-                  ${description.replace(/'/g, "\\'")}
+                  ${jsxStr(description)}
                 </p>
                 <div className="flex flex-wrap gap-3 mb-6">
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md capitalize">
@@ -172,7 +176,7 @@ export default function ServicePage() {
                   </span>
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md">
                     <Clock className="w-4 h-4" />
-                    ${service.duration.replace(/'/g, "\\'")}
+                    ${jsxStr(service.duration)}
                   </span>
                   ${showPrice ? `<span className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-100 text-green-700 text-sm rounded-md font-semibold">
                     $${service.price}
@@ -191,7 +195,7 @@ export default function ServicePage() {
               <div className="relative h-80 md:h-96 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl shadow-lg overflow-hidden">
                 <Image
                   src="/images/APGM-icon.png"
-                  alt="${serviceName.replace(/'/g, "\\'")}"
+                  alt=${sanitizeForCode(serviceName)}
                   fill
                   className="object-contain p-6"
                   sizes="(max-width: 1024px) 100vw, 50vw"
@@ -205,7 +209,7 @@ export default function ServicePage() {
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              Benefits of ${serviceName.replace(/'/g, "\\'")}
+              Benefits of ${jsxStr(serviceName)}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {benefits.map((benefit, index) => {
@@ -236,10 +240,10 @@ export default function ServicePage() {
               </div>
               <div className="order-1 lg:order-2">
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  Who is ${serviceName.replace(/'/g, "\\'")} Best For?
+                  Who is ${jsxStr(serviceName)} Best For?
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  ${serviceName.replace(/'/g, "\\'")} is an excellent choice for many clients. It is particularly beneficial for:
+                  ${jsxStr(`${serviceName} is an excellent choice for many clients. It is particularly beneficial for:`)}
                 </p>
                 <ul className="space-y-4">
                   {candidates.map((candidate, index) => (
@@ -260,7 +264,7 @@ export default function ServicePage() {
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              The ${serviceName.replace(/'/g, "\\'")} Process
+              The ${jsxStr(serviceName)} Process
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {processSteps.map((step, index) => (
@@ -281,7 +285,7 @@ export default function ServicePage() {
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto">
               <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-[#AD6269]">
-                ${serviceName.replace(/'/g, "\\'")} Aftercare
+                ${jsxStr(`${serviceName} Aftercare`)}
               </h2>
               <p className="text-center text-muted-foreground mb-8">
                 Proper aftercare is essential for achieving the best results.
@@ -310,7 +314,7 @@ export default function ServicePage() {
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              Frequently Asked Questions About ${serviceName.replace(/'/g, "\\'")}
+              Frequently Asked Questions About ${jsxStr(serviceName)}
             </h2>
             <div className="max-w-3xl mx-auto">
               <Accordion type="single" collapsible className="space-y-3">
@@ -334,10 +338,10 @@ export default function ServicePage() {
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                ${(content.ctaTitle || `Ready for Beautiful ${serviceName.replace(/'/g, "\\'")} Results?`).replace(/'/g, "\\'")}
+                ${jsxStr(content.ctaTitle || `Ready for Beautiful ${serviceName} Results?`)}
               </h2>
               <p className="text-lg mb-6 text-white/90">
-                ${(content.ctaText || `Book a free consultation with Victoria and discover how ${serviceName.replace(/'/g, "\\'")} can enhance your natural beauty.`).replace(/'/g, "\\'")}
+                ${jsxStr(content.ctaText || `Book a free consultation with Victoria and discover how ${serviceName} can enhance your natural beauty.`)}
               </p>
               <Button
                 asChild

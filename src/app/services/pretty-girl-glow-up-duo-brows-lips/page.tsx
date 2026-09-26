@@ -37,27 +37,32 @@ export const metadata: Metadata = {
 
 const faqs = [
     { question: "Can I combine services?", answer: "Yes, many clients choose to pair services for a complete look." },
-    { question: "How long does a duo session take?", answer: "Session length depends on the services selected and will be reviewed at consultation." },];
+    { question: "How long does a duo session take?", answer: "Session length depends on the services selected and will be reviewed at consultation." },
+];
 
 const benefits = [
     { icon: Clock, title: "Coordinated Results", description: "Services are designed to complement each other." },
     { icon: Clock, title: "Save Time", description: "Wake up with two features already done." },
     { icon: Clock, title: "Custom Design", description: "Colors and shapes are matched to your features." },
-    { icon: Clock, title: "Convenient", description: "Combine appointments for an efficient beauty routine." },];
+    { icon: Clock, title: "Convenient", description: "Combine appointments for an efficient beauty routine." },
+];
 
 const candidates = [
     { title: "Clients wanting multiple features", description: "Ideal for brows + lips or brows + liner combos." },
-    { title: "Busy schedules", description: "One plan, fewer appointments." },];
+    { title: "Busy schedules", description: "One plan, fewer appointments." },
+];
 
 const processSteps = [
     { number: "1", title: "Consultation", description: "We plan the combination of services that fits your goals." },
     { number: "2", title: "Design", description: "Each feature is mapped and color-matched." },
     { number: "3", title: "Procedure", description: "Services are performed with precision and care." },
-    { number: "4", title: "Touch-Ups", description: "Perfecting sessions complete each feature." },];
+    { number: "4", title: "Touch-Ups", description: "Perfecting sessions complete each feature." },
+];
 
 const aftercareSections = [
     { title: "First 2 Weeks", items: ["Keep brows dry - avoid water, sweat, and steam", "Apply healing ointment as directed", "Don't pick or scratch flaking skin", "Avoid makeup on the brow area", "Sleep on your back to avoid rubbing"] },
-    { title: "Weeks 2-6", items: ["Brows may appear lighter - this is normal", "Color will gradually return as skin heals", "Avoid sun exposure and tanning", "Schedule your touch-up appointment"] },];
+    { title: "Weeks 2-6", items: ["Brows may appear lighter - this is normal", "Color will gradually return as skin heals", "Avoid sun exposure and tanning", "Schedule your touch-up appointment"] },
+];
 
 export default function ServicePage() {
   return (
@@ -73,13 +78,13 @@ export default function ServicePage() {
                 <ChevronRight className="w-4 h-4" />
                 <Link href="/services" className="hover:text-white transition-colors">Services</Link>
                 <ChevronRight className="w-4 h-4" />
-                <span className="text-white">Pretty Girl Glow-Up Duo * Brows-Lips</span>
+                <span className="text-white">{"Pretty Girl Glow-Up Duo * Brows-Lips"}</span>
               </nav>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                Pretty Girl Glow-Up Duo * Brows-Lips in Raleigh, NC
+                {"Pretty Girl Glow-Up Duo * Brows-Lips in Raleigh, NC"}
               </h1>
               <p className="text-lg md:text-xl mb-6 text-white/90 max-w-2xl mx-auto">
-                Combine two popular permanent makeup services for a cohesive, time-saving look.
+                {"Combine two popular permanent makeup services for a cohesive, time-saving look."}
               </p>
               <Button
                 asChild
@@ -102,21 +107,10 @@ export default function ServicePage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  What is Pretty Girl Glow-Up Duo * Brows-Lips?
+                  What is {"Pretty Girl Glow-Up Duo * Brows-Lips"}?
                 </h2>
                 <p className="text-lg text-muted-foreground mb-4">
-                  A Pretty Girl Glow Up Duo
-Value in Duo Savings
-
-Two signature services, one complete glow-up. The Pretty Girl Glow Up Duo pairs a customized brow service with Lip Blush to enhance your features, create balance, and give you that polished, effortless look from morning to night.
-
-Your brows are designed to beautifully frame your face, while Lip Blush adds soft, customized color and definition to your lips.
-
-When reserved together as the Pretty Girl Glow Up Duo, exclusive package savings.
-
-Please Note: Perfecting sessions are not included in the package and are booked separately at the applicable rate. 
-
-More pretty. More value. One complete glow-up.
+                  {"A Pretty Girl Glow Up Duo\nValue in Duo Savings\n\nTwo signature services, one complete glow-up. The Pretty Girl Glow Up Duo pairs a customized brow service with Lip Blush to enhance your features, create balance, and give you that polished, effortless look from morning to night.\n\nYour brows are designed to beautifully frame your face, while Lip Blush adds soft, customized color and definition to your lips.\n\nWhen reserved together as the Pretty Girl Glow Up Duo, exclusive package savings.\n\nPlease Note: Perfecting sessions are not included in the package and are booked separately at the applicable rate. \n\nMore pretty. More value. One complete glow-up."}
                 </p>
                 <div className="flex flex-wrap gap-3 mb-6">
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md capitalize">
@@ -125,7 +119,7 @@ More pretty. More value. One complete glow-up.
                   </span>
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md">
                     <Clock className="w-4 h-4" />
-                    6 hours
+                    {"6 hours"}
                   </span>
                   
                 </div>
@@ -156,7 +150,7 @@ More pretty. More value. One complete glow-up.
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              Benefits of Pretty Girl Glow-Up Duo * Brows-Lips
+              Benefits of {"Pretty Girl Glow-Up Duo * Brows-Lips"}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {benefits.map((benefit, index) => {
@@ -187,10 +181,10 @@ More pretty. More value. One complete glow-up.
               </div>
               <div className="order-1 lg:order-2">
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  Who is Pretty Girl Glow-Up Duo * Brows-Lips Best For?
+                  Who is {"Pretty Girl Glow-Up Duo * Brows-Lips"} Best For?
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  Pretty Girl Glow-Up Duo * Brows-Lips is an excellent choice for many clients. It is particularly beneficial for:
+                  {"Pretty Girl Glow-Up Duo * Brows-Lips is an excellent choice for many clients. It is particularly beneficial for:"}
                 </p>
                 <ul className="space-y-4">
                   {candidates.map((candidate, index) => (
@@ -211,7 +205,7 @@ More pretty. More value. One complete glow-up.
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              The Pretty Girl Glow-Up Duo * Brows-Lips Process
+              The {"Pretty Girl Glow-Up Duo * Brows-Lips"} Process
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {processSteps.map((step, index) => (
@@ -232,7 +226,7 @@ More pretty. More value. One complete glow-up.
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto">
               <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-[#AD6269]">
-                Pretty Girl Glow-Up Duo * Brows-Lips Aftercare
+                {"Pretty Girl Glow-Up Duo * Brows-Lips Aftercare"}
               </h2>
               <p className="text-center text-muted-foreground mb-8">
                 Proper aftercare is essential for achieving the best results.
@@ -261,7 +255,7 @@ More pretty. More value. One complete glow-up.
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              Frequently Asked Questions About Pretty Girl Glow-Up Duo * Brows-Lips
+              Frequently Asked Questions About {"Pretty Girl Glow-Up Duo * Brows-Lips"}
             </h2>
             <div className="max-w-3xl mx-auto">
               <Accordion type="single" collapsible className="space-y-3">
@@ -285,10 +279,10 @@ More pretty. More value. One complete glow-up.
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                Build Your Perfect Duo
+                {"Build Your Perfect Duo"}
               </h2>
               <p className="text-lg mb-6 text-white/90">
-                Schedule a consultation to customize your permanent makeup combination.
+                {"Schedule a consultation to customize your permanent makeup combination."}
               </p>
               <Button
                 asChild

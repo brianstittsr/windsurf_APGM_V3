@@ -39,7 +39,8 @@ const faqs = [
     { question: "How long do powder brows last?", answer: "Powder brows typically last 2-3 years, depending on skin type and lifestyle." },
     { question: "Do powder brows look natural?", answer: "Yes. The shading can be kept soft and natural or built up for a more defined look." },
     { question: "What is the healing time?", answer: "Surface healing takes about 7-14 days, with full color settling over 6 weeks." },
-    { question: "Can I get powder brows if I have oily skin?", answer: "Absolutely. Powder brows are an excellent option for oily and combination skin." },];
+    { question: "Can I get powder brows if I have oily skin?", answer: "Absolutely. Powder brows are an excellent option for oily and combination skin." },
+];
 
 const benefits = [
     { icon: Clock, title: "Soft & Defined", description: "Achieve a filled-in brow look that resembles brow powder or pomade." },
@@ -47,24 +48,28 @@ const benefits = [
     { icon: Clock, title: "Great for All Skin Types", description: "Powder brows work beautifully on normal, oily, and mature skin." },
     { icon: Clock, title: "Custom Color", description: "Pigment is custom-blended to flatter your hair color and complexion." },
     { icon: Clock, title: "Low Maintenance", description: "Wake up with polished brows every day without makeup." },
-    { icon: Clock, title: "Buildable Coverage", description: "Choose a soft tint or a bolder, more dramatic finish." },];
+    { icon: Clock, title: "Buildable Coverage", description: "Choose a soft tint or a bolder, more dramatic finish." },
+];
 
 const candidates = [
     { title: "Oily skin types", description: "Powder brows hold better than hair-stroke methods on oily skin." },
     { title: "Sparse or uneven brows", description: "Add shape, symmetry, and fullness." },
     { title: "Makeup lovers", description: "Keep that freshly filled-in brow look 24/7." },
     { title: "Active lifestyles", description: "Sweat, swim, and shower without losing your brows." },
-    { title: "Anyone wanting a soft gradient", description: "The ombré-style front is lighter and fades toward the tail." },];
+    { title: "Anyone wanting a soft gradient", description: "The ombré-style front is lighter and fades toward the tail." },
+];
 
 const processSteps = [
     { number: "1", title: "Consultation", description: "We discuss your desired shape, color, and overall brow goals." },
     { number: "2", title: "Mapping", description: "Your ideal brow shape is mapped to complement your features." },
     { number: "3", title: "Shading", description: "Pigment is softly shaded into the skin with a PMU machine." },
-    { number: "4", title: "Touch-Up", description: "A perfecting session 6-8 weeks later locks in the color and shape." },];
+    { number: "4", title: "Touch-Up", description: "A perfecting session 6-8 weeks later locks in the color and shape." },
+];
 
 const aftercareSections = [
     { title: "First 2 Weeks", items: ["Keep brows dry - avoid water, sweat, and steam", "Apply healing ointment as directed", "Don't pick or scratch flaking skin", "Avoid makeup on the brow area", "Sleep on your back to avoid rubbing"] },
-    { title: "Weeks 2-6", items: ["Brows may appear lighter - this is normal", "Color will gradually return as skin heals", "Avoid sun exposure and tanning", "Schedule your touch-up appointment"] },];
+    { title: "Weeks 2-6", items: ["Brows may appear lighter - this is normal", "Color will gradually return as skin heals", "Avoid sun exposure and tanning", "Schedule your touch-up appointment"] },
+];
 
 export default function ServicePage() {
   return (
@@ -80,13 +85,13 @@ export default function ServicePage() {
                 <ChevronRight className="w-4 h-4" />
                 <Link href="/services" className="hover:text-white transition-colors">Services</Link>
                 <ChevronRight className="w-4 h-4" />
-                <span className="text-white">Pretty Girl Ombre\' * Ombre\' Brows</span>
+                <span className="text-white">{"Pretty Girl Ombre' * Ombre' Brows"}</span>
               </nav>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                Powder Brows in Raleigh, NC
+                {"Powder Brows in Raleigh, NC"}
               </h1>
               <p className="text-lg md:text-xl mb-6 text-white/90 max-w-2xl mx-auto">
-                Soft, shaded brows with a powdered makeup effect that lasts.
+                {"Soft, shaded brows with a powdered makeup effect that lasts."}
               </p>
               <Button
                 asChild
@@ -109,14 +114,10 @@ export default function ServicePage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  What is Pretty Girl Ombre\' * Ombre\' Brows?
+                  What is {"Pretty Girl Ombre' * Ombre' Brows"}?
                 </h2>
                 <p className="text-lg text-muted-foreground mb-4">
-                  A softly shaded brow that transitions from lighter, airy fronts into beautifully defined arches and tails. Pretty Girl Ombré is designed to give you that polished, makeup-ready look while still keeping the finish soft, balanced, and flattering to your features.
-
-Perfect for clients who love a clean, defined brow with a soft gradient effect and want to spend less time filling in their brows every morning.
-
-Soft in the front. Defined where it matters. Pretty all the way through.
+                  {"A softly shaded brow that transitions from lighter, airy fronts into beautifully defined arches and tails. Pretty Girl Ombré is designed to give you that polished, makeup-ready look while still keeping the finish soft, balanced, and flattering to your features.\n\nPerfect for clients who love a clean, defined brow with a soft gradient effect and want to spend less time filling in their brows every morning.\n\nSoft in the front. Defined where it matters. Pretty all the way through."}
                 </p>
                 <div className="flex flex-wrap gap-3 mb-6">
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md capitalize">
@@ -125,7 +126,7 @@ Soft in the front. Defined where it matters. Pretty all the way through.
                   </span>
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md">
                     <Clock className="w-4 h-4" />
-                    3
+                    {"3"}
                   </span>
                   
                 </div>
@@ -142,7 +143,7 @@ Soft in the front. Defined where it matters. Pretty all the way through.
               <div className="relative h-80 md:h-96 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl shadow-lg overflow-hidden">
                 <Image
                   src="/images/APGM-icon.png"
-                  alt="Pretty Girl Ombre\' * Ombre\' Brows"
+                  alt="Pretty Girl Ombre' * Ombre' Brows"
                   fill
                   className="object-contain p-6"
                   sizes="(max-width: 1024px) 100vw, 50vw"
@@ -156,7 +157,7 @@ Soft in the front. Defined where it matters. Pretty all the way through.
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              Benefits of Pretty Girl Ombre\' * Ombre\' Brows
+              Benefits of {"Pretty Girl Ombre' * Ombre' Brows"}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {benefits.map((benefit, index) => {
@@ -187,10 +188,10 @@ Soft in the front. Defined where it matters. Pretty all the way through.
               </div>
               <div className="order-1 lg:order-2">
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  Who is Pretty Girl Ombre\' * Ombre\' Brows Best For?
+                  Who is {"Pretty Girl Ombre' * Ombre' Brows"} Best For?
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  Pretty Girl Ombre\' * Ombre\' Brows is an excellent choice for many clients. It is particularly beneficial for:
+                  {"Pretty Girl Ombre' * Ombre' Brows is an excellent choice for many clients. It is particularly beneficial for:"}
                 </p>
                 <ul className="space-y-4">
                   {candidates.map((candidate, index) => (
@@ -211,7 +212,7 @@ Soft in the front. Defined where it matters. Pretty all the way through.
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              The Pretty Girl Ombre\' * Ombre\' Brows Process
+              The {"Pretty Girl Ombre' * Ombre' Brows"} Process
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {processSteps.map((step, index) => (
@@ -232,7 +233,7 @@ Soft in the front. Defined where it matters. Pretty all the way through.
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto">
               <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-[#AD6269]">
-                Pretty Girl Ombre\' * Ombre\' Brows Aftercare
+                {"Pretty Girl Ombre' * Ombre' Brows Aftercare"}
               </h2>
               <p className="text-center text-muted-foreground mb-8">
                 Proper aftercare is essential for achieving the best results.
@@ -261,7 +262,7 @@ Soft in the front. Defined where it matters. Pretty all the way through.
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              Frequently Asked Questions About Pretty Girl Ombre\' * Ombre\' Brows
+              Frequently Asked Questions About {"Pretty Girl Ombre' * Ombre' Brows"}
             </h2>
             <div className="max-w-3xl mx-auto">
               <Accordion type="single" collapsible className="space-y-3">
@@ -285,10 +286,10 @@ Soft in the front. Defined where it matters. Pretty all the way through.
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                Ready for Soft, Beautiful Brows?
+                {"Ready for Soft, Beautiful Brows?"}
               </h2>
               <p className="text-lg mb-6 text-white/90">
-                Book your free consultation and discover if powder brows are right for you.
+                {"Book your free consultation and discover if powder brows are right for you."}
               </p>
               <Button
                 asChild

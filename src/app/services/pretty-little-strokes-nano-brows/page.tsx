@@ -38,7 +38,8 @@ export const metadata: Metadata = {
 const faqs = [
     { question: "Are nano brows the same as microblading?", answer: "Similar in look, but nano brows use a machine instead of a hand tool, often causing less skin trauma." },
     { question: "How long do nano brows last?", answer: "Results typically last 1-3 years depending on skin type and aftercare." },
-    { question: "Is nano brow painful?", answer: "A topical numbing cream is used to keep you comfortable during the procedure." },];
+    { question: "Is nano brow painful?", answer: "A topical numbing cream is used to keep you comfortable during the procedure." },
+];
 
 const benefits = [
     { icon: Clock, title: "Precise Hair Strokes", description: "Machine work creates crisp, fine strokes that mimic natural brow hairs." },
@@ -46,23 +47,27 @@ const benefits = [
     { icon: Clock, title: "Great for Sensitive Skin", description: "A good option for clients who may not be candidates for microblading." },
     { icon: Clock, title: "Natural Finish", description: "Achieve realistic brows with soft definition." },
     { icon: Clock, title: "Custom Design", description: "Each stroke is placed to enhance your natural brow pattern." },
-    { icon: Clock, title: "Long-Lasting", description: "Enjoy results that typically last 1-3 years." },];
+    { icon: Clock, title: "Long-Lasting", description: "Enjoy results that typically last 1-3 years." },
+];
 
 const candidates = [
     { title: "Thin or sparse brows", description: "Rebuild the appearance of fuller brows." },
     { title: "Sensitive or oily skin", description: "Nano brows can be a gentler alternative." },
     { title: "Alopecia or hair loss", description: "Restore natural-looking brow hairs." },
-    { title: "Clients wanting realism", description: "Hair-stroke results without the hand tool." },];
+    { title: "Clients wanting realism", description: "Hair-stroke results without the hand tool." },
+];
 
 const processSteps = [
     { number: "1", title: "Consultation", description: "We review your goals and determine if nano brows are right for you." },
     { number: "2", title: "Brow Design", description: "Your brows are mapped for symmetry and shape." },
     { number: "3", title: "Nano Strokes", description: "Fine hair-like strokes are implanted with a PMU machine." },
-    { number: "4", title: "Healing & Touch-Up", description: "A follow-up perfects color and definition after healing." },];
+    { number: "4", title: "Healing & Touch-Up", description: "A follow-up perfects color and definition after healing." },
+];
 
 const aftercareSections = [
     { title: "First 2 Weeks", items: ["Keep brows dry - avoid water, sweat, and steam", "Apply healing ointment as directed", "Don't pick or scratch flaking skin", "Avoid makeup on the brow area", "Sleep on your back to avoid rubbing"] },
-    { title: "Weeks 2-6", items: ["Brows may appear lighter - this is normal", "Color will gradually return as skin heals", "Avoid sun exposure and tanning", "Schedule your touch-up appointment"] },];
+    { title: "Weeks 2-6", items: ["Brows may appear lighter - this is normal", "Color will gradually return as skin heals", "Avoid sun exposure and tanning", "Schedule your touch-up appointment"] },
+];
 
 export default function ServicePage() {
   return (
@@ -78,13 +83,13 @@ export default function ServicePage() {
                 <ChevronRight className="w-4 h-4" />
                 <Link href="/services" className="hover:text-white transition-colors">Services</Link>
                 <ChevronRight className="w-4 h-4" />
-                <span className="text-white">Pretty Little Strokes * Nano Brows</span>
+                <span className="text-white">{"Pretty Little Strokes * Nano Brows"}</span>
               </nav>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                Nano Brows in Raleigh, NC
+                {"Nano Brows in Raleigh, NC"}
               </h1>
               <p className="text-lg md:text-xl mb-6 text-white/90 max-w-2xl mx-auto">
-                Ultra-fine, hair-like strokes created with a machine for crisp, natural brows.
+                {"Ultra-fine, hair-like strokes created with a machine for crisp, natural brows."}
               </p>
               <Button
                 asChild
@@ -107,12 +112,10 @@ export default function ServicePage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  What is Pretty Little Strokes * Nano Brows?
+                  What is {"Pretty Little Strokes * Nano Brows"}?
                 </h2>
                 <p className="text-lg text-muted-foreground mb-4">
-                  A soft, natural-looking brow created with ultra-fine machine hairstrokes that mimic the look of real brow hair. Nano Brows are customized to your natural growth pattern, face shape, and desired fullness for a beautifully defined result that still looks effortless.
-
-Perfect for clients who want realistic hairstrokes, added fullness, and a polished brow without the look of heavy makeup.
+                  {"A soft, natural-looking brow created with ultra-fine machine hairstrokes that mimic the look of real brow hair. Nano Brows are customized to your natural growth pattern, face shape, and desired fullness for a beautifully defined result that still looks effortless.\n\nPerfect for clients who want realistic hairstrokes, added fullness, and a polished brow without the look of heavy makeup."}
                 </p>
                 <div className="flex flex-wrap gap-3 mb-6">
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md capitalize">
@@ -121,7 +124,7 @@ Perfect for clients who want realistic hairstrokes, added fullness, and a polish
                   </span>
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md">
                     <Clock className="w-4 h-4" />
-                    4
+                    {"4"}
                   </span>
                   
                 </div>
@@ -152,7 +155,7 @@ Perfect for clients who want realistic hairstrokes, added fullness, and a polish
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              Benefits of Pretty Little Strokes * Nano Brows
+              Benefits of {"Pretty Little Strokes * Nano Brows"}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {benefits.map((benefit, index) => {
@@ -183,10 +186,10 @@ Perfect for clients who want realistic hairstrokes, added fullness, and a polish
               </div>
               <div className="order-1 lg:order-2">
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  Who is Pretty Little Strokes * Nano Brows Best For?
+                  Who is {"Pretty Little Strokes * Nano Brows"} Best For?
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  Pretty Little Strokes * Nano Brows is an excellent choice for many clients. It is particularly beneficial for:
+                  {"Pretty Little Strokes * Nano Brows is an excellent choice for many clients. It is particularly beneficial for:"}
                 </p>
                 <ul className="space-y-4">
                   {candidates.map((candidate, index) => (
@@ -207,7 +210,7 @@ Perfect for clients who want realistic hairstrokes, added fullness, and a polish
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              The Pretty Little Strokes * Nano Brows Process
+              The {"Pretty Little Strokes * Nano Brows"} Process
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {processSteps.map((step, index) => (
@@ -228,7 +231,7 @@ Perfect for clients who want realistic hairstrokes, added fullness, and a polish
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto">
               <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-[#AD6269]">
-                Pretty Little Strokes * Nano Brows Aftercare
+                {"Pretty Little Strokes * Nano Brows Aftercare"}
               </h2>
               <p className="text-center text-muted-foreground mb-8">
                 Proper aftercare is essential for achieving the best results.
@@ -257,7 +260,7 @@ Perfect for clients who want realistic hairstrokes, added fullness, and a polish
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              Frequently Asked Questions About Pretty Little Strokes * Nano Brows
+              Frequently Asked Questions About {"Pretty Little Strokes * Nano Brows"}
             </h2>
             <div className="max-w-3xl mx-auto">
               <Accordion type="single" collapsible className="space-y-3">
@@ -281,10 +284,10 @@ Perfect for clients who want realistic hairstrokes, added fullness, and a polish
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                Get Natural-Looking Nano Brows
+                {"Get Natural-Looking Nano Brows"}
               </h2>
               <p className="text-lg mb-6 text-white/90">
-                Schedule your consultation to see if nano brows are the perfect fit.
+                {"Schedule your consultation to see if nano brows are the perfect fit."}
               </p>
               <Button
                 asChild
