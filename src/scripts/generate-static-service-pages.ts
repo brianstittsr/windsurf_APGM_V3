@@ -98,24 +98,24 @@ export const metadata: Metadata = {
 };
 
 const faqs = [
-${faqs || '  // Add FAQs in the admin Services panel'
-}];
+${faqs}
+];
 
 const benefits = [
-${benefits || '  // Add benefits in the admin Services panel'
-}];
+${benefits}
+];
 
 const candidates = [
-${candidates || '  // Add ideal candidates in the admin Services panel'
-}];
+${candidates}
+];
 
 const processSteps = [
-${processSteps || '  // Add process steps in the admin Services panel'
-}];
+${processSteps}
+];
 
 const aftercareSections = [
-${aftercare || '  // Add aftercare in the admin Services panel'
-}];
+${aftercare}
+];
 
 export default function ServicePage() {
   return (
@@ -369,7 +369,7 @@ async function main() {
   const existingDirs = existingStaticDirs();
   console.log('Existing static service pages:', existingDirs.join(', '));
 
-  const snap = await db.collection('services').where('isActive', '==', true).get();
+  const snap = await db.collection('services').get();
   const services = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Service));
 
   let created = 0;

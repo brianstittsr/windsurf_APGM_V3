@@ -22,41 +22,47 @@ import {
 } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: "The Pretty Girl Preview * In Person Consultation in Raleigh, NC",
-  description: "A personalized consultation designed to help you discover the permanent makeup look that fits you best. We’ll talk through your goals, review your natural features, discuss shape and color options, and create a customized plan for your brows, lips, or eyeliner.\n\nThink of it as your first look at what’s possible before your Pretty Girl transformation begins.",
+  title: "Nano Brows in Raleigh, NC",
+  description: "A soft, natural-looking brow created with ultra-fine machine hairstrokes that mimic the look of real brow hair. Nano Brows are customized to your natural growth pattern, face shape, and desired fullness for a beautifully defined result that still looks effortless.\n\nPerfect for clients who want realistic hairstrokes, added fullness, and a polished brow without the look of heavy makeup.",
   alternates: {
-    canonical: 'https://www.aprettygirlmatter.com/services/the-pretty-girl-preview-in-person-consultation',
+    canonical: 'https://www.aprettygirlmatter.com/services/pretty-little-strokes-nano-brows',
   },
   openGraph: {
-    title: "The Pretty Girl Preview * In Person Consultation in Raleigh, NC",
-    description: "A personalized consultation designed to help you discover the permanent makeup look that fits you best. We’ll talk through your goals, review your natural features, discuss shape and color options, and create a customized plan for your brows, lips, or eyeliner.\n\nThink of it as your first look at what’s possible before your Pretty Girl transformation begins.",
-    url: 'https://www.aprettygirlmatter.com/services/the-pretty-girl-preview-in-person-consultation',
+    title: "Nano Brows in Raleigh, NC",
+    description: "A soft, natural-looking brow created with ultra-fine machine hairstrokes that mimic the look of real brow hair. Nano Brows are customized to your natural growth pattern, face shape, and desired fullness for a beautifully defined result that still looks effortless.\n\nPerfect for clients who want realistic hairstrokes, added fullness, and a polished brow without the look of heavy makeup.",
+    url: 'https://www.aprettygirlmatter.com/services/pretty-little-strokes-nano-brows',
     type: 'website',
   },
 };
 
 const faqs = [
-    { question: "Is the consultation free?", answer: "Consultation details, including any fees, will be confirmed when you book." },
-    { question: "Can I book my procedure the same day?", answer: "Procedures are typically scheduled after the consultation to allow proper planning." },];
+    { question: "Are nano brows the same as microblading?", answer: "Similar in look, but nano brows use a machine instead of a hand tool, often causing less skin trauma." },
+    { question: "How long do nano brows last?", answer: "Results typically last 1-3 years depending on skin type and aftercare." },
+    { question: "Is nano brow painful?", answer: "A topical numbing cream is used to keep you comfortable during the procedure." },];
 
 const benefits = [
-    { icon: Clock, title: "Personalized Plan", description: "Get recommendations based on your features and goals." },
-    { icon: Clock, title: "Ask Questions", description: "Learn about techniques, healing, and aftercare." },
-    { icon: Clock, title: "Shape Preview", description: "See a preview of your potential brow or lip design." },
-    { icon: Clock, title: "No Pressure", description: "Take time to decide on the right service for you." },];
+    { icon: Clock, title: "Precise Hair Strokes", description: "Machine work creates crisp, fine strokes that mimic natural brow hairs." },
+    { icon: Clock, title: "Less Trauma", description: "Nano brows are gentle on the skin compared to microblading." },
+    { icon: Clock, title: "Great for Sensitive Skin", description: "A good option for clients who may not be candidates for microblading." },
+    { icon: Clock, title: "Natural Finish", description: "Achieve realistic brows with soft definition." },
+    { icon: Clock, title: "Custom Design", description: "Each stroke is placed to enhance your natural brow pattern." },
+    { icon: Clock, title: "Long-Lasting", description: "Enjoy results that typically last 1-3 years." },];
 
 const candidates = [
-    { title: "New clients", description: "Perfect for anyone considering permanent makeup for the first time." },
-    { title: "Unsure which service", description: "Compare options with professional guidance." },
-    { title: "Existing clients", description: "Plan touch-ups, corrections, or new services." },];
+    { title: "Thin or sparse brows", description: "Rebuild the appearance of fuller brows." },
+    { title: "Sensitive or oily skin", description: "Nano brows can be a gentler alternative." },
+    { title: "Alopecia or hair loss", description: "Restore natural-looking brow hairs." },
+    { title: "Clients wanting realism", description: "Hair-stroke results without the hand tool." },];
 
 const processSteps = [
-    { number: "1", title: "Book", description: "Choose a convenient time for your consultation." },
-    { number: "2", title: "Discuss Goals", description: "Share what you want to achieve with Victoria." },
-    { number: "3", title: "Design Preview", description: "See a rough sketch or color recommendation." },
-    { number: "4", title: "Plan", description: "Schedule your procedure if you decide to move forward." },];
+    { number: "1", title: "Consultation", description: "We review your goals and determine if nano brows are right for you." },
+    { number: "2", title: "Brow Design", description: "Your brows are mapped for symmetry and shape." },
+    { number: "3", title: "Nano Strokes", description: "Fine hair-like strokes are implanted with a PMU machine." },
+    { number: "4", title: "Healing & Touch-Up", description: "A follow-up perfects color and definition after healing." },];
 
-const aftercareSections = [];
+const aftercareSections = [
+    { title: "First 2 Weeks", items: ["Keep brows dry - avoid water, sweat, and steam", "Apply healing ointment as directed", "Don't pick or scratch flaking skin", "Avoid makeup on the brow area", "Sleep on your back to avoid rubbing"] },
+    { title: "Weeks 2-6", items: ["Brows may appear lighter - this is normal", "Color will gradually return as skin heals", "Avoid sun exposure and tanning", "Schedule your touch-up appointment"] },];
 
 export default function ServicePage() {
   return (
@@ -72,13 +78,13 @@ export default function ServicePage() {
                 <ChevronRight className="w-4 h-4" />
                 <Link href="/services" className="hover:text-white transition-colors">Services</Link>
                 <ChevronRight className="w-4 h-4" />
-                <span className="text-white">The Pretty Girl Preview * In Person Consultation</span>
+                <span className="text-white">Pretty Little Strokes * Nano Brows</span>
               </nav>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                The Pretty Girl Preview * In Person Consultation in Raleigh, NC
+                Nano Brows in Raleigh, NC
               </h1>
               <p className="text-lg md:text-xl mb-6 text-white/90 max-w-2xl mx-auto">
-                Discuss your goals, explore options, and design a plan tailored to you.
+                Ultra-fine, hair-like strokes created with a machine for crisp, natural brows.
               </p>
               <Button
                 asChild
@@ -101,12 +107,12 @@ export default function ServicePage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  What is The Pretty Girl Preview * In Person Consultation?
+                  What is Pretty Little Strokes * Nano Brows?
                 </h2>
                 <p className="text-lg text-muted-foreground mb-4">
-                  A personalized consultation designed to help you discover the permanent makeup look that fits you best. We’ll talk through your goals, review your natural features, discuss shape and color options, and create a customized plan for your brows, lips, or eyeliner.
+                  A soft, natural-looking brow created with ultra-fine machine hairstrokes that mimic the look of real brow hair. Nano Brows are customized to your natural growth pattern, face shape, and desired fullness for a beautifully defined result that still looks effortless.
 
-Think of it as your first look at what’s possible before your Pretty Girl transformation begins.
+Perfect for clients who want realistic hairstrokes, added fullness, and a polished brow without the look of heavy makeup.
                 </p>
                 <div className="flex flex-wrap gap-3 mb-6">
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md capitalize">
@@ -115,7 +121,7 @@ Think of it as your first look at what’s possible before your Pretty Girl tran
                   </span>
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md">
                     <Clock className="w-4 h-4" />
-                    30 minutes
+                    4
                   </span>
                   
                 </div>
@@ -132,7 +138,7 @@ Think of it as your first look at what’s possible before your Pretty Girl tran
               <div className="relative h-80 md:h-96 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl shadow-lg overflow-hidden">
                 <Image
                   src="/images/APGM-icon.png"
-                  alt="The Pretty Girl Preview * In Person Consultation"
+                  alt="Pretty Little Strokes * Nano Brows"
                   fill
                   className="object-contain p-6"
                   sizes="(max-width: 1024px) 100vw, 50vw"
@@ -146,7 +152,7 @@ Think of it as your first look at what’s possible before your Pretty Girl tran
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              Benefits of The Pretty Girl Preview * In Person Consultation
+              Benefits of Pretty Little Strokes * Nano Brows
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {benefits.map((benefit, index) => {
@@ -177,10 +183,10 @@ Think of it as your first look at what’s possible before your Pretty Girl tran
               </div>
               <div className="order-1 lg:order-2">
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  Who is The Pretty Girl Preview * In Person Consultation Best For?
+                  Who is Pretty Little Strokes * Nano Brows Best For?
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  The Pretty Girl Preview * In Person Consultation is an excellent choice for many clients. It is particularly beneficial for:
+                  Pretty Little Strokes * Nano Brows is an excellent choice for many clients. It is particularly beneficial for:
                 </p>
                 <ul className="space-y-4">
                   {candidates.map((candidate, index) => (
@@ -201,7 +207,7 @@ Think of it as your first look at what’s possible before your Pretty Girl tran
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              The The Pretty Girl Preview * In Person Consultation Process
+              The Pretty Little Strokes * Nano Brows Process
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {processSteps.map((step, index) => (
@@ -217,13 +223,41 @@ Think of it as your first look at what’s possible before your Pretty Girl tran
           </div>
         </section>
 
-        
+        {/* Aftercare */}
+        <section className="py-12 md:py-16">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto">
+              <h2 className="text-2xl md:text-3xl font-bold text-center mb-4 text-[#AD6269]">
+                Pretty Little Strokes * Nano Brows Aftercare
+              </h2>
+              <p className="text-center text-muted-foreground mb-8">
+                Proper aftercare is essential for achieving the best results.
+              </p>
+              <Card className="border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {aftercareSections.map((section, index) => (
+                      <div key={index}>
+                        <h3 className="font-bold mb-3">{section.title}</h3>
+                        <ul className="space-y-2 text-sm text-muted-foreground">
+                          {section.items.map((item, i) => (
+                            <li key={i}>• {item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
 
         {/* FAQ Section */}
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              Frequently Asked Questions About The Pretty Girl Preview * In Person Consultation
+              Frequently Asked Questions About Pretty Little Strokes * Nano Brows
             </h2>
             <div className="max-w-3xl mx-auto">
               <Accordion type="single" collapsible className="space-y-3">
@@ -247,10 +281,10 @@ Think of it as your first look at what’s possible before your Pretty Girl tran
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                Book Your Consultation Today
+                Get Natural-Looking Nano Brows
               </h2>
               <p className="text-lg mb-6 text-white/90">
-                Take the first step toward effortless, beautiful permanent makeup.
+                Schedule your consultation to see if nano brows are the perfect fit.
               </p>
               <Button
                 asChild

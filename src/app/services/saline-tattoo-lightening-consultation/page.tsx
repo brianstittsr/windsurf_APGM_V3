@@ -22,15 +22,15 @@ import {
 } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: "The Pretty Girl Preview * In Person Consultation in Raleigh, NC",
-  description: "A personalized consultation designed to help you discover the permanent makeup look that fits you best. We’ll talk through your goals, review your natural features, discuss shape and color options, and create a customized plan for your brows, lips, or eyeliner.\n\nThink of it as your first look at what’s possible before your Pretty Girl transformation begins.",
+  title: "Saline Tattoo Lightening Consultation in Raleigh, NC",
+  description: "Saline Tattoo Lightening is a non-laser method designed to gradually lighten unwanted pigment in tattooed eyebrows or body tattoos using a gentle, natural solution. This technique works by implanting a saline and fruit extract-based solution into the skin, which lifts and fades the pigment over multiple sessions.\n\nSafe for both cosmetic and body tattoos\nBreaks up pigment naturally without harsh chemicals or lasers\nDoes NOT completely remove the tattoo in one session—lightens gradually\nIdeal for those wanting to correct or fade previous work before a cover-up\n\nResults vary based on pigment depth, skin type, and number of sessions needed.",
   alternates: {
-    canonical: 'https://www.aprettygirlmatter.com/services/the-pretty-girl-preview-in-person-consultation',
+    canonical: 'https://www.aprettygirlmatter.com/services/saline-tattoo-lightening-consultation',
   },
   openGraph: {
-    title: "The Pretty Girl Preview * In Person Consultation in Raleigh, NC",
-    description: "A personalized consultation designed to help you discover the permanent makeup look that fits you best. We’ll talk through your goals, review your natural features, discuss shape and color options, and create a customized plan for your brows, lips, or eyeliner.\n\nThink of it as your first look at what’s possible before your Pretty Girl transformation begins.",
-    url: 'https://www.aprettygirlmatter.com/services/the-pretty-girl-preview-in-person-consultation',
+    title: "Saline Tattoo Lightening Consultation in Raleigh, NC",
+    description: "Saline Tattoo Lightening is a non-laser method designed to gradually lighten unwanted pigment in tattooed eyebrows or body tattoos using a gentle, natural solution. This technique works by implanting a saline and fruit extract-based solution into the skin, which lifts and fades the pigment over multiple sessions.\n\nSafe for both cosmetic and body tattoos\nBreaks up pigment naturally without harsh chemicals or lasers\nDoes NOT completely remove the tattoo in one session—lightens gradually\nIdeal for those wanting to correct or fade previous work before a cover-up\n\nResults vary based on pigment depth, skin type, and number of sessions needed.",
+    url: 'https://www.aprettygirlmatter.com/services/saline-tattoo-lightening-consultation',
     type: 'website',
   },
 };
@@ -72,10 +72,10 @@ export default function ServicePage() {
                 <ChevronRight className="w-4 h-4" />
                 <Link href="/services" className="hover:text-white transition-colors">Services</Link>
                 <ChevronRight className="w-4 h-4" />
-                <span className="text-white">The Pretty Girl Preview * In Person Consultation</span>
+                <span className="text-white">Saline Tattoo Lightening Consultation</span>
               </nav>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-                The Pretty Girl Preview * In Person Consultation in Raleigh, NC
+                Saline Tattoo Lightening Consultation in Raleigh, NC
               </h1>
               <p className="text-lg md:text-xl mb-6 text-white/90 max-w-2xl mx-auto">
                 Discuss your goals, explore options, and design a plan tailored to you.
@@ -101,21 +101,26 @@ export default function ServicePage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  What is The Pretty Girl Preview * In Person Consultation?
+                  What is Saline Tattoo Lightening Consultation?
                 </h2>
                 <p className="text-lg text-muted-foreground mb-4">
-                  A personalized consultation designed to help you discover the permanent makeup look that fits you best. We’ll talk through your goals, review your natural features, discuss shape and color options, and create a customized plan for your brows, lips, or eyeliner.
+                  Saline Tattoo Lightening is a non-laser method designed to gradually lighten unwanted pigment in tattooed eyebrows or body tattoos using a gentle, natural solution. This technique works by implanting a saline and fruit extract-based solution into the skin, which lifts and fades the pigment over multiple sessions.
 
-Think of it as your first look at what’s possible before your Pretty Girl transformation begins.
+Safe for both cosmetic and body tattoos
+Breaks up pigment naturally without harsh chemicals or lasers
+Does NOT completely remove the tattoo in one session—lightens gradually
+Ideal for those wanting to correct or fade previous work before a cover-up
+
+Results vary based on pigment depth, skin type, and number of sessions needed.
                 </p>
                 <div className="flex flex-wrap gap-3 mb-6">
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md capitalize">
                     <Sparkles className="w-4 h-4" />
-                    eyebrows
+                    correction
                   </span>
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md">
                     <Clock className="w-4 h-4" />
-                    30 minutes
+                    30 min
                   </span>
                   
                 </div>
@@ -132,7 +137,7 @@ Think of it as your first look at what’s possible before your Pretty Girl tran
               <div className="relative h-80 md:h-96 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl shadow-lg overflow-hidden">
                 <Image
                   src="/images/APGM-icon.png"
-                  alt="The Pretty Girl Preview * In Person Consultation"
+                  alt="Saline Tattoo Lightening Consultation"
                   fill
                   className="object-contain p-6"
                   sizes="(max-width: 1024px) 100vw, 50vw"
@@ -146,7 +151,7 @@ Think of it as your first look at what’s possible before your Pretty Girl tran
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              Benefits of The Pretty Girl Preview * In Person Consultation
+              Benefits of Saline Tattoo Lightening Consultation
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {benefits.map((benefit, index) => {
@@ -177,10 +182,10 @@ Think of it as your first look at what’s possible before your Pretty Girl tran
               </div>
               <div className="order-1 lg:order-2">
                 <h2 className="text-2xl md:text-3xl font-bold mb-4 text-[#AD6269]">
-                  Who is The Pretty Girl Preview * In Person Consultation Best For?
+                  Who is Saline Tattoo Lightening Consultation Best For?
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  The Pretty Girl Preview * In Person Consultation is an excellent choice for many clients. It is particularly beneficial for:
+                  Saline Tattoo Lightening Consultation is an excellent choice for many clients. It is particularly beneficial for:
                 </p>
                 <ul className="space-y-4">
                   {candidates.map((candidate, index) => (
@@ -201,7 +206,7 @@ Think of it as your first look at what’s possible before your Pretty Girl tran
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              The The Pretty Girl Preview * In Person Consultation Process
+              The Saline Tattoo Lightening Consultation Process
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {processSteps.map((step, index) => (
@@ -223,7 +228,7 @@ Think of it as your first look at what’s possible before your Pretty Girl tran
         <section className="py-12 md:py-16 bg-[#AD6269]/10">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 text-[#AD6269]">
-              Frequently Asked Questions About The Pretty Girl Preview * In Person Consultation
+              Frequently Asked Questions About Saline Tattoo Lightening Consultation
             </h2>
             <div className="max-w-3xl mx-auto">
               <Accordion type="single" collapsible className="space-y-3">

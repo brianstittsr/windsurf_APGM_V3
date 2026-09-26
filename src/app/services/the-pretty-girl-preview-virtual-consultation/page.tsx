@@ -56,8 +56,7 @@ const processSteps = [
     { number: "3", title: "Design Preview", description: "See a rough sketch or color recommendation." },
     { number: "4", title: "Plan", description: "Schedule your procedure if you decide to move forward." },];
 
-const aftercareSections = [
-  // Add aftercare in the admin Services panel];
+const aftercareSections = [];
 
 export default function ServicePage() {
   return (

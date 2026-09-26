@@ -354,11 +354,6 @@ async function main() {
 
   let updated = 0;
   for (const service of services) {
-    if (!service.isActive) {
-      console.log(`Skipping inactive: ${service.name}`);
-      continue;
-    }
-
     // Skip inactive services and services whose explicit link already points
     // to a static detail page (e.g., a hand-written page under src/app/services).
     const link = service.link?.trim();
