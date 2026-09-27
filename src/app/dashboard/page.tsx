@@ -50,9 +50,10 @@ import { ProcessCarouselManager } from '@/components/admin/ProcessCarouselManage
 import GoogleCalendarIntegration from '../../components/admin/GoogleCalendarIntegration';
 import PrivateTokenManager from '../../components/admin/PrivateTokenManager';
 import StripeCheckoutManager from '../../components/admin/StripeCheckoutManager';
+import QuickVirtualAppointmentManager from '../../components/admin/QuickVirtualAppointmentManager';
 import { cn } from '@/lib/utils';
 
-type TabType = 'overview' | 'users' | 'clients' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'ghl-migration' | 'ghl-workflow-builder' | 'boldsign' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'private-tokens' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation' | 'hero-carousel' | 'documents' | 'canva' | 'faqs' | 'process-carousel' | 'integrations' | 'stripe-checkout';
+type TabType = 'overview' | 'users' | 'clients' | 'reviews' | 'services' | 'coupons' | 'business' | 'artists' | 'bookings' | 'forms' | 'gohighlevel' | 'gohighlevel-mcp' | 'ghl-migration' | 'ghl-workflow-builder' | 'boldsign' | 'bmad-orchestrator' | 'availability' | 'calendar' | 'private-tokens' | 'qrcodes' | 'seo-competitor' | 'seo-pagespeed' | 'google-reviews' | 'whatsapp' | 'loyalty' | 'geo-competitors' | 'paid-traffic' | 'retargeting' | 'reputation' | 'social-media' | 'email-marketing' | 'video-marketing' | 'lead-generation' | 'online-offers' | 'ppc-campaigns' | 'website-convert' | 'marketing-automation' | 'hero-carousel' | 'documents' | 'canva' | 'faqs' | 'process-carousel' | 'integrations' | 'stripe-checkout' | 'quick-virtual';
 
 interface BookingMetrics {
   total: number;
@@ -186,6 +187,7 @@ export default function DashboardPage() {
       'process-carousel': 'Process Carousel',
       'integrations': 'Integrations',
       'stripe-checkout': 'Stripe Tap to Pay',
+      'quick-virtual': 'Quick Virtual Appointment',
     };
     return pageTitles[tab] || 'Dashboard';
   };
@@ -612,6 +614,8 @@ export default function DashboardPage() {
         return <GoogleCalendarIntegration />;
       case 'stripe-checkout':
         return <StripeCheckoutManager />;
+      case 'quick-virtual':
+        return <QuickVirtualAppointmentManager />;
       default:
         return null;
     }

@@ -82,6 +82,7 @@ const navigationGroups: NavGroup[] = [
       { id: 'clients', label: 'Clients', icon: UserCheck },
       { id: 'calendar', label: 'Calendar', icon: Calendar },
       { id: 'bookings', label: 'Bookings', icon: ClipboardList },
+      { id: 'quick-virtual', label: 'Quick Virtual', icon: Video },
       { id: 'reviews', label: 'Reviews', icon: Star },
     ],
   },
