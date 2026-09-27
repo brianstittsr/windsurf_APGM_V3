@@ -128,10 +128,10 @@ export default function OmbreBrowsPage() {
                 variant="secondary"
                 className="rounded-full px-8 bg-white text-[#AD6269] hover:bg-white/90"
               >
-                <Link href="/contact">
+                <a href="https://link.socaldigitalstudio.com/widget/form/wxQMl8ZFz9MiWtrKYlnP" target="_blank" rel="noopener noreferrer">
                   <CalendarPlus className="w-5 h-5 mr-2" />
                   Book Free Consultation
-                </Link>
+                </a>
               </Button>
             </div>
           </div>
