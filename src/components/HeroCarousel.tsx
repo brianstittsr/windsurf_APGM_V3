@@ -57,7 +57,7 @@ export default function HeroCarousel({
   const { reviewSlides, loading: loadingReviews } = useGoogleReviewSlides({
     maxReviews: maxReviewSlides,
     minRating: 4,
-    enabled: enableDynamicReviews && !propSlides, // Only fetch if not using prop slides
+    enabled: enableDynamicReviews,
   });
   
   // Pick a random transition for each slide change
