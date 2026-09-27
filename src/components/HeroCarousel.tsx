@@ -68,7 +68,7 @@ export default function HeroCarousel({
 
   // Load regular slides from Firestore
   useEffect(() => {
-    if (propSlides) {
+    if (propSlides && propSlides.length > 0) {
       setRegularSlides(propSlides);
       setLoadingRegular(false);
     } else {

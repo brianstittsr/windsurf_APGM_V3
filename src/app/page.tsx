@@ -34,23 +34,26 @@ const CTABanner = dynamic(() => import('@/components/CTABanner'), {
 
 async function getHeroSlides(): Promise<HeroSlide[]> {
   try {
-    const snapshot = await db
-      .collection('heroSlides')
-      .where('isActive', '==', true)
-      .orderBy('order', 'asc')
-      .get();
+    // Fetch all slides and filter/sort in memory to avoid needing a
+    // Firestore composite index for isActive + order.
+    const snapshot = await db.collection('heroSlides').get();
 
     if (snapshot.empty) return [];
 
-    return snapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        createdAt: data.createdAt?.toDate?.() || new Date(),
-        updatedAt: data.updatedAt?.toDate?.() || new Date(),
-      } as HeroSlide;
-    });
+    const slides = snapshot.docs
+      .map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate?.() || new Date(),
+          updatedAt: data.updatedAt?.toDate?.() || new Date(),
+        } as HeroSlide;
+      })
+      .filter((slide) => slide.isActive)
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+    return slides;
   } catch (error) {
     console.error('Failed to load hero slides:', error);
     return [];
