@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -311,7 +312,14 @@ export default function QuickVirtualAppointmentPage() {
                   <Video className="h-5 w-5" />
                   <span className="font-medium">Virtual Consultation</span>
                 </div>
-                <h1 className="text-3xl md:text-4xl font-bold mb-2">{config.title}</h1>
+                <h1 className="text-3xl md:text-4xl font-bold mb-2">
+                  <Link
+                    href="/services/the-pretty-girl-preview-virtual-consultation"
+                    className="hover:underline"
+                  >
+                    {config.title}
+                  </Link>
+                </h1>
                 <p className="!text-white max-w-md">{config.description}</p>
               </div>
             </div>
