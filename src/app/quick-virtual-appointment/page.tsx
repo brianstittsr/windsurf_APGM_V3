@@ -10,11 +10,13 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { cn } from '@/lib/utils';
 import { Loader2, Calendar, Clock, Video, CheckCircle, ArrowLeft } from 'lucide-react';
 
 interface QuickVirtualConfig {
   enabled: boolean;
   imageUrl: string;
+  secondaryImageUrl: string;
   title: string;
   description: string;
   serviceName: string;
@@ -49,6 +51,7 @@ export default function QuickVirtualAppointmentPage() {
   const [form, setForm] = useState({ name: '', email: '', phone: '' });
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [showSecondary, setShowSecondary] = useState(false);
 
   useEffect(() => {
     fetch('/api/quick-virtual-appointment')
@@ -186,6 +189,15 @@ export default function QuickVirtualAppointmentPage() {
 
   const { config, slots = [] } = data;
 
+  // Crossfade between the primary image and a secondary image every 5 seconds
+  useEffect(() => {
+    if (!config.secondaryImageUrl || config.secondaryImageUrl === config.imageUrl) return;
+    const interval = setInterval(() => {
+      setShowSecondary((prev) => !prev);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [config.imageUrl, config.secondaryImageUrl]);
+
   if (confirmed) {
     return (
       <>
@@ -226,10 +238,25 @@ export default function QuickVirtualAppointmentPage() {
                 src={config.imageUrl}
                 alt="A Pretty Girl Matter studio"
                 fill
-                className="object-cover"
+                className={cn(
+                  'object-cover transition-opacity duration-1000',
+                  showSecondary ? 'opacity-0' : 'opacity-100'
+                )}
                 priority
                 sizes="(max-width: 1024px) 100vw, 50vw"
               />
+              {config.secondaryImageUrl && config.secondaryImageUrl !== config.imageUrl && (
+                <Image
+                  src={config.secondaryImageUrl}
+                  alt="A Pretty Girl Matter studio alternate"
+                  fill
+                  className={cn(
+                    'object-cover transition-opacity duration-1000',
+                    showSecondary ? 'opacity-100' : 'opacity-0'
+                  )}
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                />
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
                 <div className="flex items-center gap-2 mb-2">
@@ -237,7 +264,7 @@ export default function QuickVirtualAppointmentPage() {
                   <span className="font-medium">Virtual Consultation</span>
                 </div>
                 <h1 className="text-3xl md:text-4xl font-bold mb-2">{config.title}</h1>
-                <p className="text-white/90 max-w-md">{config.description}</p>
+                <p className="text-white max-w-md">{config.description}</p>
               </div>
             </div>
 

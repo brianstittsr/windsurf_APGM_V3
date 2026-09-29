@@ -4,6 +4,7 @@ async function seed() {
   const config = {
     enabled: true,
     imageUrl: '/images/hero/victoria-escobar-hero-main.jpg',
+    secondaryImageUrl: '/images/hero/victoria-escobar-hero-main.jpg',
     title: 'Quick Virtual Consultation',
     description: 'Book a 30-minute virtual appointment with Victoria.',
     serviceName: 'The Pretty Girl Preview * Virtual Consultation',

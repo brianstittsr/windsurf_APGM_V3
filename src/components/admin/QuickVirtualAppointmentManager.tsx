@@ -14,6 +14,7 @@ import { Loader2, Save, Video } from 'lucide-react';
 interface QuickVirtualConfig {
   enabled: boolean;
   imageUrl: string;
+  secondaryImageUrl: string;
   title: string;
   description: string;
   serviceName: string;
@@ -29,6 +30,7 @@ interface QuickVirtualConfig {
 const defaultConfig: QuickVirtualConfig = {
   enabled: true,
   imageUrl: '/images/hero/victoria-escobar-hero-main.jpg',
+  secondaryImageUrl: '/images/hero/victoria-escobar-hero-main.jpg',
   title: 'Quick Virtual Consultation',
   description: 'Book a 30-minute virtual appointment with Victoria.',
   serviceName: 'The Pretty Girl Preview * Virtual Consultation',
@@ -174,14 +176,27 @@ export default function QuickVirtualAppointmentManager() {
               <p className="text-xs text-gray-500">Sent to the client as the meeting location.</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="imageUrl">Image URL</Label>
+              <Label htmlFor="imageUrl">Primary Image URL</Label>
               <Input
                 id="imageUrl"
                 value={config.imageUrl}
                 onChange={(e) => updateField('imageUrl', e.target.value)}
                 placeholder="/images/hero/victoria-escobar-hero-main.jpg"
               />
-              <p className="text-xs text-gray-500">Public path to the image shown on the left side of the page.</p>
+              <p className="text-xs text-gray-500">Public path to the main image shown on the left side of the page.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="secondaryImageUrl">Secondary Image URL</Label>
+              <Input
+                id="secondaryImageUrl"
+                value={config.secondaryImageUrl}
+                onChange={(e) => updateField('secondaryImageUrl', e.target.value)}
+                placeholder="/images/hero/victoria-escobar-hero-main.jpg"
+              />
+              <p className="text-xs text-gray-500">
+                A second image that will fade in and out with the primary image. Upload an AI-generated image here
+                when ready.
+              </p>
             </div>
           </CardContent>
         </Card>
