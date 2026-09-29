@@ -72,6 +72,16 @@ export default function QuickVirtualAppointmentPage() {
       });
   }, []);
 
+  // Crossfade between the primary image and a secondary image every 5 seconds
+  useEffect(() => {
+    const currentConfig = data?.config;
+    if (!currentConfig?.secondaryImageUrl || currentConfig.secondaryImageUrl === currentConfig.imageUrl) return;
+    const interval = setInterval(() => {
+      setShowSecondary((prev) => !prev);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [data?.config?.imageUrl, data?.config?.secondaryImageUrl]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSlot || !data?.config) return;
@@ -188,15 +198,6 @@ export default function QuickVirtualAppointmentPage() {
   }
 
   const { config, slots = [] } = data;
-
-  // Crossfade between the primary image and a secondary image every 5 seconds
-  useEffect(() => {
-    if (!config.secondaryImageUrl || config.secondaryImageUrl === config.imageUrl) return;
-    const interval = setInterval(() => {
-      setShowSecondary((prev) => !prev);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [config.imageUrl, config.secondaryImageUrl]);
 
   if (confirmed) {
     return (
