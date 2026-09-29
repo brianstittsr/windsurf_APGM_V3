@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { cn } from '@/lib/utils';
 import { Loader2, Calendar, Clock, Video, CheckCircle, ArrowLeft } from 'lucide-react';
 
 interface QuickVirtualConfig {
@@ -41,6 +42,19 @@ interface PageData {
   slots?: TimeSlot[];
 }
 
+function toISODate(date: Date): string {
+  return date.toLocaleDateString('en-CA');
+}
+
+function formatDisplayDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
 export default function QuickVirtualAppointmentPage() {
   const router = useRouter();
   const [data, setData] = useState<PageData | null>(null);
@@ -50,6 +64,12 @@ export default function QuickVirtualAppointmentPage() {
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  // Reset the selected time whenever a different day is chosen.
+  useEffect(() => {
+    setSelectedSlot(null);
+  }, [selectedDate]);
 
   // Cycle through images every 6 seconds when more than one is configured.
   useEffect(() => {
@@ -197,6 +217,35 @@ export default function QuickVirtualAppointmentPage() {
 
   const { config, slots = [] } = data;
 
+  const today = useMemo(() => new Date(), []);
+  const calendarDays = useMemo(() => {
+    const days: Date[] = [];
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      days.push(d);
+    }
+    return days;
+  }, [today]);
+
+  const availableDateSet = useMemo(() => new Set(slots.map((slot) => slot.date)), [slots]);
+
+  const slotsByDate = useMemo(() => {
+    const map = new Map<string, TimeSlot[]>();
+    slots.forEach((slot) => {
+      const list = map.get(slot.date) || [];
+      list.push(slot);
+      map.set(slot.date, list);
+    });
+    return map;
+  }, [slots]);
+
+  const selectedDaySlots = selectedDate ? slotsByDate.get(selectedDate) || [] : [];
+
+  const calendarMonth = useMemo(() => {
+    return calendarDays[0].toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  }, [calendarDays]);
+
   if (confirmed) {
     return (
       <>
@@ -270,30 +319,97 @@ export default function QuickVirtualAppointmentPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-[#AD6269]" />
-                Select a Time
+                {!selectedDate
+                  ? 'Select a Date'
+                  : !selectedSlot
+                  ? 'Select a Time'
+                  : 'Confirm Appointment'}
               </CardTitle>
               <CardDescription>
-                Choose a {config.duration}-minute virtual appointment slot.
+                {!selectedDate
+                  ? `Choose a day for your ${config.duration}-minute virtual consultation. Available days are highlighted.`
+                  : !selectedSlot
+                  ? `${formatDisplayDate(selectedDate)} — choose a ${config.duration}-minute slot.`
+                  : 'Enter your details to book the virtual appointment.'}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {!selectedSlot ? (
+              {slots.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">
+                  No upcoming slots are available. Please check back soon.
+                </p>
+              ) : !selectedDate ? (
                 <div className="space-y-4">
-                  {slots.length === 0 ? (
-                    <p className="text-gray-500 text-center py-8">
-                      No upcoming slots are available. Please check back soon.
+                  <div className="text-center font-semibold text-gray-900">{calendarMonth}</div>
+                  <div className="grid grid-cols-7 gap-2 text-center text-sm text-gray-500">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                      <div key={day}>{day}</div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7 gap-2">
+                    {calendarDays.map((day) => {
+                      const dateStr = toISODate(day);
+                      const hasSlots = availableDateSet.has(dateStr);
+                      const isSelected = selectedDate === dateStr;
+                      const isToday = toISODate(new Date()) === dateStr;
+                      return (
+                        <button
+                          key={dateStr}
+                          type="button"
+                          disabled={!hasSlots}
+                          onClick={() => setSelectedDate(dateStr)}
+                          className={cn(
+                            'h-10 w-10 rounded-full text-sm font-medium transition-colors mx-auto',
+                            isSelected
+                              ? 'bg-[#AD6269] text-white'
+                              : hasSlots
+                              ? 'bg-gray-100 text-gray-900 hover:bg-[#AD6269]/10 hover:text-[#AD6269]'
+                              : 'bg-transparent text-gray-300 cursor-not-allowed',
+                            isToday && !isSelected && 'ring-2 ring-[#AD6269] ring-offset-1'
+                          )}
+                        >
+                          {day.getDate()}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-gray-500 text-center">
+                    Only available days are clickable.
+                  </p>
+                </div>
+              ) : !selectedSlot ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-gray-900">
+                      {formatDisplayDate(selectedDate)}
+                    </h3>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedDate(null);
+                        setSelectedSlot(null);
+                      }}
+                      className="text-gray-500"
+                    >
+                      Change date
+                    </Button>
+                  </div>
+                  {selectedDaySlots.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">
+                      No times available for this day.
                     </p>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-1">
-                      {slots.map((slot) => (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {selectedDaySlots.map((slot) => (
                         <button
                           key={`${slot.date}T${slot.time}`}
                           type="button"
                           onClick={() => setSelectedSlot(slot)}
-                          className="text-left px-4 py-3 rounded-lg border border-gray-200 bg-white hover:border-[#AD6269] hover:bg-[#AD6269]/5 transition-colors"
+                          className="px-4 py-3 rounded-lg border border-gray-200 bg-white text-center hover:border-[#AD6269] hover:bg-[#AD6269]/5 transition-colors"
                         >
-                          <div className="font-semibold text-gray-900">{slot.label.split(' at ')[0]}</div>
-                          <div className="flex items-center gap-1 text-sm text-[#AD6269]">
+                          <div className="flex items-center justify-center gap-1 text-sm font-semibold text-[#AD6269]">
                             <Clock className="h-3.5 w-3.5" />
                             {slot.label.split(' at ')[1]}
                           </div>
