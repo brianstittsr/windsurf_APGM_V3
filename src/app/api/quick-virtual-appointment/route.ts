@@ -20,7 +20,8 @@ interface QuickVirtualConfig {
 const defaultConfig: QuickVirtualConfig = {
   enabled: true,
   imageUrl: '/images/hero/victoria-escobar-hero-main.jpg',
-  imageUrl2: '',
+  imageUrl2:
+    'https://images.pexels.com/photos/7606041/pexels-photo-7606041.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
   title: 'Quick Virtual Consultation',
   description: 'Book a 30-minute virtual appointment with Victoria.',
   serviceName: 'The Pretty Girl Preview * Virtual Consultation',
