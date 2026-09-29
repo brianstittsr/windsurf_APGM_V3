@@ -16,6 +16,7 @@ interface QuickVirtualConfig {
   title: string;
   description: string;
   serviceName: string;
+  zoomLink: string;
   duration: number;
   days: number[];
   startTime: string;
@@ -86,6 +87,9 @@ export default function QuickVirtualAppointmentPage() {
         phone: form.phone.trim(),
         serviceName: config.serviceName,
         title: config.serviceName,
+        meetingLocationType: 'custom',
+        overrideLocationConfig: true,
+        address: config.zoomLink,
         startTime: selectedSlot.startTime,
         endTime: selectedSlot.endTime,
         appointmentDate: selectedSlot.date,

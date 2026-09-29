@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Create the appointment in GHL
-    const appointmentPayload = {
+    const appointmentPayload: Record<string, unknown> = {
       locationId: credentials.locationId,
       contactId: contactId,
       calendarId: calendarId,
@@ -193,6 +193,17 @@ export async function POST(request: NextRequest) {
       ignoreDateRange: true,
       toNotify: true // Triggers GHL confirmation email + reminder workflows
     };
+
+    // Support custom/virtual meeting locations (e.g. Zoom links)
+    if (appointmentData.meetingLocationType) {
+      appointmentPayload.meetingLocationType = appointmentData.meetingLocationType;
+    }
+    if (appointmentData.meetingLocationId) {
+      appointmentPayload.meetingLocationId = appointmentData.meetingLocationId;
+    }
+    if (typeof appointmentData.overrideLocationConfig === 'boolean') {
+      appointmentPayload.overrideLocationConfig = appointmentData.overrideLocationConfig;
+    }
 
     const createAppointmentResponse = await fetch(
       'https://services.leadconnectorhq.com/calendars/events/appointments',

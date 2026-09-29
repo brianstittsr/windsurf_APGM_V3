@@ -7,6 +7,7 @@ interface QuickVirtualConfig {
   title: string;
   description: string;
   serviceName: string;
+  zoomLink: string;
   duration: number;
   days: number[];
   startTime: string;
@@ -21,6 +22,7 @@ const defaultConfig: QuickVirtualConfig = {
   title: 'Quick Virtual Consultation',
   description: 'Book a 30-minute virtual appointment with Victoria.',
   serviceName: 'The Pretty Girl Preview * Virtual Consultation',
+  zoomLink: 'https://us05web.zoom.us/j/2989268538?pwd=Q4wtUTamIablNDnZzDiX6a4sWQqNcB.1#success',
   duration: 30,
   days: [2, 4],
   startTime: '16:30',

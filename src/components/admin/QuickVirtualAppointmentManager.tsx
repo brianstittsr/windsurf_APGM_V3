@@ -17,6 +17,7 @@ interface QuickVirtualConfig {
   title: string;
   description: string;
   serviceName: string;
+  zoomLink: string;
   duration: number;
   days: number[];
   startTime: string;
@@ -31,6 +32,7 @@ const defaultConfig: QuickVirtualConfig = {
   title: 'Quick Virtual Consultation',
   description: 'Book a 30-minute virtual appointment with Victoria.',
   serviceName: 'The Pretty Girl Preview * Virtual Consultation',
+  zoomLink: 'https://us05web.zoom.us/j/2989268538?pwd=Q4wtUTamIablNDnZzDiX6a4sWQqNcB.1#success',
   duration: 30,
   days: [2, 4], // Tuesday (2), Thursday (4)
   startTime: '16:30',
@@ -160,6 +162,16 @@ export default function QuickVirtualAppointmentManager() {
                 value={config.description}
                 onChange={(e) => updateField('description', e.target.value)}
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="zoomLink">Zoom / Meeting Link</Label>
+              <Input
+                id="zoomLink"
+                value={config.zoomLink}
+                onChange={(e) => updateField('zoomLink', e.target.value)}
+                placeholder="https://zoom.us/j/..."
+              />
+              <p className="text-xs text-gray-500">Sent to the client as the meeting location.</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="imageUrl">Image URL</Label>
