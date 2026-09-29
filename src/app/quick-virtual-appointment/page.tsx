@@ -239,7 +239,7 @@ export default function QuickVirtualAppointmentPage() {
                   src={url}
                   alt={
                     index === 0
-                      ? 'Woman on a virtual video consultation'
+                      ? 'A Pretty Girl Matter studio'
                       : 'Woman on a web conference call'
                   }
                   fill
