@@ -255,6 +255,10 @@ export default function QuickVirtualAppointmentPage() {
                 />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+              <div className="absolute top-4 right-4 bg-[#2D8CFF] text-white px-3 py-1.5 rounded-full flex items-center gap-2 shadow-lg">
+                <Video className="h-4 w-4" />
+                <span className="text-sm font-semibold">Zoom</span>
+              </div>
               <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
                 <div className="flex items-center gap-2 mb-2">
                   <Video className="h-5 w-5" />
