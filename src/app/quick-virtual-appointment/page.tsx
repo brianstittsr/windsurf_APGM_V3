@@ -237,7 +237,11 @@ export default function QuickVirtualAppointmentPage() {
                 <Image
                   key={url}
                   src={url}
-                  alt={`A Pretty Girl Matter ${index === 0 ? 'studio' : 'virtual consultation'}`}
+                  alt={
+                    index === 0
+                      ? 'Woman on a virtual video consultation'
+                      : 'Woman on a web conference call'
+                  }
                   fill
                   className={`object-cover transition-opacity duration-1000 ease-in-out ${
                     index === activeImageIndex ? 'opacity-100' : 'opacity-0'
