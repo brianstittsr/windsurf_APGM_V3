@@ -54,6 +54,16 @@ function toEastern(date: Date): Date {
   return new Date(date.getTime() + offsetHours * 60 * 60 * 1000);
 }
 
+function getEasternDateParts(date: Date): { year: number; month: number; day: number; dayOfWeek: number } {
+  const eastern = toEastern(date);
+  return {
+    year: eastern.getUTCFullYear(),
+    month: eastern.getUTCMonth() + 1,
+    day: eastern.getUTCDate(),
+    dayOfWeek: eastern.getUTCDay(),
+  };
+}
+
 function parseTime(timeStr: string): { hours: number; minutes: number } {
   const [h, m] = timeStr.split(':').map(Number);
   return { hours: h, minutes: m };
@@ -116,43 +126,38 @@ export async function GET(_request: NextRequest) {
     const start = parseTime(startTime);
     const end = parseTime(endTime);
 
-    for (let w = 0; w < maxWeeksAhead; w++) {
-      for (let i = 0; i < 7; i++) {
-        // Build candidate date in Eastern time, then convert to UTC for storage.
-        const base = new Date();
-        base.setUTCDate(now.getUTCDate() + w * 7 + i);
-        const dayOfWeek = base.getUTCDay(); // 0=Sunday ... 6=Saturday
-        if (!days.includes(dayOfWeek)) continue;
+    for (let d = 0; d < maxWeeksAhead * 7; d++) {
+      // Build candidate date in UTC, then determine the corresponding Eastern
+      // weekday so we match the configured days (Tuesday/Thursday) in local time.
+      const base = new Date(now);
+      base.setUTCDate(now.getUTCDate() + d);
+      const parts = getEasternDateParts(base);
+      if (!days.includes(parts.dayOfWeek)) continue;
 
-        // Build each slot in UTC by interpreting the configured Eastern time as Eastern.
-        const easternDate = toEastern(base);
-        const y = easternDate.getUTCFullYear();
-        const mo = easternDate.getUTCMonth();
-        const d = easternDate.getUTCDate();
+      // Convert the configured Eastern start/end times to UTC for this date.
+      const offset = getEasternOffset(new Date(Date.UTC(parts.year, parts.month - 1, parts.day, 12, 0)));
+      let current = new Date(Date.UTC(parts.year, parts.month - 1, parts.day, start.hours - offset, start.minutes));
+      const limit = new Date(Date.UTC(parts.year, parts.month - 1, parts.day, end.hours - offset, end.minutes));
 
-        let current = new Date(Date.UTC(y, mo, d, start.hours - getEasternOffset(new Date(Date.UTC(y, mo, d, 12, 0))), start.minutes));
-        const limit = new Date(Date.UTC(y, mo, d, end.hours - getEasternOffset(new Date(Date.UTC(y, mo, d, 12, 0))), end.minutes));
+      while (current < limit) {
+        const next = new Date(current.getTime() + duration * 60000);
+        if (next > limit) break;
 
-        while (current < limit) {
-          const next = new Date(current.getTime() + duration * 60000);
-          if (next > limit) break;
+        const eastern = toEastern(current);
+        const dateStr = `${eastern.getUTCFullYear()}-${(eastern.getUTCMonth() + 1).toString().padStart(2, '0')}-${eastern.getUTCDate().toString().padStart(2, '0')}`;
+        const timeStr = `${eastern.getUTCHours().toString().padStart(2, '0')}:${eastern.getUTCMinutes().toString().padStart(2, '0')}`;
 
-          const eastern = toEastern(current);
-          const dateStr = `${eastern.getUTCFullYear()}-${(eastern.getUTCMonth() + 1).toString().padStart(2, '0')}-${eastern.getUTCDate().toString().padStart(2, '0')}`;
-          const timeStr = `${eastern.getUTCHours().toString().padStart(2, '0')}:${eastern.getUTCMinutes().toString().padStart(2, '0')}`;
-
-          if (current > now && !taken.has(`${dateStr}T${timeStr}`)) {
-            slots.push({
-              date: dateStr,
-              time: timeStr,
-              label: `${formatEasternDate(current)} at ${formatEasternTime(current)}`,
-              startTime: current.toISOString(),
-              endTime: next.toISOString(),
-            });
-          }
-
-          current = next;
+        if (current > now && !taken.has(`${dateStr}T${timeStr}`)) {
+          slots.push({
+            date: dateStr,
+            time: timeStr,
+            label: `${formatEasternDate(current)} at ${formatEasternTime(current)}`,
+            startTime: current.toISOString(),
+            endTime: next.toISOString(),
+          });
         }
+
+        current = next;
       }
     }
 
