@@ -283,7 +283,7 @@ export default function QuickVirtualAppointmentPage() {
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
             {/* Left: Image */}
-            <div className="relative rounded-2xl overflow-hidden shadow-lg min-h-[400px] lg:min-h-full bg-black">
+            <div className="relative rounded-2xl overflow-hidden shadow-lg min-h-[400px] lg:min-h-full bg-gray-200">
               {config.imageUrls.map((url, index) => (
                 <Image
                   key={url}
@@ -294,7 +294,7 @@ export default function QuickVirtualAppointmentPage() {
                       : 'Woman on a web conference call'
                   }
                   fill
-                  className={`object-contain transition-opacity duration-1000 ease-in-out ${
+                  className={`object-cover transition-opacity duration-1000 ease-in-out ${
                     index === activeImageIndex ? 'opacity-100' : 'opacity-0'
                   }`}
                   priority={index === 0}
@@ -317,7 +317,7 @@ export default function QuickVirtualAppointmentPage() {
             </div>
 
           {/* Right: Calendar / Form */}
-          <Card className="shadow-lg border-0">
+          <Card className="shadow-lg border-0 min-h-[480px] flex flex-col">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-[#AD6269]" />
@@ -335,7 +335,7 @@ export default function QuickVirtualAppointmentPage() {
                   : 'Enter your details to book the virtual appointment.'}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1">
               {slots.length === 0 ? (
                 <p className="text-gray-500 text-center py-8">
                   No upcoming slots are available. Please check back soon.
