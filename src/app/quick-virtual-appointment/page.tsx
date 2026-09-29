@@ -1,10 +1,8 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { getDb } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -26,151 +24,51 @@ interface QuickVirtualConfig {
   calendarId: string;
 }
 
-const defaultConfig: QuickVirtualConfig = {
-  enabled: true,
-  imageUrl: '/images/hero/victoria-escobar-hero-main.jpg',
-  title: 'Quick Virtual Consultation',
-  description: 'Book a 30-minute virtual appointment with Victoria.',
-  serviceName: 'The Pretty Girl Preview * Virtual Consultation',
-  duration: 30,
-  days: [2, 4],
-  startTime: '16:30',
-  endTime: '18:00',
-  maxWeeksAhead: 4,
-  calendarId: '',
-};
-
 interface TimeSlot {
   date: string;
   time: string;
   label: string;
-  startDateTime: Date;
-  endDateTime: Date;
+  startTime: string;
+  endTime: string;
 }
 
-function parseTime(timeStr: string): { hours: number; minutes: number } {
-  const [h, m] = timeStr.split(':').map(Number);
-  return { hours: h, minutes: m };
-}
-
-function formatTime(timeStr: string): string {
-  const [h, m] = timeStr.split(':').map(Number);
-  const period = h >= 12 ? 'PM' : 'AM';
-  const hour = h % 12 || 12;
-  return `${hour}:${m.toString().padStart(2, '0')} ${period}`;
-}
-
-function formatDate(dateStr: string): string {
-  const [y, mo, d] = dateStr.split('-').map(Number);
-  const date = new Date(y, mo - 1, d);
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
+interface PageData {
+  enabled: boolean;
+  config?: QuickVirtualConfig;
+  slots?: TimeSlot[];
 }
 
 export default function QuickVirtualAppointmentPage() {
   const router = useRouter();
-  const [config, setConfig] = useState<QuickVirtualConfig | null>(null);
+  const [data, setData] = useState<PageData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [bookedSlots, setBookedSlots] = useState<Set<string>>(new Set());
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const [form, setForm] = useState({ name: '', email: '', phone: '' });
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
 
-  // Load config and existing bookings
   useEffect(() => {
-    const load = async () => {
-      try {
-        const db = getDb();
-        const configSnap = await getDoc(doc(db, 'quickVirtualAppointment/config'));
-        const cfg = configSnap.exists()
-          ? { ...defaultConfig, ...(configSnap.data() as QuickVirtualConfig) }
-          : defaultConfig;
-        setConfig(cfg);
-
-        // Fetch existing bookings for this service to block already-booked slots
-        const bookingsQuery = query(
-          collection(db, 'bookings'),
-          where('serviceName', '==', cfg.serviceName)
-        );
-        const bookingsSnap = await getDocs(bookingsQuery);
-        const taken = new Set<string>();
-        bookingsSnap.docs.forEach((d) => {
-          const data = d.data();
-          if (data.date && data.time) {
-            taken.add(`${data.date}T${data.time}`);
-          }
-        });
-        setBookedSlots(taken);
-      } catch (error) {
+    fetch('/api/quick-virtual-appointment')
+      .then(async (res) => {
+        if (!res.ok) throw new Error('Failed to load');
+        return res.json() as Promise<PageData>;
+      })
+      .then((pageData) => {
+        setData(pageData);
+      })
+      .catch((error) => {
         console.error('Error loading quick virtual page:', error);
         toast.error('Could not load appointment options. Please refresh.');
-      } finally {
+        setData({ enabled: false });
+      })
+      .finally(() => {
         setLoading(false);
-      }
-    };
-    load();
+      });
   }, []);
-
-  const slots = useMemo<TimeSlot[]>(() => {
-    if (!config) return [];
-    const { days, startTime, endTime, duration, maxWeeksAhead } = config;
-    const result: TimeSlot[] = [];
-    const today = new Date();
-    const start = parseTime(startTime);
-    const end = parseTime(endTime);
-
-    for (let w = 0; w < maxWeeksAhead; w++) {
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() + w * 7 + i);
-        const dayOfWeek = date.getDay();
-        if (!days.includes(dayOfWeek)) continue;
-
-        const [y, mo, d] = [date.getFullYear(), date.getMonth() + 1, date.getDate()];
-        const dateStr = `${y}-${mo.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
-
-        const current = new Date(y, mo - 1, d, start.hours, start.minutes);
-        const limit = new Date(y, mo - 1, d, end.hours, end.minutes);
-
-        while (current < limit) {
-          const next = new Date(current.getTime() + duration * 60000);
-          if (next > limit) break;
-
-          const h = current.getHours().toString().padStart(2, '0');
-          const m = current.getMinutes().toString().padStart(2, '0');
-          const timeStr = `${h}:${m}`;
-
-          // Skip slots in the past
-          if (current <= new Date()) {
-            current.setMinutes(current.getMinutes() + duration);
-            continue;
-          }
-
-          // Skip already-booked slots
-          if (!bookedSlots.has(`${dateStr}T${timeStr}`)) {
-            result.push({
-              date: dateStr,
-              time: timeStr,
-              label: `${formatDate(dateStr)} at ${formatTime(timeStr)}`,
-              startDateTime: new Date(current),
-              endDateTime: new Date(next),
-            });
-          }
-
-          current.setMinutes(current.getMinutes() + duration);
-        }
-      }
-    }
-    return result;
-  }, [config, bookedSlots]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedSlot || !config) return;
+    if (!selectedSlot || !data?.config) return;
 
     if (!form.name.trim() || !form.email.trim() || !form.phone.trim()) {
       toast.warning('Please fill out your name, email, and phone number.');
@@ -179,11 +77,7 @@ export default function QuickVirtualAppointmentPage() {
 
     setSubmitting(true);
     try {
-      const startTime = selectedSlot.startDateTime.toISOString();
-      const endTime = selectedSlot.endDateTime.toISOString();
-      const dateStr = selectedSlot.date;
-      const timeStr = selectedSlot.time;
-
+      const { config } = data;
       const appointmentData = {
         name: form.name.trim(),
         firstName: '',
@@ -192,11 +86,11 @@ export default function QuickVirtualAppointmentPage() {
         phone: form.phone.trim(),
         serviceName: config.serviceName,
         title: config.serviceName,
-        startTime,
-        endTime,
-        appointmentDate: dateStr,
-        appointmentTime: timeStr,
-        appointmentEndTime: timeStr,
+        startTime: selectedSlot.startTime,
+        endTime: selectedSlot.endTime,
+        appointmentDate: selectedSlot.date,
+        appointmentTime: selectedSlot.time,
+        appointmentEndTime: selectedSlot.time,
         duration: config.duration,
         calendarId: config.calendarId || undefined,
         price: 0,
@@ -217,7 +111,7 @@ export default function QuickVirtualAppointmentPage() {
         throw new Error(ghlResult.message || 'Failed to create appointment');
       }
 
-      // Trigger the Pretty Girl Preview workflow if this is that service
+      // Trigger the Pretty Girl Preview workflow when applicable.
       if (/pretty\s+girl\s+preview/i.test(config.serviceName)) {
         try {
           await fetch('/api/bookings/ghl-pretty-girl-webhook', {
@@ -226,8 +120,6 @@ export default function QuickVirtualAppointmentPage() {
             body: JSON.stringify({
               booking: {
                 ...appointmentData,
-                startTime,
-                endTime,
                 contactId: ghlResult.contactId,
               },
               result: {
@@ -259,7 +151,7 @@ export default function QuickVirtualAppointmentPage() {
     );
   }
 
-  if (!config || !config.enabled) {
+  if (!data || !data.enabled || !data.config) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <Card className="max-w-md w-full text-center">
@@ -278,6 +170,8 @@ export default function QuickVirtualAppointmentPage() {
     );
   }
 
+  const { config, slots = [] } = data;
+
   if (confirmed) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -287,9 +181,7 @@ export default function QuickVirtualAppointmentPage() {
               <CheckCircle className="h-6 w-6" />
               Appointment Confirmed
             </CardTitle>
-            <CardDescription>
-              {selectedSlot?.label}
-            </CardDescription>
+            <CardDescription>{selectedSlot?.label}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-gray-600">
@@ -356,10 +248,10 @@ export default function QuickVirtualAppointmentPage() {
                           onClick={() => setSelectedSlot(slot)}
                           className="text-left px-4 py-3 rounded-lg border border-gray-200 bg-white hover:border-[#AD6269] hover:bg-[#AD6269]/5 transition-colors"
                         >
-                          <div className="font-semibold text-gray-900">{formatDate(slot.date)}</div>
+                          <div className="font-semibold text-gray-900">{slot.label.split(' at ')[0]}</div>
                           <div className="flex items-center gap-1 text-sm text-[#AD6269]">
                             <Clock className="h-3.5 w-3.5" />
-                            {formatTime(slot.time)}
+                            {slot.label.split(' at ')[1]}
                           </div>
                         </button>
                       ))}
@@ -370,8 +262,8 @@ export default function QuickVirtualAppointmentPage() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="bg-[#AD6269]/10 rounded-lg p-4 flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-gray-900">{formatDate(selectedSlot.date)}</p>
-                      <p className="text-sm text-[#AD6269]">{formatTime(selectedSlot.time)}</p>
+                      <p className="font-semibold text-gray-900">{selectedSlot.label.split(' at ')[0]}</p>
+                      <p className="text-sm text-[#AD6269]">{selectedSlot.label.split(' at ')[1]}</p>
                     </div>
                     <Button
                       type="button"
