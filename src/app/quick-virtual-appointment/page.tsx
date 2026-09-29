@@ -265,7 +265,7 @@ export default function QuickVirtualAppointmentPage() {
                   <span className="font-medium">Virtual Consultation</span>
                 </div>
                 <h1 className="text-3xl md:text-4xl font-bold mb-2">{config.title}</h1>
-                <p className="text-white max-w-md">{config.description}</p>
+                <p className="!text-white max-w-md">{config.description}</p>
               </div>
             </div>
 
