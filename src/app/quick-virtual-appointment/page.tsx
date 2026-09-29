@@ -180,6 +180,37 @@ export default function QuickVirtualAppointmentPage() {
     }
   };
 
+  const slots = data?.slots || [];
+
+  const today = useMemo(() => new Date(), []);
+  const calendarDays = useMemo(() => {
+    const days: Date[] = [];
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      days.push(d);
+    }
+    return days;
+  }, [today]);
+
+  const availableDateSet = useMemo(() => new Set(slots.map((slot) => slot.date)), [slots]);
+
+  const slotsByDate = useMemo(() => {
+    const map = new Map<string, TimeSlot[]>();
+    slots.forEach((slot) => {
+      const list = map.get(slot.date) || [];
+      list.push(slot);
+      map.set(slot.date, list);
+    });
+    return map;
+  }, [slots]);
+
+  const selectedDaySlots = selectedDate ? slotsByDate.get(selectedDate) || [] : [];
+
+  const calendarMonth = useMemo(() => {
+    return calendarDays[0].toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  }, [calendarDays]);
+
   if (loading) {
     return (
       <>
@@ -215,37 +246,6 @@ export default function QuickVirtualAppointmentPage() {
     );
   }
 
-  const { config, slots = [] } = data;
-
-  const today = useMemo(() => new Date(), []);
-  const calendarDays = useMemo(() => {
-    const days: Date[] = [];
-    for (let i = 0; i < 30; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
-      days.push(d);
-    }
-    return days;
-  }, [today]);
-
-  const availableDateSet = useMemo(() => new Set(slots.map((slot) => slot.date)), [slots]);
-
-  const slotsByDate = useMemo(() => {
-    const map = new Map<string, TimeSlot[]>();
-    slots.forEach((slot) => {
-      const list = map.get(slot.date) || [];
-      list.push(slot);
-      map.set(slot.date, list);
-    });
-    return map;
-  }, [slots]);
-
-  const selectedDaySlots = selectedDate ? slotsByDate.get(selectedDate) || [] : [];
-
-  const calendarMonth = useMemo(() => {
-    return calendarDays[0].toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  }, [calendarDays]);
-
   if (confirmed) {
     return (
       <>
@@ -273,6 +273,8 @@ export default function QuickVirtualAppointmentPage() {
       </>
     );
   }
+
+  const config = data.config;
 
   return (
     <>
