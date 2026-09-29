@@ -4,7 +4,7 @@ import { db } from '@/lib/firebase-admin';
 interface QuickVirtualConfig {
   enabled: boolean;
   imageUrl: string;
-  secondaryImageUrl: string;
+  imageUrl2: string;
   title: string;
   description: string;
   serviceName: string;
@@ -20,7 +20,7 @@ interface QuickVirtualConfig {
 const defaultConfig: QuickVirtualConfig = {
   enabled: true,
   imageUrl: '/images/hero/victoria-escobar-hero-main.jpg',
-  secondaryImageUrl: '/images/hero/victoria-escobar-hero-main.jpg',
+  imageUrl2: '',
   title: 'Quick Virtual Consultation',
   description: 'Book a 30-minute virtual appointment with Victoria.',
   serviceName: 'The Pretty Girl Preview * Virtual Consultation',

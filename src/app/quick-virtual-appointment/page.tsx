@@ -10,13 +10,12 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { cn } from '@/lib/utils';
 import { Loader2, Calendar, Clock, Video, CheckCircle, ArrowLeft } from 'lucide-react';
 
 interface QuickVirtualConfig {
   enabled: boolean;
   imageUrl: string;
-  secondaryImageUrl: string;
+  imageUrl2: string;
   title: string;
   description: string;
   serviceName: string;
@@ -51,7 +50,16 @@ export default function QuickVirtualAppointmentPage() {
   const [form, setForm] = useState({ name: '', email: '', phone: '' });
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
-  const [showSecondary, setShowSecondary] = useState(false);
+  const [showSecondImage, setShowSecondImage] = useState(false);
+
+  // Crossfade between two images every 6 seconds if a secondary image is configured.
+  useEffect(() => {
+    if (!data?.config?.imageUrl2) return;
+    const interval = setInterval(() => {
+      setShowSecondImage((prev) => !prev);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [data?.config?.imageUrl2]);
 
   useEffect(() => {
     fetch('/api/quick-virtual-appointment')
@@ -71,16 +79,6 @@ export default function QuickVirtualAppointmentPage() {
         setLoading(false);
       });
   }, []);
-
-  // Crossfade between the primary image and a secondary image every 5 seconds
-  useEffect(() => {
-    const currentConfig = data?.config;
-    if (!currentConfig?.secondaryImageUrl || currentConfig.secondaryImageUrl === currentConfig.imageUrl) return;
-    const interval = setInterval(() => {
-      setShowSecondary((prev) => !prev);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [data?.config?.imageUrl, data?.config?.secondaryImageUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -239,22 +237,20 @@ export default function QuickVirtualAppointmentPage() {
                 src={config.imageUrl}
                 alt="A Pretty Girl Matter studio"
                 fill
-                className={cn(
-                  'object-cover transition-opacity duration-1000',
-                  showSecondary ? 'opacity-0' : 'opacity-100'
-                )}
+                className={`object-cover transition-opacity duration-1000 ease-in-out ${
+                  showSecondImage && config.imageUrl2 ? 'opacity-0' : 'opacity-100'
+                }`}
                 priority
                 sizes="(max-width: 1024px) 100vw, 50vw"
               />
-              {config.secondaryImageUrl && config.secondaryImageUrl !== config.imageUrl && (
+              {config.imageUrl2 && (
                 <Image
-                  src={config.secondaryImageUrl}
-                  alt="A Pretty Girl Matter studio alternate"
+                  src={config.imageUrl2}
+                  alt="A Pretty Girl Matter virtual consultation"
                   fill
-                  className={cn(
-                    'object-cover transition-opacity duration-1000',
-                    showSecondary ? 'opacity-100' : 'opacity-0'
-                  )}
+                  className={`object-cover transition-opacity duration-1000 ease-in-out ${
+                    showSecondImage ? 'opacity-100' : 'opacity-0'
+                  }`}
                   sizes="(max-width: 1024px) 100vw, 50vw"
                 />
               )}
