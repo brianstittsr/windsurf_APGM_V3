@@ -14,8 +14,7 @@ import { Loader2, Calendar, Clock, Video, CheckCircle, ArrowLeft } from 'lucide-
 
 interface QuickVirtualConfig {
   enabled: boolean;
-  imageUrl: string;
-  imageUrl2: string;
+  imageUrls: string[];
   title: string;
   description: string;
   serviceName: string;
@@ -50,16 +49,17 @@ export default function QuickVirtualAppointmentPage() {
   const [form, setForm] = useState({ name: '', email: '', phone: '' });
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
-  const [showSecondImage, setShowSecondImage] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  // Crossfade between two images every 6 seconds if a secondary image is configured.
+  // Cycle through images every 6 seconds when more than one is configured.
   useEffect(() => {
-    if (!data?.config?.imageUrl2) return;
+    const imageCount = data?.config?.imageUrls?.length ?? 0;
+    if (imageCount <= 1) return;
     const interval = setInterval(() => {
-      setShowSecondImage((prev) => !prev);
+      setActiveImageIndex((prev) => (prev + 1) % imageCount);
     }, 6000);
     return () => clearInterval(interval);
-  }, [data?.config?.imageUrl2]);
+  }, [data?.config?.imageUrls?.length]);
 
   useEffect(() => {
     fetch('/api/quick-virtual-appointment')
@@ -233,27 +233,19 @@ export default function QuickVirtualAppointmentPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
             {/* Left: Image */}
             <div className="relative rounded-2xl overflow-hidden shadow-lg min-h-[400px] lg:min-h-full bg-gray-200">
-              <Image
-                src={config.imageUrl}
-                alt="A Pretty Girl Matter studio"
-                fill
-                className={`object-cover transition-opacity duration-1000 ease-in-out ${
-                  showSecondImage && config.imageUrl2 ? 'opacity-0' : 'opacity-100'
-                }`}
-                priority
-                sizes="(max-width: 1024px) 100vw, 50vw"
-              />
-              {config.imageUrl2 && (
+              {config.imageUrls.map((url, index) => (
                 <Image
-                  src={config.imageUrl2}
-                  alt="A Pretty Girl Matter virtual consultation"
+                  key={url}
+                  src={url}
+                  alt={`A Pretty Girl Matter ${index === 0 ? 'studio' : 'virtual consultation'}`}
                   fill
                   className={`object-cover transition-opacity duration-1000 ease-in-out ${
-                    showSecondImage ? 'opacity-100' : 'opacity-0'
+                    index === activeImageIndex ? 'opacity-100' : 'opacity-0'
                   }`}
+                  priority={index === 0}
                   sizes="(max-width: 1024px) 100vw, 50vw"
                 />
-              )}
+              ))}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               <div className="absolute top-4 right-4 bg-[#2D8CFF] text-white px-3 py-1.5 rounded-full flex items-center gap-2 shadow-lg">
                 <Video className="h-4 w-4" />

@@ -3,9 +3,13 @@ import { db } from '../lib/firebase-admin';
 async function seed() {
   const config = {
     enabled: true,
-    imageUrl: '/images/hero/victoria-escobar-hero-main.jpg',
-    imageUrl2:
+    imageUrls: [
+      '/images/hero/victoria-escobar-hero-main.jpg',
       'https://images.pexels.com/photos/7606041/pexels-photo-7606041.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      'https://images.pexels.com/photos/9301861/pexels-photo-9301861.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      'https://images.pexels.com/photos/4031707/pexels-photo-4031707.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      'https://images.pexels.com/photos/34225007/pexels-photo-34225007.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    ],
     title: 'Quick Virtual Consultation',
     description: 'Book a 30-minute virtual appointment with Victoria.',
     serviceName: 'The Pretty Girl Preview * Virtual Consultation',

@@ -3,8 +3,7 @@ import { db } from '@/lib/firebase-admin';
 
 interface QuickVirtualConfig {
   enabled: boolean;
-  imageUrl: string;
-  imageUrl2: string;
+  imageUrls: string[];
   title: string;
   description: string;
   serviceName: string;
@@ -19,9 +18,13 @@ interface QuickVirtualConfig {
 
 const defaultConfig: QuickVirtualConfig = {
   enabled: true,
-  imageUrl: '/images/hero/victoria-escobar-hero-main.jpg',
-  imageUrl2:
+  imageUrls: [
+    '/images/hero/victoria-escobar-hero-main.jpg',
     'https://images.pexels.com/photos/7606041/pexels-photo-7606041.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    'https://images.pexels.com/photos/9301861/pexels-photo-9301861.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    'https://images.pexels.com/photos/4031707/pexels-photo-4031707.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    'https://images.pexels.com/photos/34225007/pexels-photo-34225007.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+  ],
   title: 'Quick Virtual Consultation',
   description: 'Book a 30-minute virtual appointment with Victoria.',
   serviceName: 'The Pretty Girl Preview * Virtual Consultation',
@@ -92,9 +95,21 @@ function formatEasternDate(date: Date): string {
 export async function GET(_request: NextRequest) {
   try {
     const configSnap = await db.collection('quickVirtualAppointment').doc('config').get();
-    const config = configSnap.exists
-      ? { ...defaultConfig, ...(configSnap.data() as QuickVirtualConfig) }
-      : defaultConfig;
+    let config: QuickVirtualConfig = defaultConfig;
+    if (configSnap.exists) {
+      const raw = configSnap.data() as QuickVirtualConfig & { imageUrl?: string; imageUrl2?: string };
+      config = {
+        ...defaultConfig,
+        ...raw,
+        imageUrls:
+          raw.imageUrls && raw.imageUrls.length > 0
+            ? raw.imageUrls
+            : [
+                raw.imageUrl || defaultConfig.imageUrls[0],
+                ...(raw.imageUrl2 ? [raw.imageUrl2] : []),
+              ].filter((url): url is string => Boolean(url)),
+      };
+    }
 
     if (!config.enabled) {
       return NextResponse.json({ enabled: false });

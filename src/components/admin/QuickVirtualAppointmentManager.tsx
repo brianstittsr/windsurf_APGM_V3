@@ -13,8 +13,7 @@ import { Loader2, Save, Video } from 'lucide-react';
 
 interface QuickVirtualConfig {
   enabled: boolean;
-  imageUrl: string;
-  imageUrl2: string;
+  imageUrls: string[];
   title: string;
   description: string;
   serviceName: string;
@@ -29,9 +28,13 @@ interface QuickVirtualConfig {
 
 const defaultConfig: QuickVirtualConfig = {
   enabled: true,
-  imageUrl: '/images/hero/victoria-escobar-hero-main.jpg',
-  imageUrl2:
+  imageUrls: [
+    '/images/hero/victoria-escobar-hero-main.jpg',
     'https://images.pexels.com/photos/7606041/pexels-photo-7606041.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    'https://images.pexels.com/photos/9301861/pexels-photo-9301861.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    'https://images.pexels.com/photos/4031707/pexels-photo-4031707.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    'https://images.pexels.com/photos/34225007/pexels-photo-34225007.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+  ],
   title: 'Quick Virtual Consultation',
   description: 'Book a 30-minute virtual appointment with Victoria.',
   serviceName: 'The Pretty Girl Preview * Virtual Consultation',
@@ -177,25 +180,22 @@ export default function QuickVirtualAppointmentManager() {
               <p className="text-xs text-gray-500">Sent to the client as the meeting location.</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="imageUrl">Primary Image URL</Label>
-              <Input
-                id="imageUrl"
-                value={config.imageUrl}
-                onChange={(e) => updateField('imageUrl', e.target.value)}
-                placeholder="/images/hero/victoria-escobar-hero-main.jpg"
-              />
-              <p className="text-xs text-gray-500">Public path to the image shown on the left side of the page.</p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="imageUrl2">Secondary Image URL (optional)</Label>
-              <Input
-                id="imageUrl2"
-                value={config.imageUrl2}
-                onChange={(e) => updateField('imageUrl2', e.target.value)}
-                placeholder="/images/hero/victoria-chair-ai.jpg"
+              <Label htmlFor="imageUrls">Image URLs</Label>
+              <textarea
+                id="imageUrls"
+                rows={5}
+                value={config.imageUrls.join('\n')}
+                onChange={(e) =>
+                  updateField(
+                    'imageUrls',
+                    e.target.value.split('\n').map((url) => url.trim()).filter(Boolean)
+                  )
+                }
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="/images/hero/..."
               />
               <p className="text-xs text-gray-500">
-                If provided, the page will fade between the primary and secondary images.
+                Enter one image URL per line. The first image displays first; the rest rotate on a 6-second fade.
               </p>
             </div>
           </CardContent>
