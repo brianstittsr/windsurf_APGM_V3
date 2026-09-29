@@ -200,6 +200,9 @@ export async function POST(request: NextRequest) {
     }
     if (appointmentData.meetingLocationId) {
       appointmentPayload.meetingLocationId = appointmentData.meetingLocationId;
+    } else if (appointmentData.meetingLocationType === 'custom') {
+      // GHL requires meetingLocationId="custom" for the custom address override to apply
+      appointmentPayload.meetingLocationId = 'custom';
     }
     if (typeof appointmentData.overrideLocationConfig === 'boolean') {
       appointmentPayload.overrideLocationConfig = appointmentData.overrideLocationConfig;

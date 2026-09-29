@@ -28,9 +28,35 @@ export async function POST(request: NextRequest) {
     const nameParts = fullName.split(/\s+/).filter(Boolean);
     const firstName = (booking.firstName || nameParts[0] || '').trim();
     const lastName = (booking.lastName || nameParts.slice(1).join(' ') || '').trim();
+    const zoomLink = booking.address || booking.zoomLink || booking.meetingLocation || '';
+
+    const bookingPayload = {
+      firstName,
+      lastName,
+      name: fullName,
+      email: booking.email || '',
+      phone: booking.phone || '',
+      serviceName: booking.serviceName || '',
+      appointmentDate: booking.appointmentDate || '',
+      appointmentTime: booking.appointmentTime || '',
+      startTime: booking.startTime || '',
+      endTime: booking.endTime || '',
+      // Virtual meeting location so workflow emails can reference the Zoom link.
+      address: zoomLink,
+      zoomLink,
+      meetingLocation: zoomLink,
+      location: zoomLink,
+      price: booking.price ?? 0,
+      depositPaid: booking.depositPaid ?? false,
+      notes: booking.notes || '',
+      ghlContactId: booking.contactId || result?.contactId || null,
+      ghlAppointmentId: result?.appointmentId || null,
+    };
 
     const payload = {
       event: 'booking_created',
+      // Nested object matching {{inboundWebhookRequest.booking.*}} merge fields
+      booking: bookingPayload,
       serviceName: booking.serviceName || '',
       serviceKey: 'pretty_girl_preview_virtual_consultation',
       name: fullName,
@@ -48,6 +74,10 @@ export async function POST(request: NextRequest) {
       appointmentTime: booking.appointmentTime || '',
       startTime: booking.startTime || '',
       endTime: booking.endTime || '',
+      address: zoomLink,
+      zoomLink,
+      meetingLocation: zoomLink,
+      meetingLocationType: booking.meetingLocationType || 'custom',
       price: booking.price ?? 0,
       depositPaid: booking.depositPaid ?? false,
       depositMethod: booking.depositMethod || '',
