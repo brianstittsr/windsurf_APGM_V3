@@ -3,8 +3,11 @@ import { db } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 
 const NEW_BUTTON_TEXT = 'Your Pretty Girl Matter Consultation Starts Here';
-const NEW_BUTTON_LINK = 'https://link.socaldigitalstudio.com/widget/form/wxQMl8ZFz9MiWtrKYlnP';
+const NEW_BUTTON_LINK = '/quick-virtual-appointment';
 const OLD_BUTTON_TEXTS = ['Book Now', 'Schedule a Virtual Consultation'];
+const OLD_BUTTON_LINKS = [
+  'https://link.socaldigitalstudio.com/widget/form/wxQMl8ZFz9MiWtrKYlnP',
+];
 
 export async function POST() {
   try {
@@ -14,7 +17,11 @@ export async function POST() {
     for (const docSnap of snapshot.docs) {
       try {
         const data = docSnap.data();
-        if (OLD_BUTTON_TEXTS.includes(data.buttonText) || !data.buttonText) {
+        if (
+          OLD_BUTTON_TEXTS.includes(data.buttonText) ||
+          !data.buttonText ||
+          OLD_BUTTON_LINKS.includes(data.buttonLink)
+        ) {
           await docSnap.ref.update({
             buttonText: NEW_BUTTON_TEXT,
             buttonLink: NEW_BUTTON_LINK,

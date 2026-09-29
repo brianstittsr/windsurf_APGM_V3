@@ -110,10 +110,8 @@ export default function TheProcess() {
               The entire process typically takes 2-3 hours for the initial appointment, with a touch-up session 
               scheduled 4-6 weeks later.
             </p>
-            <a 
-              href="https://link.socaldigitalstudio.com/widget/form/wxQMl8ZFz9MiWtrKYlnP"
-              target="_blank"
-              rel="noopener noreferrer"
+            <a
+              href="/quick-virtual-appointment"
               className="inline-flex items-center px-8 py-4 bg-[#AD6269] text-white font-semibold rounded-full hover:bg-[#9d5860] transition-colors shadow-lg"
             >
               Your Pretty Girl Matter Consultation Starts Here

@@ -16,7 +16,7 @@ if (!getApps().length) {
 }
 
 const db = getFirestore();
-const NEW_LINK = 'https://link.socaldigitalstudio.com/widget/form/wxQMl8ZFz9MiWtrKYlnP';
+const NEW_LINK = '/quick-virtual-appointment';
 
 (async () => {
   const snap = await db.collection('heroSlides').get();
