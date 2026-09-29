@@ -283,7 +283,7 @@ export default function QuickVirtualAppointmentPage() {
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
             {/* Left: Image */}
-            <div className="relative rounded-2xl overflow-hidden shadow-lg min-h-[400px] lg:min-h-full bg-gray-200">
+            <div className="relative rounded-2xl overflow-hidden shadow-lg min-h-[400px] lg:min-h-full bg-black">
               {config.imageUrls.map((url, index) => (
                 <Image
                   key={url}
@@ -294,7 +294,7 @@ export default function QuickVirtualAppointmentPage() {
                       : 'Woman on a web conference call'
                   }
                   fill
-                  className={`object-cover transition-opacity duration-1000 ease-in-out ${
+                  className={`object-contain transition-opacity duration-1000 ease-in-out ${
                     index === activeImageIndex ? 'opacity-100' : 'opacity-0'
                   }`}
                   priority={index === 0}
@@ -349,6 +349,9 @@ export default function QuickVirtualAppointmentPage() {
                     ))}
                   </div>
                   <div className="grid grid-cols-7 gap-2">
+                    {Array.from({ length: calendarDays[0].getDay() }).map((_, i) => (
+                      <div key={`pad-${i}`} className="h-10 w-10 mx-auto" />
+                    ))}
                     {calendarDays.map((day) => {
                       const dateStr = toISODate(day);
                       const hasSlots = availableDateSet.has(dateStr);
