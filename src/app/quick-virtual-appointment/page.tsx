@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import { Loader2, Calendar, Clock, Video, CheckCircle, ArrowLeft } from 'lucide-react';
 
 interface QuickVirtualConfig {
@@ -149,28 +151,36 @@ export default function QuickVirtualAppointmentPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loader2 className="h-8 w-8 animate-spin text-[#AD6269]" />
-      </div>
+      <>
+        <Header />
+        <main className="pt-16 min-h-screen flex items-center justify-center bg-gray-50">
+          <Loader2 className="h-8 w-8 animate-spin text-[#AD6269]" />
+        </main>
+        <Footer />
+      </>
     );
   }
 
   if (!data || !data.enabled || !data.config) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <Card className="max-w-md w-full text-center">
-          <CardHeader>
-            <CardTitle>Not Available</CardTitle>
-            <CardDescription>Quick virtual appointments are currently disabled.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => router.push('/')} variant="outline" className="mt-2">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Return Home
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <>
+        <Header />
+        <main className="pt-16 min-h-screen flex items-center justify-center bg-gray-50 px-4">
+          <Card className="max-w-md w-full text-center">
+            <CardHeader>
+              <CardTitle>Not Available</CardTitle>
+              <CardDescription>Quick virtual appointments are currently disabled.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => router.push('/')} variant="outline" className="mt-2">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Return Home
+              </Button>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
+      </>
     );
   }
 
@@ -178,52 +188,58 @@ export default function QuickVirtualAppointmentPage() {
 
   if (confirmed) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <Card className="max-w-md w-full text-center">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-center gap-2 text-green-600">
-              <CheckCircle className="h-6 w-6" />
-              Appointment Confirmed
-            </CardTitle>
-            <CardDescription>{selectedSlot?.label}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-gray-600">
-              You will receive a confirmation email with the virtual consultation details.
-            </p>
-            <Button onClick={() => router.push('/')} className="bg-[#AD6269] hover:bg-[#8B4A52] text-white">
-              Return Home
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <>
+        <Header />
+        <main className="pt-16 min-h-screen flex items-center justify-center bg-gray-50 px-4">
+          <Card className="max-w-md w-full text-center">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-center gap-2 text-green-600">
+                <CheckCircle className="h-6 w-6" />
+                Appointment Confirmed
+              </CardTitle>
+              <CardDescription>{selectedSlot?.label}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-gray-600">
+                You will receive a confirmation email with the virtual consultation details.
+              </p>
+              <Button onClick={() => router.push('/')} className="bg-[#AD6269] hover:bg-[#8B4A52] text-white">
+                Return Home
+              </Button>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
-          {/* Left: Image */}
-          <div className="relative rounded-2xl overflow-hidden shadow-lg min-h-[400px] lg:min-h-full bg-gray-200">
-            <Image
-              src={config.imageUrl}
-              alt="A Pretty Girl Matter studio"
-              fill
-              className="object-cover"
-              priority
-              sizes="(max-width: 1024px) 100vw, 50vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-              <div className="flex items-center gap-2 mb-2">
-                <Video className="h-5 w-5" />
-                <span className="font-medium">Virtual Consultation</span>
+    <>
+      <Header />
+      <main className="pt-16 min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+            {/* Left: Image */}
+            <div className="relative rounded-2xl overflow-hidden shadow-lg min-h-[400px] lg:min-h-full bg-gray-200">
+              <Image
+                src={config.imageUrl}
+                alt="A Pretty Girl Matter studio"
+                fill
+                className="object-cover"
+                priority
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
+                <div className="flex items-center gap-2 mb-2">
+                  <Video className="h-5 w-5" />
+                  <span className="font-medium">Virtual Consultation</span>
+                </div>
+                <h1 className="text-3xl md:text-4xl font-bold mb-2">{config.title}</h1>
+                <p className="text-white/90 max-w-md">{config.description}</p>
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-2">{config.title}</h1>
-              <p className="text-white/90 max-w-md">{config.description}</p>
             </div>
-          </div>
 
           {/* Right: Calendar / Form */}
           <Card className="shadow-lg border-0">
@@ -331,6 +347,8 @@ export default function QuickVirtualAppointmentPage() {
           </Card>
         </div>
       </div>
-    </div>
+      </main>
+      <Footer />
+    </>
   );
 }
