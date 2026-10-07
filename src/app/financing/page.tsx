@@ -10,31 +10,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export default function FinancingPage() {
-  const [purchaseAmount, setPurchaseAmount] = useState('500');
+  const [purchaseAmount, setPurchaseAmount] = useState('');
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
   const [selectedTerm, setSelectedTerm] = useState(12);
-  const [animatedValue, setAnimatedValue] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
+  const [selectedService, setSelectedService] = useState<string | null>('Microblading');
 
   useEffect(() => {
     setIsVisible(true);
-    // Animate the counter
-    const targetValue = purchaseAmount ? parseFloat(purchaseAmount) : 0;
-    const duration = 1000;
-    const steps = 60;
-    const increment = targetValue / steps;
-    let current = 0;
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= targetValue) {
-        setAnimatedValue(targetValue);
-        clearInterval(timer);
-      } else {
-        setAnimatedValue(current);
-      }
-    }, duration / steps);
-    return () => clearInterval(timer);
-  }, [purchaseAmount]);
+  }, []);
 
   const benefits = [
     { icon: '⚡', title: 'Instant Approval', desc: 'Get approved in seconds, not days' },
@@ -44,10 +28,10 @@ export default function FinancingPage() {
   ];
 
   const popularServices = [
-    { name: 'Microblading', price: 450, image: '🎨' },
-    { name: 'Lip Blush', price: 400, image: '💋' },
-    { name: 'Powder Brows', price: 500, image: '✨' },
-    { name: 'Combo Brows', price: 550, image: '💫' },
+    { name: 'Microblading', min: 550, max: 700, image: '🎨' },
+    { name: 'Lip Blush', min: 550, max: 700, image: '💋' },
+    { name: 'Powder Brows', min: 550, max: 700, image: '✨' },
+    { name: 'Combo Brows', min: 650, max: 900, image: '💫' },
   ];
 
   const testimonials = [
@@ -70,6 +54,10 @@ export default function FinancingPage() {
 
   const faqs = [
     {
+      question: "How do I get my exact price?",
+      answer: "All prices on this page are estimated ranges only. Book a virtual consultation with Victoria to discuss your goals and receive your exact, personalized price."
+    },
+    {
       question: "What is Buy Now, Pay Later?",
       answer: "Buy Now, Pay Later allows you to get your beauty treatments today and pay over time in easy monthly installments. No need to wait or save up – get the look you want now!"
     },
@@ -87,7 +75,7 @@ export default function FinancingPage() {
     },
     {
       question: "What payment options are available?",
-      answer: "We offer Cherry, Klarna, Affirm, and PayPal Credit. Each has different terms and benefits – choose what works best for you!"
+      answer: "We offer Cherry, Klarna, Affirm, and PayPal Credit. Each has different terms and benefits – check your approval with each partner, then book your virtual consultation to confirm your final price!"
     },
   ];
 
@@ -95,6 +83,9 @@ export default function FinancingPage() {
     if (amount < 100) return 0;
     return Math.round((amount / months) * 100) / 100;
   };
+
+  const activeService =
+    popularServices.find((service) => service.name === selectedService) ?? null;
 
   const toggleFAQ = (index: number) => {
     setExpandedFAQ(expandedFAQ === index ? null : index);
@@ -127,22 +118,15 @@ export default function FinancingPage() {
                   <span className="block text-white/90">Pay Over Time</span>
                 </h1>
                 <p className="text-xl text-white/80 mb-8 max-w-lg">
-                  Why wait? Get the beauty treatments you deserve today with flexible payment plans starting as low as <span className="font-bold text-white">$33/month</span>.
+                  Estimate your monthly payment below, check your spending power with a payment partner — then book a virtual consultation with Victoria to get your exact price.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <Button 
-                    size="lg" 
+                  <Button
+                    size="lg"
                     className="bg-white text-[#AD6269] hover:bg-gray-100 font-bold px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105"
-                    onClick={() => window.location.href = '/book-now-custom'}
+                    onClick={() => window.location.href = '/quick-virtual-appointment'}
                   >
-                    Book Now & Pay Later
-                  </Button>
-                  <Button 
-                    size="lg" 
-                    variant="outline" 
-                    className="border-2 border-white bg-transparent text-white hover:bg-white/20 font-bold px-8 py-6 text-lg"
-                  >
-                    Learn More
+                    Your Pretty Girl Consultation Starts Here
                   </Button>
                 </div>
               </div>
@@ -173,20 +157,24 @@ export default function FinancingPage() {
                     </div>
                     
                     {/* Quick Service Buttons */}
+                    <p className="text-xs text-gray-500 mb-2 text-center">Select a service to see its estimated price range</p>
                     <div className="grid grid-cols-2 gap-2 mb-6">
                       {popularServices.map((service) => (
                         <button
                           key={service.name}
-                          onClick={() => setPurchaseAmount(service.price.toString())}
+                          onClick={() => {
+                            setSelectedService(service.name);
+                            setPurchaseAmount('');
+                          }}
                           className={`p-3 rounded-lg border-2 transition-all hover:scale-105 ${
-                            purchaseAmount === service.price.toString()
+                            selectedService === service.name
                               ? 'border-[#AD6269] bg-[#AD6269]/10'
                               : 'border-gray-200 hover:border-[#AD6269]/50'
                           }`}
                         >
                           <span className="text-2xl block mb-1">{service.image}</span>
                           <span className="text-sm font-medium text-gray-700">{service.name}</span>
-                          <span className="text-xs text-gray-500 block">${service.price}</span>
+                          <span className="text-xs text-gray-500 block">${service.min} – ${service.max}</span>
                         </button>
                       ))}
                     </div>
@@ -203,7 +191,10 @@ export default function FinancingPage() {
                           id="purchaseAmount"
                           placeholder="Enter amount"
                           value={purchaseAmount}
-                          onChange={(e) => setPurchaseAmount(e.target.value)}
+                          onChange={(e) => {
+                            setPurchaseAmount(e.target.value);
+                            setSelectedService(null);
+                          }}
                           className="pl-10 h-14 text-2xl font-bold text-center border-2 border-gray-200 focus:border-[#AD6269]"
                         />
                       </div>
@@ -232,27 +223,29 @@ export default function FinancingPage() {
                     {/* Result Display */}
                     <div className="bg-gradient-to-r from-[#AD6269] to-[#c4787f] rounded-xl p-6 text-white text-center mb-6">
                       <p className="text-white/80 text-sm mb-1">Your estimated monthly payment</p>
-                      <div className="text-5xl font-bold mb-2 animate-pulse">
-                        ${purchaseAmount && parseFloat(purchaseAmount) >= 100 
-                          ? calculateMonthlyPayment(parseFloat(purchaseAmount), selectedTerm).toFixed(2)
-                          : '--'
-                        }
+                      <div className="text-5xl font-bold mb-2">
+                        {activeService
+                          ? `$${calculateMonthlyPayment(activeService.min, selectedTerm).toFixed(0)} – $${calculateMonthlyPayment(activeService.max, selectedTerm).toFixed(0)}`
+                          : purchaseAmount && parseFloat(purchaseAmount) >= 100
+                            ? `$${calculateMonthlyPayment(parseFloat(purchaseAmount), selectedTerm).toFixed(2)}`
+                            : '--'}
                         <span className="text-2xl font-normal">/mo</span>
                       </div>
                       <p className="text-white/70 text-xs">
                         for {selectedTerm} months at 0% APR*
+                        {activeService && ` — based on a $${activeService.min} – $${activeService.max} estimated price range`}
                       </p>
                     </div>
 
-                    <Button 
+                    <Button
                       className="w-full bg-[#AD6269] hover:bg-[#9a555c] text-white font-bold py-6 text-lg shadow-lg hover:shadow-xl transition-all"
-                      onClick={() => window.location.href = '/book-now-custom'}
+                      onClick={() => window.location.href = '/quick-virtual-appointment'}
                     >
-                      Apply Now - Takes 60 Seconds ⚡
+                      Your Pretty Girl Consultation Starts Here
                     </Button>
-                    
+
                     <p className="text-xs text-gray-400 mt-4 text-center">
-                      *0% APR for qualified customers. Subject to credit approval.
+                      *0% APR for qualified customers. Subject to credit approval. Prices shown are estimates only — your final price is confirmed during your virtual consultation with Victoria.
                     </p>
                   </CardContent>
                 </Card>
@@ -262,8 +255,124 @@ export default function FinancingPage() {
           </div>
         </section>
 
-        {/* Benefits Section */}
+        {/* Payment Partners */}
         <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Choose Your Payment Partner
+              </h2>
+              <p className="text-gray-500 text-lg max-w-2xl mx-auto">
+                Check how much you&apos;re approved for — each partner offers a quick, soft-credit-check application
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+              {/* Cherry */}
+              <a
+                href="https://pay.withcherry.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block group focus:outline-none focus:ring-2 focus:ring-[#AD6269] rounded-xl"
+              >
+                <Card className="border-2 border-gray-200 group-hover:border-[#AD6269] transition-all group-hover:shadow-2xl group-hover:-translate-y-2 cursor-pointer bg-white h-full">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <img
+                        src="https://cdn.prod.website-files.com/681bf1d6f7dea459fe255c59/68252146834983973a92051f_cherry-logo-primary.svg"
+                        alt="Cherry Logo"
+                        className="w-full h-auto object-contain"
+                      />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Cherry</h3>
+                    <p className="text-gray-500 text-sm mb-4">0% APR available</p>
+                    <div className="text-[#AD6269] font-semibold mb-2">Most Popular ⭐</div>
+                    <span className="text-[#AD6269] text-sm font-semibold group-hover:underline">Check your approval →</span>
+                  </CardContent>
+                </Card>
+              </a>
+
+              {/* Klarna */}
+              <a
+                href="https://www.klarna.com/us/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block group focus:outline-none focus:ring-2 focus:ring-[#FFB3C7] rounded-xl"
+              >
+                <Card className="border-2 border-gray-200 group-hover:border-[#FFB3C7] transition-all group-hover:shadow-2xl group-hover:-translate-y-2 cursor-pointer bg-white h-full">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <img
+                        src="https://cdn.klarna.com/1.0/shared/image/generic/logo/en_us/basic/logo_black.png"
+                        alt="Klarna Logo"
+                        className="w-full h-auto object-contain"
+                      />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Klarna</h3>
+                    <p className="text-gray-500 text-sm mb-4">Pay in 4 installments</p>
+                    <div className="text-[#FFB3C7] font-semibold mb-2">Interest-free</div>
+                    <span className="text-[#FFB3C7] text-sm font-semibold group-hover:underline">Check your approval →</span>
+                  </CardContent>
+                </Card>
+              </a>
+
+              {/* Affirm */}
+              <a
+                href="https://www.affirm.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block group focus:outline-none focus:ring-2 focus:ring-[#0FA0EA] rounded-xl"
+              >
+                <Card className="border-2 border-gray-200 group-hover:border-[#0FA0EA] transition-all group-hover:shadow-2xl group-hover:-translate-y-2 cursor-pointer bg-white h-full">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <img
+                        src="https://cdn-assets.affirm.com/images/black_logo-transparent_bg.png"
+                        alt="Affirm Logo"
+                        className="w-full h-auto object-contain"
+                      />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Affirm</h3>
+                    <p className="text-gray-500 text-sm mb-4">3-12 month terms</p>
+                    <div className="text-[#0FA0EA] font-semibold mb-2">No hidden fees</div>
+                    <span className="text-[#0FA0EA] text-sm font-semibold group-hover:underline">Check your approval →</span>
+                  </CardContent>
+                </Card>
+              </a>
+
+              {/* PayPal */}
+              <a
+                href="https://www.paypal.com/us/credit"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block group focus:outline-none focus:ring-2 focus:ring-[#003087] rounded-xl"
+              >
+                <Card className="border-2 border-gray-200 group-hover:border-[#003087] transition-all group-hover:shadow-2xl group-hover:-translate-y-2 cursor-pointer bg-white h-full">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <img
+                        src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-200px.png"
+                        alt="PayPal Logo"
+                        className="w-full h-auto object-contain"
+                      />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">PayPal Credit</h3>
+                    <p className="text-gray-500 text-sm mb-4">6 months interest-free</p>
+                    <div className="text-[#003087] font-semibold mb-2">On $99+ purchases</div>
+                    <span className="text-[#003087] text-sm font-semibold group-hover:underline">Check your approval →</span>
+                  </CardContent>
+                </Card>
+              </a>
+            </div>
+
+            <p className="text-center text-gray-400 text-sm mt-8">
+              Approval is determined by each payment partner and does not guarantee final service pricing.
+            </p>
+          </div>
+        </section>
+
+        {/* Benefits Section */}
+        <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Why Pay Later?</h2>
@@ -293,13 +402,16 @@ export default function FinancingPage() {
         </section>
 
         {/* Comparison Section */}
-        <section className="py-16 bg-gray-50">
+        <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
                 Pay Now vs. Pay Later
               </h2>
-              <p className="text-gray-500 text-lg">See the difference flexible payments can make</p>
+              <p className="text-gray-500 text-lg max-w-2xl mx-auto">See the difference flexible payments can make</p>
+              <p className="text-[#AD6269] font-semibold mt-3">
+                All prices shown are estimates only — not actual pricing. Your final price is confirmed during your virtual consultation with Victoria.
+              </p>
             </div>
 
             <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
@@ -331,7 +443,7 @@ export default function FinancingPage() {
                   </ul>
                   <div className="mt-8 p-4 bg-gray-100 rounded-lg text-center">
                     <p className="text-gray-500 text-sm">Example: Microblading</p>
-                    <p className="text-3xl font-bold text-gray-700">$450</p>
+                    <p className="text-3xl font-bold text-gray-700">$650</p>
                     <p className="text-gray-500 text-sm">due today</p>
                   </div>
                 </CardContent>
@@ -368,87 +480,9 @@ export default function FinancingPage() {
                   </ul>
                   <div className="mt-8 p-4 bg-[#AD6269]/10 rounded-lg text-center">
                     <p className="text-[#AD6269] text-sm">Example: Microblading</p>
-                    <p className="text-3xl font-bold text-[#AD6269]">$37.50<span className="text-lg font-normal">/mo</span></p>
+                    <p className="text-3xl font-bold text-[#AD6269]">$42.50<span className="text-lg font-normal">/mo</span></p>
                     <p className="text-[#AD6269]/70 text-sm">for 12 months at 0% APR</p>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </section>
-
-        {/* Payment Partners */}
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Choose Your Payment Partner
-              </h2>
-              <p className="text-gray-500 text-lg">Multiple options to fit your needs</p>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
-              {/* Cherry */}
-              <Card className="border-2 border-transparent hover:border-[#AD6269] transition-all hover:shadow-xl group cursor-pointer bg-white">
-                <CardContent className="p-6 text-center">
-                  <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <img 
-                      src="https://cdn.prod.website-files.com/681bf1d6f7dea459fe255c59/68252146834983973a92051f_cherry-logo-primary.svg" 
-                      alt="Cherry Logo" 
-                      className="w-full h-auto object-contain"
-                    />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Cherry</h3>
-                  <p className="text-gray-500 text-sm mb-4">0% APR available</p>
-                  <div className="text-[#AD6269] font-semibold">Most Popular ⭐</div>
-                </CardContent>
-              </Card>
-
-              {/* Klarna */}
-              <Card className="border-2 border-transparent hover:border-[#FFB3C7] transition-all hover:shadow-xl group cursor-pointer bg-white">
-                <CardContent className="p-6 text-center">
-                  <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <img 
-                      src="https://cdn.klarna.com/1.0/shared/image/generic/logo/en_us/basic/logo_black.png" 
-                      alt="Klarna Logo" 
-                      className="w-full h-auto object-contain"
-                    />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Klarna</h3>
-                  <p className="text-gray-500 text-sm mb-4">Pay in 4 installments</p>
-                  <div className="text-[#FFB3C7] font-semibold">Interest-free</div>
-                </CardContent>
-              </Card>
-
-              {/* Affirm */}
-              <Card className="border-2 border-transparent hover:border-[#0FA0EA] transition-all hover:shadow-xl group cursor-pointer bg-white">
-                <CardContent className="p-6 text-center">
-                  <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <img 
-                      src="https://cdn-assets.affirm.com/images/black_logo-transparent_bg.png" 
-                      alt="Affirm Logo" 
-                      className="w-full h-auto object-contain"
-                    />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Affirm</h3>
-                  <p className="text-gray-500 text-sm mb-4">3-12 month terms</p>
-                  <div className="text-[#0FA0EA] font-semibold">No hidden fees</div>
-                </CardContent>
-              </Card>
-
-              {/* PayPal */}
-              <Card className="border-2 border-transparent hover:border-[#003087] transition-all hover:shadow-xl group cursor-pointer bg-white">
-                <CardContent className="p-6 text-center">
-                  <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <img 
-                      src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-200px.png" 
-                      alt="PayPal Logo" 
-                      className="w-full h-auto object-contain"
-                    />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">PayPal Credit</h3>
-                  <p className="text-gray-500 text-sm mb-4">6 months interest-free</p>
-                  <div className="text-[#003087] font-semibold">On $99+ purchases</div>
                 </CardContent>
               </Card>
             </div>
@@ -460,15 +494,15 @@ export default function FinancingPage() {
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">How It Works</h2>
-              <p className="text-lg !text-white" style={{ color: 'white' }}>Get approved in 3 simple steps</p>
+              <p className="text-lg !text-white" style={{ color: 'white' }}>Three simple steps to your dream look</p>
             </div>
 
             <div className="max-w-4xl mx-auto">
               <div className="grid md:grid-cols-3 gap-8">
                 {[
-                  { step: 1, icon: '📱', title: 'Apply Online', desc: 'Quick 60-second application with no hard credit check' },
-                  { step: 2, icon: '✅', title: 'Get Approved', desc: 'Instant decision - know your spending power immediately' },
-                  { step: 3, icon: '💅', title: 'Book & Enjoy', desc: 'Schedule your appointment and pay over time' },
+                  { step: 1, icon: '📱', title: 'Check Your Approval', desc: 'See how much a payment partner approves you for — soft credit check, no score impact' },
+                  { step: 2, icon: '💻', title: 'Book Your Virtual Consultation', desc: 'Meet Victoria online to get your exact final price — no guessing' },
+                  { step: 3, icon: '💅', title: 'Book & Pay Over Time', desc: 'Schedule your appointment and split your payments into easy monthly installments' },
                 ].map((item, index) => (
                   <div key={index} className="text-center relative">
                     {index < 2 && (
@@ -570,19 +604,19 @@ export default function FinancingPage() {
               Ready to Get Started?
             </h2>
             <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-              Don&apos;t wait another day for the look you deserve. Apply now and get instant approval!
+              Don&apos;t wait another day for the look you deserve. Book your virtual consultation to get your exact price and explore flexible payments.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="bg-white text-[#AD6269] hover:bg-gray-100 font-bold px-10 py-7 text-xl shadow-xl hover:shadow-2xl transition-all hover:scale-105"
-                onClick={() => window.location.href = '/book-now-custom'}
+                onClick={() => window.location.href = '/quick-virtual-appointment'}
               >
-                Book Now & Pay Later ✨
+                Your Pretty Girl Consultation Starts Here ✨
               </Button>
             </div>
             <p className="mt-6 text-white/80 text-sm">
-              No hard credit check • Instant approval • 0% APR available
+              Free virtual consultation • Exact final pricing • 0% APR financing available
             </p>
           </div>
         </section>
