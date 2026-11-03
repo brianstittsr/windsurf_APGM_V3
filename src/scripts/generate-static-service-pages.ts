@@ -186,7 +186,7 @@ export default function ServicePage() {
                   asChild
                   className="rounded-full px-8 bg-gradient-to-r from-[#AD6269] to-[#8B4A52] text-white hover:opacity-90"
                 >
-                  <a href="${CONSULTATION_FORM_URL}" target="_blank" rel="noopener noreferrer">
+                  <a href="https://link.socaldigitalstudio.com/preview/1mMCAELmzcSpzD8yiG1q?notrack=true#consult" target="_blank" rel="noopener noreferrer">
                     <CalendarPlus className="w-5 h-5 mr-2" />
                     Your Pretty Girl Matter Consultation Starts Here
                   </a>

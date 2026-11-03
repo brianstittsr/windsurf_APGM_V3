@@ -124,7 +124,7 @@ export default function FinancingPage() {
                   <Button
                     size="lg"
                     className="bg-white text-[#AD6269] hover:bg-gray-100 font-bold px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105"
-                    onClick={() => window.location.href = '/quick-virtual-appointment'}
+                    onClick={() => window.location.href = 'https://link.socaldigitalstudio.com/preview/1mMCAELmzcSpzD8yiG1q?notrack=true#consult'}
                   >
                     Your Pretty Girl Consultation Starts Here
                   </Button>
@@ -239,7 +239,7 @@ export default function FinancingPage() {
 
                     <Button
                       className="w-full bg-[#AD6269] hover:bg-[#9a555c] text-white font-bold py-6 text-lg shadow-lg hover:shadow-xl transition-all"
-                      onClick={() => window.location.href = '/quick-virtual-appointment'}
+                      onClick={() => window.location.href = 'https://link.socaldigitalstudio.com/preview/1mMCAELmzcSpzD8yiG1q?notrack=true#consult'}
                     >
                       Your Pretty Girl Consultation Starts Here
                     </Button>
@@ -610,7 +610,7 @@ export default function FinancingPage() {
               <Button
                 size="lg"
                 className="bg-white text-[#AD6269] hover:bg-gray-100 font-bold px-10 py-7 text-xl shadow-xl hover:shadow-2xl transition-all hover:scale-105"
-                onClick={() => window.location.href = '/quick-virtual-appointment'}
+                onClick={() => window.location.href = 'https://link.socaldigitalstudio.com/preview/1mMCAELmzcSpzD8yiG1q?notrack=true#consult'}
               >
                 Your Pretty Girl Consultation Starts Here ✨
               </Button>

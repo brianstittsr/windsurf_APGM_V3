@@ -139,8 +139,7 @@ export default function ContactPage() {
               <p className="text-white max-w-2xl mx-auto mb-8">
                 Schedule your consultation today and discover how permanent makeup can transform your daily routine.
               </p>
-              <a
-                href="https://link.socaldigitalstudio.com/widget/form/wxQMl8ZFz9MiWtrKYlnP"
+              <a href="https://link.socaldigitalstudio.com/preview/1mMCAELmzcSpzD8yiG1q?notrack=true#consult"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center px-8 py-4 bg-white text-[#AD6269] font-bold rounded-full hover:bg-gray-100 transition-colors shadow-lg"

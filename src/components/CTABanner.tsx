@@ -26,7 +26,9 @@ export default function CTABanner() {
           {/* Right - Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
             <a
-              href="/quick-virtual-appointment"
+              href="https://link.socaldigitalstudio.com/preview/1mMCAELmzcSpzD8yiG1q?notrack=true#consult"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center justify-center px-8 py-4 bg-white text-[#AD6269] font-bold rounded-full hover:bg-gray-100 transition-colors shadow-lg"
             >
               Your Pretty Girl Matter Consultation Starts Here

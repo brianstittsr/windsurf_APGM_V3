@@ -111,7 +111,9 @@ export default function TheProcess() {
               scheduled 4-6 weeks later.
             </p>
             <a
-              href="/quick-virtual-appointment"
+              href="https://link.socaldigitalstudio.com/preview/1mMCAELmzcSpzD8yiG1q?notrack=true#consult"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center px-8 py-4 bg-[#AD6269] text-white font-semibold rounded-full hover:bg-[#9d5860] transition-colors shadow-lg"
             >
               Your Pretty Girl Matter Consultation Starts Here
