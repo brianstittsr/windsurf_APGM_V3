@@ -30,7 +30,6 @@ import {
 import { getServiceImagePath } from '@/utils/serviceImageUtils';
 import { Service, ServiceDetailPageContent } from '@/types/database';
 
-const CONSULTATION_FORM_URL = 'https://link.socaldigitalstudio.com/widget/form/wxQMl8ZFz9MiWtrKYlnP';
 
 const DEFAULT_ICONS = [Clock, Leaf, Droplets, Smile, Palette, RefreshCw];
 
@@ -154,17 +153,6 @@ export default async function ServiceDetailPage({ params }: PageProps) {
                   {heroSubtitle}
                 </p>
               )}
-              <Button
-                asChild
-                size="lg"
-                variant="secondary"
-                className="rounded-full px-8 bg-white text-[#AD6269] hover:bg-white/90"
-              >
-                <a href={CONSULTATION_FORM_URL} target="_blank" rel="noopener noreferrer">
-                  <CalendarPlus className="w-5 h-5 mr-2" />
-                  Book Free Consultation
-                </a>
-              </Button>
             </div>
           </div>
         </section>
@@ -409,17 +397,6 @@ export default async function ServiceDetailPage({ params }: PageProps) {
                 {content.ctaText ||
                   `Book a free consultation with Victoria and discover how ${serviceName} can enhance your natural beauty.`}
               </p>
-              <Button
-                asChild
-                size="lg"
-                variant="secondary"
-                className="rounded-full px-8 bg-white text-[#AD6269] hover:bg-white/90"
-              >
-                <a href={CONSULTATION_FORM_URL} target="_blank" rel="noopener noreferrer">
-                  <CalendarPlus className="w-5 h-5 mr-2" />
-                  Book Free Consultation
-                </a>
-              </Button>
               <p className="mt-6 text-white/80 flex items-center justify-center gap-2">
                 <MapPin className="w-4 h-4" />
                 Serving Raleigh, Cary, Durham, Chapel Hill & Wake Forest, NC

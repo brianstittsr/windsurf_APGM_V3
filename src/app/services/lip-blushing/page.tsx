@@ -124,17 +124,6 @@ export default function LipBlushingPage() {
               <p className="text-lg md:text-xl mb-6 text-white/90">
                 Enhance your natural lip color and definition with beautiful, long-lasting results
               </p>
-              <Button
-                asChild
-                size="lg"
-                variant="secondary"
-                className="rounded-full px-8 bg-white text-[#AD6269] hover:bg-white/90"
-              >
-                <a href="https://link.socaldigitalstudio.com/widget/form/wxQMl8ZFz9MiWtrKYlnP" target="_blank" rel="noopener noreferrer">
-                  <CalendarPlus className="w-5 h-5 mr-2" />
-                  Book Free Consultation
-                </a>
-              </Button>
             </div>
           </div>
         </section>

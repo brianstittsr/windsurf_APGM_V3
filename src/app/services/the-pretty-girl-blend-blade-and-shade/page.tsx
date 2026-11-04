@@ -93,17 +93,6 @@ export default function ServicePage() {
               <p className="text-lg md:text-xl mb-6 text-white/90 max-w-2xl mx-auto">
                 {"Soft, shaded brows with a powdered makeup effect that lasts."}
               </p>
-              <Button
-                asChild
-                size="lg"
-                variant="secondary"
-                className="rounded-full px-8 bg-white text-[#AD6269] hover:bg-white/90"
-              >
-                <a href="https://link.socaldigitalstudio.com/widget/form/wxQMl8ZFz9MiWtrKYlnP" target="_blank" rel="noopener noreferrer">
-                  <CalendarPlus className="w-5 h-5 mr-2" />
-                  Book Free Consultation
-                </a>
-              </Button>
             </div>
           </div>
         </section>
@@ -291,17 +280,6 @@ export default function ServicePage() {
               <p className="text-lg mb-6 text-white/90">
                 {"Book your free consultation and discover if powder brows are right for you."}
               </p>
-              <Button
-                asChild
-                size="lg"
-                variant="secondary"
-                className="rounded-full px-8 bg-white text-[#AD6269] hover:bg-white/90"
-              >
-                <a href="https://link.socaldigitalstudio.com/widget/form/wxQMl8ZFz9MiWtrKYlnP" target="_blank" rel="noopener noreferrer">
-                  <CalendarPlus className="w-5 h-5 mr-2" />
-                  Book Free Consultation
-                </a>
-              </Button>
               <p className="mt-6 text-white/80 flex items-center justify-center gap-2">
                 <MapPin className="w-4 h-4" />
                 Serving Raleigh, Cary, Durham, Chapel Hill & Wake Forest, NC
