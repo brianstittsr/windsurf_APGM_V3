@@ -23,13 +23,13 @@ import {
 
 export const metadata: Metadata = {
   title: "The Pretty Girl Preview * Virtual Consultation in Raleigh, NC",
-  description: "Schedules a virtual consultation on the calendar and triggers reminders. \n\nVirtual Consultation via Zoom:\nThe Pretty Girl Preview * Consultation\n\nZoom Link: https://us05web.zoom.us/j/2989268538?pwd=Q4wtUTamIablNDnZzDiX6a4sWQqNcB.1#success\n\nInbound Webhook: \n\nhttps://services.leadconnectorhq.com/hooks/Wyy3BzaCa7rC36CsrH9z/webhook-trigger/cd9706ec-fd62-4bff-b358-0a3d24e082a0\n\nSample rest URL payload: curl -X POST \"https://services.leadconnectorhq.com/hooks/Wyy3BzaCa7rC36CsrH9z/webhook-trigger/cd9706ec-fd62-4bff-b358-0a3d24e082a0\" -H \"Content-Type: application/json\" -d '{\"Full Name\":\"Brian Stitt\",\"Date\":\"10-02-2026\",\"Time\":\"10:00AM\",\"Service\":\"EyeBrows\",\"Pre-Consultation Form Link\":\"https://www.yahoo.com\"}'",
+  description: "Schedules a virtual consultation on the calendar and triggers reminders. \n\nVirtual Consultation via Zoom:\nThe Pretty Girl Preview * Consultation",
   alternates: {
     canonical: 'https://www.aprettygirlmatter.com/services/the-pretty-girl-preview-virtual-consultation',
   },
   openGraph: {
     title: "The Pretty Girl Preview * Virtual Consultation in Raleigh, NC",
-    description: "Schedules a virtual consultation on the calendar and triggers reminders. \n\nVirtual Consultation via Zoom:\nThe Pretty Girl Preview * Consultation\n\nZoom Link: https://us05web.zoom.us/j/2989268538?pwd=Q4wtUTamIablNDnZzDiX6a4sWQqNcB.1#success\n\nInbound Webhook: \n\nhttps://services.leadconnectorhq.com/hooks/Wyy3BzaCa7rC36CsrH9z/webhook-trigger/cd9706ec-fd62-4bff-b358-0a3d24e082a0\n\nSample rest URL payload: curl -X POST \"https://services.leadconnectorhq.com/hooks/Wyy3BzaCa7rC36CsrH9z/webhook-trigger/cd9706ec-fd62-4bff-b358-0a3d24e082a0\" -H \"Content-Type: application/json\" -d '{\"Full Name\":\"Brian Stitt\",\"Date\":\"10-02-2026\",\"Time\":\"10:00AM\",\"Service\":\"EyeBrows\",\"Pre-Consultation Form Link\":\"https://www.yahoo.com\"}'",
+    description: "Schedules a virtual consultation on the calendar and triggers reminders. \n\nVirtual Consultation via Zoom:\nThe Pretty Girl Preview * Consultation",
     url: 'https://www.aprettygirlmatter.com/services/the-pretty-girl-preview-virtual-consultation',
     type: 'website',
   },
@@ -86,17 +86,6 @@ export default function ServicePage() {
               <p className="text-lg md:text-xl mb-6 text-white/90 max-w-2xl mx-auto">
                 {"Discuss your goals, explore options, and design a plan tailored to you."}
               </p>
-              <Button
-                asChild
-                size="lg"
-                variant="secondary"
-                className="rounded-full px-8 bg-white text-[#AD6269] hover:bg-white/90"
-              >
-                <a href="https://link.socaldigitalstudio.com/widget/form/wxQMl8ZFz9MiWtrKYlnP" target="_blank" rel="noopener noreferrer">
-                  <CalendarPlus className="w-5 h-5 mr-2" />
-                  Book Free Consultation
-                </a>
-              </Button>
             </div>
           </div>
         </section>
@@ -110,7 +99,7 @@ export default function ServicePage() {
                   What is {"The Pretty Girl Preview * Virtual Consultation"}?
                 </h2>
                 <p className="text-lg text-muted-foreground mb-4">
-                  {"Schedules a virtual consultation on the calendar and triggers reminders. \n\nVirtual Consultation via Zoom:\nThe Pretty Girl Preview * Consultation\n\nZoom Link: https://us05web.zoom.us/j/2989268538?pwd=Q4wtUTamIablNDnZzDiX6a4sWQqNcB.1#success\n\nInbound Webhook: \n\nhttps://services.leadconnectorhq.com/hooks/Wyy3BzaCa7rC36CsrH9z/webhook-trigger/cd9706ec-fd62-4bff-b358-0a3d24e082a0\n\nSample rest URL payload: curl -X POST \"https://services.leadconnectorhq.com/hooks/Wyy3BzaCa7rC36CsrH9z/webhook-trigger/cd9706ec-fd62-4bff-b358-0a3d24e082a0\" -H \"Content-Type: application/json\" -d '{\"Full Name\":\"Brian Stitt\",\"Date\":\"10-02-2026\",\"Time\":\"10:00AM\",\"Service\":\"EyeBrows\",\"Pre-Consultation Form Link\":\"https://www.yahoo.com\"}'"}
+                  {"Schedules a virtual consultation on the calendar and triggers reminders. \n\nVirtual Consultation via Zoom:\nThe Pretty Girl Preview * Consultation"}
                 </p>
                 <div className="flex flex-wrap gap-3 mb-6">
                   <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-md capitalize">
@@ -256,17 +245,6 @@ export default function ServicePage() {
               <p className="text-lg mb-6 text-white/90">
                 {"Take the first step toward effortless, beautiful permanent makeup."}
               </p>
-              <Button
-                asChild
-                size="lg"
-                variant="secondary"
-                className="rounded-full px-8 bg-white text-[#AD6269] hover:bg-white/90"
-              >
-                <a href="https://link.socaldigitalstudio.com/widget/form/wxQMl8ZFz9MiWtrKYlnP" target="_blank" rel="noopener noreferrer">
-                  <CalendarPlus className="w-5 h-5 mr-2" />
-                  Book Free Consultation
-                </a>
-              </Button>
               <p className="mt-6 text-white/80 flex items-center justify-center gap-2">
                 <MapPin className="w-4 h-4" />
                 Serving Raleigh, Cary, Durham, Chapel Hill & Wake Forest, NC
